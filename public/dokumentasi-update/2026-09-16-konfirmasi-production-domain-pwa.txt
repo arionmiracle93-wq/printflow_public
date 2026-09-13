@@ -1,0 +1,203 @@
+================================================================
+KONFIRMASI PRODUCTION DOMAIN UNTUK PWA / PWABUILDER
+Tanggal : 16 September 2026
+Status  : PRODUCTION DOMAIN SUDAH BENAR
+Aplikasi: Print Flow
+================================================================
+
+
+1. KESIMPULAN SCREENSHOT
+----------------------------------------------------------------
+
+Domain Production yang benar adalah:
+
+    https://printflow-orcin.vercel.app
+
+Buktinya pada Vercel Settings -> Domains terlihat:
+
+    printflow-orcin.vercel.app
+    Production
+    Valid Configuration
+
+Hasil diagnosis domain tersebut:
+
+    /api/pwa/check
+    "ok": true
+
+Komponen utama juga berhasil:
+- Manifest dynamic    : HTTP 200
+- Service Worker      : HTTP 200
+- Icon dynamic 192    : HTTP 200 image/png
+- Icon dynamic 512    : HTTP 200 image/png
+
+Jadi domain Production tersebut sudah dapat diakses publik dan cocok
+untuk PWABuilder.
+
+
+2. DOMAIN YANG JANGAN DIPAKAI
+----------------------------------------------------------------
+
+Jangan gunakan domain deployment acak seperti:
+
+    printflow-plt5evgll-arionmiracle93-1104.vercel.app
+
+Domain tersebut terkena Standard Deployment Protection. Request tanpa
+cookie Vercel mendapat status 302.
+
+Browser Anda dapat membukanya karena sudah login ke Vercel, tetapi:
+- PWABuilder tidak login ke akun Vercel Anda.
+- Android OS tidak mempunyai cookie Vercel.
+- Chrome manifest validator dapat melakukan request tanpa cookie.
+
+Akibatnya icon terlihat gagal walaupun filenya sebenarnya ada.
+
+
+3. APAKAH REQUIRE LOG IN HARUS DIMATIKAN?
+----------------------------------------------------------------
+
+Pada screenshot:
+
+    Require Log In: ON
+    Mode: Standard Protection
+
+Mode Standard Protection boleh tetap ON jika domain Production tetap
+publik. Hasil /api/pwa/check pada printflow-orcin.vercel.app yang
+ok:true membuktikan domain Production tersebut publik.
+
+Standard Protection berguna untuk melindungi:
+- Preview deployments
+- Generated deployment URLs
+
+Jangan ubah menjadi proteksi semua Production Domain.
+
+Print Flow juga sudah memiliki login Owner/Karyawan sendiri, sehingga
+Dashboard tetap aman meskipun Production Domain publik pada level
+Vercel.
+
+
+4. STATIC ICON 404 TIDAK MASALAH
+----------------------------------------------------------------
+
+Hasil check Production menunjukkan:
+
+    icon192Dynamic  : 200 image/png
+    icon512Dynamic  : 200 image/png
+
+Tetapi:
+
+    icon192Static   : 404
+    icon512Static   : 404
+    maskableStatic  : 404
+
+Ini tidak menghalangi instalasi karena manifest memakai icon dinamis.
+Static icon hanya fallback opsional.
+
+Yang wajib adalah icon yang dirujuk manifest dapat diakses, dan icon
+dinamis sudah HTTP 200.
+
+
+5. VERSI DEPLOYMENT MASIH TERLIHAT LAMA
+----------------------------------------------------------------
+
+Screenshot memperlihatkan:
+
+    const CACHE = "print-flow-shell-v7"
+
+Sedangkan source terbaru menggunakan:
+
+    print-flow-shell-v8
+
+Screenshot manifest juga masih memakai URL icon:
+
+    /api/pwa/icon/192
+    /api/pwa/icon/512
+
+Source terbaru memakai:
+
+    /api/pwa/icon/192.png
+    /api/pwa/icon/512.png
+
+Artinya Production Domain kemungkinan masih menunjuk deployment sebelum
+revisi v8, atau browser masih menampilkan cache lama.
+
+Langkah:
+1. Pastikan commit terbaru berhasil deploy ke Production.
+2. Vercel -> Deployments -> deployment terbaru harus Ready dan diberi
+   label Production/Current.
+3. Jika deployment terbaru masih Preview, klik menu tiga titik ->
+   Promote to Production.
+4. Buka:
+
+       https://printflow-orcin.vercel.app/sw.js
+
+   Pastikan tertulis:
+
+       print-flow-shell-v8
+
+5. Buka:
+
+       https://printflow-orcin.vercel.app/api/pwa/manifest
+
+   Pastikan icon menggunakan akhiran .png.
+
+
+6. URL YANG DIMASUKKAN KE PWABUILDER
+----------------------------------------------------------------
+
+Masukkan hanya:
+
+    https://printflow-orcin.vercel.app
+
+Jangan masukkan:
+- URL deployment acak
+- /login
+- /api/pwa/manifest
+- /api/pwa/check
+
+Setelah memasukkan domain utama, klik Start / Scan ulang.
+
+
+7. PEMERIKSAAN FINAL
+----------------------------------------------------------------
+
+Buka Incognito/Guest browser agar benar-benar tanpa cookie Vercel:
+
+    https://printflow-orcin.vercel.app/api/pwa/check
+
+Hasil benar:
+
+    "ok": true
+    "code": "ready"
+
+Lalu buka:
+
+    https://printflow-orcin.vercel.app/api/pwa/icon/192.png
+    https://printflow-orcin.vercel.app/api/pwa/icon/512.png
+
+Keduanya harus langsung menampilkan icon, tanpa halaman login Vercel.
+
+
+8. WARNING SCREENSHOT SHOWCASE
+----------------------------------------------------------------
+
+Peringatan Chrome:
+
+    Richer PWA Install UI won't be available...
+
+hanya berarti belum ada screenshot showcase pada manifest.
+Ini bukan kegagalan PWA dan bukan penyebab icon gagal.
+
+Bisa ditambahkan nanti jika ingin tampilan instalasi PWABuilder/Play
+Store lebih menarik.
+
+
+9. TIDAK PERLU DATABASE SETUP
+----------------------------------------------------------------
+
+Tidak perlu menjalankan /api/setup.
+Tidak perlu mengubah Neon atau DATABASE_URL.
+Tidak perlu mematikan login Print Flow.
+
+================================================================
+SELESAI - gunakan printflow-orcin.vercel.app untuk PWABuilder.
+================================================================

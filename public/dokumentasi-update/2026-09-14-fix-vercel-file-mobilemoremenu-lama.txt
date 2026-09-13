@@ -1,0 +1,170 @@
+================================================================
+FIX VERCEL - FILE MOBILEMOREMENU LAMA
+Tanggal : 14 September 2026
+Status  : DIPERBAIKI
+Aplikasi: Print Flow
+================================================================
+
+
+1. ERROR YANG MUNCUL
+----------------------------------------------------------------
+
+Vercel berhasil compile, tetapi gagal saat TypeScript check:
+
+    ./src/components/MobileMoreMenu.tsx:34:22
+    Type error: Type '"kasir"' is not assignable to type
+    '"owner" | "karyawan"'.
+
+Baris yang bermasalah:
+
+    roles: ["owner", "kasir"]
+
+
+2. PENYEBAB
+----------------------------------------------------------------
+
+Role login sudah disederhanakan menjadi:
+
+    owner
+    karyawan
+
+Role berikut sudah tidak valid:
+
+    operator
+    kasir
+
+File MobileMoreMenu.tsx merupakan file navigasi versi lama. Pada versi
+terbaru sebenarnya file tersebut sudah tidak digunakan/dihapus.
+
+Namun, bila update project dilakukan dengan cara upload/drag file baru
+ke GitHub, GitHub TIDAK otomatis menghapus file lama yang tidak ikut
+di-upload. Akibatnya file lama masih berada di repository dan tetap
+diperiksa oleh TypeScript, walaupun tidak di-import aplikasi.
+
+TypeScript memeriksa semua file .ts/.tsx dalam folder src berdasarkan
+tsconfig.json. Karena itu file tidak terpakai pun dapat menggagalkan
+build jika berisi type error.
+
+
+3. BARIS KUNING BUKAN ERROR UTAMA
+----------------------------------------------------------------
+
+Pesan berikut hanya WARNING:
+
+    npm warn deprecated ...
+    npm warn allow-scripts ...
+
+Warning tersebut tidak menyebabkan build gagal.
+
+Bukti pada log:
+
+    Compiled successfully in 11.3s
+    Running TypeScript ...
+    Failed to type check.
+
+Jadi masalahnya bukan npm, Neon, Vercel, atau database. Masalahnya hanya
+file TypeScript lama dengan role "kasir".
+
+
+4. PERBAIKAN YANG DITERAPKAN
+----------------------------------------------------------------
+
+File berikut dibuat ulang sebagai file kompatibilitas:
+
+    src/components/MobileMoreMenu.tsx
+
+Versi baru:
+- Hanya menerima role Owner dan Karyawan.
+- Tidak memiliki kata role "operator" atau "kasir".
+- Tidak mengganggu navigasi mobile baru.
+- Membuat repository yang masih menyimpan file lama tetap lolos build.
+
+Navigasi mobile utama tetap menggunakan:
+
+    MainNav.tsx + MoreMenu.tsx
+
+Jadi file kompatibilitas ini hanya pengaman deployment lama/manual.
+
+
+5. CARA MEMPERBAIKI DI GITHUB
+----------------------------------------------------------------
+
+CARA PALING MUDAH:
+
+Upload/replace file ini di GitHub:
+
+    src/components/MobileMoreMenu.tsx
+
+Gunakan versi terbaru dari project platform AI.
+Commit, lalu Vercel akan redeploy otomatis.
+
+CARA ALTERNATIF:
+
+Karena file tersebut sebenarnya tidak dipakai, Anda juga boleh
+menghapusnya langsung di GitHub:
+
+1. Buka repository GitHub.
+2. Buka src/components/MobileMoreMenu.tsx.
+3. Klik menu tiga titik / ikon tempat sampah.
+4. Pilih Delete file.
+5. Commit changes.
+6. Tunggu Vercel deploy ulang.
+
+Kedua cara valid. Mengganti dengan file kompatibilitas lebih aman jika
+Anda sering update dengan upload manual.
+
+
+6. HAL YANG PERLU DIPAHAMI SAAT UPLOAD MANUAL
+----------------------------------------------------------------
+
+Upload manual ke GitHub:
+- Menambah file baru: YA
+- Mengganti file dengan nama sama: YA
+- Menghapus file lama yang tidak ada di upload: TIDAK
+
+Karena itu bila catatan update menyebut "DIHAPUS", Anda perlu:
+- Menghapus file tersebut manual di GitHub, atau
+- Menggunakan GitHub Desktop/git push yang melacak penghapusan.
+
+Saran terbaik untuk update berikutnya:
+Gunakan GitHub Desktop agar file baru, perubahan, dan penghapusan ikut
+tersinkron otomatis.
+
+
+7. TIDAK PERLU API SETUP
+----------------------------------------------------------------
+
+Fix ini hanya file TypeScript.
+Tidak ada perubahan database.
+Tidak perlu membuka /api/setup.
+Tidak perlu mengubah DATABASE_URL atau AUTH_SECRET.
+
+
+8. FILE YANG PERLU DIUPLOAD
+----------------------------------------------------------------
+
+WAJIB:
+    src/components/MobileMoreMenu.tsx
+
+DOKUMENTASI:
+    public/dokumentasi-update/2026-09-14-fix-vercel-file-mobilemoremenu-lama.txt
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+9. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+Vercel log:
+
+    Compiled successfully
+    Running TypeScript
+    Collecting page data
+    Build Completed
+
+Tidak lagi muncul:
+
+    Type '"kasir"' is not assignable to type '"owner" | "karyawan"'
+
+================================================================
+SELESAI - file lama dibuat kompatibel dengan sistem dua role.
+================================================================

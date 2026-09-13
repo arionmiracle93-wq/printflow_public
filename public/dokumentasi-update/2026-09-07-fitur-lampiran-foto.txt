@@ -1,0 +1,204 @@
+================================================================
+CATATAN UPDATE - FITUR LAMPIRAN FOTO PER PEKERJAAN
+Tanggal : 07 September 2026
+Status  : SELESAI & SUDAH DIUJI
+Aplikasi: CetakPantau AI - Monitoring Produksi Percetakan
+================================================================
+
+
+1. JAWABAN SINGKAT
+----------------------------------------------------------------
+
+Pertanyaan: "Jika ditambahkan fitur attachment gambar untuk setiap
+job bisa ga ya? Kadang jika hanya melihat dari nama sulit
+mengenali pekerjaan, apalagi jika ada pekerjaan produk yang sama."
+
+Jawaban: BISA, dan sudah dibuatkan sekarang. 👍
+
+Anda benar - nama pekerjaan memang sering mirip. Contoh nyata:
+"Spanduk 3x1" bisa ada 3 orang pelanggan berbeda dalam satu minggu.
+Dengan foto, Anda tinggal lihat gambarnya, tidak perlu menebak.
+
+
+2. YANG SEKARANG ADA DI SETIAP PEKERJAAN
+----------------------------------------------------------------
+
+Card baru bernama "🖼️ Foto Pekerjaan" ada di halaman DETAIL
+pekerjaan (posisinya di bawah Riwayat Produksi).
+
+Kemampuannya:
+
+a) 3 JENIS FOTO
+   - Desain / Referensi  : gambar desain yang disetujui pelanggan
+   - Hasil Jadi          : foto barang sebelum diserahkan
+   - Nota / Bukti        : foto nota atau bukti pembayaran
+
+b) KETERANGAN BEBAS
+   Contoh: "revisi 2, warna merah" atau "bahan flexi China"
+
+c) AMBIL LANGSUNG DARI KAMERA HP
+   Tidak perlu pindah aplikasi atau transfer file.
+
+d) MULTI UPLOAD
+   Bisa pilih beberapa foto sekaligus. Ada indikator progres
+   "Memperkecil & mengunggah foto 1 dari 3...".
+
+e) GALERI + LIGHTBOX
+   Ketuk foto -> tampil besar -> ada tombol "⬇️ Unduh".
+
+f) KOMPRESI OTOMATIS
+   Foto diperkecil di HP sebelum dikirim (sisi terpanjang 1.400 px,
+   JPEG kualitas 72%).
+   Foto kamera HP 4 MB biasanya menjadi sekitar 150-250 KB.
+   Manfaatnya: hemat kuota internet dan hemat kuota database.
+
+g) BADGE DI DAFTAR PEKERJAAN
+   Pekerjaan yang punya foto ditandai "🖼️ 2" di halaman Pekerjaan
+   (tampil di tampilan HP dan di tampilan tabel desktop).
+
+h) IKUT TERHAPUS OTOMATIS
+   Kalau pekerjaan dihapus, fotonya ikut terhapus. Tidak meninggalkan
+   sampah di database.
+
+i) PEMAKAIAN TERPANTAU
+   Halaman Pengaturan menampilkan baris baru:
+   "Penyimpanan foto: N foto · X KB"
+
+
+3. BATASAN YANG DIPASANG
+----------------------------------------------------------------
+
+- Maksimal 8 foto per pekerjaan.
+  (percobaan ke-9 otomatis ditolak dengan pesan jelas)
+- Maksimal 4 MB per foto sebelum dikompres.
+- Hanya berkas gambar yang diterima. Berkas lain ditolak:
+  pesannya "Berkas yang dikirim bukan gambar."
+
+Kalau nanti merasa 8 foto kurang, tinggal bilang - bisa ditambah.
+
+
+4. HASIL PENGUJIAN YANG SUDAH DIJALANKAN
+----------------------------------------------------------------
+
+Upload 2 foto ............................ BERHASIL
+Tampil gambar (status 200, image/png) .... BERHASIL
+Tolak berkas non-gambar .................. BERHASIL
+Badge jumlah foto di daftar .............. BERHASIL
+Tampilan penyimpanan di Pengaturan ....... BERHASIL
+Batas 8 foto (ke-9 ditolak) .............. BERHASIL
+Foto ikut terhapus saat pekerjaan dihapus  BERHASIL
+Semua halaman utama tetap normal ......... BERHASIL
+
+Ditemukan 1 kendala teknis saat dikerjakan:
+komponen foto sempat menarik library database ke browser sehingga
+build gagal (error "Can't resolve 'fs'"). Sudah diperbaiki dengan
+memisahkan konstanta foto ke file khusus: src/lib/photos.ts
+
+
+5. PENTING - SATU LANGKAH WAJIB DI SISI ANDA
+----------------------------------------------------------------
+
+Fitur ini menambah 1 tabel baru di database, yaitu tabel
+"order_photos".
+
+Buka alamat ini SEKALI di browser:
+
+    https://alamat-aplikasi-anda.vercel.app/api/setup
+
+(ganti dengan alamat aplikasi Anda)
+
+Hasil yang benar:
+    {"ok":true,"message":"Database siap dipakai...", ...}
+
+Catatan penting:
+- Aman dijalankan berulang kali.
+- TIDAK menghapus data apa pun.
+- Tanpa langkah ini: halaman detail TETAP TERBUKA (tidak blank),
+  hanya muncul kartu kuning yang mengarahkan ke alamat di atas.
+
+
+6. CARA MENERAPKAN KE VERCEL ANDA
+----------------------------------------------------------------
+
+Upload / commit file-file ini ke GitHub. Vercel akan build
+otomatis (sekitar 2 menit). Tidak perlu sentuh Neon atau
+Environment Variables.
+
+File yang berubah / baru:
+
+    src/db/schema.ts                          (diubah)
+    src/lib/photos.ts                         (BARU)
+    src/lib/queries.ts                        (diubah)
+    src/components/PhotoManager.tsx           (BARU)
+    src/app/pesanan/[id]/page.tsx             (diubah)
+    src/app/pesanan/page.tsx                  (diubah)
+    src/app/pengaturan/page.tsx               (diubah)
+    src/app/api/setup/route.ts                (diubah)
+    src/app/api/orders/[id]/photos/route.ts   (BARU)
+    src/app/api/orders/[id]/photos/[photoId]/route.ts (BARU)
+    src/app/api/photos/[id]/route.ts          (BARU)
+    README.md                                 (diubah)
+    public/panduan-deploy-neon-vercel.md      (diubah)
+
+Setelah build selesai, jalankan /api/setup satu kali. Selesai.
+
+
+7. SOAL KUOTA DATABASE (BIAR TENANG)
+----------------------------------------------------------------
+
+Paket gratis Neon: sekitar 0,5 GB.
+Satu foto terkompresi: sekitar 200 KB.
+
+Perhitungan:
+    0,5 GB  /  200 KB  =  sekitar 2.500 foto
+    2.500 foto / 8 foto per order  =  sekitar 300 order
+
+Untuk percetakan kecil-menengah, itu cukup untuk 1-2 tahun pertama.
+
+Kalau suatu saat hampir penuh, pilihannya:
+  a) Hapus foto lama yang sudah tidak perlu (paling murah).
+  b) Upgrade paket Neon (sekitar US$ 19 / bulan).
+  c) Pindahkan penyimpanan foto ke Vercel Blob.
+     Tinggal bilang, nanti dibantu pindahnya.
+
+
+8. SARAN CARA PAKAI DI LAPANGAN
+----------------------------------------------------------------
+
+Jadikan KEBIASAAN: foto HASIL JADI diambil sebelum status diubah
+ke "✅ Selesai".
+
+Manfaatnya besar. Kalau nanti pelanggan berkata
+"kok warnanya beda?" - Anda punya bukti visual lengkap dengan
+tanggalnya. Tidak ada lagi debat kosong.
+
+Untuk pekerjaan yang didesain sendiri (bukan file pelanggan),
+simpan juga foto DESAIN yang sudah di-approve. Ini melindungi
+Anda kalau pelanggan berubah pikiran setelah cetak.
+
+
+9. DOKUMENTASI TERKAIT
+----------------------------------------------------------------
+
+- Panduan lengkap fitur ini: halaman /panduan, bagian 14.Z
+- Diagnosis sistem        : halaman /status
+- Pemakaian penyimpanan   : halaman /pengaturan
+
+
+10. LANGKAH BERIKUTNYA YANG DISARANKAN (OPSIONAL)
+----------------------------------------------------------------
+
+Kalau fitur foto sudah terbiasa dipakai, fitur berikut yang paling
+bernialai adalah:
+
+    "Kirim link lacak + foto ke pelanggan via WhatsApp"
+
+Artinya pelanggan bisa melihat status pesanannya sendiri beserta
+foto hasilnya, dan Anda tidak perlu menjawab pertanyaan
+"pesanan saya sudah sampai mana?" berulang kali.
+
+Tinggal bilang kalau mau dikerjakan.
+
+================================================================
+SELESAI - terima kasih 🙏
+================================================================

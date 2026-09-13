@@ -1,0 +1,316 @@
+================================================================
+CATATAN UPDATE - PRODUKSI MITRA / LEMPAR ORDER
+Tanggal : 09 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. KONDISI LAPANGAN
+----------------------------------------------------------------
+
+Kadang order pelanggan tidak dapat dikerjakan sendiri karena:
+- Mesin rusak / maintenance
+- Kapasitas produksi penuh
+- Bahan atau ukuran tidak didukung
+- Membutuhkan finishing / teknik khusus
+- Deadline terlalu dekat
+- Pekerjaan harus dilempar ke percetakan pusat atau percetakan lain
+
+Kondisi ini normal dalam bisnis percetakan. Yang berbahaya bukan
+"melempar order", melainkan kehilangan kendali setelah order berada
+di luar: tidak tahu statusnya, lupa follow-up, barang kembali terlalu
+mepet, kualitas tidak dicek, atau margin ternyata habis.
+
+
+2. SARAN PENGELOLAAN TERBAIK
+----------------------------------------------------------------
+
+PRINSIP UTAMA:
+
+    Pelanggan tetap berhubungan dengan Anda.
+    Mitra produksi adalah dapur internal yang tidak perlu diketahui
+    detailnya oleh pelanggan.
+
+Jangan mengubah tanggung jawab deadline kepada vendor. Di mata
+pelanggan, Anda tetap penanggung jawab pekerjaan.
+
+Untuk setiap order yang dilempar keluar, catat 7 hal:
+
+1) DIKERJAKAN OLEH SIAPA
+   Nama percetakan mitra / pusat + nomor WhatsApp.
+
+2) STATUS DI MITRA
+   Belum dikirim, dikirim, proses, siap diambil, diterima/QC, revisi.
+
+3) TARGET BARANG KEMBALI
+   Ini HARUS lebih awal dari deadline pelanggan.
+   Saran minimum buffer:
+   - Pekerjaan sederhana : 8 jam sebelum deadline pelanggan
+   - Pekerjaan kompleks  : 1 hari sebelum deadline
+   - Buku/offset/banyak finishing: 2-3 hari sebelum deadline
+
+4) BIAYA VENDOR
+   Supaya margin nyata terlihat, bukan hanya omzet.
+
+5) SPESIFIKASI TERTULIS
+   Bahan, ukuran, warna, jumlah, finishing, file versi berapa.
+   Jangan hanya disampaikan lewat telepon.
+
+6) BUKTI SERAH / FOTO
+   Lampirkan desain yang dikirim dan foto hasil saat diterima.
+
+7) QC SAAT KEMBALI
+   Jangan langsung serahkan ke pelanggan. Cek jumlah, warna, ukuran,
+   potongan, laminasi, dan cacat. Catat hasilnya.
+
+
+3. FITUR YANG DITAMBAHKAN KE PRINT FLOW
+----------------------------------------------------------------
+
+A. CARD "PRODUKSI MITRA / LEMPAR KELUAR"
+
+Lokasi:
+    Buka detail satu pekerjaan.
+
+Jika order masih internal, muncul card ringkas dengan tombol:
+    "Alihkan ke Mitra"
+
+Setelah diklik, tersedia kolom:
+- Pilih mitra / percetakan pusat
+- Nama mitra yang dicatat
+- Status di mitra
+- Biaya vendor / pusat
+- Target tanggal dan jam barang kembali
+- Catatan spesifikasi untuk mitra
+- Hasil QC saat barang diterima
+- Penanggung jawab update
+
+B. DAFTAR STATUS PRODUKSI MITRA
+
+1. Belum Dikirim
+2. Sudah Dikirim ke Mitra
+3. Sedang Diproduksi Mitra
+4. Siap Diambil dari Mitra
+5. Sudah Diterima & Perlu QC
+6. Dikembalikan / Revisi Mitra
+
+Status ini TERPISAH dari status order pelanggan.
+Contoh:
+- Status internal pelanggan: "Proses Cetak"
+- Status mitra: "Sedang Diproduksi Mitra"
+
+Dengan begitu alur pelanggan tidak tercampur dengan alur vendor.
+
+C. MARGIN KOTOR OTOMATIS
+
+Card menampilkan:
+- Harga ke pelanggan
+- Biaya mitra
+- Margin kotor (rupiah dan persen)
+
+Rumus:
+    Margin kotor = Harga pelanggan - Biaya mitra
+
+Catatan: ini belum mengurangi ongkir, tenaga, dan bahan internal.
+Namun sudah cukup untuk mencegah menerima order dengan margin negatif.
+
+D. PERINGATAN BUFFER DEADLINE
+
+Jika target barang kembali sama atau melewati deadline pelanggan,
+aplikasi memberi peringatan merah/kuning.
+
+Halaman Produksi Mitra juga menghitung buffer antara:
+    target barang kembali dari mitra
+                DAN
+    deadline serah kepada pelanggan
+
+Buffer kurang dari 8 jam diberi peringatan.
+
+E. HALAMAN BARU "/mitra"
+
+Menu "Mitra" ditambahkan pada navigasi desktop.
+Halaman ini menampilkan:
+- Jumlah pekerjaan yang masih di luar
+- Jumlah yang lewat target kembali
+- Total biaya mitra
+- Total margin kotor tercatat
+- Semua pekerjaan mitra diurutkan dari target kembali terdekat
+- Status mitra
+- Sisa waktu / keterlambatan dari target vendor
+- Peringatan buffer deadline pelanggan
+- Link update ke detail pekerjaan
+
+F. BADGE DI DASHBOARD & DAFTAR PEKERJAAN
+
+Pekerjaan yang dilempar keluar diberi badge:
+    "Mitra: Nama Percetakan"
+
+Owner langsung tahu pekerjaan itu tidak berada di mesin sendiri.
+
+G. DAFTAR MITRA TERSIMPAN
+
+Saat mengatur produksi luar, owner dapat menambahkan mitra baru:
+- Nama
+- Jenis: percetakan mitra / pusat / vendor spesialis
+- Nomor WhatsApp
+- Alamat
+
+Mitra berikutnya tinggal dipilih, tidak perlu mengetik ulang.
+Ada link langsung untuk menghubungi mitra via WhatsApp.
+
+H. RIWAYAT OTOMATIS
+
+Setiap perubahan status mitra ditulis ke Riwayat Produksi:
+    "Mitra — Sedang Diproduksi Mitra"
+
+Catatan mencakup nama mitra dan statusnya. Ini penting bila perlu
+menelusuri siapa terlambat dan kapan follow-up dilakukan.
+
+
+4. PRIVASI PELANGGAN
+----------------------------------------------------------------
+
+Informasi berikut TIDAK muncul di halaman /lacak/TOKEN pelanggan:
+- Nama percetakan mitra
+- Nomor WhatsApp mitra
+- Biaya vendor
+- Margin
+- Status internal mitra
+- Catatan khusus vendor
+
+Pelanggan hanya melihat status order yang Anda berikan.
+
+Pengujian:
+- Nama vendor di halaman lacak: 0 kemunculan
+- Nilai biaya vendor di halaman lacak: 0 kemunculan
+
+Alasannya: hubungan vendor adalah rahasia operasional bisnis Anda.
+
+
+5. SOP YANG DISARANKAN
+----------------------------------------------------------------
+
+SAAT MEMUTUSKAN LEMPAR ORDER:
+1. Buka detail pekerjaan.
+2. Klik "Alihkan ke Mitra".
+3. Pilih / tambah mitra.
+4. Isi biaya dan target kembali (lebih cepat dari deadline pelanggan).
+5. Isi spesifikasi tertulis.
+6. Upload desain final sebagai Foto Desain/Referensi.
+7. Ubah status mitra menjadi "Sudah Dikirim".
+
+SAAT VENDOR MENGERJAKAN:
+1. Cek halaman /mitra setiap pagi.
+2. Follow-up pekerjaan yang tersisa < 24 jam.
+3. Ubah status menjadi "Proses" / "Siap Diambil" sesuai kabar.
+4. Catat kendala vendor pada kolom catatan.
+
+SAAT BARANG KEMBALI:
+1. Ubah status menjadi "Sudah Diterima & Perlu QC".
+2. Cek fisik sebelum memberi kabar ke pelanggan.
+3. Isi Hasil QC.
+4. Foto hasil jadi dan upload.
+5. Jika lolos: lanjut status order pelanggan ke QC / Siap Diambil.
+6. Jika gagal: status mitra "Revisi", lalu kabari pelanggan lebih awal.
+
+
+6. ATURAN VENDOR YANG SEHAT
+----------------------------------------------------------------
+
+Buat standar minimum untuk memilih mitra:
+
+- Harga disepakati sebelum pekerjaan dikirim.
+- Deadline vendor tertulis, bukan hanya "secepatnya".
+- File final diberi nama versi yang jelas.
+- Mitra mengirim foto proof sebelum produksi massal jika order besar.
+- Aturan reject/reprint disepakati.
+- Jangan memilih mitra hanya karena paling murah; catat ketepatan waktu
+  dan kualitasnya.
+- Selalu punya minimal 2 mitra cadangan untuk kategori penting.
+
+Setelah data terkumpul 1-2 bulan, pengembangan berikut yang bernilai:
+"Skor Kinerja Mitra" berdasarkan tepat waktu, reject, dan jumlah order.
+
+
+7. DATABASE BARU
+----------------------------------------------------------------
+
+Tabel production_partners:
+- daftar vendor, pusat, dan spesialis
+
+Tabel outsource_jobs:
+- satu record produksi luar per pekerjaan
+- partner, status, biaya, target kembali, tanggal kirim/terima,
+  QC, catatan, waktu update
+
+Jika pekerjaan dihapus, data produksi mitra ikut terhapus otomatis.
+Jika mitra dihapus, pekerjaan tetap menyimpan nama historis mitra.
+
+
+8. LANGKAH WAJIB SETELAH DEPLOY
+----------------------------------------------------------------
+
+Karena ada 2 tabel baru, buka sekali:
+
+    https://alamat-aplikasi-anda.vercel.app/api/setup
+
+Aman dijalankan berulang dan tidak menghapus data.
+
+Setelah itu:
+1. Buka satu pekerjaan.
+2. Klik "Alihkan ke Mitra".
+3. Tambah mitra pertama.
+4. Simpan.
+5. Buka menu /mitra untuk melihat monitoring pusat.
+
+
+9. FILE YANG PERLU DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+
+BARU:
+    src/lib/outsource.ts
+    src/lib/outsource-queries.ts
+    src/components/OutsourceManager.tsx
+    src/app/api/partners/route.ts
+    src/app/api/orders/[id]/outsource/route.ts
+    src/app/mitra/page.tsx
+    public/dokumentasi-update/2026-09-09-produksi-mitra-lempar-order.txt
+
+DIUBAH:
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/lib/dbcheck.ts
+    src/lib/queries.ts
+    src/app/pesanan/[id]/page.tsx
+    src/app/pesanan/page.tsx
+    src/app/page.tsx
+    src/components/ui.tsx
+    src/components/MainNav.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Paling aman: upload seluruh project versi terbaru.
+
+
+10. BIAYA
+----------------------------------------------------------------
+
+Fitur ini tidak membutuhkan layanan pihak ketiga dan tidak menambah
+biaya bulanan. Hanya menggunakan database Neon yang sudah ada.
+Data teks sangat kecil dibanding foto.
+
+
+11. BATASAN VERSI INI
+----------------------------------------------------------------
+
+- Satu pekerjaan memiliki satu pengaturan mitra aktif.
+- Belum ada skor otomatis performa vendor.
+- Belum ada hutang/vendor payment tracking terpisah.
+- Belum ada notifikasi follow-up otomatis ke vendor.
+
+Versi ini sudah mencakup kebutuhan paling penting: kendali status,
+deadline kembali, biaya, margin, QC, dan riwayat.
+
+================================================================
+SELESAI - order yang dilempar keluar tetap berada dalam kendali Anda.
+================================================================

@@ -1,0 +1,253 @@
+================================================================
+CATATAN UPDATE - POPUP FOTO DI CARD + LACAK WHATSAPP
+Tanggal : 08 September 2026
+Status  : SELESAI & SUDAH DIUJI
+Aplikasi: CetakPantau AI - Monitoring Produksi Percetakan
+================================================================
+
+
+BAGIAN 1 - POPUP FOTO DARI CARD PEKERJAAN
+================================================================
+
+Permintaan: "kira-kira bisa ga jika foto attachment di akses dari
+job card di dashboard, mungkin semacam tombol klik yang menampilkan
+popup gambar attachment tersebut."
+
+Jawaban: BISA, sudah jadi. ✅
+
+CARA PAKAI
+----------------------------------------------------------------
+Di card pekerjaan (di Dashboard dan di Daftar Pekerjaan) sekarang
+ada tombol kecil bertuliskan:
+
+    🖼️ 2      (angka = jumlah foto)
+
+Klik tombol itu -> muncul POPUP berisi galeri foto, TANPA perlu
+membuka halaman pekerjaan.
+
+Isi popup:
+- Daftar foto lengkap dengan jenisnya
+  (Desain/Referensi, Hasil Jadi, Nota/Bukti)
+- Keterangan tiap foto
+- Klik satu foto -> membesar, ada tombol "⬇️ Unduh"
+- Tombol "✕ Tutup" (atau klik area gelap di luar)
+- Link "Buka halaman pekerjaan ini ->" kalau mau ke detail
+
+LOKASI TOMBOLNYA
+----------------------------------------------------------------
+1. Dashboard        : di sebelah kode pekerjaan (PJ-2026-0001)
+2. Daftar Pekerjaan (HP)      : di sebelah tanggal deadline
+3. Daftar Pekerjaan (desktop) : di sebelah nama pelanggan
+
+PELANGGAN KERAS
+----------------------------------------------------------------
+Tombol ini TIDAK muncul kalau pekerjaan belum punya foto.
+Jadi daftar tetap bersih.
+
+SIFAT TEKNIS YANG BAIK
+----------------------------------------------------------------
+Foto BARU diambil dari server saat tombol pertama kali diklik,
+bukan saat halaman dibuka. Manfaatnya:
+- Dashboard tetap cepat (tidak memuat ratusan gambar sekaligus)
+- Hemat kuota internet, terutama di HP
+
+
+BAGIAN 2 - KIRIM LINK LACAK + FOTO VIA WHATSAPP
+================================================================
+
+Permintaan: fitur berikutnya "Kirim link lacak + foto ke pelanggan
+via WhatsApp", dikerjakan bila memungkinkan dalam 1 sesi.
+
+Status: DIKERJAKAN & SELESAI. ✅ (muat dalam 1 sesi)
+
+CARA PAKAI (3 KLIK)
+----------------------------------------------------------------
+1. Buka pekerjaan.
+2. Cari card "💬 Kabari Pelanggan via WhatsApp"
+   (posisinya di antara card Analisa AI dan Foto Pekerjaan).
+3. Klik "📲 Kirim via WhatsApp".
+
+Yang terjadi setelah klik:
+- Aplikasi membuat TAUTAN LACAK rahasia untuk pekerjaan itu
+  (sekali saja, lalu tautannya selalu sama).
+- Pesan WhatsApp sudah terisi otomatis.
+- Di HP Android: muncul menu bagikan, tinggal pilih WhatsApp
+  lalu pilih kontak pelanggan.
+- Di laptop: langsung membuka WhatsApp Web.
+
+Contoh pesan yang terkirim:
+
+    Halo Toko Berkah Jaya 👋
+
+    Berikut kabar terbaru pesanan Anda di percetakan kami:
+
+    • No. pesanan : PJ-2026-0002
+    • Pekerjaan   : Kartu nama 5 box
+    • Status      : 📦 Siap Diambil / Dikirim
+    • Perkiraan selesai: 2026-09-06 pukul 16:00
+
+    Anda bisa memantau progres & foto pesanan lewat tautan ini 👇
+    https://app-anda.vercel.app/lacak/a7b2k9m4p8q1r3s5t6u2w4x
+
+    Terima kasih sudah memesan 🙏
+
+Kalau statusnya sudah "Selesai", pesan otomatis berubah menjadi
+versi "pesanan Anda sudah SELESAI dan siap diambil ✅".
+
+ADA JUGA TOMBOL "📋 Salin Teks Pesan"
+----------------------------------------------------------------
+Untuk Anda yang lebih suka menyalin lalu menempel manual ke chat
+pelanggan (atau mau mengedit dulu).
+
+HALAMAN LACAK PELANGGAN (/lacak/TOKEN)
+----------------------------------------------------------------
+Halaman ini BOLEH dibuka siapa saja yang punya tautan, TANPA login.
+Cocok dikirim ke pelanggan.
+
+Isi halaman:
+- Status pesanan + emoji besar (mis. "📦 Siap Diambil / Dikirim")
+- Bar PROGRES pengerjaan (persen)
+- Rangkaian tahap: Antrian, Desain, Cetak, Finishing, QC, Siap, Selesai
+- Jenis pesanan & jumlah
+- Perkiraan tanggal selesai
+- Catatan pekerjaan (kalau diisi)
+- FOTO pesanan - bisa diketuk untuk memperbesar
+- Riwayat pengerjaan lengkap dengan tanggal & jam
+- Kalau sudah selesai: pesan ucapan selamat 🎉
+
+KEAMANAN & PRIVASI (SUDAH DIPASTIKAN)
+----------------------------------------------------------------
+a) Tautan memakai TOKEN ACAK 22 karakter, bukan nomor urut.
+   Jadi tidak bisa ditebak orang lain.
+   Contoh: /lacak/toposy2n6pnp3r2rdxxyue
+
+b) Foto berjenis NOTA / BUKTI TIDAK IKUT DIKIRIM ke pelanggan.
+   Yang tampil hanya foto "Hasil Jadi" dan "Desain/Referensi".
+   -> Sudah diuji: foto nota TIDAK muncul di halaman lacak.
+
+c) Data keuangan TIDAK ditampilkan di halaman lacak
+   (harga, DP, sisa tagihan tidak dikirim).
+
+d) Token salah / tautan dipotong -> halaman tetap terbuka dengan
+   pesan "🔒 Tautan tidak dikenali", TIDAK membocorkan data apa pun.
+
+e) Halaman lacak tidak terindeks Google (noindex).
+
+f) Satu tautan = satu pekerjaan saja.
+
+g) Tautan tidak diubah-ubah. Token dibuat sekali lalu dipakai
+   terus, jadi pesan lama tetap berfungsi.
+
+
+BAGIAN 3 - HASIL PENGUJIAN
+================================================================
+
+Kolom share_token ditambahkan ke tabel orders ..... BERHASIL
+Membuat token lacak ............................... BERHASIL
+Token sifatnya idempoten (panggil ulang = sama) ... BERHASIL
+Halaman /lacak/TOKEN terbuka ...................... BERHASIL (200)
+Progres, tahapan, riwayat tampil .................. BERHASIL
+Foto hasil jadi tampil ............................ BERHASIL
+Foto nota TIDAK tampil (privasi terjaga) .......... BERHASIL
+Token salah -> halaman aman, tanpa data ........... BERHASIL
+Tombol 🖼️ muncul di dashboard ..................... BERHASIL
+Tombol 🖼️ muncul di daftar pekerjaan (HP+desktop) . BERHASIL
+Semua halaman utama tetap normal .................. BERHASIL
+
+Ditemukan & diperbaiki selama pengerjaan:
+- Sisa baris ganda pada src/components/ui.tsx yang membuat
+  type error. Sudah dibersihkan.
+
+
+BAGIAN 4 - LANGKAH WAJIB DI SISI ANDA (WAJIB, 1 MENIT)
+================================================================
+
+Fitur ini menambah 1 KOLOM BARU (share_token) di tabel orders.
+
+Buka alamat ini SEKALI di browser:
+
+    https://alamat-aplikasi-anda.vercel.app/api/setup
+
+Hasil yang benar:
+    {"ok":true,"message":"Database siap dipakai...", ...}
+
+Catatan:
+- Aman dijalankan berulang.
+- TIDAK menghapus data.
+- TANPA langkah ini: halaman lacak dan tombol WhatsApp akan
+  menampilkan layar peringatan (bukan layar hitam), dan
+  pengaturannya dijelaskan di sana.
+
+
+BAGIAN 5 - FILE YANG HARUS DIUPLOAD KE GITHUB
+================================================================
+
+Diubah:
+    src/db/schema.ts
+    src/lib/queries.ts
+    src/components/ui.tsx
+    src/app/page.tsx
+    src/app/pesanan/page.tsx
+    src/app/pesanan/[id]/page.tsx
+    src/app/api/setup/route.ts
+
+BARU:
+    src/lib/photos.ts                              (sudah ada sebelumnya)
+    src/components/PhotoQuickPeek.tsx              (BARU)
+    src/components/ShareWhatsApp.tsx               (BARU)
+    src/app/lacak/[token]/page.tsx                 (BARU)
+    src/app/api/orders/[id]/share/route.ts         (BARU)
+    public/dokumentasi-update/2026-09-08-popup-foto-dan-lacak-whatsapp.txt  (BARU)
+
+Setelah build selesai, jalankan /api/setup satu kali. Selesai.
+
+
+BAGIAN 6 - SARAN PEMAKAIAN DI LAPANGAN
+================================================================
+
+Waktu paling tepat menekan tombol "📲 Kirim via WhatsApp":
+
+1) Saat pekerjaan baru masuk
+   -> pelanggan langsung bisa memantau sendiri, mengurangi telepon/WA
+      menanyakan "sudah jadi belum?"
+
+2) Saat status berubah ke "📦 Siap Diambil"   <-- PALING BERGUNA
+   -> pelanggan langsung tahu + lihat foto hasilnya
+   -> sering langsung diikuti pelunasan pembayaran
+
+3) Saat ada kendala (status "⏸️ Ditunda")
+   -> transparan, pelanggan lebih pengertian
+
+TIPS: jadikan langkah ke-2 (kirim saat siap) sebagai kebiasaan
+wajib sebelum menutup pekerjaan. Ini satu tindakan kecil yang
+paling terasa manfaatnya dalam memangkas pertanyaan berulang.
+
+
+BAGIAN 7 - BIAYA & KUOTA
+================================================================
+Fitur ini TIDAK menambah biaya apa pun.
+- Tidak memakai API WhatsApp berbayar (hanya membuka link wa.me
+  yang gratis).
+- Halaman lacak adalah halaman biasa di Vercel (gratis).
+- Tidak ada data baru yang berat, hanya 1 kolom token.
+
+
+BAGIAN 8 - YANG BISA DITAMBAHKAN NANTI (BELUM DIBUAT)
+================================================================
+- Notifikasi otomatis: sistem yang mengirim WA tanpa Anda klik
+  (misal otomatis saat pekerjaan masuk zona berisiko telat).
+  Perlu layanan pihak ketiga (Fonnte/WABLAS/WhatsApp Cloud API)
+  dan sedikit biaya. Bisa dikerjakan kalau diminta.
+- QR code untuk halaman lacak, bisa ditempel di nota/packaging.
+- Batas waktu tautan (mis. kadaluarsa setelah 90 hari).
+
+
+BAGIAN 9 - DOKUMEN TERKAIT
+================================================================
+- Catatan update sebelumnya : /catatan-perubahan
+- Panduan lengkap           : /panduan
+- Status sistem             : /status
+
+================================================================
+SELESAI - terima kasih 🙏
+================================================================

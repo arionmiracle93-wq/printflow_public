@@ -1,0 +1,44 @@
+# ===== JANGAN upload file berikut ke GitHub =====
+
+# Rahasia / password (isi manual di Vercel)
+.env
+.env.local
+.env*.local
+
+# Dependensi (dibuat ulang otomatis oleh "npm install")
+node_modules/
+.pnp
+.pnp.js
+
+# Hasil build Next.js (dibuat ulang otomatis oleh Vercel)
+.next/
+out/
+build/
+dist/
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# Folder & berkas Vercel
+.vercel/
+
+# Log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor & sistem
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Berhasil tes / coverage
+coverage/
+.nyc_output/
+
+# Drizzle (jika suatu saat memakai folder migrasi otomatis)
+drizzle/meta/

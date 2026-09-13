@@ -1,0 +1,283 @@
+================================================================
+DIAGNOSIS PWA - ICON FAILED TO LOAD / STATUS 302
+Tanggal : 16 September 2026
+Status  : PENYEBAB DIKONFIRMASI, DIAGNOSIS KODE DIPERBAIKI
+Aplikasi: Print Flow
+================================================================
+
+
+1. HASIL PEMBACAAN SCREENSHOT
+----------------------------------------------------------------
+
+Kondisi positif:
+- App Manifest sudah terdeteksi di Chrome DevTools.
+- URL manifest: /api/pwa/manifest.
+- Nama, short name, description, id, start_url, theme, orientation,
+  display, dan shortcuts terbaca.
+- Service worker v7 aktif dan running.
+- URL icon 192 dan 512 dapat dibuka manual dan gambarnya tampil.
+
+Peringatan:
+- Icon .../api/pwa/icon/192 failed to load.
+- Icon .../api/pwa/icon/512 failed to load.
+- No square icons.
+
+Hasil /api/pwa/check:
+- manifest       status 302
+- service worker status 302
+- dynamic icons  status 302
+- static icons   status 302
+- content-type   text/plain
+
+STATUS 302 adalah petunjuk utama.
+
+
+2. ARTI STATUS 302
+----------------------------------------------------------------
+
+302 bukan "file tidak ada".
+302 berarti request dialihkan ke URL lain.
+
+Dalam kondisi ini request anonim kemungkinan dialihkan oleh Vercel
+Deployment Protection / Vercel Authentication.
+
+Kenapa icon bisa dibuka manual?
+- Browser Anda sudah login ke akun Vercel.
+- Browser mempunyai cookie otorisasi Vercel.
+- Saat membuka URL manual, Vercel mengenali Anda dan menampilkan icon.
+
+Kenapa Chrome Manifest/PWABuilder gagal?
+- Validator/crawler meminta icon tanpa cookie Vercel.
+- Vercel mengalihkannya ke halaman login/authentication.
+- Response bukan PNG, tetapi redirect/text.
+- Validator menyimpulkan "icon failed to load".
+
+Mengapa /api/pwa/check juga 302?
+- Endpoint check sengaja melakukan request anonim server-to-server.
+- Ini meniru PWABuilder/Android OS yang tidak mempunyai cookie Vercel.
+- Jadi hasil false justru mengungkap protection yang sebenarnya.
+
+
+3. URL YANG DIPAKAI ADALAH DEPLOYMENT/PREVIEW URL
+----------------------------------------------------------------
+
+Screenshot memakai URL dengan akhiran acak seperti:
+
+    printflow-plt5evgll-arionmiracle93-1104.vercel.app
+
+Ini tampak seperti generated deployment URL, bukan Production Domain
+utama yang stabil.
+
+Menurut dokumentasi resmi Vercel:
+- Standard Protection melindungi Preview dan Deployment URLs.
+- Production Domain terkini pada Hobby biasanya tetap publik.
+- Protection bekerja sebelum routing/proxy aplikasi.
+
+Artinya kode Print Flow tidak dapat membypass protection tersebut.
+Pengaturannya harus dilakukan di dashboard Vercel.
+
+Referensi resmi:
+https://vercel.com/docs/deployment-protection
+https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection
+
+
+4. SOLUSI YANG HARUS DILAKUKAN DI VERCEL
+----------------------------------------------------------------
+
+A. TEMUKAN PRODUCTION DOMAIN
+
+1. Buka Vercel Dashboard.
+2. Pilih project Print Flow.
+3. Buka Settings -> Domains.
+4. Cari domain yang diberi label Production / Primary.
+5. Copy domain tersebut.
+
+Biasanya bentuknya lebih stabil, contoh:
+
+    https://print-flow.vercel.app
+
+atau custom domain milik Anda.
+
+Jangan gunakan deployment URL dengan hash/akhiran acak untuk
+PWABuilder.
+
+B. CEK DEPLOYMENT PROTECTION
+
+1. Vercel -> Project -> Settings.
+2. Buka Deployment Protection.
+3. Pastikan Production Domain tidak dilindungi Vercel Authentication
+   atau Password Protection.
+4. Preview deployment boleh tetap dilindungi.
+5. Simpan perubahan bila ada.
+
+CATATAN KEAMANAN:
+Print Flow sudah mempunyai login Owner/Karyawan sendiri. Membuat
+Production Domain publik pada level Vercel tidak berarti Dashboard
+terbuka bebas; proxy Print Flow tetap mengarahkan pengguna ke /login.
+
+Yang perlu publik:
+- Halaman login
+- Manifest
+- Icon
+- Service worker
+- Halaman lacak pelanggan
+
+Halaman internal tetap dilindungi login Print Flow.
+
+
+5. CARA TES PRODUCTION DOMAIN
+----------------------------------------------------------------
+
+Ganti DOMAIN dengan Production Domain:
+
+    https://DOMAIN/api/pwa/manifest
+    https://DOMAIN/api/pwa/icon/192.png
+    https://DOMAIN/api/pwa/icon/512.png
+    https://DOMAIN/sw.js
+    https://DOMAIN/api/pwa/check
+
+Hasil benar:
+- Tidak meminta login Vercel.
+- Manifest status 200.
+- Icon status 200 dan tampil.
+- sw.js status 200.
+- /api/pwa/check menampilkan:
+
+      "ok": true
+      "code": "ready"
+
+Jika masih:
+
+      "code": "vercel_deployment_protected"
+
+berarti domain tersebut masih dilindungi Vercel.
+
+
+6. PERBAIKAN DI KODE
+----------------------------------------------------------------
+
+A. DIAGNOSIS 302
+
+/api/pwa/check sekarang mendeteksi:
+- 302 / 307 / 308 redirect
+- 401 / 403 protection
+- Location header yang mengarah Vercel/SSO/auth/login
+
+Output baru:
+
+    code: vercel_deployment_protected
+
+Disertai:
+- currentUrl
+- vercelEnvironment
+- likelyDeploymentUrl
+- recommendedProductionUrl (jika tersedia dari Vercel env)
+- langkah perbaikan khusus
+
+B. ICON PATH RELATIF
+
+Manifest sebelumnya menghasilkan icon URL absolut berdasarkan domain
+request, contoh deployment URL acak.
+
+Sekarang memakai path relatif:
+
+    /api/pwa/icon/192.png
+    /api/pwa/icon/512.png
+
+Manfaat:
+- Selalu mengikuti origin halaman saat ini.
+- Tidak mengunci manifest ke preview URL.
+- Lebih mudah dikenali validator karena berakhiran .png.
+- Menghindari domain deployment lama tersimpan dalam manifest cache.
+
+C. CORS MANIFEST
+
+Manifest memberi header:
+    Access-Control-Allow-Origin: *
+
+D. SERVICE WORKER
+
+Cache version:
+    print-flow-shell-v8
+
+Shell icon memakai path .png:
+    /api/pwa/icon/192.png
+    /api/pwa/icon/512.png
+
+Icon notifikasi juga memakai path tersebut.
+
+
+7. PERINGATAN SCREENSHOTS
+----------------------------------------------------------------
+
+Chrome menampilkan:
+- Richer PWA Install UI won't be available on desktop.
+- Richer PWA Install UI won't be available on mobile.
+
+Ini bukan error instalasi dasar.
+Ini hanya berarti manifest belum mempunyai screenshot showcase untuk
+UI install yang lebih kaya.
+
+PWA tetap dapat di-install bila:
+- Manifest terdeteksi
+- Service worker aktif
+- Icon valid
+- HTTPS
+- start_url/scope/display benar
+
+Screenshots dapat ditambahkan kemudian dan tidak menyebabkan icon
+failed to load.
+
+
+8. LANGKAH PWABUILDER
+----------------------------------------------------------------
+
+1. Pastikan /api/pwa/check pada Production Domain = ok:true.
+2. Buka PWABuilder.
+3. Hapus URL deployment lama.
+4. Masukkan Production Domain utama saja.
+5. Jangan masukkan /login atau /api/pwa/manifest.
+6. Jalankan Scan/Start ulang.
+7. Tunggu beberapa menit jika hasil lama masih di-cache.
+
+PWABuilder tidak dapat mengakses domain dengan Vercel Authentication,
+karena tidak dapat login sebagai anggota akun Vercel Anda.
+
+
+9. FILE YANG BERUBAH
+----------------------------------------------------------------
+
+DIUBAH:
+    src/app/api/pwa/check/route.ts
+    src/app/api/pwa/manifest/route.ts
+    src/app/layout.tsx
+    public/sw.js
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+BARU:
+    public/dokumentasi-update/2026-09-16-diagnosis-icon-gagal-status-302-vercel-protection.txt
+
+Tidak ada perubahan database.
+Tidak perlu /api/setup.
+
+
+10. KESIMPULAN
+----------------------------------------------------------------
+
+Icon tidak rusak; buktinya URL icon dapat dibuka dan gambar tampil.
+Masalahnya adalah domain deployment diproteksi, sehingga request tanpa
+cookie Vercel menerima redirect 302.
+
+Solusi utama:
+    Gunakan Production Domain publik untuk DevTools/PWABuilder.
+
+Bukan:
+- Mengubah DATABASE_URL
+- Mengulang /api/setup
+- Menghapus user
+- Mengganti Neon
+
+================================================================
+SELESAI - diagnosis kini membedakan aset rusak dan Vercel Protection.
+================================================================

@@ -1,0 +1,307 @@
+================================================================
+PANDUAN FILE HASIL PWABUILDER & DIGITAL ASSET LINKS
+Tanggal : 17 September 2026
+Aplikasi: Print Flow
+================================================================
+
+
+1. FILE YANG ANDA TERIMA SUDAH LENGKAP
+----------------------------------------------------------------
+
+Folder hasil PWABuilder berisi:
+
+1. assetlinks.json
+2. Print Flow.aab
+3. Print Flow.apk
+4. Readme.html
+5. signing.keystore
+6. signing-info.txt
+
+Tidak perlu mencari file lain untuk menghilangkan address bar APK
+direct-install. Package Name dan SHA-256 sudah tersedia dalam
+assetlinks.json / signing-info.txt.
+
+
+2. FUNGSI SETIAP FILE
+----------------------------------------------------------------
+
+assetlinks.json
+- Menghubungkan domain Print Flow dengan APK Android.
+- Berisi Package Name dan SHA-256 certificate fingerprint.
+- Data inilah yang perlu dimasukkan ke Environment Variables Vercel.
+
+Print Flow.apk
+- File instalasi langsung ke HP Android.
+- Cocok untuk pemakaian internal percetakan.
+- Bisa dikirim lewat WhatsApp/Google Drive lalu di-install.
+
+Print Flow.aab
+- File untuk upload ke Google Play Console.
+- Tidak dapat di-install langsung seperti APK.
+- Google Play dapat menandatangani ulang AAB menggunakan Play App
+  Signing; fingerprint-nya bisa berbeda dari APK direct-install.
+
+Readme.html
+- Petunjuk dari PWABuilder.
+- Bisa dibuka dengan Chrome/Edge.
+
+signing.keystore
+- Kunci rahasia untuk menandatangani aplikasi Android.
+- Wajib disimpan aman.
+- Jangan upload ke GitHub.
+- Jangan kirim ke grup WhatsApp.
+- Jangan hilang: tanpa keystore yang sama, update APK direct-install
+  bisa dianggap sebagai aplikasi berbeda/tidak dapat dipasang di atas
+  versi lama.
+
+signing-info.txt
+- Biasanya berisi alias, password/credential signing, package info,
+  dan/atau fingerprint sertifikat.
+- Sangat rahasia.
+- Simpan bersama signing.keystore.
+- Jangan upload ke GitHub atau folder public website.
+
+
+3. CARA MEMBUKA ASSETLINKS.JSON
+----------------------------------------------------------------
+
+1. Klik kanan assetlinks.json.
+2. Pilih Open with / Buka dengan.
+3. Pilih Notepad.
+
+Isinya kira-kira:
+
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.contoh.printflow",
+      "sha256_cert_fingerprints": [
+        "AA:BB:CC:DD:EE:FF:..."
+      ]
+    }
+  }
+]
+
+Yang harus disalin:
+
+A. Nilai package_name
+   Contoh:
+       com.contoh.printflow
+
+B. Nilai pertama dalam sha256_cert_fingerprints
+   Contoh:
+       AA:BB:CC:DD:EE:FF:...
+
+Jangan salin tanda kutip atau koma di akhir.
+
+
+4. MASUKKAN KE VERCEL
+----------------------------------------------------------------
+
+Buka:
+Vercel -> Project Print Flow -> Settings -> Environment Variables
+
+Tambah variable pertama:
+
+Name:
+    ANDROID_PACKAGE_NAME
+
+Value:
+    isi package_name dari assetlinks.json
+
+Tambah variable kedua:
+
+Name:
+    ANDROID_SHA256_CERT_FINGERPRINT
+
+Value:
+    isi SHA-256 dari assetlinks.json
+
+Pilih environment:
+- Production: wajib
+- Preview: boleh dicentang
+- Development: boleh dicentang
+
+Klik Save.
+
+Setelah Save, WAJIB:
+1. Buka Deployments.
+2. Cari deployment terbaru.
+3. Klik menu tiga titik.
+4. Klik Redeploy.
+5. Tunggu sampai Ready.
+
+Environment Variables tidak berlaku pada deployment lama sebelum
+Redeploy.
+
+
+5. VERIFIKASI ASSETLINKS DI DOMAIN
+----------------------------------------------------------------
+
+Setelah Redeploy, buka:
+
+https://printflow-orcin.vercel.app/.well-known/assetlinks.json
+
+Sebelum konfigurasi hasilnya:
+
+    []
+
+Setelah konfigurasi harus berisi package dan fingerprint Anda.
+
+Kemudian buka:
+
+https://printflow-orcin.vercel.app/api/apk/check
+
+Bagian yang dicari:
+
+    "addressBar": {
+      "ready": true
+    }
+
+Periksa juga:
+- packageName sama dengan assetlinks.json.
+- fingerprints sama dengan assetlinks.json.
+- assetlinks status 200.
+
+
+6. UNINSTALL DAN INSTALL ULANG APK
+----------------------------------------------------------------
+
+Setelah addressBar.ready = true:
+
+1. Uninstall Print Flow APK lama dari HP.
+2. Tunggu 2-5 menit agar Android/Chrome membaca assetlinks terbaru.
+3. Install ulang file Print Flow.apk yang ada di folder hasil
+   PWABuilder tersebut.
+4. Buka dari icon launcher.
+
+Jika fingerprint/package cocok, bagian atas Chrome Custom Tab:
+- tombol X
+- nama domain
+- tombol Share
+- menu Chrome
+
+seharusnya hilang.
+
+Jika belum hilang:
+- Pastikan APK yang di-install adalah file dari folder yang sama dengan
+  assetlinks.json.
+- Jangan rebuild APK dengan keystore berbeda.
+- Update Chrome Android.
+- Pastikan domain dalam package PWABuilder adalah
+  printflow-orcin.vercel.app.
+- Pastikan assetlinks dapat dibuka Incognito tanpa redirect/login Vercel.
+
+
+7. APK DIRECT INSTALL VS GOOGLE PLAY
+----------------------------------------------------------------
+
+A. APK DIRECT INSTALL
+
+Gunakan fingerprint dari assetlinks.json hasil PWABuilder saat ini.
+Ini cocok dengan Print Flow.apk yang berada dalam folder sama.
+
+B. AAB DI GOOGLE PLAY
+
+Jika Print Flow.aab di-upload ke Google Play dan Play App Signing
+aktif, Google menandatangani aplikasi dengan sertifikat Google Play.
+Fingerprint Play bisa berbeda.
+
+Setelah aplikasi masuk Play Console:
+1. Buka Play Console.
+2. App Integrity / Setup / App Signing.
+3. Cari App signing key certificate.
+4. Copy SHA-256 certificate fingerprint.
+5. Tambahkan fingerprint Play ke Vercel.
+
+Gunakan variable:
+
+    ANDROID_SHA256_CERT_FINGERPRINTS
+
+Isi dua fingerprint dipisahkan koma:
+
+    FINGERPRINT_APK_DIRECT,FINGERPRINT_GOOGLE_PLAY
+
+Setelah itu Redeploy.
+
+Endpoint assetlinks akan memuat keduanya, sehingga APK direct dan versi
+Google Play sama-sama terverifikasi.
+
+
+8. SIMPAN KEYSTORE DENGAN AMAN
+----------------------------------------------------------------
+
+Simpan file berikut bersama-sama:
+
+- signing.keystore
+- signing-info.txt
+- assetlinks.json
+- Print Flow.aab
+- Print Flow.apk
+
+Saran lokasi:
+1. Satu copy di flashdisk/SSD milik Owner.
+2. Satu copy di Google Drive/OneDrive folder privat.
+3. Folder ZIP diberi password.
+4. Catat tanggal dan versi aplikasi.
+
+JANGAN simpan di:
+- GitHub
+- folder public Print Flow
+- grup WhatsApp
+- komputer umum/kasir tanpa perlindungan
+
+Nama backup yang disarankan:
+
+    PrintFlow-Android-Signing-2026-09.zip
+
+
+9. PUSH NOTIFICATION
+----------------------------------------------------------------
+
+File Android di atas tidak otomatis mengisi VAPID.
+Push notification tetap membutuhkan variable Vercel:
+
+- NEXT_PUBLIC_VAPID_PUBLIC_KEY
+- VAPID_PRIVATE_KEY
+- VAPID_SUBJECT
+
+Setelah VAPID aktif dan Redeploy:
+1. Login di APK.
+2. Buka Pengaturan.
+3. Tekan Aktifkan Notifikasi.
+4. Tekan Izinkan pada Android.
+5. Tekan Uji Notifikasi.
+
+Buka:
+
+https://printflow-orcin.vercel.app/api/apk/check
+
+Hasil yang diharapkan:
+
+    "pushNotification": {
+      "infrastructureReady": true,
+      "vapidConfigured": true,
+      "serviceWorkerReady": true
+    }
+
+
+10. RINGKASAN LANGKAH SEKARANG
+----------------------------------------------------------------
+
+1. Buka assetlinks.json dengan Notepad.
+2. Copy package_name.
+3. Copy SHA-256 fingerprint.
+4. Tambah dua Environment Variables di Vercel.
+5. Redeploy.
+6. Buka /.well-known/assetlinks.json -> jangan sampai [].
+7. Buka /api/apk/check -> addressBar.ready = true.
+8. Uninstall APK lama.
+9. Install ulang Print Flow.apk dari folder yang sama.
+10. Simpan signing.keystore dan signing-info.txt secara rahasia.
+
+================================================================
+SELESAI - semua file yang dibutuhkan sudah tersedia dalam folder Anda.
+================================================================

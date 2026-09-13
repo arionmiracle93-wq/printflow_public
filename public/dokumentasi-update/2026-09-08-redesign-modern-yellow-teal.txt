@@ -1,0 +1,280 @@
+================================================================
+CATATAN UPDATE - REDESIGN MODERN YELLOW–TEAL
+Tanggal : 08 September 2026
+Status  : SELESAI
+Aplikasi: CetakPantau AI - Monitoring Produksi Percetakan
+================================================================
+
+
+1. RINGKASAN
+----------------------------------------------------------------
+
+Aplikasi didesain ulang menggunakan referensi gambar dari pemilik.
+Arah desain baru:
+
+- Color scheme utama : deep navy-teal + teal + golden yellow
+- Nuansa              : modern B2B SaaS, bersih, profesional, elegan
+- Ikon                : Lucide modern (stroke icon), mengganti emoji
+                        pada navigasi dan komponen utama dashboard
+- Fokus               : informasi produksi tetap padat, tetapi lebih
+                        mudah dibaca dan terasa premium
+
+Warna brand:
+- Deep navy-teal : #07384F (header, hero, identitas kuat)
+- Teal utama     : #0D9488 (navigasi aktif, ikon, progres, link)
+- Teal terang    : #14B8A6 (aksen, glow, elemen AI)
+- Golden yellow  : #FBBF24 (CTA utama, highlight, rekomendasi)
+- Page background: #F4F9F9 (putih hijau sangat lembut)
+
+
+2. PERUBAHAN HEADER & NAVIGASI
+----------------------------------------------------------------
+
+SEBELUM:
+- Header putih
+- Logo emoji printer
+- Warna aktif ungu/indigo
+- Ikon menu berupa emoji
+
+SESUDAH:
+- Header deep navy-teal, sticky, dengan blur dan bayangan lembut
+- Brand mark robot AI modern dalam frame teal + titik kuning
+- Semua menu memakai ikon Lucide yang konsisten
+- Menu aktif berupa kapsul teal dengan teks putih
+- Hover transparan putih agar elegan di atas header gelap
+- Header desktop, tablet, dan mobile punya aturan tersendiri
+
+NAVIGASI MOBILE:
+- Bar putih transparan di bawah layar
+- Tombol "Baru" menonjol sebagai tombol kuning yang mengambang
+- Ikon modern dan label ringkas
+- Area aman bawah (safe-area) mendukung HP modern
+
+
+3. PERUBAHAN DASHBOARD
+----------------------------------------------------------------
+
+HERO:
+- Background deep navy-teal dengan gradient teal transparan
+- Ornamen geometris (lingkaran, glow, blok kuning) tanpa gambar berat
+- Tanggal memakai ikon CalendarClock
+- Logo robot kecil di samping judul
+- Tombol Pekerjaan Baru berwarna kuning
+- Tombol Semua Pekerjaan transparan dengan border putih
+
+RINGKASAN AI:
+- Panel semi-transparan teal (glass-like)
+- Ikon Sparkles modern
+- Badge update otomatis dengan ikon Refresh
+- Poin informasi memakai ikon CheckCircle
+- Rekomendasi memakai card putih + garis kuning di kiri
+
+KPI CARDS:
+- Card putih, border tipis, bayangan lembut
+- Ikon berada dalam kotak berwarna lembut
+- Hover mengangkat card sedikit
+- Garis gradient teal-kuning muncul saat hover
+- Ikon modern khusus untuk:
+  * Pekerjaan aktif
+  * Terlambat
+  * Waspada / risiko
+  * Siap diambil
+  * Nilai order aktif
+  * DP / terbayar
+
+PRIORITAS AI:
+- Judul menggunakan ikon Flame berwarna kuning
+- Tiap pekerjaan punya garis status di sisi kiri
+- Kode, status, risiko, progres, rekomendasi tersusun lebih jelas
+- Rekomendasi memakai ikon Lightbulb
+- Tombol popup foto tetap berfungsi
+
+PIPELINE / POSISI PEKERJAAN:
+- Ikon Workflow modern
+- Emoji tahap diganti titik status berwarna
+- Bar progres dipertahankan karena mudah dibaca
+
+TANYA AI:
+- Header gradient navy-teal
+- Ikon Bot modern
+- Tombol Ringkas berwarna kuning
+- Chip pertanyaan berwarna teal lembut
+- Bubble chat pengguna berwarna teal
+- Tombol kirim memakai ikon Send
+
+CARA KERJA MONITORING:
+- Nomor langkah tampil sebagai kotak teal kecil
+- Hirarki teks lebih bersih
+- Legenda skor risiko tetap dipertahankan
+
+
+4. SISTEM DESAIN GLOBAL
+----------------------------------------------------------------
+
+Perubahan tidak hanya untuk dashboard. Komponen global ikut berubah:
+
+- .card        : radius modern, border tipis, shadow teal lembut
+- .btn-primary : golden yellow (aksi utama)
+- .btn-secondary: teal (aksi pendukung kuat)
+- .btn-ghost   : border teal (aksi netral)
+- .input       : fokus teal dengan ring lembut
+- .label       : uppercase kecil dengan letter spacing
+- .chip        : font lebih tegas
+- selection    : highlight kuning lembut
+- scrollbar    : teal lembut
+
+Komponen lama yang masih menggunakan class indigo diberi brand override
+ke teal. Ini membuat semua halaman mengikuti warna baru tanpa merusak
+warna semantik seperti merah untuk terlambat, oranye untuk risiko, dan
+hijau untuk selesai.
+
+
+5. IKON & LOGO PWA
+----------------------------------------------------------------
+
+Package baru:
+    lucide-react
+
+Kelebihan Lucide:
+- Ringan
+- Ikon konsisten
+- Tajam di semua resolusi
+- Warna dan ukuran mudah mengikuti desain
+- Banyak digunakan aplikasi web modern
+
+File icon-512.png dibuat ulang:
+- Background deep navy-teal
+- Robot AI putih
+- Frame cyan/teal bercahaya
+- Titik aksen golden yellow
+- Tidak ada teks, jadi tetap terbaca saat ikon kecil
+
+Warna manifest PWA juga berubah:
+- theme_color      : #07384F
+- background_color : #F4F9F9
+
+Jika aplikasi sudah dipasang di HP dan ikon lama masih muncul:
+1. Hapus shortcut/aplikasi CetakPantau lama dari layar utama.
+2. Buka ulang aplikasi lewat Chrome.
+3. Menu titik tiga -> Tambahkan ke layar utama / Install app.
+4. Ikon baru akan muncul.
+
+Browser kadang menyimpan ikon lama di cache. Ini normal.
+
+
+6. RESPONSIVE / TAMPILAN PER PERANGKAT
+----------------------------------------------------------------
+
+DESKTOP BESAR:
+- Lebar maksimum dinaikkan menjadi 1440 px
+- Menu lengkap terlihat
+- KPI 6 kolom
+- Konten utama 2/3, panel AI 1/3
+
+TABLET:
+- Menu penting saja yang tampil
+- KPI 3 kolom
+- Layout menyesuaikan tanpa horizontal overflow
+
+HP:
+- Padding dibuat lebih rapat
+- KPI 2 kolom
+- Card tetap nyaman disentuh
+- Navigasi bawah 5 tombol
+- Tombol tambah order dibuat paling menonjol
+- Safe-area iPhone/Android modern didukung
+
+
+7. FITUR YANG TETAP UTUH
+----------------------------------------------------------------
+
+Redesign hanya mengubah visual. Semua fungsi ini tetap berjalan:
+- Dashboard & ringkasan AI
+- Input/edit/hapus pekerjaan
+- 9 status produksi
+- Analisa risiko
+- Tanya AI
+- Popup foto dari job card
+- Lampiran foto
+- Link lacak pelanggan
+- Kirim via WhatsApp
+- Data pelanggan
+- Checklist
+- Pengaturan & backup CSV
+- Diagnosis
+- Panduan & catatan perubahan
+
+Tidak ada perubahan data, rumus AI, atau alur database.
+Tidak perlu menjalankan /api/setup khusus untuk redesign ini.
+
+
+8. FILE YANG BERUBAH / BARU
+----------------------------------------------------------------
+
+BARU:
+    src/components/BrandMark.tsx
+    public/dokumentasi-update/2026-09-08-redesign-modern-yellow-teal.txt
+
+DIUBAH:
+    src/app/globals.css
+    src/app/layout.tsx
+    src/app/page.tsx
+    src/components/MainNav.tsx
+    src/components/AiAssistant.tsx
+    src/components/ui.tsx
+    public/manifest.webmanifest
+    public/icon-512.png
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    package-lock.json (otomatis karena instalasi Lucide)
+    package.json      (otomatis melalui npm install lucide-react)
+
+Catatan: package.json TIDAK diedit manual. Package ditambahkan melalui
+npm install sehingga package.json dan package-lock.json berubah otomatis.
+
+
+9. CARA MENERAPKAN DI VERCEL
+----------------------------------------------------------------
+
+1. Upload/commit semua file perubahan ke GitHub.
+2. Pastikan package.json dan package-lock.json ikut diupload.
+3. Vercel akan build otomatis (biasanya 1-3 menit).
+4. Buka alamat aplikasi lalu tekan refresh.
+5. Kalau tampilan lama masih muncul, lakukan hard refresh:
+   - Windows: Ctrl + Shift + R
+   - Mac    : Cmd + Shift + R
+   - HP     : tutup tab, buka lagi; jika perlu bersihkan cache Chrome
+
+Tidak perlu:
+- Mengubah DATABASE_URL
+- Menyentuh Neon
+- Menjalankan /api/setup
+- Menghapus data
+
+
+10. HASIL VALIDASI
+----------------------------------------------------------------
+
+Next.js route type generation ............. LULUS
+TypeScript typecheck ...................... LULUS
+Production build .......................... LULUS
+
+Validasi runtime dilakukan setelah dokumentasi ini dibuat dan hasil
+akhir dicatat melalui proses build_and_start platform.
+
+
+11. CATATAN DESAIN
+----------------------------------------------------------------
+
+Warna status semantik sengaja TIDAK semuanya dipaksa teal/kuning:
+- Merah   tetap dipakai untuk terlambat/error
+- Oranye  tetap dipakai untuk risiko tinggi
+- Hijau   tetap dipakai untuk selesai/aman
+- Biru    tetap dipakai sebagai aksen nilai keuangan
+
+Alasannya: warna semantik membantu pemilik mengambil keputusan cepat.
+Brand yellow-teal menjadi identitas utama, sementara warna alarm tetap
+punya arti operasional.
+
+================================================================
+SELESAI - desain modern yellow-teal sudah diterapkan.
+================================================================

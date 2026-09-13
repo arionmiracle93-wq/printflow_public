@@ -1,0 +1,358 @@
+================================================================
+CATATAN UPDATE - PENGATURAN RESPONSIVE & ROLE KARYAWAN
+Tanggal : 14 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow
+================================================================
+
+
+1. RINGKASAN PERMINTAAN
+----------------------------------------------------------------
+
+A. Halaman Pengaturan belum menyesuaikan layar mobile sepenuhnya.
+   Beberapa elemen terlalu lebar sehingga pengguna harus menggeser
+   halaman ke kiri/kanan.
+
+B. Role Operator dan Kasir/CS digabung karena kondisi lapangan sering
+   mengharuskan operator membantu kasir atau kasir membantu produksi.
+
+Role baru hanya:
+- Owner
+- Karyawan
+
+
+2. AKAR OVERFLOW HALAMAN PENGATURAN
+----------------------------------------------------------------
+
+Ditemukan beberapa penyebab yang saling menambah:
+
+- Host DATABASE_URL panjang dan dipaksa berada satu baris dengan label.
+- Baris kondisi sistem memakai max-width + truncate, tetapi parent flex
+  tetap dapat mempertahankan lebar minimum konten.
+- Kelompok tombol menggunakan flex-wrap, namun beberapa label tombol
+  panjang masih mempunyai intrinsic width besar.
+- Beberapa card/grid/flex belum memakai min-width: 0.
+- URL, status notifikasi, dan keterangan panjang belum semuanya dapat
+  memecah kata panjang.
+- Proteksi overflow baru ada pada body, belum khusus subtree Pengaturan.
+
+
+3. PERBAIKAN RESPONSIVE PENGATURAN
+----------------------------------------------------------------
+
+A. CONTAINER HALAMAN
+
+Ditambahkan class:
+    settings-page
+
+Dengan aturan:
+- min-width: 0
+- max-width: 100%
+- overflow-x: clip
+
+B. SEMUA CARD / GRID / FLEX DI PENGATURAN
+
+Pada mobile dipaksa:
+- min-width: 0 !important
+- max-width: 100% !important
+
+Ini mencegah anak flex/grid memaksa parent melebar.
+
+C. TEKS PANJANG
+
+Untuk p, span, link, button, dan code:
+- overflow-wrap: anywhere
+- word-break: break-word
+
+Host Neon yang sangat panjang sekarang turun baris, bukan memperlebar
+layar.
+
+D. KONDISI SISTEM
+
+Sebelum:
+- Label dan nilai selalu sejajar kiri-kanan.
+- Nilai panjang memakai truncate.
+
+Sekarang mobile:
+- Label berada di baris pertama.
+- Nilai berada di bawahnya.
+- Nilai dapat wrap/break-all.
+
+Tablet/desktop:
+- Kembali sejajar kiri-kanan.
+- Nilai maksimal 65% lebar dan rata kanan.
+
+E. TOMBOL
+
+Pada mobile tombol dibuat satu kolom/full width untuk:
+- Upload/ganti/hapus logo
+- Aktifkan/uji/nonaktifkan notifikasi
+- Data contoh/reset
+- Diagnosis/tes kecepatan/catatan/JSON
+- Konfirmasi zona berbahaya
+- Manajemen user
+
+Pada layar sm ke atas, tombol kembali auto-width/flex.
+
+F. CARD KHUSUS
+
+LogoSettings, PushNotificationSettings, AdminActions, Kondisi Sistem,
+APK/PWA, dan User Management mendapat:
+- min-w-0
+- max-w-full
+- overflow hidden/clip yang aman
+- heading break-words
+
+G. GLOBAL SAFETY
+
+html dan body memakai overflow-x: clip.
+body dibatasi max-width: 100vw.
+
+Tujuannya sebagai pagar terakhir; konten tetap dibuat wrap sehingga
+informasi tidak sekadar tersembunyi.
+
+
+4. ROLE BARU: OWNER & KARYAWAN
+----------------------------------------------------------------
+
+ROLE OWNER
+- Semua akses
+- Pengaturan
+- Kelola user
+- Backup/export
+- Diagnosis/status
+- Logo dan push configuration
+- Hapus pekerjaan
+- Tambah mitra master
+
+ROLE KARYAWAN
+Menggabungkan kemampuan Operator + Kasir/CS:
+- Dashboard
+- Pekerjaan dan order baru
+- Update status produksi
+- Ubah PIC/operator pekerjaan
+- Foto & paste clipboard
+- Pelanggan
+- Pembayaran/DP
+- Link lacak dan WhatsApp pelanggan
+- Produksi Mitra
+- Serah Terima Shift
+- Badge Shift
+- Push notification perangkat
+
+Tetap tidak dapat:
+- Membuka Pengaturan Owner
+- Kelola akun pengguna
+- Backup/export admin
+- Diagnosis internal
+- Upload logo usaha
+- Menghapus pekerjaan
+- Mengubah konfigurasi sistem Owner
+
+
+5. ISTILAH OPERATOR TETAP ADA PADA PEKERJAAN
+----------------------------------------------------------------
+
+Yang digabung adalah ROLE LOGIN, bukan istilah tugas produksi.
+
+Istilah berikut tetap dipakai:
+- Operator mesin
+- PIC pekerjaan
+- Dari operator / kepada operator pada serah-terima shift
+- Nama operator pada job card
+
+Contoh:
+- Role login: Karyawan
+- Tugas pekerjaan: Operator/PIC = Pak Andi
+
+Satu Karyawan dapat bertugas sebagai operator, kasir, finishing, atau
+CS sesuai kondisi lapangan.
+
+
+6. MIGRASI AKUN LAMA OTOMATIS
+----------------------------------------------------------------
+
+Saat /api/setup dijalankan:
+
+    role = operator  -> karyawan
+    role = kasir     -> karyawan
+
+Data akun TIDAK dihapus:
+- Nama tetap
+- Username tetap
+- Password hash tetap
+- Riwayat tetap
+- Status aktif tetap
+
+`token_version` dinaikkan satu kali untuk akun lama yang dimigrasikan.
+Akibatnya akun lama otomatis logout dan harus login kembali. Ini
+sengaja agar cookie lama dengan role operator/kasir tidak terus dipakai.
+
+Perintah migrasi bersifat idempoten:
+- Setup pertama: role berubah, token version naik.
+- Setup berikutnya: tidak berubah lagi dan token tidak naik lagi.
+
+Hasil uji:
+    legacyop:operator:1 -> legacyop:karyawan:2
+    legacycash:kasir:1  -> legacycash:karyawan:2
+    setup kedua         -> tetap version 2
+
+
+7. MANAJEMEN USER
+----------------------------------------------------------------
+
+Halaman Pengguna sekarang hanya menawarkan:
+- Owner
+- Karyawan
+
+Default akun baru:
+    Karyawan
+
+Form dan card user juga dibuat responsive:
+- Tombol full width mobile
+- Username dapat break
+- Role badge tidak mendorong card melebar
+- Reset password/nonaktifkan tersusun vertikal di mobile
+
+
+8. NAVIGASI BERDASARKAN ROLE
+----------------------------------------------------------------
+
+Karyawan mendapat gabungan menu lapangan:
+
+Bottom mobile:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+- Pelanggan
+
+Titik tiga mobile:
+- Produksi Mitra
+
+Desktop:
+- Dashboard
+- Pekerjaan
+- Order Baru
+- Pelanggan
+- Mitra
+- Shift
+
+Tombol titik tiga Karyawan hanya tampil di mobile karena Mitra sudah
+ada di menu utama desktop. Ini mencegah dropdown kosong di desktop.
+
+Owner tetap mendapat menu utilitas lengkap melalui titik tiga.
+
+
+9. PERUBAHAN DATABASE
+----------------------------------------------------------------
+
+Tidak ada tabel baru.
+
+Perubahan:
+- Default role users: 'operator' -> 'karyawan'
+- Migrasi nilai lama operator/kasir -> karyawan
+
+Karena ada migrasi data role, WAJIB menjalankan /api/setup sekali
+setelah deploy.
+
+
+10. LANGKAH DEPLOY (WAJIB DIPERHATIKAN)
+----------------------------------------------------------------
+
+1. Push seluruh perubahan ke GitHub.
+2. Tunggu Vercel Ready.
+3. Buka sekali:
+
+       https://alamat-aplikasi.vercel.app/api/setup
+
+   Jika memakai SETUP_TOKEN:
+
+       https://alamat-aplikasi.vercel.app/api/setup?token=TOKEN_ANDA
+
+4. Pastikan response ok:true.
+5. Semua akun Operator/Kasir lama akan menjadi Karyawan.
+6. Minta semua user login ulang.
+7. Di HP, tutup PWA/Chrome lalu buka kembali.
+
+Tidak perlu membuat ulang akun dan tidak perlu reset password.
+
+
+11. SERVICE WORKER CACHE
+----------------------------------------------------------------
+
+Cache dinaikkan:
+    print-flow-shell-v4 -> print-flow-shell-v5
+
+Jika tampilan Pengaturan lama masih muncul:
+- Tutup semua tab/PWA.
+- Hapus dari Recent Apps.
+- Buka kembali.
+- Jika perlu Clear site data lalu login ulang.
+
+Data pekerjaan aman di Neon.
+
+
+12. HASIL PENGUJIAN ROLE
+----------------------------------------------------------------
+
+Migrasi operator -> karyawan ............... BERHASIL
+Migrasi kasir -> karyawan .................. BERHASIL
+Token version naik sekali .................. BERHASIL
+Setup kedua idempoten ...................... BERHASIL
+Buat akun Karyawan ......................... BERHASIL
+Login Karyawan ............................. BERHASIL
+Karyawan buka Dashboard .................... 200
+Karyawan buka Pekerjaan .................... 200
+Karyawan buka Pelanggan .................... 200
+Karyawan buka Mitra ........................ 200
+Karyawan buka Shift ........................ 200
+Karyawan buka Pengaturan ................... DIALIHKAN / tidak diizinkan
+Karyawan akses API user .................... DITOLAK 403
+Karyawan hapus pekerjaan ................... DITOLAK 403
+
+
+13. FILE YANG BERUBAH
+----------------------------------------------------------------
+
+DIUBAH:
+    src/lib/auth-client.ts
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/components/MainNav.tsx
+    src/components/MoreMenu.tsx
+    src/proxy.ts
+    src/app/api/users/route.ts
+    src/app/pesanan/[id]/page.tsx
+    src/components/UserManagement.tsx
+    src/app/pengaturan/page.tsx
+    src/components/LogoSettings.tsx
+    src/components/PushNotificationSettings.tsx
+    src/components/AdminActions.tsx
+    src/app/globals.css
+    src/app/login/page.tsx
+    src/lib/checklist.ts
+    public/sw.js
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+BARU:
+    public/dokumentasi-update/2026-09-14-pengaturan-responsive-dan-role-karyawan.txt
+
+
+14. IDE LANJUTAN
+----------------------------------------------------------------
+
+Dengan role sederhana Owner/Karyawan, pengelolaan lapangan lebih mudah.
+Tahap berikut yang paling bermanfaat bukan menambah role lagi, tetapi:
+
+- Preferensi per akun, misalnya notifikasi apa yang ingin diterima.
+- Filter "Pekerjaan saya" berdasarkan PIC.
+- Dropdown PIC dari daftar akun Karyawan agar nama konsisten.
+- Audit aktivitas per Karyawan.
+
+Ini memberi fleksibilitas tanpa membuat hak akses rumit.
+
+================================================================
+SELESAI - Pengaturan mobile responsive dan role disederhanakan.
+================================================================

@@ -1,0 +1,222 @@
+================================================================
+CATATAN UPDATE - PREFETCH & NAVIGASI LEBIH SMOOTH
+Tanggal : 11 September 2026
+Status  : SELESAI
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. PERTANYAAN
+----------------------------------------------------------------
+
+Setelah optimasi sebelumnya, klik sudah memberikan respons berupa
+loading. Namun harapannya adalah perpindahan antar-menu langsung smooth
+tanpa terlihat delay sama sekali.
+
+Apakah ini bisa diperbaiki, atau merupakan limitasi?
+
+
+2. JAWABAN JUJUR
+----------------------------------------------------------------
+
+Perpindahan 0 milidetik tidak dapat dijamin untuk halaman yang harus
+membaca data terbaru dari server/database.
+
+Ada waktu fisik yang tetap dibutuhkan:
+- HP/laptop mengirim request ke internet.
+- Vercel menjalankan Server Component.
+- Vercel membaca data Neon.
+- Server mengirim hasil ke perangkat.
+- Browser menggambar halaman.
+
+Namun aplikasi bisa dibuat TERASA mendekati instan dengan cara
+mempersiapkan halaman sebelum pengguna mengklik. Teknik ini disebut
+prefetch.
+
+
+3. MASALAH FEEDBACK SEBELUMNYA
+----------------------------------------------------------------
+
+Indikator progress sebelumnya tampil segera saat klik.
+
+Dampak positif:
+- Pengguna tahu klik diterima.
+
+Dampak negatif:
+- Walaupun navigasi hanya 100-150 ms, garis loading sempat berkedip.
+- Perpindahan terlihat seperti selalu menunggu.
+- Secara psikologis aplikasi terasa lebih lambat daripada waktu nyata.
+
+
+4. DELAYED LOADING FEEDBACK
+----------------------------------------------------------------
+
+Indikator navigasi sekarang menunggu 180 ms sebelum tampil.
+
+Perilaku baru:
+- Halaman selesai < 180 ms  -> tidak ada garis loading, terasa instant.
+- Halaman > 180 ms          -> progress bar tampil sebagai feedback.
+- Halaman selesai           -> progress langsung hilang.
+- Lebih dari 8 detik        -> timeout pengaman menutup progress.
+
+Ini pola yang umum dipakai aplikasi modern: jangan tampilkan spinner
+untuk operasi sangat singkat karena justru menyebabkan visual flicker.
+
+
+5. PREFETCH PROAKTIF
+----------------------------------------------------------------
+
+Setelah halaman pertama stabil dan browser sedang idle, Print Flow
+mempersiapkan halaman penting di background:
+
+- Dashboard
+- Pekerjaan
+- Order Baru
+- Shift
+- Mitra
+- Pelanggan
+- Pengaturan
+
+Saat pengguna kemudian mengklik, kode/layout/route payload kemungkinan
+sudah tersedia dalam Router Cache Next.js.
+
+Tambahan:
+- Desktop: hover/focus menu memprioritaskan prefetch halaman tersebut.
+- HP: touch awal menu memprioritaskan prefetch sebelum navigasi.
+- Link diberi prefetch eksplisit.
+
+Prefetch dijalankan saat browser idle agar tidak menghambat tampilan
+halaman pertama.
+
+
+6. LOADING SKELETON TETAP DIPERTAHANKAN
+----------------------------------------------------------------
+
+Jika route dinamis tetap membutuhkan server roundtrip, loading.tsx
+dapat ditampilkan segera karena sudah diprefetch bersama layout.
+
+Ini sesuai rekomendasi resmi Next.js:
+- Dynamic route tetap dapat memerlukan server roundtrip.
+- loading.tsx memungkinkan partial prefetch dan streaming.
+- router.prefetch() dapat menghangatkan route yang akan dikunjungi.
+
+Referensi:
+https://nextjs.org/docs/app/guides/prefetching
+https://nextjs.org/docs/app/getting-started/linking-and-navigating
+
+
+7. KENAPA TIDAK MEMAKAI CACHE DATA 30 DETIK SECARA AGRESIF?
+----------------------------------------------------------------
+
+Cache agresif bisa membuat page berpindah sangat cepat, tetapi ada
+risiko operasional:
+
+Contoh:
+1. Operator A mengubah status menjadi Finishing.
+2. Owner membuka Dashboard dalam masa cache.
+3. Dashboard masih menampilkan Proses Cetak selama 30 detik.
+
+Untuk aplikasi berita, keterlambatan cache mungkin tidak masalah.
+Untuk monitoring produksi dan mutasi shift, data lama bisa menyebabkan
+keputusan yang salah.
+
+Keputusan desain Print Flow:
+- Gunakan Router Cache/prefetch untuk transisi.
+- Setelah tombol simpan, komponen memanggil router.refresh().
+- Jangan diam-diam memberi cache data panjang pada status operasional.
+- Kesegaran data lebih penting daripada mengejar angka 0 ms palsu.
+
+
+8. EDGE CASE FILTER
+----------------------------------------------------------------
+
+Link filter di halaman Pekerjaan menggunakan pathname yang sama,
+contoh:
+
+    /pesanan?status=cetak
+    /pesanan?status=finishing
+
+Pathname tidak berubah; hanya query string berubah.
+
+Progress global sekarang tidak dipakai untuk navigasi filter seperti
+ini agar tidak tertahan sampai timeout. Form/filter tetap memproses
+normal dan hasil diperbarui.
+
+
+9. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+KONDISI WARM / INTERNET BAIK:
+- Menu yang sudah diprefetch dapat berpindah tanpa progress terlihat.
+- Transisi terasa seperti aplikasi SPA/native.
+
+KONDISI COLD START / INTERNET LAMBAT:
+- Setelah 180 ms, progress bar tampil.
+- Loading skeleton tampil cepat.
+- Pengguna tetap mendapat feedback, bukan layar diam.
+
+SETELAH LAMA TIDAK DIPAKAI:
+- Klik pertama mungkin tetap lebih lambat karena Vercel/Neon cold start.
+- Klik berikutnya jauh lebih cepat.
+
+
+10. CARA MENGUJI DENGAN BENAR
+----------------------------------------------------------------
+
+1. Deploy ke Vercel.
+2. Hard refresh sekali.
+3. Tunggu 2-3 detik agar prefetch background selesai.
+4. Klik Dashboard -> Pekerjaan -> Pelanggan -> Pengaturan.
+5. Bandingkan dengan klik pertama tepat setelah cold start.
+6. Tes juga di jaringan Wi-Fi dan seluler.
+
+Jangan menilai mode development (`npm run dev`) karena prefetch Next.js
+memang tidak bekerja sama seperti production. Tes harus di deployment
+production Vercel.
+
+
+11. BATAS YANG TIDAK DAPAT DIHILANGKAN SEPENUHNYA
+----------------------------------------------------------------
+
+- Cold start setelah idle lama.
+- Latensi internet pengguna.
+- Jarak region Vercel ke Neon.
+- Query data terbaru yang belum diprefetch.
+- Halaman detail unik yang belum pernah dibuka.
+- Proses simpan database (harus menunggu bukti sukses).
+
+Jika semua navigasi tetap konsisten > 1 detik setelah prefetch,
+lakukan Pengaturan -> Tes Kecepatan dua kali dan periksa:
+- pooled harus true
+- firstQueryMs
+- warmQueryMs
+
+
+12. FILE YANG DIUBAH
+----------------------------------------------------------------
+
+    src/components/NavigationFeedback.tsx
+    src/components/MainNav.tsx
+    public/dokumentasi-update/2026-09-11-prefetch-dan-navigasi-smooth.txt
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Tidak ada tabel baru.
+Tidak perlu menjalankan /api/setup.
+
+
+13. CARA DEPLOY
+----------------------------------------------------------------
+
+1. Push semua perubahan ke GitHub.
+2. Tunggu Vercel Ready.
+3. Hard refresh aplikasi.
+4. Tunggu 2-3 detik.
+5. Uji berpindah antar-menu.
+
+Tidak perlu mengubah Neon, DATABASE_URL, atau VAPID.
+
+================================================================
+SELESAI - navigasi cepat tidak lagi menampilkan loading flash dan
+route utama dipersiapkan proaktif di background.
+================================================================

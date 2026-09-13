@@ -1,0 +1,229 @@
+================================================================
+FIX UJI PUSH TIDAK MUNCUL SETELAH REVISI ICON/APK
+Tanggal : 20 September 2026
+Status  : DIAGNOSIS & REPAIR TOOLS DITAMBAHKAN
+Aplikasi: Print Flow
+================================================================
+
+
+1. KEMUNGKINAN PENYEBAB
+----------------------------------------------------------------
+
+Perubahan gambar icon sendiri tidak seharusnya mematikan Web Push.
+Namun proses berikut dapat mengubah keadaan perangkat:
+
+- APK di-uninstall lalu install ulang.
+- Service worker berubah versi.
+- VAPID key pernah dibuat/dimasukkan ulang.
+- Subscription browser lama tidak cocok dengan public key server.
+- Browser masih menganggap subscribed, tetapi row Neon sudah hilang.
+- Izin notifikasi Android kembali default/ditolak setelah reinstall.
+- Chrome/Android Battery Saver atau Do Not Disturb membatasi notifikasi.
+
+Karena sebelumnya tombol test hanya memberi status umum, sulit
+membedakan masalah Android dan masalah server. Sekarang diagnosis
+dipisahkan menjadi dua.
+
+
+2. UJI LOKAL
+----------------------------------------------------------------
+
+Tombol:
+    Uji Lokal
+
+Tidak menggunakan:
+- Vercel push sender
+- VAPID
+- Neon subscription
+- Firebase/Chrome push endpoint internet
+- Icon notifikasi dinamis
+
+Uji Lokal langsung memanggil:
+
+    serviceWorkerRegistration.showNotification()
+
+Tujuannya hanya memeriksa:
+- Permission Android = granted
+- Service worker aktif
+- Android/Chrome bersedia menampilkan notifikasi
+
+INTERPRETASI:
+
+A. Uji Lokal MUNCUL
+   Android + permission + service worker baik.
+   Masalah berada pada subscription/VAPID/pengiriman server.
+   Lanjut ke Perbaiki Subscription lalu Uji Push Server.
+
+B. Uji Lokal TIDAK MUNCUL
+   Masalah bukan Neon/VAPID. Periksa:
+   - Android Settings -> Apps -> Print Flow -> Notifications -> Allow
+   - Jika tidak ada Print Flow, cek Chrome -> Notifications -> Allow
+   - Matikan sementara Do Not Disturb
+   - Matikan sementara Battery Saver
+   - Pastikan permission pada card tertulis granted
+   - Tekan Periksa Ulang
+   - Update Chrome Android
+
+Uji Lokal sengaja tidak memakai icon agar kegagalan icon tidak dapat
+mengganggu diagnosis permission.
+
+
+3. UJI PUSH SERVER
+----------------------------------------------------------------
+
+Tombol:
+    Uji Push Server
+
+Menguji seluruh jalur:
+
+    Print Flow API (Vercel)
+        -> VAPID
+        -> subscription Neon
+        -> Chrome/FCM push service
+        -> service worker Android
+        -> notification panel
+
+Sekarang test hanya menargetkan perangkat akun yang sedang login +
+Owner, bukan semua user tanpa batas.
+
+Response menampilkan:
+- attempted
+- sent
+- failed
+- removed
+- errors statusCode/message/deviceName
+
+INTERPRETASI:
+
+attempted = 0
+    Tidak ada subscription database untuk akun. Perbaiki Subscription.
+
+sent > 0
+    Push service menerima pesan. Jika panel tidak muncul, cek Android,
+    Do Not Disturb, permission, dan service worker.
+
+failed > 0
+    Response sekarang menampilkan detail error.
+
+status 404 / 410
+    Subscription kedaluwarsa; row otomatis dihapus. Aktifkan ulang.
+
+Error p256dh/auth/key
+    Subscription rusak/tidak cocok; Perbaiki Subscription.
+
+
+4. TOMBOL PERBAIKI SUBSCRIPTION
+----------------------------------------------------------------
+
+Tombol:
+    Perbaiki Subscription
+
+Yang dilakukan:
+1. Unsubscribe subscription browser lama.
+2. Hapus seluruh subscription Neon milik akun login.
+3. Minta service worker melakukan update.
+4. Refresh status card.
+
+Setelah selesai:
+1. Tekan Aktifkan Notifikasi.
+2. Tekan Izinkan bila Android bertanya.
+3. Tekan Uji Lokal.
+4. Tekan Uji Push Server.
+
+Jika public key server berbeda dari applicationServerKey subscription
+lama, tombol Aktifkan juga otomatis mengganti subscription.
+
+
+5. SERVICE WORKER VERSION
+----------------------------------------------------------------
+
+Card Notifikasi sekarang menampilkan:
+
+    service worker: print-flow-shell-v10
+
+Jika masih v8/v9:
+1. Tekan Perbaiki Subscription.
+2. Tutup APK dari Recent Apps.
+3. Buka lagi.
+4. Tekan Periksa Ulang.
+5. Jika belum berubah, clear site data atau reinstall APK.
+
+Service worker terbaru:
+    print-flow-shell-v10
+
+
+6. URUTAN REPAIR YANG DIREKOMENDASIKAN
+----------------------------------------------------------------
+
+1. Deploy code terbaru ke Production.
+2. Buka APK -> titik tiga -> Notifikasi Perangkat.
+3. Pastikan VAPID aktif.
+4. Catat:
+   - Status izin
+   - perangkat akun ini
+   - service worker version
+5. Tekan Uji Lokal.
+6. Jika Lokal tidak muncul: perbaiki Android permission.
+7. Jika Lokal muncul: tekan Perbaiki Subscription.
+8. Tekan Aktifkan Notifikasi.
+9. Tekan Uji Push Server.
+10. Minimize APK dan lihat notification panel.
+
+
+7. STATUS VAPID VERCEL
+----------------------------------------------------------------
+
+Buka:
+    https://printflow-orcin.vercel.app/api/apk/check
+
+Harus:
+    vapidConfigured: true
+    serviceWorkerReady: true
+    infrastructureReady: true
+
+Environment:
+- NEXT_PUBLIC_VAPID_PUBLIC_KEY = Config
+- VAPID_PRIVATE_KEY = Secret
+- VAPID_SUBJECT = Config (mailto:email)
+
+Public/private key harus berasal dari satu pasangan yang sama.
+Jangan membuat private key baru tanpa memperbarui public key pasangannya.
+
+
+8. HASIL UJI KODE
+----------------------------------------------------------------
+
+Detailed failure response diuji memakai subscription palsu:
+- attempted: 1
+- sent: 0
+- failed: 1
+- errors berisi alasan p256dh invalid
+
+Reset subscription diuji:
+- deleted: 1
+- mySubscriptions berubah 1 -> 0
+
+Artinya alat diagnosis dan reset bekerja.
+Pengujian visual notifikasi tetap harus dilakukan di HP Android nyata.
+
+
+9. FILE YANG BERUBAH
+----------------------------------------------------------------
+
+DIUBAH:
+    src/lib/push.ts
+    src/app/api/push/route.ts
+    src/components/PushNotificationSettings.tsx
+    public/sw.js
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+BARU:
+    public/dokumentasi-update/2026-09-20-fix-uji-push-setelah-revisi-icon.txt
+
+Tidak ada perubahan database.
+Tidak perlu /api/setup untuk repair tools ini.
+
+================================================================
+SELESAI - gunakan Uji Lokal untuk memisahkan masalah Android vs server.
+================================================================

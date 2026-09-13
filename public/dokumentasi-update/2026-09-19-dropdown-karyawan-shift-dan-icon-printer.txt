@@ -1,0 +1,311 @@
+================================================================
+DROPDOWN KARYAWAN SHIFT & ICON PRINTER
+Tanggal : 19 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow
+================================================================
+
+
+1. DROPDOWN TUJUAN SERAH-TERIMA
+----------------------------------------------------------------
+
+SEBELUM:
+Tujuan shift diketik manual pada field "Kepada operator".
+
+Risiko:
+- Salah ejaan nama.
+- Nama tidak sama dengan akun login.
+- Push targeted tidak menemukan perangkat tujuan.
+- Dua orang dengan nama mirip dapat tertukar.
+- Akun nonaktif masih bisa ditulis manual.
+
+SEKARANG:
+Field tujuan menjadi dropdown:
+
+    Kepada Karyawan
+    [ Pilih akun Karyawan... ]
+
+Pilihan menampilkan:
+
+    Nama Lengkap (@username)
+
+Contoh:
+
+    Rina Karyawan (@rina)
+    Yoga Karyawan (@yoga)
+
+Hanya akun dengan kondisi berikut yang muncul:
+- Role = Karyawan
+- Active = true
+
+Karyawan yang sedang login tidak muncul sebagai tujuan bagi dirinya
+sendiri. Owner melihat seluruh Karyawan aktif.
+
+
+2. VALIDASI SERVER
+----------------------------------------------------------------
+
+Dropdown bukan hanya perubahan tampilan.
+API menerima `toUserId`, lalu server memeriksa:
+
+- ID user benar-benar ada.
+- Role benar-benar Karyawan.
+- Akun masih aktif.
+- Bukan akun sendiri.
+
+Nama tujuan diambil dari database oleh server, bukan dari teks browser.
+Browser tidak dapat memalsukan nama tujuan dengan mengubah request.
+
+Jika tidak valid:
+
+    "Pilih akun Karyawan aktif sebagai tujuan serah-terima."
+
+Jika memilih diri sendiri:
+
+    "Pekerjaan tidak dapat diserahkan kepada akun sendiri."
+
+
+3. TO_USER_ID PADA DATABASE
+----------------------------------------------------------------
+
+Kolom baru pada shift_handovers:
+
+    to_user_id
+
+Fungsi:
+- Menghubungkan mutasi langsung ke akun tujuan.
+- Menjamin Karyawan yang benar menerima pekerjaan.
+- Menjamin push dikirim ke subscription user ID yang benar.
+- Aman jika dua Karyawan mempunyai nama sama.
+
+Riwayat lama tetap kompatibel:
+- Record lama yang belum mempunyai to_user_id menggunakan pencocokan
+  nama sebagai fallback.
+- Record baru selalu menyimpan ID + nama snapshot.
+
+
+4. SIAPA YANG BOLEH MENERIMA?
+----------------------------------------------------------------
+
+Hanya akun Karyawan yang dipilih pada dropdown yang dapat menekan:
+
+    Terima sebagai [Nama]
+
+Jika akun lain mencoba, API mengembalikan HTTP 403:
+
+    "Serah terima ini ditujukan kepada Rina Karyawan,
+     bukan akun Yoga Karyawan."
+
+Setelah penerima yang benar menekan Terima:
+- Status mutasi menjadi diterima.
+- Operator/PIC aktif pekerjaan berubah ke penerima.
+- Riwayat tercatat.
+- Badge Shift berkurang.
+
+HASIL UJI:
+- Owner pilih Rina (user ID 2): BERHASIL.
+- Database menyimpan to_operator=Rina dan to_user_id=2.
+- Yoga mencoba menerima: DITOLAK 403.
+- Rina menerima: BERHASIL 200.
+- PIC pekerjaan berubah menjadi Rina.
+
+
+5. PUSH MUTASI BERDASARKAN USER ID
+----------------------------------------------------------------
+
+Sebelumnya push targeted mencocokkan nama.
+Sekarang prioritas pencocokan memakai:
+
+    push_subscriptions.user_id = shift_handovers.to_user_id
+
+Owner tetap ikut menerima sebagai pengawas.
+
+Jika record lama tidak mempunyai ID, pencocokan nama tetap menjadi
+fallback.
+
+Ini menghilangkan risiko:
+- Salah ejaan.
+- Nama sama.
+- Nama user berubah.
+
+Catatan:
+Karyawan harus pernah login dan mengaktifkan Notifikasi Perangkat agar
+HP mempunyai subscription.
+
+
+6. JIKA DROPDOWN KOSONG
+----------------------------------------------------------------
+
+Pesan yang tampil:
+
+    "Belum ada akun Karyawan aktif lain. Owner perlu membuat/
+     mengaktifkan akun Karyawan melalui Kelola Pengguna."
+
+Solusi:
+1. Owner -> badge user -> Kelola Pengguna.
+2. Tambah akun Karyawan, atau aktifkan akun nonaktif.
+3. Kembali ke pekerjaan dan refresh.
+
+
+7. ICON LAUNCHER BARU
+----------------------------------------------------------------
+
+SEBELUM:
+- Background teal.
+- Kotak kuning besar.
+- Huruf PF.
+
+SEKARANG:
+- Printer sederhana bergaya modern.
+- Badan printer putih.
+- Panel/slot warna navy-teal.
+- Kertas kuning keluar dari printer.
+- Lampu status kuning kecil.
+- Tidak ada tulisan PF.
+- Safe padding tetap ada agar tidak terpotong icon bulat/squircle.
+
+Background teal tetap digunakan sebagai bidang aman Android, tetapi
+fokus visualnya sekarang printer, bukan kotak/huruf.
+
+
+8. ICON DINAMIS & FALLBACK
+----------------------------------------------------------------
+
+Icon dinamis:
+
+    /api/pwa/icon/192.png?v=printer-1
+    /api/pwa/icon/512.png?v=printer-1
+
+Keduanya diuji:
+- HTTP 200
+- Content-Type image/png
+- Dimensi 192x192 dan 512x512
+
+Icon fallback public juga diganti:
+- public/icon-192.png
+- public/icon-512.png
+- public/icon-maskable-512.png
+- public/apple-touch-icon.png
+
+Manifest, metadata, shortcut, service worker, dan icon notifikasi memakai
+URL versioned agar cache icon PF lama tidak terus digunakan.
+
+Service worker:
+
+    print-flow-shell-v9
+
+
+9. PENTING: ICON APK TIDAK BERUBAH HANYA DENGAN DEPLOY
+----------------------------------------------------------------
+
+Icon launcher APK TWA adalah resource native yang dimasukkan saat APK
+dibuild oleh PWABuilder.
+
+Jadi setelah deploy web:
+- Icon PWA browser dapat berubah setelah reinstall.
+- Icon di APK yang sudah terpasang TIDAK otomatis berubah.
+
+Untuk mengganti launcher icon APK:
+1. Deploy versi terbaru ke Production.
+2. Pastikan manifest menunjukkan icon printer versioned.
+3. Scan ulang https://printflow-orcin.vercel.app di PWABuilder.
+4. Generate ulang Android package.
+5. Gunakan package name YANG SAMA.
+6. Gunakan signing.keystore LAMA yang sama.
+7. Build/sign APK baru.
+8. Install sebagai update, atau uninstall lalu install ulang.
+
+
+10. JANGAN KEHILANGAN SIGNING KEY
+----------------------------------------------------------------
+
+Jika APK baru ditandatangani dengan keystore berbeda:
+- Android menganggap signature berbeda.
+- APK mungkin tidak dapat di-install sebagai update.
+- SHA-256 berubah.
+- Digital Asset Links lama tidak cocok.
+- Address bar Chrome dapat muncul kembali.
+
+Gunakan file lama:
+
+    signing.keystore
+    signing-info.txt
+
+Jika PWABuilder membuat signing key baru, Anda perlu menambahkan
+fingerprint baru ke:
+
+    ANDROID_SHA256_CERT_FINGERPRINTS
+
+Tetapi untuk update aplikasi yang sama, pilihan terbaik adalah signing
+key lama.
+
+
+11. MIGRASI DATABASE WAJIB
+----------------------------------------------------------------
+
+Karena ada kolom to_user_id baru, setelah deploy buka sekali:
+
+    https://printflow-orcin.vercel.app/api/setup
+
+Jika memakai SETUP_TOKEN:
+
+    /api/setup?token=TOKEN_ANDA
+
+Aman dijalankan berulang dan tidak menghapus data.
+
+
+12. FILE BARU & DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/lib/user-queries.ts
+    public/dokumentasi-update/2026-09-19-dropdown-karyawan-shift-dan-icon-printer.txt
+
+DIUBAH:
+    src/app/pesanan/[id]/page.tsx
+    src/components/HandoverManager.tsx
+    src/app/api/orders/[id]/handovers/route.ts
+    src/lib/handover-queries.ts
+    src/lib/push.ts
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/app/api/pwa/icon/[size]/route.ts
+    src/app/api/pwa/manifest/route.ts
+    src/app/layout.tsx
+    public/sw.js
+    public/icon-192.png
+    public/icon-512.png
+    public/icon-maskable-512.png
+    public/apple-touch-icon.png
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+
+13. LANGKAH SETELAH DEPLOY
+----------------------------------------------------------------
+
+A. FITUR SHIFT
+1. Push code ke GitHub.
+2. Tunggu Vercel Ready/Production.
+3. Jalankan /api/setup sekali.
+4. Login Owner.
+5. Pastikan ada minimal satu akun Karyawan aktif.
+6. Buka pekerjaan -> Serah Terima Shift.
+7. Pilih akun dari dropdown.
+8. Simpan dan uji notifikasi/accept.
+
+B. ICON PWA
+1. Tutup PWA.
+2. Clear site data bila icon lama tetap muncul.
+3. Uninstall PWA lama.
+4. Install ulang dari Production Domain.
+
+C. ICON APK
+1. Generate Android package baru di PWABuilder.
+2. Gunakan package ID sama.
+3. Gunakan keystore lama.
+4. Install/update APK.
+
+================================================================
+SELESAI - tujuan shift tepat berdasarkan akun dan icon printer aktif.
+================================================================

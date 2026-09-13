@@ -1,0 +1,398 @@
+================================================================
+AKTIVASI PUSH NOTIFICATION LENGKAP
+Tanggal : 18 September 2026
+Status  : INFRASTRUKTUR & WIZARD SELESAI
+Aplikasi: Print Flow
+================================================================
+
+
+1. YANG SUDAH TERSEDIA
+----------------------------------------------------------------
+
+Infrastruktur push Print Flow sekarang lengkap:
+
+- Service Worker menerima push saat APK/PWA tidak dibuka.
+- Subscription perangkat disimpan di Neon.
+- VAPID sender di server Vercel.
+- Subscription terkait akun Owner/Karyawan.
+- Perangkat/endpoint mati dibersihkan otomatis.
+- Tombol membuat VAPID key (Owner only).
+- Wizard konfigurasi 3 tahap.
+- Tombol Aktifkan / Nonaktifkan / Uji.
+- Subscription dengan VAPID lama diganti otomatis.
+- Halaman Notifikasi Perangkat untuk Owner dan Karyawan.
+- Pengiriman menggunakan Next.js after() agar tombol simpan tidak lambat.
+
+
+2. EVENT YANG MENGIRIM NOTIFIKASI
+----------------------------------------------------------------
+
+A. ORDER BARU
+
+    Judul: Pekerjaan baru masuk
+    Isi: PJ-2026-0012 — Spanduk Toko Jaya untuk Pelanggan X.
+
+B. PERUBAHAN STATUS PEKERJAAN
+
+    Judul: Status pekerjaan berubah
+    Isi: PJ-2026-0012 — Spanduk Toko Jaya sekarang Finishing.
+
+C. MUTASI SHIFT DIBUAT
+
+    Judul: Mutasi shift untuk Yoga
+    Isi: Dimas menyerahkan PJ-2026-0012. Berikutnya: lanjut cetak.
+
+D. MUTASI SHIFT DITERIMA
+
+    Judul: Serah terima sudah diterima
+    Isi: Yoga menerima PJ-2026-0012.
+
+E. STATUS PRODUKSI MITRA
+
+    Judul: Status Produksi Mitra berubah
+    Isi: PJ-2026-0012 di Percetakan Mitra: Sedang Diproduksi.
+
+Notifikasi status/umum dikirim ke perangkat internal aktif.
+Mutasi shift dapat ditargetkan ke nama akun tujuan + Owner.
+
+
+3. HALAMAN NOTIFIKASI BARU
+----------------------------------------------------------------
+
+Halaman:
+
+    /notifikasi
+
+Dapat dibuka oleh:
+- Owner
+- Karyawan
+
+Lokasi menu:
+- Klik titik tiga di header.
+- Pilih Notifikasi Perangkat.
+
+Alasan dibuat terpisah:
+Halaman Pengaturan hanya Owner. Setiap Karyawan perlu mengaktifkan push
+sendiri pada HP-nya, jadi aktivasi perangkat harus dapat diakses semua
+akun internal.
+
+
+4. TAHAP 1 - BUAT VAPID KEY
+----------------------------------------------------------------
+
+Login sebagai Owner.
+
+1. Buka titik tiga -> Notifikasi Perangkat.
+2. Pada Tahap 1, tekan "Buat VAPID Key".
+3. Print Flow menampilkan:
+   - NEXT_PUBLIC_VAPID_PUBLIC_KEY
+   - VAPID_PRIVATE_KEY
+   - Input email VAPID
+4. Isi email Owner.
+5. Tekan "Salin Semua Variable".
+
+PENTING:
+- Private key hanya ditampilkan pada response tersebut.
+- Print Flow tidak menyimpan private key di database.
+- Jangan menutup halaman sebelum nilai disalin.
+- Jangan membuat key berkali-kali.
+- Setelah VAPID aktif, tombol generator menolak pembuatan key baru.
+
+Keamanan endpoint:
+- Hanya Owner.
+- Karyawan mendapat HTTP 403.
+- Response Cache-Control no-store/no-cache.
+- Private key tidak dicatat ke log.
+
+
+5. TAHAP 2 - MASUKKAN KE VERCEL
+----------------------------------------------------------------
+
+Buka:
+Vercel -> Project Print Flow -> Settings -> Environment Variables
+
+Tambahkan tiga variable.
+
+A. NEXT_PUBLIC_VAPID_PUBLIC_KEY
+
+Value:
+Public key yang dibuat Print Flow.
+
+B. VAPID_PRIVATE_KEY
+
+Value:
+Private key yang dibuat Print Flow.
+
+C. VAPID_SUBJECT
+
+Value:
+
+    mailto:email-owner@gmail.com
+
+Wajib ada awalan `mailto:`.
+
+Untuk tiap variable:
+- Centang Production.
+- Preview/Development boleh dicentang.
+- Save.
+
+Setelah semua Save:
+1. Buka Deployments.
+2. Klik menu tiga titik deployment terbaru.
+3. Redeploy.
+4. Tunggu Ready.
+5. Pastikan domain Production memakai deployment terbaru.
+
+Jangan memasukkan private key ke:
+- GitHub
+- public folder
+- dokumentasi .txt
+- screenshot publik
+- grup WhatsApp
+
+
+6. TAHAP 3 - PERIKSA SERVER
+----------------------------------------------------------------
+
+Buka Production Domain:
+
+    https://printflow-orcin.vercel.app/api/apk/check
+
+Bagian yang dicari:
+
+    "pushNotification": {
+      "infrastructureReady": true,
+      "vapidConfigured": true,
+      "serviceWorkerReady": true
+    }
+
+Jika vapidConfigured false:
+- Nama env salah.
+- Variable belum dipasang di Production.
+- Belum Redeploy.
+- Deployment terbaru belum Promote to Production.
+
+Nama harus persis, huruf besar/kecil termasuk:
+
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    VAPID_PRIVATE_KEY
+    VAPID_SUBJECT
+
+
+7. AKTIFKAN PADA APK OWNER
+----------------------------------------------------------------
+
+1. Buka APK Print Flow.
+2. Login sebagai Owner.
+3. Titik tiga -> Notifikasi Perangkat.
+4. Tahap 1 harus menunjukkan VAPID aktif.
+5. Tahap 2 tekan Aktifkan Notifikasi.
+6. Android menampilkan dialog permission.
+7. Tekan Izinkan / Allow.
+8. Tahap 2 berubah menjadi perangkat aktif.
+9. Tekan Uji Notifikasi pada Tahap 3.
+10. Minimize APK dan lihat panel notification Android.
+
+Notifikasi uji:
+
+    Print Flow siap 🎉
+    Notifikasi Android/PWA berhasil diaktifkan pada perangkat ini.
+
+
+8. AKTIFKAN PADA HP KARYAWAN
+----------------------------------------------------------------
+
+Ulangi pada setiap HP:
+
+1. Install/buka APK.
+2. Login menggunakan akun Karyawan masing-masing.
+3. Titik tiga -> Notifikasi Perangkat.
+4. Tekan Aktifkan Notifikasi.
+5. Tekan Izinkan.
+6. Tekan Uji Notifikasi.
+
+Setiap HP memiliki subscription sendiri.
+Satu akun dapat mempunyai beberapa perangkat.
+
+Status card menampilkan:
+- Status izin browser
+- Jumlah perangkat milik akun
+- Jumlah seluruh perangkat aktif
+
+
+9. JIKA IZIN PERNAH DITOLAK
+----------------------------------------------------------------
+
+Jika permission = denied, browser tidak selalu menampilkan dialog lagi.
+
+Android:
+1. Settings / Pengaturan HP.
+2. Apps / Aplikasi.
+3. Cari Print Flow atau Chrome.
+4. Notifications / Notifikasi.
+5. Aktifkan Allow notifications.
+6. Kembali ke Print Flow.
+7. Tekan Periksa Ulang.
+8. Aktifkan dan Uji kembali.
+
+Pada TWA, permission dapat tercatat di Chrome karena engine push berasal
+dari Chrome.
+
+
+10. JIKA KEY PERNAH BERUBAH
+----------------------------------------------------------------
+
+Jika VAPID public/private key diganti setelah perangkat berlangganan:
+- Subscription lama tidak cocok.
+- Pengiriman gagal.
+
+Print Flow sekarang membandingkan applicationServerKey perangkat dengan
+public key server. Saat Aktifkan ditekan:
+- Jika key sama: subscription digunakan kembali.
+- Jika berbeda: subscription lama di-unsubscribe lalu dibuat ulang.
+
+Tetap disarankan jangan mengganti VAPID key kecuali private key bocor.
+
+
+11. CARA UJI EVENT NYATA
+----------------------------------------------------------------
+
+Setelah Uji Notifikasi berhasil:
+
+A. ORDER BARU
+- Buat satu pekerjaan baru dari perangkat lain.
+- Notifikasi "Pekerjaan baru masuk" muncul.
+
+B. STATUS
+- Buka pekerjaan -> Lanjut ke status berikutnya.
+- Notifikasi perubahan status muncul.
+
+C. SHIFT
+- Buat Serah Terima Shift ke nama Karyawan.
+- HP Karyawan tujuan + Owner menerima mutasi.
+- Penerima tekan Terima Pekerjaan.
+- Notifikasi diterima muncul.
+
+D. MITRA
+- Buka pekerjaan -> Produksi Mitra.
+- Ubah status mitra dan simpan.
+- Notifikasi status Mitra muncul.
+
+Klik notifikasi membuka halaman pekerjaan terkait.
+
+
+12. CATATAN PENARGETAN MUTASI
+----------------------------------------------------------------
+
+Subscription menyimpan nama akun saat perangkat mengaktifkan push.
+Mutasi shift dicocokkan berdasarkan nama tujuan.
+
+Agar tepat:
+- Nama tujuan serah-terima harus sama dengan nama akun Karyawan.
+- Jangan memakai ejaan/singkatan berbeda.
+
+Contoh:
+Akun: Muhamad Rizal
+Tujuan shift juga: Muhamad Rizal
+
+Owner selalu ikut menerima mutasi sebagai pengawas.
+
+Pengembangan berikut yang disarankan:
+Ganti input tujuan shift menjadi dropdown akun Karyawan, supaya tidak
+mungkin salah ejaan.
+
+
+13. KEAMANAN & PRIVASI
+----------------------------------------------------------------
+
+Notifikasi sebaiknya tidak menampilkan data sensitif berlebihan di lock
+screen. Versi sekarang hanya menampilkan:
+- Kode pekerjaan
+- Judul singkat
+- Status
+- Nama operator pada mutasi
+
+Tidak menampilkan:
+- Password
+- DP/piutang
+- Connection string database
+- Private VAPID key
+
+Pengguna dapat mengatur apakah isi notifikasi tampil di lock screen
+melalui Android Settings.
+
+
+14. FILE BARU & DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/app/api/push/vapid-helper/route.ts
+    src/app/notifikasi/page.tsx
+    public/dokumentasi-update/2026-09-18-aktivasi-push-notification-lengkap.txt
+
+DIUBAH:
+    src/app/api/push/route.ts
+    src/components/PushNotificationSettings.tsx
+    src/app/api/orders/route.ts
+    src/app/api/orders/[id]/outsource/route.ts
+    src/components/MoreMenu.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Tabel push_subscriptions sudah tersedia dari update sebelumnya.
+Jika belum pernah menjalankan setup sejak fitur push dibuat, buka
+/api/setup sekali. Jika login/push table sudah ada, setup aman diulang.
+
+
+15. HASIL PENGUJIAN
+----------------------------------------------------------------
+
+Owner generate VAPID ...................... BERHASIL
+Panjang public key 87 ..................... VALID
+Panjang private key 43 .................... VALID
+Karyawan generate VAPID ................... DITOLAK 403
+Server tanpa env .......................... configured:false
+Server dengan env ......................... configured:true
+Generate ulang saat aktif ................. DITOLAK 409
+/api/apk/check dengan VAPID ................ push ready:true
+Status perangkat per user ................. TERSEDIA
+Service worker push/click .................. TERSEDIA
+Order baru trigger ........................ TERPASANG
+Status pekerjaan trigger .................. TERPASANG
+Mutasi dibuat/diterima trigger ............. TERPASANG
+Produksi Mitra trigger ..................... TERPASANG
+TypeScript dan production build ........... LULUS
+
+Pengujian visual status bar harus dilakukan pada HP Android Anda karena
+sandbox tidak memiliki perangkat Android/endpoint push browser nyata.
+Tombol Uji Notifikasi dibuat untuk pengujian final tersebut.
+
+
+16. TROUBLESHOOTING CEPAT
+----------------------------------------------------------------
+
+VAPID belum dikonfigurasi:
+- Pastikan tiga env benar dan Redeploy.
+
+Belum ada perangkat berlangganan:
+- Login di HP lalu Aktifkan Notifikasi.
+
+Permission denied:
+- Android Settings -> Notifications -> Allow.
+
+Uji dikirim tetapi tidak muncul:
+- Cek mode Do Not Disturb.
+- Cek Battery Saver.
+- Pastikan Chrome terbaru.
+- Pastikan notifikasi Chrome/Print Flow tidak diblokir.
+- Nonaktifkan lalu Aktifkan ulang subscription.
+
+Notifikasi event tidak muncul tetapi test berhasil:
+- Pastikan event benar-benar disimpan.
+- Tunggu beberapa detik.
+- Coba update status dari perangkat lain.
+- Periksa Vercel Runtime Logs untuk "Push notification failed".
+
+================================================================
+SELESAI - wizard aktivasi dan trigger push operasional telah lengkap.
+================================================================

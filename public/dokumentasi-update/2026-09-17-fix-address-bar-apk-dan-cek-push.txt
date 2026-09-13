@@ -1,0 +1,367 @@
+================================================================
+FIX ADDRESS BAR APK & CEK PUSH NOTIFICATION
+Tanggal : 17 September 2026
+Status  : INFRASTRUKTUR DIGITAL ASSET LINKS DITAMBAHKAN
+Aplikasi: Print Flow
+================================================================
+
+
+1. KENAPA APK MASIH MENAMPILKAN ADDRESS BAR?
+----------------------------------------------------------------
+
+Screenshot APK menunjukkan bagian atas:
+- Tombol X
+- Nama domain printflow-orcin.vercel.app
+- Tombol Share
+- Menu tiga titik Chrome
+
+Ini berarti APK membuka website sebagai CHROME CUSTOM TAB, bukan Trusted
+Web Activity (TWA) yang sudah terverifikasi.
+
+Menurut dokumentasi Android:
+- TWA dapat tampil fullscreen tanpa browser UI.
+- Android/Chrome hanya mengizinkan fullscreen jika website dan APK
+  terbukti dimiliki pihak yang sama.
+- Bukti tersebut disebut DIGITAL ASSET LINKS.
+- Jika verifikasi gagal, TWA otomatis fallback menjadi Custom Tab.
+- Fallback Custom Tab selalu menampilkan address bar/domain.
+
+Jadi APK tidak rusak. Verifikasi hubungan APK <-> domain belum lengkap.
+
+
+2. YANG DIPERLUKAN AGAR ADDRESS BAR HILANG
+----------------------------------------------------------------
+
+Production Domain harus menyediakan file:
+
+    https://printflow-orcin.vercel.app/.well-known/assetlinks.json
+
+Isi file harus mencantumkan:
+1. Package Name APK yang tepat.
+2. SHA-256 fingerprint sertifikat yang menandatangani APK yang tepat.
+
+Contoh:
+
+    [
+      {
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+          "namespace": "android_app",
+          "package_name": "com.namausaha.printflow",
+          "sha256_cert_fingerprints": [
+            "AA:BB:CC:DD:...:FF"
+          ]
+        }
+      }
+    ]
+
+Package dan fingerprint harus cocok 100%. Salah satu karakter saja
+membuat verifikasi gagal.
+
+URL assetlinks harus:
+- HTTPS
+- Dapat dibuka tanpa login Vercel
+- HTTP 200
+- Content-Type application/json
+- Tidak redirect 301/302
+
+
+3. INFRASTRUKTUR YANG DITAMBAHKAN
+----------------------------------------------------------------
+
+Endpoint baru:
+
+    /.well-known/assetlinks.json
+
+Isi endpoint dibuat otomatis dari Environment Variables Vercel:
+
+    ANDROID_PACKAGE_NAME
+    ANDROID_SHA256_CERT_FINGERPRINT
+
+atau jika ada lebih dari satu sertifikat:
+
+    ANDROID_SHA256_CERT_FINGERPRINTS
+
+Endpoint publik dan tidak membutuhkan login Print Flow.
+
+Jika env belum diisi, endpoint menampilkan:
+
+    []
+
+Itu valid JSON tetapi belum dapat memverifikasi TWA.
+
+
+4. CARA MENDAPATKAN PACKAGE NAME DARI PWABUILDER
+----------------------------------------------------------------
+
+Saat membuat Android package di PWABuilder, Anda mengisi field seperti:
+
+    Package ID / Package Name
+
+Contoh:
+
+    com.namausaha.printflow
+
+Gunakan nilai yang PERSIS sama.
+
+Cara lain:
+- Buka ZIP hasil PWABuilder.
+- Cari file konfigurasi Android / manifest / twa-manifest.
+- Cari teks `packageId`, `applicationId`, atau `package`.
+
+Jangan menebak package name berdasarkan nama aplikasi.
+
+
+5. CARA MENDAPATKAN SHA-256 FINGERPRINT
+----------------------------------------------------------------
+
+CARA PALING MUDAH - HASIL PWABUILDER
+
+PWABuilder biasanya menyediakan petunjuk/berkas Digital Asset Links
+setelah Android package dibuat. Cari dalam hasil download:
+- assetlinks.json
+- signing information
+- SHA-256 fingerprint
+- Digital Asset Links
+
+Jika ada file assetlinks.json dari PWABuilder, buka dengan Notepad.
+Copy:
+
+    package_name
+    sha256_cert_fingerprints
+
+ke Vercel Environment Variables.
+
+CARA DENGAN KEYTOOL - APK DIRECT INSTALL
+
+Jika mempunyai file keystore yang dipakai menandatangani APK:
+
+    keytool -list -v -keystore nama-file.keystore
+
+Cari:
+
+    SHA256: AA:BB:CC:...:FF
+
+Gunakan fingerprint sertifikat RELEASE, bukan debug.
+
+GOOGLE PLAY APP SIGNING
+
+Jika APK/AAB dipublikasikan melalui Google Play dengan Play App Signing:
+- Buka Google Play Console.
+- Release / Setup / App Integrity / App Signing.
+- Cari App signing key certificate.
+- Copy SHA-256 certificate fingerprint.
+
+Fingerprint Google Play dapat berbeda dari APK direct-install.
+Jika keduanya dipakai, masukkan kedua fingerprint dipisahkan koma.
+
+Contoh:
+
+    ANDROID_SHA256_CERT_FINGERPRINTS=
+    AA:BB:...:FF,11:22:...:99
+
+
+6. ENVIRONMENT VARIABLES VERCEL
+----------------------------------------------------------------
+
+Buka:
+    Vercel -> Project Print Flow -> Settings -> Environment Variables
+
+Tambah:
+
+A. ANDROID_PACKAGE_NAME
+
+    com.namausaha.printflow
+
+B. Pilih salah satu:
+
+    ANDROID_SHA256_CERT_FINGERPRINT
+
+untuk satu sertifikat, atau:
+
+    ANDROID_SHA256_CERT_FINGERPRINTS
+
+untuk beberapa sertifikat dipisahkan koma.
+
+Centang Production, lalu Save.
+
+WAJIB setelah Save:
+    Deployments -> deployment terbaru -> Redeploy
+
+Environment Variable tidak masuk ke deployment lama tanpa Redeploy.
+
+
+7. CARA VERIFIKASI SETELAH REDEPLOY
+----------------------------------------------------------------
+
+Buka Incognito:
+
+    https://printflow-orcin.vercel.app/.well-known/assetlinks.json
+
+Hasilnya tidak boleh `[]`.
+Harus berisi package_name dan fingerprint Anda.
+
+Kemudian buka:
+
+    https://printflow-orcin.vercel.app/api/apk/check
+
+Hasil yang diharapkan:
+
+    "addressBar": {
+      "ready": true
+    }
+
+Periksa packageName dan fingerprints pada response.
+Pastikan sama dengan APK.
+
+
+8. APK PERLU DI-INSTALL ULANG
+----------------------------------------------------------------
+
+Android melakukan verifikasi saat instalasi/pertama kali membuka App
+Links. Setelah assetlinks diperbaiki:
+
+1. Uninstall APK Print Flow lama dari HP.
+2. Tunggu beberapa menit agar perubahan assetlinks tersebar.
+3. Install ulang APK signed yang sama.
+4. Pastikan Chrome adalah browser default dan terbaru.
+5. Buka Print Flow dari icon launcher.
+
+Jika fingerprint benar, address bar Chrome tidak lagi tampil.
+
+Jika masih tampil:
+- Package ID tidak cocok.
+- Fingerprint tidak cocok.
+- APK ditandatangani ulang dengan sertifikat lain.
+- Domain dalam AndroidManifest/TWA tidak sama dengan Production Domain.
+- assetlinks masih redirect/terproteksi.
+
+
+9. DIAGNOSIS APK TERPADU
+----------------------------------------------------------------
+
+Endpoint baru:
+
+    /api/apk/check
+
+Memeriksa:
+- Digital Asset Links
+- Package Name env
+- SHA-256 env
+- Manifest PWA
+- Service worker
+- Icon 512
+- VAPID push notification
+
+Bisa dibuka melalui:
+
+    Pengaturan -> Cek APK & Push
+
+Jika env Android belum diisi, hasil menjelaskan:
+
+    TWA belum terverifikasi, sehingga tampil sebagai Custom Tab
+    dengan address bar.
+
+
+10. APAKAH PUSH NOTIFICATION SUDAH BISA?
+----------------------------------------------------------------
+
+INFRASTRUKTUR KODE:
+Ya, sudah tersedia:
+- Service worker push event
+- VAPID sender
+- Subscription perangkat
+- Trigger status pekerjaan
+- Trigger mutasi shift
+- Tombol aktivasi, nonaktif, dan uji
+
+TETAPI push aktif di HP hanya jika:
+1. VAPID env sudah diisi di Vercel:
+   - NEXT_PUBLIC_VAPID_PUBLIC_KEY
+   - VAPID_PRIVATE_KEY
+   - VAPID_SUBJECT
+2. Redeploy selesai.
+3. User login Print Flow pada APK/PWA.
+4. Buka Pengaturan -> Push Notification Android/PWA.
+5. Tekan Aktifkan Notifikasi.
+6. Tekan Izinkan pada dialog Android.
+7. Tekan Uji Notifikasi.
+
+Buka:
+
+    /api/apk/check
+
+Perhatikan:
+
+    "pushNotification": {
+      "infrastructureReady": true,
+      "vapidConfigured": true,
+      "serviceWorkerReady": true
+    }
+
+Jika vapidConfigured false, push belum siap walaupun service worker aktif.
+
+
+11. APAKAH CUSTOM TAB BISA PUSH?
+----------------------------------------------------------------
+
+Web Push dapat bekerja melalui Chrome profile walaupun halaman masih
+Custom Tab, selama izin/subscription berhasil.
+
+Namun untuk pengalaman APK yang benar:
+- Digital Asset Links tetap harus diperbaiki.
+- TWA terverifikasi memberi fullscreen tanpa address bar.
+- Push tetap memakai service worker Chrome/Web Push.
+
+Address bar dan push adalah dua konfigurasi berbeda:
+
+    Address bar hilang -> Digital Asset Links
+    Push notification  -> VAPID + izin user + subscription
+
+Satu bisa berhasil sementara yang lain belum.
+
+
+12. CATATAN ICON DI STATUS BAR
+----------------------------------------------------------------
+
+Web Push menggunakan icon manifest/notification yang disediakan.
+Android dapat mengolah badge/status icon menjadi monokrom sesuai aturan
+OS. Hasil icon kecil bisa berbeda dari icon launcher penuh warna.
+
+Untuk kontrol icon status bar native sepenuhnya dibutuhkan FCM native /
+Capacitor. Untuk TWA, Web Push sudah cukup untuk kebutuhan operasional.
+
+
+13. FILE BARU & DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/app/.well-known/assetlinks.json/route.ts
+    src/app/api/apk/check/route.ts
+    public/dokumentasi-update/2026-09-17-fix-address-bar-apk-dan-cek-push.txt
+
+DIUBAH:
+    src/proxy.ts
+    .env.example
+    src/app/pengaturan/page.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Tidak ada perubahan database.
+Tidak perlu menjalankan /api/setup.
+
+
+14. RINGKAS LANGKAH PEMILIK
+----------------------------------------------------------------
+
+1. Cari Package ID dan SHA-256 dari PWABuilder/signing APK.
+2. Tambah ANDROID_PACKAGE_NAME dan fingerprint di Vercel.
+3. Redeploy.
+4. Buka /.well-known/assetlinks.json -> jangan sampai [].
+5. Buka /api/apk/check -> addressBar.ready harus true.
+6. Uninstall dan install ulang APK.
+7. Untuk push: Pengaturan -> Aktifkan -> Izinkan -> Uji.
+
+================================================================
+SELESAI - kode website siap menerima konfigurasi verifikasi APK.
+================================================================

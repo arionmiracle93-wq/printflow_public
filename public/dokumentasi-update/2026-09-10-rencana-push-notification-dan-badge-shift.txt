@@ -1,0 +1,321 @@
+================================================================
+CATATAN UPDATE - PUSH NOTIFICATION & BADGE MENU SHIFT
+Tanggal : 10 September 2026
+Status  : BADGE SELESAI; PUSH NOTIFICATION = RANCANGAN TAHAP BERIKUTNYA
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. JAWABAN SINGKAT
+----------------------------------------------------------------
+
+PERTANYAAN:
+Jika Print Flow dikonversi menjadi APK Android, apakah bisa menerima
+push notification di panel notification / icon status bar Android,
+misalnya perubahan status pekerjaan atau mutasi operator?
+
+JAWABAN:
+BISA. ✅
+
+Tetapi "mengubah website menjadi APK" saja belum otomatis memberi
+push notification. Aplikasi memerlukan:
+
+- Service Worker (jika memakai PWA / TWA)
+- Izin notifikasi dari pengguna
+- Subscription / token tiap perangkat
+- Backend pengirim notifikasi
+- Pemicu kejadian (status berubah, mutasi dibuat, dll.)
+- Layanan push: Web Push/VAPID atau Firebase Cloud Messaging (FCM)
+
+Badge angka pada menu Shift sudah dibuat dan aktif sekarang.
+Push notification sistem Android belum diaktifkan pada update ini,
+karena perlu penentuan siapa penerima notifikasinya dan identitas
+operator/login.
+
+
+2. PILIHAN TEKNOLOGI APK
+----------------------------------------------------------------
+
+A. PWA / TWA (REKOMENDASI UNTUK PRINT FLOW SEKARANG)
+
+Jika APK dibuat melalui PWABuilder sebagai Trusted Web Activity (TWA):
+- Gunakan Web Push API + Service Worker.
+- Chrome Android menyalurkan push melalui layanan push (FCM di balik
+  layar).
+- Notifikasi dapat muncul ketika aplikasi tidak sedang terbuka.
+- Klik notifikasi membuka pekerjaan terkait.
+- Satu kode tetap melayani web, desktop, PWA, dan APK.
+- Update aplikasi tetap cukup melalui GitHub -> Vercel.
+
+B. CAPACITOR / APK NATIVE
+
+Jika nanti Print Flow dibungkus menggunakan Capacitor:
+- Gunakan Firebase Cloud Messaging (FCM) native.
+- Kontrol notification channel, icon kecil, suara, priority, dan data
+  payload lebih lengkap.
+- Membutuhkan project Firebase dan konfigurasi Android tambahan.
+- Build APK/AAB biasanya membutuhkan Android Studio / layanan build.
+
+C. WEBVIEW SEDERHANA
+
+Jika APK hanya WebView yang membungkus website:
+- Web Push belum tentu bekerja dengan baik.
+- Perlu jembatan native/FCM sendiri.
+- Tidak direkomendasikan untuk kebutuhan notifikasi penting.
+
+REKOMENDASI:
+Mulai dengan PWA/TWA + Web Push. Pindah ke FCM native hanya jika nanti
+butuh integrasi Android yang lebih dalam.
+
+
+3. BENTUK NOTIFIKASI YANG BISA DIBUAT
+----------------------------------------------------------------
+
+Contoh notifikasi status pekerjaan:
+
+    Judul : Status pekerjaan berubah
+    Isi   : PJ-2026-0012 - Spanduk Toko Jaya sekarang Finishing
+    Klik  : membuka /pesanan/12
+
+Contoh mutasi shift:
+
+    Judul : Pekerjaan diserahkan kepada Anda
+    Isi   : Dimas menyerahkan PJ-2026-0012. Berikutnya: lanjut 300
+            lembar dan cek warna.
+    Klik  : membuka detail pekerjaan / halaman serah-terima
+
+Contoh risiko deadline:
+
+    Judul : Pekerjaan berisiko terlambat
+    Isi   : PJ-2026-0012 tersisa 6 jam. Status masih Proses Cetak.
+
+Contoh produksi mitra:
+
+    Judul : Target kembali dari mitra hari ini
+    Isi   : Buku Profil Desa di Percetakan Maju harus kembali 14:00.
+
+Contoh siap diambil:
+
+    Judul : Pesanan siap diambil
+    Isi   : PJ-2026-0012 sudah siap. Kirim link lacak ke pelanggan.
+
+
+4. ANDROID 13 DAN IZIN NOTIFIKASI
+----------------------------------------------------------------
+
+Android 13 (API level 33) dan lebih baru mematikan notifikasi secara
+default untuk aplikasi baru. Pengguna harus menekan "Izinkan" pada
+dialog izin notifikasi.
+
+Praktik terbaik:
+- Jangan meminta izin langsung saat aplikasi pertama terbuka.
+- Tampilkan penjelasan manfaat dahulu:
+  "Aktifkan notifikasi agar tidak melewatkan mutasi shift dan deadline."
+- Minta izin setelah operator menekan tombol "Aktifkan Notifikasi".
+- Jika pengguna menolak, mereka harus mengaktifkan ulang lewat Settings
+  Android / pengaturan browser.
+
+Notifikasi tidak boleh dijadikan satu-satunya sumber informasi.
+Badge di aplikasi dan daftar mutasi tetap wajib tersedia.
+
+Referensi resmi:
+- Android Notification Permission:
+  https://developer.android.com/develop/ui/views/notifications/notification-permission
+- Firebase Android Messaging:
+  https://firebase.google.com/docs/cloud-messaging/android/receive-messages
+- Chrome Service Worker / PWA:
+  https://developer.chrome.com/docs/lighthouse/pwa/service-worker
+- Chrome App Badging:
+  https://developer.chrome.com/docs/capabilities/web-apis/badging-api
+
+
+5. MASALAH IDENTITAS OPERATOR (PENTING)
+----------------------------------------------------------------
+
+Print Flow sekarang belum memiliki login individual operator.
+Nama operator masih berupa teks pada pekerjaan.
+
+Akibatnya, jika push diaktifkan sekarang:
+- Sistem tahu mutasi ditujukan kepada "Yoga".
+- Tetapi sistem belum tahu HP mana milik Yoga.
+- Pilihan sementara: kirim ke semua perangkat yang berlangganan.
+
+Untuk notifikasi TERTARGET:
+1. Tambahkan login operator.
+2. Setiap akun mempunyai user_id.
+3. Subscription perangkat disimpan bersama user_id.
+4. Mutasi ke Yoga hanya dikirim ke perangkat akun Yoga.
+5. Owner dapat memilih menerima semua notifikasi.
+
+Karena itu rekomendasi implementasi dibagi dua tahap.
+
+
+6. RENCANA IMPLEMENTASI PUSH YANG DIREKOMENDASIKAN
+----------------------------------------------------------------
+
+TAHAP 1 - BROADCAST INTERNAL (lebih cepat)
+- Tombol Aktifkan Notifikasi di Pengaturan.
+- Service worker push handler.
+- VAPID key server.
+- Tabel push_subscriptions.
+- Semua perangkat internal yang mengaktifkan akan menerima:
+  * mutasi shift dibuat
+  * pekerjaan berisiko telat
+  * produksi mitra melewati target
+  * status siap diambil
+- Cocok untuk owner / tim kecil.
+
+TAHAP 2 - LOGIN & TARGET OPERATOR (paling ideal)
+- Login owner/operator/kasir.
+- Subscription dipetakan ke akun.
+- Mutasi dikirim hanya kepada operator tujuan + owner.
+- Preferensi notifikasi per pengguna.
+- Riwayat terkirim/gagal/dibaca.
+
+TAHAP 3 - OTOMASI TERJADWAL
+- Vercel Cron memeriksa deadline, misalnya setiap 15-30 menit.
+- Anti-duplikasi agar satu risiko tidak dikirim berulang.
+- Quiet hours, misalnya tidak mengirim non-urgent pukul 22:00-06:00.
+- Eskalasi ke owner jika mutasi belum diterima setelah 15 menit.
+
+
+7. NOTIFICATION CHANNEL YANG DISARANKAN
+----------------------------------------------------------------
+
+Pisahkan kategori agar pengguna bisa mematikan jenis tertentu:
+
+1. SHIFT_MUTATION (prioritas tinggi)
+   Serah-terima baru, belum diterima, diterima.
+
+2. DEADLINE_ALERT (prioritas tinggi)
+   Risiko keterlambatan, deadline lewat.
+
+3. JOB_STATUS (prioritas normal)
+   Perubahan status pekerjaan.
+
+4. PARTNER_PRODUCTION (prioritas normal)
+   Target vendor/pusat, siap diambil dari mitra.
+
+5. CUSTOMER_READY (prioritas normal)
+   Pesanan siap, pengingat kirim WhatsApp pelanggan.
+
+
+8. BADGE MENU SHIFT - SUDAH AKTIF
+----------------------------------------------------------------
+
+Jika ada serah-terima yang belum diterima, menu Shift menampilkan badge
+merah dengan angka:
+
+    Shift  [3]
+
+Perilaku:
+- 0 mutasi  : badge tidak tampil.
+- 1-99      : angka sebenarnya.
+- >99       : tampil "99+".
+
+Badge tampil pada:
+- Navigasi desktop
+- Navigasi tablet
+- Navigasi bawah HP
+
+Menu Shift juga ditambahkan ke navigasi bawah HP. Navigasi mobile
+sekarang memiliki 6 menu agar mutasi tidak tersembunyi.
+
+Pembaruan badge:
+- Saat halaman pertama dibuka.
+- Setiap 30 detik.
+- Saat aplikasi kembali fokus.
+- Saat tab kembali terlihat.
+- Langsung setelah mutasi dibuat.
+- Langsung setelah mutasi diterima.
+
+Jika API badge gagal, navigasi tetap berjalan normal tanpa crash.
+Response tidak di-cache agar angka selalu segar.
+
+Endpoint baru:
+    GET /api/handovers/pending-count
+
+Contoh response:
+    {"ok":true,"count":3}
+
+
+9. HASIL PENGUJIAN BADGE
+----------------------------------------------------------------
+
+Kondisi awal ................................ count = 0
+Setelah membuat mutasi ...................... count = 1
+Mencoba membuat mutasi kedua ................ ditolak HTTP 409
+Setelah operator menerima ................... count = 0
+Event update langsung terpasang ............. BERHASIL
+Polling 30 detik terpasang ................... BERHASIL
+Refresh saat focus/visible terpasang ......... BERHASIL
+Badge desktop/tablet/mobile .................. TERPASANG
+
+
+10. LANGKAH DEPLOY UNTUK BADGE
+----------------------------------------------------------------
+
+Tidak ada perubahan tabel untuk badge. Tabel shift_handovers sudah
+dibuat pada update sebelumnya.
+
+Jika update Serah Terima Shift sebelumnya sudah menjalankan /api/setup:
+- Cukup push file ke GitHub.
+- Tidak perlu menjalankan /api/setup lagi.
+
+Jika belum pernah menjalankan setup update shift:
+- Buka /api/setup sekali.
+
+
+11. FILE YANG BERUBAH UNTUK BADGE
+----------------------------------------------------------------
+
+BARU:
+    src/app/api/handovers/pending-count/route.ts
+    public/dokumentasi-update/2026-09-10-rencana-push-notification-dan-badge-shift.txt
+
+DIUBAH:
+    src/lib/handover-queries.ts
+    src/components/MainNav.tsx
+    src/components/HandoverManager.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+
+12. BIAYA PUSH NOTIFICATION (PERKIRAAN)
+----------------------------------------------------------------
+
+Web Push + VAPID:
+- Protokol Web Push tidak berbayar.
+- Library server dapat dijalankan di Vercel.
+- Biaya utama tetap pemakaian Vercel/Neon.
+
+FCM:
+- Pengiriman Cloud Messaging pada penggunaan normal tersedia tanpa
+  biaya langsung, tetapi Firebase/Google Cloud tetap perlu disiapkan.
+
+Vercel Cron:
+- Batas frekuensi tergantung paket Vercel.
+- Untuk peringatan tiap 15 menit mungkin memerlukan paket yang
+  mendukung jadwal lebih sering.
+
+Login/operator auth:
+- Bisa memakai Auth.js/Clerk/Supabase Auth, dengan konsekuensi setup dan
+  biaya sesuai penyedia.
+
+
+13. REKOMENDASI KEPUTUSAN
+----------------------------------------------------------------
+
+Untuk kondisi Print Flow sekarang:
+
+1. Gunakan badge Shift yang sudah aktif.
+2. Terapkan Serah-Terima Shift selama 1-2 minggu untuk membentuk SOP.
+3. Setelah daftar operator stabil, tambahkan login operator.
+4. Baru aktifkan push tertarget untuk mutasi + deadline.
+
+Jika tim sangat kecil dan semua orang boleh menerima semua informasi,
+push broadcast Tahap 1 dapat dikerjakan lebih dahulu tanpa login.
+
+================================================================
+SELESAI - badge Shift aktif; rancangan push Android siap dikembangkan.
+================================================================

@@ -1,0 +1,467 @@
+================================================================
+CATATAN UPDATE - LOGIN USER & HAK AKSES
+Tanggal : 12 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. RINGKASAN
+----------------------------------------------------------------
+
+Print Flow sekarang mempunyai mekanisme login internal dengan 3 role:
+
+- Owner
+- Operator
+- Kasir / Customer Service
+
+Fitur yang tersedia:
+- Pembuatan akun Owner pertama
+- Login username + password
+- Password bcrypt hash (bukan teks asli)
+- Session JWT dalam cookie HttpOnly
+- Logout
+- Menu menyesuaikan role
+- Proteksi halaman dan API
+- Manajemen user oleh Owner
+- Tambah pengguna
+- Reset password
+- Aktif/nonaktifkan akun
+- Ganti role
+- Audit login berhasil/gagal
+- Pembatasan percobaan password salah
+- Identitas login dipakai pada riwayat status dan serah-terima shift
+- Push subscription terhubung ke user/role untuk notifikasi tertarget
+
+
+2. ROLE & HAK AKSES
+----------------------------------------------------------------
+
+OWNER
+- Akses penuh semua halaman
+- Kelola pekerjaan, pelanggan, mitra, shift
+- Pengaturan, backup/export, diagnosis, dokumentasi
+- Kelola pengguna
+- Upload logo
+- Aktifkan push
+- Hapus pekerjaan
+
+OPERATOR
+- Dashboard produksi
+- Daftar, detail, dan pekerjaan baru
+- Update status pekerjaan
+- Upload foto / paste clipboard
+- Produksi Mitra
+- Serah Terima Shift
+- Tidak dapat membuka Pengaturan Owner
+- Tidak dapat mengelola pelanggan
+- Tidak dapat mengelola user
+- Tidak dapat menghapus pekerjaan
+
+KASIR / CS
+- Dashboard
+- Daftar/detail/order baru
+- Data pelanggan
+- Komunikasi/link lacak pelanggan
+- Pembayaran pada pekerjaan
+- Tidak dapat membuka Mitra dan Shift
+- Tidak dapat membuka Pengaturan Owner
+- Tidak dapat mengelola user
+- Tidak dapat menghapus pekerjaan
+
+Pembatasan dilakukan di proxy dan API sensitif, bukan hanya
+menyembunyikan menu.
+
+
+3. KEAMANAN PASSWORD & SESSION
+----------------------------------------------------------------
+
+PASSWORD
+- Password minimal 8 karakter.
+- Disimpan sebagai bcrypt hash cost 12.
+- Password asli tidak pernah disimpan di database.
+- Owner dapat reset password karyawan, tetapi tidak dapat membaca
+  password lama.
+
+SESSION
+- Token JWT ditandatangani HS256.
+- Disimpan di cookie HttpOnly: JavaScript browser tidak bisa membacanya.
+- Secure aktif di production (HTTPS).
+- SameSite=Lax.
+- Masa session 12 jam.
+- Token mencatat user ID, role, dan tokenVersion.
+
+REVOKE / PEMBATALAN SESSION
+Jika akun dinonaktifkan, role diganti, atau password di-reset:
+- tokenVersion bertambah.
+- Session lama tidak lagi valid pada pemeriksaan server.
+- Pengguna dialihkan kembali ke halaman Login.
+
+Pengujian nyata:
+- Operator login: Dashboard HTTP 200.
+- Owner menonaktifkan Operator.
+- Request Operator berikutnya: HTTP 307 -> /login.
+
+
+4. AUDIT LOGIN & ANTI BRUTE FORCE
+----------------------------------------------------------------
+
+Tabel login_audit mencatat:
+- Username yang mencoba login
+- User ID jika ditemukan
+- Berhasil / gagal
+- IP
+- User-agent perangkat
+- Waktu
+
+Jika username mengalami 8 kegagalan dalam 15 menit:
+- Login ditolak sementara dengan HTTP 429.
+- Pengguna diminta menunggu 15 menit.
+
+Pesan login salah tidak membedakan "username tidak ada" dan
+"password salah" agar tidak membantu penyerang menebak akun.
+
+
+5. AUTH_SECRET - WAJIB DI VERCEL
+----------------------------------------------------------------
+
+AUTH_SECRET adalah kunci penandatangan session login.
+Buat sekali dan jangan sering diganti.
+
+CARA MEMBUAT:
+Buka terminal di folder project, jalankan:
+
+    node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+
+Contoh hasil (JANGAN pakai contoh ini):
+
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Copy hasil tersebut.
+
+DI VERCEL:
+1. Project Print Flow -> Settings -> Environment Variables.
+2. Add New.
+3. Name  : AUTH_SECRET
+4. Value : tempel hasil acak.
+5. Centang Production, Preview, Development.
+6. Save.
+7. Deployments -> deployment terbaru -> tiga titik -> Redeploy.
+
+JANGAN:
+- Upload AUTH_SECRET ke GitHub.
+- Menulisnya di source code.
+- Mengirimnya ke grup WhatsApp.
+- Mengganti secret tanpa alasan; semua user akan logout jika diganti.
+
+Fallback DATABASE_URL tersedia agar deployment lama tidak langsung
+terkunci, tetapi AUTH_SECRET khusus tetap sangat direkomendasikan.
+
+
+6. SETUP_TOKEN SANGAT DIREKOMENDASIKAN
+----------------------------------------------------------------
+
+SETUP_TOKEN melindungi pembuatan akun Owner pertama dan /api/setup.
+
+Di Vercel tambahkan:
+    SETUP_TOKEN = kata-rahasia-setup-anda
+
+Saat membuat Owner pertama, form meminta Setup Token tersebut.
+
+Setelah Owner tercipta, endpoint bootstrap akan menolak Owner kedua
+meskipun seseorang mengetahui token. PostgreSQL advisory transaction
+lock mencegah dua akun Owner dibuat bersamaan.
+
+
+7. URUTAN DEPLOY YANG AMAN (PENTING)
+----------------------------------------------------------------
+
+1. SEBELUM push atau segera setelahnya, buka Vercel Environment
+   Variables.
+2. Tambahkan AUTH_SECRET.
+3. Pastikan SETUP_TOKEN ada (direkomendasikan).
+4. Push semua kode ke GitHub.
+5. Tunggu Vercel Ready.
+6. Buka:
+
+       https://alamat-anda.vercel.app/api/setup?token=SETUP_TOKEN_ANDA
+
+   Jika Anda tidak memakai SETUP_TOKEN:
+
+       https://alamat-anda.vercel.app/api/setup
+
+7. Pastikan response {"ok":true,...}.
+8. Buka:
+
+       https://alamat-anda.vercel.app/setup-akun
+
+9. Isi:
+   - Nama Owner
+   - Username (contoh: owner)
+   - Password minimal 8 karakter
+   - Ulangi password
+   - Setup Token jika digunakan
+10. Klik Buat Akun Owner.
+11. Otomatis masuk Dashboard.
+12. Buka menu user pojok kanan atas -> Kelola Pengguna.
+13. Buat akun setiap operator dan kasir.
+
+Setelah login aktif, membuka / tanpa session akan otomatis dialihkan
+ke /login. Halaman lacak pelanggan tetap publik.
+
+
+8. MEMBUAT AKUN KARYAWAN
+----------------------------------------------------------------
+
+Owner login -> klik profil pojok kanan atas -> Kelola Pengguna.
+
+Klik Tambah Pengguna, isi:
+- Nama lengkap
+- Username
+- Password awal
+- Role
+
+Saran username:
+- andi
+- rina.operator
+- kasir1
+
+Saran password awal:
+- Minimal 10-12 karakter
+- Gabungan huruf besar, kecil, angka
+- Jangan gunakan nomor HP atau nama toko
+
+Setelah login pertama, beri password melalui kanal pribadi.
+Jangan kirim daftar password ke grup.
+
+
+9. MANAJEMEN USER
+----------------------------------------------------------------
+
+Di /pengguna, Owner dapat:
+
+GANTI ROLE
+- Session lama user dibatalkan.
+- User login ulang dan menerima menu baru.
+
+RESET PASSWORD
+- Masukkan password baru minimal 8 karakter.
+- Semua session user lama dibatalkan.
+
+NONAKTIFKAN
+- User tidak dapat login.
+- Session halaman lama dialihkan ke login pada request berikutnya.
+- Data pekerjaan/riwayat user tidak dihapus.
+
+AKTIFKAN KEMBALI
+- User bisa login lagi menggunakan password terakhir.
+
+PENGAMAN OWNER
+- Owner tidak dapat menonaktifkan akun yang sedang dipakai.
+- Owner tidak dapat menurunkan role akun dirinya sendiri.
+
+Saran: buat minimal dua Owner terpercaya agar ada cadangan jika satu
+orang lupa password. Jangan memberikan Owner kepada semua operator.
+
+
+10. HEADER & LOGOUT
+----------------------------------------------------------------
+
+Setelah login, pojok kanan atas menampilkan:
+- Huruf awal nama
+- Nama user
+- Role
+
+Klik profil untuk:
+- Kelola Pengguna (Owner)
+- Keluar
+
+Saat belum login:
+- Menu internal tidak tampil.
+- Brand Print Flow tetap tampil.
+- Pengguna diarahkan ke halaman login bila membuka route internal.
+
+
+11. HALAMAN PUBLIK YANG TETAP TANPA LOGIN
+----------------------------------------------------------------
+
+- /login
+- /setup-akun (hanya berguna jika user masih kosong)
+- /lacak/TOKEN untuk pelanggan
+- /api/health
+- /api/setup (gunakan SETUP_TOKEN agar aman)
+- Logo usaha GET
+- Foto yang dibutuhkan halaman lacak
+- Manifest, service worker, icon, dan offline page
+
+Halaman /setup-akun otomatis menolak penciptaan jika sudah ada user.
+
+
+12. IDENTITAS LOGIN DALAM OPERASIONAL
+----------------------------------------------------------------
+
+PERUBAHAN STATUS
+Aktor diambil dari session login, bukan nama yang diketik browser.
+Riwayat menjadi lebih dapat dipercaya.
+
+PEMBUATAN ORDER
+PIC pembuat diambil dari nama user login.
+
+SERAH TERIMA SHIFT
+- Operator asal otomatis user yang sedang login.
+- Field operator asal terkunci untuk Operator.
+- Owner dapat mewakili operator bila diperlukan.
+- Penerima otomatis nama akun yang menekan tombol.
+- Tombol berbunyi: "Terima sebagai [Nama]".
+
+Ini menghilangkan kemungkinan operator mengetik nama orang lain untuk
+mengambil atau menyerahkan pekerjaan.
+
+
+13. LOGIN & PUSH NOTIFICATION TERTARGET
+----------------------------------------------------------------
+
+Subscription push sekarang mencatat:
+- user_id
+- operator_name
+- user_role
+
+Saat perangkat mengaktifkan notifikasi, identitas diambil dari session
+login, bukan input bebas.
+
+Mutasi shift baru:
+- Dikirim ke perangkat operator tujuan berdasarkan nama akun.
+- Owner juga menerima sebagai pengawas.
+
+Perubahan status masih broadcast ke perangkat internal aktif.
+
+PENTING:
+Pastikan nama tujuan serah-terima sama dengan nama akun operator.
+Pengembangan berikutnya sebaiknya mengganti input nama tujuan menjadi
+pilihan langsung dari daftar akun role Operator. Dengan demikian tidak
+ada perbedaan ejaan.
+
+
+14. DATABASE BARU
+----------------------------------------------------------------
+
+Tabel users:
+- name
+- username unik
+- password_hash
+- role
+- active
+- token_version
+- last_login_at
+- created_at / updated_at
+
+Tabel login_audit:
+- username
+- user_id
+- success
+- ip
+- user_agent
+- created_at
+
+Kolom tambahan push_subscriptions:
+- user_id
+- user_role
+
+
+15. FILE BARU & DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/lib/auth.ts
+    src/lib/auth-client.ts
+    src/proxy.ts
+    src/components/LoginForm.tsx
+    src/components/BootstrapOwnerForm.tsx
+    src/components/UserMenu.tsx
+    src/components/UserManagement.tsx
+    src/app/login/page.tsx
+    src/app/setup-akun/page.tsx
+    src/app/tidak-diizinkan/page.tsx
+    src/app/pengguna/page.tsx
+    src/app/api/auth/status/route.ts
+    src/app/api/auth/bootstrap/route.ts
+    src/app/api/auth/login/route.ts
+    src/app/api/auth/logout/route.ts
+    src/app/api/users/route.ts
+    src/app/api/users/[id]/route.ts
+    public/dokumentasi-update/2026-09-12-login-user-dan-hak-akses.txt
+
+DIUBAH:
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/lib/dbcheck.ts
+    src/app/layout.tsx
+    src/components/MainNav.tsx
+    src/components/HandoverManager.tsx
+    src/app/pesanan/[id]/page.tsx
+    src/app/api/orders/route.ts
+    src/app/api/orders/[id]/route.ts
+    src/app/api/orders/[id]/handovers/route.ts
+    src/app/api/push/route.ts
+    src/lib/push.ts
+    .env.example
+    package.json (bcryptjs + jose)
+    package-lock.json
+    README.md
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+16. HASIL PENGUJIAN
+----------------------------------------------------------------
+
+Guest membuka Dashboard ............. 307 -> /login
+Halaman lacak pelanggan ............. 200 tanpa login
+/api/setup .......................... 200 tanpa login (token optional)
+Status bootstrap user kosong ........ needsBootstrap=true
+Buat Owner pertama .................. BERHASIL
+Cookie session HttpOnly ............. BERHASIL
+Owner buka Dashboard ................ 200
+Owner buka /pengguna ................ 200
+Bootstrap Owner kedua ............... DITOLAK 409
+Password salah ...................... DITOLAK 401
+Buat akun Operator .................. BERHASIL
+Login Operator ...................... BERHASIL
+Operator buka Dashboard ............. 200
+Operator buka Pengaturan ............ 307 -> tidak-diizinkan
+Operator akses API user ............. DITOLAK 403
+Owner nonaktifkan Operator .......... BERHASIL
+Session Operator setelah nonaktif ... 307 -> /login
+Logout Owner ........................ BERHASIL -> /login
+Transaksi anti double Owner ......... TERPASANG
+TypeScript / production build ....... LULUS
+
+
+17. IDE LANJUTAN YANG DIREKOMENDASIKAN
+----------------------------------------------------------------
+
+A. PILIH OPERATOR DARI AKUN
+Field PIC dan tujuan mutasi memakai dropdown user role Operator,
+bukan teks. Ini memastikan push tertarget selalu cocok.
+
+B. GANTI PASSWORD SENDIRI
+Setiap user dapat mengganti password sendiri setelah login.
+
+C. AUDIT AKTIVITAS TERPUSAT
+Halaman owner yang menampilkan perubahan status, login, foto, dan
+mutasi per user.
+
+D. SESSION MANAGEMENT
+Owner melihat perangkat aktif dan dapat logout perangkat tertentu.
+
+E. 2FA OWNER
+Tambahkan kode authenticator untuk akun Owner jika aplikasi sudah
+menyimpan data bisnis penting.
+
+F. PEMBATASAN FIELD KASIR
+Kasir dapat mengubah pembayaran/status siap, tetapi tidak spesifikasi
+produksi. Operator tidak dapat mengubah harga. Ini perlu form/API yang
+lebih granular pada tahap berikut.
+
+================================================================
+SELESAI - login user dan role-based access siap digunakan.
+================================================================

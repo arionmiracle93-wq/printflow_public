@@ -1,0 +1,457 @@
+================================================================
+CATATAN UPDATE - INFRASTRUKTUR PUSH & PIC OPERATOR
+Tanggal : 11 September 2026
+Status  : INFRASTRUKTUR SELESAI; PERLU VAPID + IZIN PERANGKAT
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. JAWABAN LANGSUNG
+----------------------------------------------------------------
+
+PERTANYAAN:
+Apakah infrastruktur kode push notification Android sudah disiapkan
+agar ketika dikonversi ke APK otomatis berjalan?
+
+SEBELUM UPDATE INI:
+Belum sepenuhnya. Baru ada badge Shift dan rancangan arsitektur.
+
+SETELAH UPDATE INI:
+Infrastruktur Web Push sudah lengkap dan terpasang:
+- Service worker
+- Push event handler
+- Notification click handler
+- Database subscription perangkat
+- API subscribe/unsubscribe/test
+- Server sender dengan VAPID
+- Pembersihan subscription mati
+- Trigger otomatis perubahan status
+- Trigger otomatis mutasi shift dibuat/diterima
+- Tombol aktifkan/nonaktif/uji di Pengaturan
+
+Tetapi Android TIDAK memperbolehkan notifikasi aktif diam-diam.
+Masih ada 2 langkah yang memang wajib dilakukan pemilik/pengguna:
+
+1. Pemilik mengisi VAPID keys di Vercel (sekali untuk seluruh aplikasi).
+2. Setiap pengguna/perangkat menekan "Aktifkan Notifikasi" dan
+   menyetujui dialog izin Android (sekali per perangkat).
+
+Setelah dua langkah itu, saat aplikasi dikonversi sebagai PWA/TWA APK,
+notifikasi status bar dapat berjalan termasuk saat aplikasi ditutup.
+
+
+2. ARSITEKTUR YANG DIBUAT
+----------------------------------------------------------------
+
+ALUR AKTIVASI:
+
+Pengaturan -> Aktifkan Notifikasi
+        |
+        v
+Browser meminta izin Android/Chrome
+        |
+        v
+Service Worker membuat PushSubscription
+        |
+        v
+Subscription disimpan di tabel push_subscriptions (Neon)
+
+ALUR NOTIFIKASI:
+
+Operator mengubah status / membuat mutasi
+        |
+        v
+API Print Flow menyimpan perubahan ke Neon
+        |
+        v
+Response sukses segera kembali ke operator
+        |
+        v
+Next.js after() mengirim Web Push setelah response
+        |
+        v
+Push service Chrome/FCM membangunkan Service Worker
+        |
+        v
+Notifikasi muncul di panel/status bar Android
+        |
+        v
+Pengguna mengetuk -> membuka pekerjaan terkait
+
+Pengiriman memakai Next.js after(), bukan fire-and-forget biasa.
+Alasannya: Vercel dapat menghentikan promise biasa setelah response
+selesai. after() menjamin callback mendapat lifecycle yang benar tanpa
+membuat tombol simpan menunggu push selesai.
+
+
+3. NOTIFIKASI OTOMATIS YANG SUDAH TERPASANG
+----------------------------------------------------------------
+
+A. PERUBAHAN STATUS PEKERJAAN
+
+Contoh:
+    Judul : Status pekerjaan berubah
+    Isi   : PJ-2026-0012 — Spanduk Toko Jaya sekarang Finishing.
+    Klik  : /pesanan/12
+
+B. MUTASI SHIFT BARU
+
+Contoh:
+    Judul : Mutasi shift untuk Yoga
+    Isi   : Dimas menyerahkan PJ-2026-0012. Berikutnya: lanjut 300
+            lembar dan cek warna.
+    Klik  : /pesanan/12
+
+Mutasi memakai requireInteraction dan urgency tinggi agar lebih mudah
+terlihat. Perilaku akhir tetap mengikuti kebijakan Android/browser.
+
+C. MUTASI DITERIMA
+
+Contoh:
+    Judul : Serah terima sudah diterima
+    Isi   : Yoga menerima PJ-2026-0012 — Spanduk Toko Jaya.
+
+D. UJI NOTIFIKASI
+
+Pengaturan -> Uji Notifikasi
+
+Contoh:
+    Judul : Print Flow siap 🎉
+    Isi   : Notifikasi Android/PWA berhasil diaktifkan.
+
+
+4. SERVICE WORKER
+----------------------------------------------------------------
+
+File:
+    public/sw.js
+
+Kemampuan:
+- Menerima push saat halaman tidak terbuka.
+- Menampilkan title, body, icon, badge, getaran.
+- Klik notifikasi membuka URL pekerjaan.
+- Jika Print Flow sudah terbuka, fokus/navigasi window yang ada.
+- Tag per pekerjaan mencegah terlalu banyak notification duplikat.
+- Cache hanya manifest, icon, dan halaman offline.
+
+PRIVASI CACHE:
+Dashboard dan data pekerjaan TIDAK disimpan sebagai cache statis.
+Saat offline, pengguna melihat halaman:
+    public/offline.html
+
+Alasannya: data produksi harus selalu terbaru dan tidak cocok disimpan
+lama dalam browser cache.
+
+
+5. DATABASE SUBSCRIPTION
+----------------------------------------------------------------
+
+Tabel baru:
+    push_subscriptions
+
+Data yang disimpan:
+- endpoint push unik perangkat
+- encryption key p256dh
+- auth secret
+- nama perangkat (Android/APK atau Browser/Desktop)
+- nama operator (sudah disediakan untuk login mendatang)
+- user-agent
+- status aktif
+- tanggal dibuat/diubah
+
+Tidak menyimpan isi notifikasi atau data pribadi pelanggan.
+
+Subscription yang sudah kadaluarsa/dihapus browser dibersihkan otomatis
+jika push service mengembalikan HTTP 404 atau 410.
+
+
+6. CARA MEMBUAT VAPID KEYS (SEKALI SAJA)
+----------------------------------------------------------------
+
+VAPID adalah identitas server Print Flow saat mengirim Web Push.
+Buat satu pasangan key dan JANGAN diganti setelah pengguna berlangganan.
+
+CARA DENGAN TERMINAL DI FOLDER PROJECT:
+
+    npx web-push generate-vapid-keys --json
+
+Hasil contoh (MILIK ANDA AKAN BERBEDA):
+
+    {
+      "publicKey": "Bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...",
+      "privateKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx..."
+    }
+
+Copy kedua nilai ke Notepad sementara.
+JANGAN upload privateKey ke GitHub.
+
+Jika tidak nyaman menggunakan terminal, minta platform AI menjalankan
+perintah tersebut dan berikan nilainya melalui kanal aman. Nilai tetap
+harus ditempel manual ke Vercel karena merupakan secret.
+
+
+7. ENVIRONMENT VARIABLES DI VERCEL
+----------------------------------------------------------------
+
+Buka:
+Vercel -> Project Print Flow -> Settings -> Environment Variables
+
+Tambahkan tiga variable:
+
+A. NEXT_PUBLIC_VAPID_PUBLIC_KEY
+   Value: publicKey dari perintah di atas.
+   Ini aman dikirim ke browser (memang public).
+
+B. VAPID_PRIVATE_KEY
+   Value: privateKey dari perintah di atas.
+   RAHASIA. Jangan upload ke GitHub atau kirim ke grup chat.
+
+C. VAPID_SUBJECT
+   Value: email dengan format:
+
+       mailto:emailanda@gmail.com
+
+   Contoh:
+       mailto:ownerpercetakan@gmail.com
+
+Untuk masing-masing variable:
+- Centang Production
+- Centang Preview
+- Centang Development (opsional tetapi disarankan)
+- Save
+
+Lalu WAJIB:
+Deployments -> deployment terbaru -> menu tiga titik -> Redeploy
+
+Environment variable tidak berlaku pada deployment lama sebelum
+Redeploy.
+
+
+8. LANGKAH DATABASE SETELAH DEPLOY
+----------------------------------------------------------------
+
+Karena ada tabel push_subscriptions baru, buka sekali:
+
+    https://alamat-aplikasi-anda.vercel.app/api/setup
+
+Hasil benar:
+    {"ok":true,"message":"Database siap dipakai..."}
+
+Aman diulang dan tidak menghapus data.
+
+Urutan yang disarankan:
+1. Push kode ke GitHub.
+2. Tambah VAPID env di Vercel.
+3. Redeploy.
+4. Buka /api/setup.
+5. Buka aplikasi dari Android/APK.
+6. Pengaturan -> Aktifkan Notifikasi.
+7. Tekan Izinkan pada dialog Android.
+8. Tekan Uji Notifikasi.
+
+
+9. PENGATURAN NOTIFIKASI DI APLIKASI
+----------------------------------------------------------------
+
+Lokasi:
+    Pengaturan -> Push Notification Android / PWA
+
+Kondisi yang mungkin tampil:
+
+"Infrastruktur kode siap, tetapi VAPID belum diisi di Vercel."
+    -> isi 3 env VAPID + Redeploy.
+
+"Perangkat ini belum berlangganan notifikasi."
+    -> tekan Aktifkan Notifikasi.
+
+"Perangkat ini sudah menerima notifikasi."
+    -> tekan Uji Notifikasi.
+
+"Izin pernah ditolak."
+    -> Android Settings / Chrome Site Settings -> Notifications -> Allow.
+
+Tombol:
+- Aktifkan Notifikasi
+- Uji Notifikasi
+- Nonaktifkan
+
+
+10. APAKAH OTOMATIS SETELAH MENJADI APK?
+----------------------------------------------------------------
+
+JIKA APK = PWA/TWA DARI PWABUILDER:
+Ya, infrastruktur yang sama digunakan. Service worker dan Web Push
+tetap berjalan. Tidak perlu menulis ulang kode Android.
+
+Tetapi setiap instalasi tetap harus menekan Aktifkan Notifikasi dan
+Izinkan. Ini aturan keamanan Android/browser, tidak dapat dilewati.
+
+JIKA APK = WEBVIEW BIASA:
+Belum tentu. WebView sederhana tidak selalu mendukung Web Push.
+Gunakan PWABuilder TWA atau Capacitor+FCM, jangan generator WebView
+sembarang.
+
+JIKA APK = CAPACITOR/NATIVE:
+Infrastruktur Web Push web tidak otomatis menjadi FCM native.
+Perlu plugin Firebase/FCM. Karena rencana saat ini PWABuilder/TWA,
+Web Push adalah pilihan yang tepat.
+
+
+11. BROADCAST VS TARGET OPERATOR
+----------------------------------------------------------------
+
+VERSI SEKARANG:
+Semua perangkat internal yang mengaktifkan notifikasi menerima semua
+notifikasi status dan shift (broadcast).
+
+Alasannya: Print Flow belum memiliki login individual operator.
+Sistem tahu mutasi ditujukan ke "Yoga", tetapi belum tahu subscription
+perangkat mana milik akun Yoga.
+
+Struktur tabel sudah menyiapkan kolom operator_name sehingga kelak
+login dapat ditambahkan tanpa migrasi besar.
+
+UNTUK TIM KECIL:
+Broadcast biasanya cukup dan bahkan membantu owner mengetahui semua
+mutasi.
+
+UNTUK TIM BESAR:
+Tambahkan login + role:
+- Operator tujuan menerima mutasi untuk dirinya.
+- Owner menerima semua.
+- Kasir hanya menerima "siap diambil".
+
+Ini adalah pengembangan paling bernilai berikutnya menurut rekomendasi.
+
+
+12. NAMA OPERATOR PADA CARD PEKERJAAN
+----------------------------------------------------------------
+
+Ditambahkan teks penanggung jawab:
+
+    PIC: Pak Andi
+
+Lokasi:
+- Card Prioritas AI di Dashboard
+- Card pekerjaan mobile
+- Tabel daftar pekerjaan desktop
+
+Jika operator belum ditentukan:
+
+    PIC: Belum ditentukan
+
+ditampilkan berwarna kuning agar owner langsung tahu bahwa tanggung
+jawab belum jelas.
+
+Nama PIC otomatis berubah setelah Serah Terima Shift diterima.
+
+
+13. IDE LANJUTAN YANG DISARANKAN
+----------------------------------------------------------------
+
+A. LOGIN & ROLE OPERATOR (PRIORITAS TERTINGGI)
+Untuk notifikasi tertarget, keamanan data, dan audit yang lebih kuat.
+Role:
+- Owner: semua akses
+- Operator: pekerjaan & status sendiri
+- Kasir/CS: pelanggan, pembayaran, siap diambil
+
+B. PREFERENSI NOTIFIKASI
+Setiap pengguna memilih:
+- Mutasi shift
+- Deadline
+- Semua perubahan status
+- Siap diambil
+- Produksi mitra
+
+C. NOTIFIKASI DEADLINE TERJADWAL
+Perlu Vercel Cron:
+- 24 jam sebelum deadline
+- 6 jam sebelum deadline
+- Saat terlambat
+- Anti-duplikasi agar tidak spam
+
+D. ESKALASI MUTASI
+Jika mutasi belum diterima 15 menit:
+- Kirim pengingat operator tujuan
+- Kirim eskalasi ke owner setelah 30 menit
+
+E. LOG PENGIRIMAN
+Catat notifikasi terkirim/gagal agar owner dapat memastikan perangkat
+operator aktif.
+
+
+14. HASIL PENGUJIAN INFRASTRUKTUR
+----------------------------------------------------------------
+
+Generate VAPID key ......................... BERHASIL
+Public key length 87, private key length 43  VALID
+Konfigurasi VAPID terdeteksi ............... BERHASIL
+Service worker /sw.js ...................... HTTP 200
+Push event handler ......................... TERPASANG
+Notification click handler ................. TERPASANG
+Subscription disimpan ...................... BERHASIL (count 0 -> 1)
+Subscription dihapus ....................... BERHASIL (count 1 -> 0)
+Trigger perubahan status utama ............. BERHASIL
+Operasi status tetap sukses jika push gagal  BERHASIL
+PIC pada Dashboard ......................... TAMPIL
+PIC pada Daftar Pekerjaan .................. TAMPIL
+File nonaktif tanpa VAPID tidak crash ....... BERHASIL
+TypeScript / production build .............. LULUS
+
+CATATAN:
+Push visual di panel status Android tidak dapat diuji dalam sandbox
+server karena tidak ada browser/perangkat Android dan endpoint push
+FCM nyata. Pengujian terakhir harus dilakukan di HP Android setelah
+VAPID env diisi dan izin diberikan. Tombol Uji Notifikasi disediakan
+khusus untuk validasi tersebut.
+
+
+15. FILE BARU DAN DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    public/sw.js
+    public/offline.html
+    src/lib/push.ts
+    src/app/api/push/route.ts
+    src/components/ServiceWorkerRegister.tsx
+    src/components/PushNotificationSettings.tsx
+    public/dokumentasi-update/2026-09-11-infrastruktur-push-dan-pic-operator.txt
+
+DIUBAH:
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/lib/dbcheck.ts
+    src/app/layout.tsx
+    src/app/pengaturan/page.tsx
+    src/app/api/orders/[id]/route.ts
+    src/app/api/orders/[id]/handovers/route.ts
+    src/lib/ai.ts
+    src/components/ui.tsx
+    src/app/pesanan/page.tsx
+    .env.example
+    package.json (otomatis melalui install web-push)
+    package-lock.json (otomatis)
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Paling aman: upload seluruh project versi terbaru.
+
+
+16. BIAYA
+----------------------------------------------------------------
+
+Web Push/VAPID tidak memiliki biaya pengiriman langsung.
+Chrome Android menggunakan push service miliknya.
+
+Biaya yang tetap berlaku sesuai paket:
+- Vercel untuk menjalankan API pengirim
+- Neon untuk menyimpan subscription
+
+Data subscription sangat kecil. Untuk puluhan perangkat praktis tidak
+memberi dampak berarti pada kuota database.
+
+================================================================
+SELESAI - infrastruktur push siap untuk APK PWA/TWA setelah VAPID dan izin.
+================================================================

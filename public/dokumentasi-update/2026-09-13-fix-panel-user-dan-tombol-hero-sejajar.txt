@@ -1,0 +1,141 @@
+================================================================
+CATATAN UPDATE - FIX PANEL USER & TOMBOL HERO SEJAJAR
+Tanggal : 13 September 2026
+Status  : SELESAI
+Aplikasi: Print Flow
+================================================================
+
+
+1. MASALAH PANEL USER
+----------------------------------------------------------------
+
+Pada screenshot mobile, setelah badge user ditekan, panel akun terbuka
+namun bagian kirinya keluar layar / terpotong.
+
+Penyebab:
+- Badge user berada di sisi kiri header mobile.
+- Dropdown masih menggunakan posisi `right: 0`.
+- Panel selebar 240px membuka ke arah kiri dari ujung kanan badge.
+- Karena badge berada dekat kiri layar, sebagian panel keluar viewport.
+
+
+2. PERBAIKAN PANEL USER
+----------------------------------------------------------------
+
+Posisi dibuat responsive:
+
+MOBILE:
+    left: 0
+    right: auto
+    top: 3rem
+
+TABLET / DESKTOP:
+    left: auto
+    right: 0
+    top: 2.75rem
+
+Lebar panel sekarang:
+
+    min(16rem, 100vw - 2rem)
+
+Artinya:
+- Maksimal 256px.
+- Selalu menyisakan minimal 16px pada kedua sisi layar.
+- Tidak dapat melewati batas viewport.
+- Nama panjang tetap dapat dibungkus (`break-words`).
+
+Panel mobile sekarang membuka dari sisi kiri badge menuju kanan, bukan
+melebar keluar ke sisi kiri layar.
+
+
+3. TOMBOL DASHBOARD SEJAJAR
+----------------------------------------------------------------
+
+Tombol:
+- Pekerjaan Baru
+- Semua Pekerjaan
+
+Sebelumnya menggunakan flex-wrap. Jika total lebar tombol melebihi
+ruang, tombol kedua turun ke baris berikutnya.
+
+Sekarang pada mobile menggunakan:
+
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    width: 100%
+    gap: 0.5rem
+
+Hasil:
+- Kedua tombol selalu berdampingan.
+- Lebarnya sama.
+- Tidak ada tombol yang turun ke baris kedua.
+- Teks memakai ukuran 11px pada mobile agar tetap muat.
+- Padding mobile dibuat lebih ringkas.
+- Ikon tidak mengecil (`shrink-0`).
+- Teks tidak pindah baris (`whitespace-nowrap`).
+
+Pada layar `sm` ke atas, tombol kembali menggunakan flex dengan ukuran
+teks dan padding normal.
+
+
+4. SERVICE WORKER CACHE
+----------------------------------------------------------------
+
+Versi cache dinaikkan:
+
+    print-flow-shell-v3 -> print-flow-shell-v4
+
+Tujuannya agar PWA/Chrome Android segera meninggalkan shell versi lama
+setelah deployment baru aktif.
+
+
+5. FILE YANG BERUBAH
+----------------------------------------------------------------
+
+DIUBAH:
+    src/components/UserMenu.tsx
+    src/app/page.tsx
+    public/sw.js
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+BARU:
+    public/dokumentasi-update/2026-09-13-fix-panel-user-dan-tombol-hero-sejajar.txt
+
+Tidak ada perubahan database.
+Tidak perlu menjalankan /api/setup.
+
+
+6. CARA MELIHAT PERUBAHAN DI ANDROID
+----------------------------------------------------------------
+
+Setelah Vercel deploy berstatus Ready:
+
+1. Tutup tab/aplikasi Print Flow.
+2. Hapus Print Flow dari Recent Apps.
+3. Tunggu 5-10 detik.
+4. Buka kembali.
+
+Jika masih versi lama:
+1. Chrome -> Site Settings untuk domain Print Flow.
+2. Clear site data / Clear & reset.
+3. Buka ulang dan login.
+
+Data pekerjaan aman di Neon. Clear site data hanya menghapus cache dan
+session browser.
+
+
+7. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+- Klik badge user -> panel seluruhnya terlihat di dalam layar.
+- Nama Owner terlihat lengkap.
+- Kelola Pengguna dan Keluar tidak terpotong.
+- Pekerjaan Baru dan Semua Pekerjaan sejajar berdampingan.
+- Kedua tombol sama lebar pada mobile.
+- Navigasi utama tetap fixed di bawah.
+- Header user + titik tiga tetap fixed di atas.
+
+================================================================
+SELESAI - panel akun dan dua tombol Dashboard telah dirapikan.
+================================================================

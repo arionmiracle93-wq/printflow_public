@@ -1,0 +1,318 @@
+================================================================
+CATATAN UPDATE - OPTIMASI RESPONSIVITAS & LOADING
+Tanggal : 10 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. KELUHAN
+----------------------------------------------------------------
+
+Aplikasi terasa sedikit kurang responsif / ada delay setelah tombol
+atau menu diklik.
+
+Pertanyaan utama:
+Apakah bisa diperbaiki, atau merupakan limitasi Neon dan Vercel?
+
+JAWABAN:
+Bisa diperbaiki. Delay berasal dari gabungan kode aplikasi dan sifat
+layanan serverless, bukan hanya limitasi Neon/Vercel.
+
+
+2. PENYEBAB TERBESAR YANG DITEMUKAN
+----------------------------------------------------------------
+
+Dashboard sebelumnya menjalankan smartSummary() setiap kali halaman
+utama dibuka.
+
+Jika OPENAI_API_KEY atau ANTHROPIC_API_KEY aktif, artinya setiap klik
+menu Dashboard harus menunggu urutan berikut:
+
+1. Vercel menjalankan halaman.
+2. Aplikasi membaca database Neon.
+3. Aplikasi mengirim data ringkasan ke OpenAI/Anthropic.
+4. Menunggu jawaban model AI dari internet.
+5. Baru HTML Dashboard dikirim ke browser.
+
+Panggilan API model bahasa dapat membutuhkan 1-5 detik atau lebih.
+Hal ini membuat Dashboard terasa lambat walaupun Neon sebenarnya cepat.
+
+PERBAIKAN:
+- Dashboard sekarang menggunakan mesin analisa internal Print Flow.
+- Ringkasan status/risk tetap tersedia dan dihitung dalam milidetik.
+- GPT/Claude hanya dipanggil saat pengguna membuka dan memakai
+  panel "Tanya AI".
+- Navigasi biasa tidak lagi menunggu API AI eksternal.
+
+Fungsi AI tidak hilang. Hanya waktu pemanggilannya dibuat tepat:
+ON-DEMAND, bukan setiap membuka Dashboard.
+
+
+3. SERVER COMPONENT & UMPAN BALIK KLIK
+----------------------------------------------------------------
+
+Halaman Print Flow bersifat dinamis karena mengambil data terbaru dari
+Neon. Next.js perlu menunggu data server sebelum mengganti isi layar.
+
+Sebelumnya tidak ada indikator selama jeda tersebut. Akibatnya:
+- Pengguna menekan tombol.
+- Layar terlihat tidak berubah selama beberapa ratus milidetik.
+- Pengguna merasa klik tidak diterima dan bisa menekan dua kali.
+
+PERBAIKAN:
+Ditambahkan NavigationFeedback global.
+
+Saat link internal diklik:
+- Garis loading yellow-teal langsung bergerak di bagian paling atas.
+- Pengguna mendapat konfirmasi visual dalam satu frame.
+- Indikator hilang ketika halaman tujuan selesai dibuka.
+- Ada timeout pengaman 8 detik untuk query string / navigasi gagal.
+- Link eksternal, download, Ctrl+click, dan link tab baru tidak memicu
+  indikator palsu.
+
+File baru:
+    src/components/NavigationFeedback.tsx
+
+
+4. SKELETON LOADING
+----------------------------------------------------------------
+
+Ditambahkan file:
+    src/app/loading.tsx
+
+Ketika Next.js menunggu Server Component, pengguna sekarang melihat:
+- Placeholder hero navy-teal
+- 6 placeholder KPI cards
+- Placeholder daftar prioritas
+- Placeholder panel kanan
+- Teks "Memuat data Print Flow..."
+
+Skeleton mengikuti bentuk halaman sebenarnya sehingga perpindahan
+terasa stabil dan tidak membuat layout melompat.
+
+Catatan:
+Loading tidak mengurangi waktu jaringan secara langsung, tetapi
+meningkatkan perceived performance: pengguna langsung tahu aplikasi
+bekerja dan tidak merasa tombol macet.
+
+
+5. RESPONS SENTUHAN MOBILE
+----------------------------------------------------------------
+
+Ditambahkan CSS:
+    touch-action: manipulation
+
+pada button, link, dan elemen role=button.
+
+Manfaat:
+- Browser tidak menunggu interpretasi gesture zoom/double tap.
+- Respons tap terasa lebih langsung di Android.
+- Tidak memengaruhi scrolling normal.
+
+Tombol tetap mempunyai efek active scale sebagai feedback sentuhan.
+
+
+6. OPTIMASI KONEKSI POSTGRESQL
+----------------------------------------------------------------
+
+Pool koneksi dioptimalkan untuk lingkungan Vercel serverless:
+
+SEBELUM:
+    max: 5
+    connectionTimeoutMillis: 15000
+
+SESUDAH:
+    max: 3
+    min: 0
+    idleTimeoutMillis: 30000
+    keepAlive: true
+    keepAliveInitialDelayMillis: 10000
+    connectionTimeoutMillis: 15000
+
+Alasan:
+- Setiap instance Vercel bisa membuat pool sendiri.
+- Pool terlalu besar dapat menghasilkan terlalu banyak koneksi.
+- Pool kecil cukup untuk query halaman, apalagi DATABASE_URL sudah
+  memakai Neon pooled endpoint.
+- KeepAlive membantu memakai ulang koneksi pada instance Vercel yang
+  masih warm.
+
+Jangan menaikkan pool besar di serverless. Lebih besar belum tentu
+lebih cepat dan bisa memperburuk limit koneksi.
+
+
+7. COLD START NEON & VERCEL
+----------------------------------------------------------------
+
+Masih mungkin ada delay pada PERMINTAAN PERTAMA setelah aplikasi lama
+tidak dipakai. Ini disebut cold start.
+
+VERCEL COLD START:
+- Function/instance tidak selalu aktif terus-menerus.
+- Setelah lama idle, Vercel perlu menyalakan runtime.
+- Permintaan berikutnya biasanya lebih cepat.
+
+NEON COLD START:
+- Compute database pada paket hemat/gratis dapat scale down / suspend
+  ketika tidak digunakan.
+- Query pertama membangunkan compute.
+- Query berikutnya menggunakan database yang sudah warm.
+
+Ini sifat arsitektur serverless, bukan bug aplikasi.
+
+CARA MEMBEDAKAN:
+- Lambat hanya klik pertama setelah beberapa lama: kemungkinan cold start.
+- Semua klik selalu lambat: cek region, koneksi pooled, atau query.
+- Dashboard saja sangat lambat: sebelumnya karena API AI; sudah diperbaiki.
+- Tombol simpan lambat: jaringan + penulisan database; sekarang indikator
+  busy tetap tampil pada tombol terkait.
+
+
+8. ENDPOINT TES KECEPATAN
+----------------------------------------------------------------
+
+Ditambahkan:
+    GET /api/performance
+
+Akses dari:
+    Pengaturan -> Tes Kecepatan
+
+Endpoint mengukur:
+- firstQueryMs : query database pertama
+- warmQueryMs  : query kedua pada koneksi/runtime yang sama
+- totalMs      : total waktu pengukuran
+- pooled       : apakah host DATABASE_URL terdeteksi memakai -pooler
+- level        : cepat / cukup / lambat / sangat_lambat
+- advice       : saran sesuai hasil
+
+Contoh response:
+
+    {
+      "ok": true,
+      "level": "cepat",
+      "pooled": true,
+      "firstQueryMs": 120,
+      "warmQueryMs": 30,
+      "totalMs": 150
+    }
+
+CARA MEMBACA:
+- firstQuery < 250 ms : cepat
+- 250-799 ms          : cukup
+- 800-2499 ms         : lambat
+- >= 2500 ms          : sangat lambat / cold start besar
+
+Tes dua kali berturut-turut:
+- Tes pertama tinggi, kedua rendah -> cold start normal.
+- Keduanya tinggi -> kemungkinan region jauh / connection string salah.
+
+Endpoint tidak membuka data pelanggan atau pekerjaan. Hanya select 1.
+Response juga mengirim Server-Timing untuk pemeriksaan developer.
+
+
+9. PENGATURAN NEON YANG BENAR
+----------------------------------------------------------------
+
+Gunakan connection string POOLED:
+- Host mengandung "-pooler".
+- Akhir URL mengandung "?sslmode=require".
+
+Contoh:
+    postgresql://user:password@ep-xxx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+
+Pilih region Neon Singapore untuk pengguna Indonesia.
+
+Jangan memakai Direct connection untuk request aplikasi Vercel.
+Direct connection boleh dipakai untuk administrasi/migrasi tertentu,
+tetapi aplikasi serverless sebaiknya pooled.
+
+
+10. PENGATURAN VERCEL YANG BENAR
+----------------------------------------------------------------
+
+Idealnya function Vercel dekat dengan Neon.
+
+Jika Neon di Singapore:
+- Gunakan region function Vercel Singapore jika paket/pengaturan proyek
+  mengizinkan.
+- Jangan menaruh database di Amerika dan function di Asia, atau sebaliknya.
+
+Cara umum memeriksa:
+1. Vercel -> Project -> Settings.
+2. Cari Functions / Regions.
+3. Pilih region dekat database (Singapore).
+4. Redeploy.
+
+Nama menu Vercel bisa berubah sesuai versi dashboard/paket. Jika tidak
+ada pilihan region pada paket yang digunakan, jangan mengubah sembarang
+konfigurasi; koneksi pooled dan optimasi kode sudah memberi dampak besar.
+
+
+11. PERUBAHAN FILE
+----------------------------------------------------------------
+
+BARU:
+    src/components/NavigationFeedback.tsx
+    src/app/loading.tsx
+    src/app/api/performance/route.ts
+    public/dokumentasi-update/2026-09-10-optimasi-responsivitas-dan-loading.txt
+
+DIUBAH:
+    src/app/page.tsx
+    src/app/layout.tsx
+    src/app/globals.css
+    src/db/index.ts
+    src/app/pengaturan/page.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+
+12. LANGKAH DEPLOY
+----------------------------------------------------------------
+
+1. Upload/push semua file versi terbaru ke GitHub.
+2. Tunggu Vercel deploy sampai Ready.
+3. Lakukan hard refresh:
+   Windows : Ctrl + Shift + R
+   Mac     : Cmd + Shift + R
+   Android : tutup aplikasi/tab lalu buka kembali
+4. Buka Dashboard dan bandingkan waktu respons.
+5. Buka Pengaturan -> Tes Kecepatan.
+6. Jalankan dua kali dan bandingkan firstQueryMs/warmQueryMs.
+
+Tidak ada tabel database baru.
+Tidak perlu menjalankan /api/setup untuk update performa ini.
+Tidak perlu mengubah DATABASE_URL jika sudah memakai URL pooled.
+
+
+13. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+- Klik menu langsung menampilkan garis progress.
+- Saat server menunggu data, skeleton langsung tampil.
+- Dashboard tidak lagi menunggu OpenAI/Anthropic.
+- Klik kedua pada instance warm terasa lebih cepat.
+- Tap di HP terasa lebih langsung.
+- AI Chat tetap bekerja saat dipakai.
+- Semua data dan fungsi lama tetap utuh.
+
+
+14. BATAS REALISTIS
+----------------------------------------------------------------
+
+Tidak mungkin menjamin setiap request selalu 0 ms karena:
+- Jarak jaringan fisik tetap ada.
+- Vercel dan Neon adalah layanan serverless.
+- Paket gratis/hobby bisa mengalami cold start.
+- Koneksi internet pengguna berbeda-beda.
+
+Target realistis:
+- Klik terasa langsung karena feedback muncul segera.
+- Halaman warm terbuka cepat.
+- Permintaan pertama yang cold tetap dapat dimengerti melalui skeleton.
+- Tidak ada panggilan eksternal mahal dalam render Dashboard.
+
+================================================================
+SELESAI - respons aktual dan respons yang dirasakan sudah dioptimalkan.
+================================================================

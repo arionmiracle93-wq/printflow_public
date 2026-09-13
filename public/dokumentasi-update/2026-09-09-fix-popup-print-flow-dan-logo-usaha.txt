@@ -1,0 +1,259 @@
+================================================================
+CATATAN UPDATE - FIX POPUP, PRINT FLOW, & LOGO USAHA
+Tanggal : 09 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. RINGKASAN PERMINTAAN
+----------------------------------------------------------------
+
+Empat revisi dikerjakan:
+
+1) Memperbaiki popup foto attachment yang membuat layar berkedip
+   terus ketika dibuka dari job card dashboard.
+2) Mengganti nama aplikasi dari "CetakPantau AI" menjadi
+   "Print Flow".
+3) Menghapus menu "Langkah" dari menu utama dan menghapus card
+   "Langkah yang sudah Anda tandai" dari halaman Pengaturan.
+4) Menambahkan upload logo usaha di menu Pengaturan. Logo unggahan
+   menggantikan ikon robot di sebelah nama aplikasi pada header.
+
+
+2. PERBAIKAN BUG POPUP FOTO BERKEDIP
+----------------------------------------------------------------
+
+PENYEBAB:
+Job card dashboard mempunyai efek hover yang memakai CSS transform
+(card bergerak naik sedikit). Modal popup sebelumnya berada DI DALAM
+card tersebut dan memakai posisi fixed.
+
+Dalam browser, elemen fixed yang berada di dalam parent ber-transform
+bisa berubah titik acuannya. Saat cursor/popup mengubah keadaan hover,
+transform aktif-mati berulang sehingga layar terlihat blink/kedip.
+
+SOLUSI:
+Popup sekarang dirender menggunakan React Portal langsung ke
+"document.body", bukan sebagai anak dari job card.
+
+Tambahan kestabilan:
+- Klik tombol memakai preventDefault + stopPropagation.
+- Scroll halaman dikunci selama popup terbuka.
+- Tombol Escape menutup zoom terlebih dahulu, lalu popup.
+- Klik hanya pada area gelap luar yang menutup popup.
+- Popup memakai z-index terpisah (100), zoom foto z-index 110.
+- Event mousedown diperiksa agar klik isi modal tidak menutup modal.
+- Style popup diperbarui sesuai yellow-teal.
+
+Hasilnya: popup tidak lagi dipengaruhi hover/transform job card.
+
+
+3. PERGANTIAN NAMA MENJADI "PRINT FLOW"
+----------------------------------------------------------------
+
+Nama yang terlihat pengguna diubah di:
+- Header aplikasi
+- Judul browser / metadata
+- PWA / aplikasi yang dipasang di HP
+- Apple Web App title
+- Footer
+- Halaman Status
+- Halaman Panduan
+- Halaman Catatan Perubahan
+- Halaman Lacak pelanggan
+- Halaman Pengaturan
+- Halaman Langkah (URL lama masih tersedia, tapi tidak ada di menu)
+- README dan panduan utama
+
+Nama baru:
+    Print Flow
+
+Tagline tetap:
+    Monitoring Produksi Percetakan
+
+Manifest PWA:
+    name       : Print Flow — Monitoring Produksi Percetakan
+    short_name : Print Flow
+
+Jika aplikasi di HP masih menampilkan nama lama:
+1. Hapus shortcut / aplikasi lama dari layar utama.
+2. Buka alamat aplikasi lewat Chrome.
+3. Pilih "Tambahkan ke layar utama / Install app" lagi.
+
+Browser/PWA menyimpan nama dan icon dalam cache; ini normal.
+
+
+4. MENU & CARD YANG DIHAPUS
+----------------------------------------------------------------
+
+DIHAPUS DARI NAVIGASI UTAMA:
+    Menu "Langkah"
+
+- Dihapus dari desktop.
+- Dihapus dari tablet.
+- Dihapus dari bottom navigation HP.
+- Di HP, posisinya diganti menu "Pelanggan" agar tetap 5 menu.
+
+URL /mulai TIDAK dihapus agar data/fitur lama tidak rusak.
+Halaman itu hanya tidak ditampilkan di menu utama.
+
+DIHAPUS DARI MENU PENGATURAN:
+    Card "Langkah yang sudah Anda tandai"
+
+Data checklist lama di database tidak dihapus, tetapi tidak lagi
+ditampilkan. Ini aman dan tidak memengaruhi pekerjaan.
+
+
+5. FITUR UPLOAD LOGO USAHA
+----------------------------------------------------------------
+
+LOKASI:
+    Menu Pengaturan -> card "Logo Usaha"
+
+CARA PAKAI:
+1. Buka menu Pengaturan.
+2. Cari card "Logo Usaha".
+3. Klik "Upload Logo".
+4. Pilih file logo.
+5. Klik "Muat Ulang Header" atau refresh halaman.
+6. Logo langsung menggantikan icon robot di kiri atas.
+
+FORMAT:
+- PNG
+- JPG / JPEG
+- WEBP
+
+BATAS:
+- Maksimal 2 MB.
+- Saran ukuran 512 x 512 piksel.
+- Logo persegi atau logo dengan background transparan memberi hasil
+  paling rapi.
+
+KEAMANAN:
+- SVG tidak diterima untuk mencegah risiko script aktif di berkas.
+- File dibatasi tipe MIME dan ukuran.
+- Logo disimpan di database Neon (tabel business_branding).
+- Hanya satu logo aktif; upload baru mengganti logo lama.
+
+FALLBACK:
+- Jika belum ada logo, icon robot tetap tampil.
+- Jika gambar gagal dimuat, icon robot otomatis tampil.
+- Tombol "Kembali ke Ikon Robot" menghapus logo usaha.
+
+PENEMPATAN:
+- Logo usaha hanya menggantikan icon di header pojok kiri atas,
+  tepat di sebelah tulisan "Print Flow".
+- Ikon robot pada konteks AI lain (contoh Ringkasan AI) boleh tetap
+  tampil karena fungsinya menjelaskan AI, bukan logo usaha.
+
+
+6. PERUBAHAN DATABASE
+----------------------------------------------------------------
+
+Tabel baru:
+    business_branding
+
+Kolom:
+- id          : selalu 1 (hanya satu logo aktif)
+- mime        : jenis file gambar
+- size_bytes  : ukuran file
+- data        : isi gambar (bytea)
+- updated_at  : waktu update
+
+Endpoint baru:
+- GET    /api/branding/logo  -> menampilkan logo
+- POST   /api/branding/logo  -> upload / ganti logo
+- DELETE /api/branding/logo  -> hapus logo
+
+
+7. LANGKAH WAJIB SETELAH DEPLOY
+----------------------------------------------------------------
+
+Karena ada tabel baru, buka alamat ini SEKALI setelah deploy:
+
+    https://alamat-aplikasi-anda.vercel.app/api/setup
+
+Hasil benar:
+    {"ok":true,"message":"Database siap dipakai..."}
+
+Aman dijalankan berulang dan TIDAK menghapus data pekerjaan.
+
+Tanpa langkah ini:
+- Aplikasi utama tetap bisa menampilkan icon robot fallback.
+- Halaman Pengaturan dapat memberi peringatan tabel belum ada.
+- Upload logo belum bisa digunakan.
+
+
+8. FILE YANG PERLU DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+
+BARU:
+    src/components/AppLogo.tsx
+    src/components/LogoSettings.tsx
+    src/app/api/branding/logo/route.ts
+    public/dokumentasi-update/2026-09-09-fix-popup-print-flow-dan-logo-usaha.txt
+
+DIUBAH:
+    src/components/PhotoQuickPeek.tsx
+    src/components/MainNav.tsx
+    src/app/layout.tsx
+    src/app/pengaturan/page.tsx
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/lib/dbcheck.ts
+    public/manifest.webmanifest
+    README.md
+    public/panduan-deploy-neon-vercel.md
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Catatan: upload seluruh project versi terbaru paling aman agar tidak
+ada file yang tertinggal.
+
+
+9. CARA DEPLOY
+----------------------------------------------------------------
+
+1. Commit/push semua file ke GitHub.
+2. Tunggu Vercel build otomatis.
+3. Setelah status Vercel "Ready", buka:
+       https://alamat-aplikasi-anda.vercel.app/api/setup
+4. Kembali ke aplikasi dan refresh.
+5. Buka Pengaturan -> Upload Logo Usaha.
+6. Uji popup foto dari card dashboard.
+
+Tidak perlu mengubah DATABASE_URL atau membuat project Neon baru.
+
+
+10. HASIL PENGUJIAN
+----------------------------------------------------------------
+
+TypeScript typecheck ........................ LULUS
+Next.js production build .................... LULUS
+Upload logo PNG ............................. LULUS
+Serve logo (HTTP 200, image/png) ............ LULUS
+Pengaturan mendeteksi logo aktif ............ LULUS
+Reject berkas TXT / non-gambar .............. LULUS
+Hapus logo .................................. LULUS
+Setelah hapus: endpoint 404 -> robot fallback  LULUS
+Nama "Print Flow" tampil .................... LULUS
+Nama lama di halaman utama (0 kemunculan) ... LULUS
+Menu "Langkah" (0 kemunculan) ............... LULUS
+Card checklist Pengaturan (0 kemunculan) .... LULUS
+Popup foto memakai Portal di document.body .. LULUS (struktur diperbaiki)
+
+Validasi produksi final dijalankan kembali setelah dokumen ini
+diperbarui.
+
+
+11. CATATAN PRIVASI & BIAYA
+----------------------------------------------------------------
+
+- Logo tersimpan di Neon, tidak dikirim ke layanan pihak ketiga.
+- Ukuran maksimal hanya 2 MB, jadi dampak kuota sangat kecil.
+- Tidak ada biaya tambahan.
+- Tidak membutuhkan API key.
+
+================================================================
+SELESAI - Print Flow siap memakai logo usaha Anda.
+================================================================

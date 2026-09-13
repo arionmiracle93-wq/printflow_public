@@ -1,0 +1,576 @@
+================================================================
+DAFTAR ISI - CATATAN PERUBAHAN (CHANGELOG) CETAKPANTAU AI
+Folder: public/dokumentasi-update/
+================================================================
+
+CARA MEMBACA FILE INI
+----------------------------------------------------------------
+Setiap update penting disimpan sebagai 1 file .txt di folder ini.
+Nama filenya berformat:  TAHUN-BULAN-TANGGAL-judul.txt
+
+Anda bisa membacanya dengan 2 cara:
+  1) Lewat aplikasi : buka halaman /catatan-perubahan
+  2) Lewat browser  : buka /dokumentasi-update/NAMA-FILE.txt
+  3) Lewat komputer : buka folder public/dokumentasi-update/
+
+
+================================================================
+DAFTAR FILE
+================================================================
+
+[29] 2026-09-20-fix-uji-push-setelah-revisi-icon.txt
+    PALING BARU. Push test tidak muncul: ditambahkan Uji Lokal (izin/SW),
+    Uji Push Server (Vercel/VAPID/Neon), detail error delivery, Perbaiki
+    Subscription, reset per akun, dan SW version v10. Tidak perlu setup.
+
+[28] 2026-09-20-address-bar-muncul-lagi-setelah-rebuild-apk.txt
+    Address bar muncul lagi setelah rebuild APK biasanya
+    karena signing key/SHA-256, package ID, atau domain berubah. Bandingkan
+    assetlinks APK lama/baru dan masukkan fingerprint baru ke Vercel.
+
+[27] 2026-09-19-dropdown-karyawan-shift-dan-icon-printer.txt
+    Tujuan shift menjadi dropdown akun Karyawan aktif,
+    disimpan sebagai to_user_id, hanya akun tujuan boleh menerima, push
+    targeted berdasarkan ID. Icon launcher diganti printer simpel dan
+    versioned; rebuild APK dengan keystore lama. WAJIB /api/setup.
+
+[26] 2026-09-18-fix-tipe-environment-variable-vapid-vercel.txt
+    Fix warning Vercel: NEXT_PUBLIC_VAPID_PUBLIC_KEY harus
+    Type Config, VAPID_PRIVATE_KEY Type Secret, VAPID_SUBJECT Type Config.
+    Tambahkan satu per satu lalu Redeploy. Tidak perlu membuat key baru.
+
+[25] 2026-09-18-aktivasi-push-notification-lengkap.txt
+    Wizard VAPID Owner, halaman Notifikasi untuk semua role,
+    status subscription per akun, aktivasi/uji Android, ganti key lama,
+    dan trigger order/status/shift/mitra. Salin VAPID ke Vercel; private
+    key tidak disimpan. Setup hanya bila tabel push belum ada.
+
+[24] 2026-09-17-panduan-file-hasil-pwabuilder-dan-assetlinks.txt
+    Folder hasil PWABuilder sudah lengkap: cara membuka
+    assetlinks.json, mengambil package/SHA-256, mengisi Vercel, install
+    ulang APK, perbedaan direct APK vs Google Play, dan backup keystore.
+
+[23] 2026-09-17-fix-address-bar-apk-dan-cek-push.txt
+    APK masih menampilkan address bar karena TWA gagal
+    Digital Asset Links; endpoint /.well-known/assetlinks.json berbasis
+    env package/SHA-256 + /api/apk/check ditambahkan. Push readiness
+    juga diperiksa. Tidak perlu /api/setup.
+
+[22] 2026-09-16-konfirmasi-production-domain-pwa.txt
+    Konfirmasi domain benar untuk PWA/PWABuilder adalah
+    https://printflow-orcin.vercel.app (Production, check ok:true).
+    Standard Protection boleh tetap ON untuk preview/deployment URL;
+    pastikan Production sudah memakai SW v8. Tidak perlu /api/setup.
+
+[21] 2026-09-16-diagnosis-icon-gagal-status-302-vercel-protection.txt
+    Screenshot mengonfirmasi icon ada tetapi request anonim
+    mendapat 302 karena Vercel Deployment Protection pada deployment URL.
+    Diagnosis kini memberi code khusus, manifest memakai path .png relatif,
+    SW v8. Gunakan Production Domain publik. Tidak perlu /api/setup.
+
+[20] 2026-09-15-fix-manifest-tidak-terdeteksi-dan-icon-dinamis.txt
+    Fix "No manifest detected" dan icon public yang tidak
+    ikut upload: manifest + icon PNG 192/512 dilayani dinamis dari kode,
+    endpoint /api/pwa/check, metadata/proxy/SW v7. Tidak perlu setup.
+
+[19] 2026-09-15-edit-username-icon-pwa-dan-exit-android.txt
+    Tombol Ubah Username + revoke session; icon PWA asli
+    192/512/maskable dan Apple 180; manifest/metadata diperbaiki; aset
+    icon publik; penjelasan Back/Exit mobile web vs PWA vs TWA/APK.
+    Tidak perlu /api/setup.
+
+[18] 2026-09-14-fix-vercel-file-mobilemoremenu-lama.txt
+    Fix Vercel TypeScript: file MobileMoreMenu.tsx lama
+    masih berisi role kasir karena upload manual tidak menghapus file.
+    File dibuat kompatibel Owner/Karyawan. Tidak perlu /api/setup.
+
+[17] 2026-09-14-pengaturan-responsive-dan-role-karyawan.txt
+    Pengaturan dibuat full responsive/no horizontal scroll;
+    role login disederhanakan menjadi Owner dan Karyawan. Akun Operator/
+    Kasir lama otomatis dimigrasikan menjadi Karyawan melalui /api/setup.
+    WAJIB jalankan /api/setup sekali dan semua user login ulang.
+
+[16] 2026-09-13-fix-panel-user-dan-tombol-hero-sejajar.txt
+    Dropdown badge user mobile diubah dari right-anchor ke
+    left-anchor dan dibatasi viewport agar tidak terpotong; tombol
+    Pekerjaan Baru/Semua Pekerjaan menjadi grid 2 kolom sejajar.
+    Cache service worker v4. Tidak perlu /api/setup.
+
+[15] 2026-09-13-fix-final-posisi-menu-mobile-dan-jam-lokal.txt
+    Akar bug menu mobile ditemukan: fixed nav menjadi
+    relatif ke header backdrop-filter pada Chrome Android. Nav dipindah
+    ke document.body via Portal + CSS fixed eksplisit; header user fixed
+    atas; tanggal/jam kini live dari perangkat. Cache SW v3. Tanpa setup.
+
+[14] 2026-09-13-fix-dropdown-mobile-dan-header-user.txt
+    Bottom-sheet Lainnya dihapus; mobile kini memakai
+    badge user kiri + titik tiga kanan atas dengan dropdown ke bawah,
+    sedangkan menu utama fixed di bawah: Beranda/Kerjaan/Baru/Shift/
+    Pelanggan. Mitra/utilitas ada di dropdown. Tidak perlu /api/setup.
+
+[13] 2026-09-12-navigasi-mobile-bawah-menu-lainnya.txt
+    Navigasi bawah Owner menjadi Beranda/Kerjaan/Baru/
+    Shift/Lainnya; panel bottom sheet Lainnya berisi Pelanggan, Mitra,
+    Pengaturan, Catatan, Status, dan Panduan. Menu mengikuti role dan
+    titik tiga header disembunyikan di mobile. Tidak perlu /api/setup.
+
+[12] 2026-09-12-header-ringkas-menu-titik-tiga.txt
+    Pengaturan, Catatan, Status, dan Panduan dipindah ke
+    dropdown titik tiga setelah badge user; menu utama/mobile diringkas;
+    nama user tidak lagi dipotong pada desktop. Tidak perlu /api/setup.
+
+[11] 2026-09-12-login-user-dan-hak-akses.txt
+    Login internal Owner/Operator/Kasir, bcrypt password,
+    JWT HttpOnly cookie, role-based route/API, bootstrap Owner pertama,
+    manajemen user, reset/nonaktif, audit login, actor session, dan
+    push subscription tertarget. WAJIB AUTH_SECRET + /api/setup.
+
+[10] 2026-09-11-prefetch-dan-navigasi-smooth.txt
+    Prefetch proaktif menu utama, prefetch saat hover/touch,
+    loading feedback ditunda 180 ms agar navigasi cepat tidak flash,
+    dan perbaikan progress pada filter query-string. Tidak perlu setup.
+
+[9] 2026-09-11-infrastruktur-push-dan-pic-operator.txt
+    Infrastruktur Web Push lengkap untuk APK PWA/TWA:
+    service worker, VAPID, subscription perangkat, API, sender dengan
+    Next.js after(), trigger status/mutasi, tombol aktifkan/uji, offline
+    aman; plus PIC operator pada card Dashboard dan daftar. WAJIB isi
+    VAPID env di Vercel dan jalankan /api/setup sekali.
+
+[8] 2026-09-10-optimasi-responsivitas-dan-loading.txt
+    Optimasi respons aplikasi: Dashboard tidak lagi
+    menunggu GPT/Claude, progress navigasi instan, skeleton loading,
+    touch-action mobile, pool PostgreSQL serverless, endpoint tes
+    /api/performance, serta panduan cold start dan region Neon/Vercel.
+    Tidak perlu menjalankan /api/setup.
+
+[7] 2026-09-10-rencana-push-notification-dan-badge-shift.txt
+    Penjelasan push notification Android untuk PWA/TWA
+    vs FCM native, rencana implementasi bertahap, Android 13 permission,
+    dan badge angka merah pada menu Shift. Badge SUDAH AKTIF dan
+    diperbarui realtime/polling; push masih berupa rancangan.
+
+[6] 2026-09-09-serah-terima-shift-dan-paste-clipboard.txt
+    Serah-terima pekerjaan antar operator shift dengan
+    bukti serah/terima, posisi terakhir, kendala, tindakan berikutnya,
+    operator aktif otomatis berubah; plus paste screenshot Windows
+    melalui Ctrl+V / clipboard. WAJIB jalankan /api/setup sekali.
+
+[5] 2026-09-09-produksi-mitra-lempar-order.txt
+    Pengelolaan order yang dilempar ke percetakan lain
+    atau pusat: daftar mitra, status vendor, target barang kembali,
+    biaya & margin, QC, riwayat, badge dashboard, halaman /mitra,
+    serta SOP pengelolaan lapangan. WAJIB jalankan /api/setup sekali.
+
+[4] 2026-09-09-fix-popup-print-flow-dan-logo-usaha.txt
+    Memperbaiki popup foto berkedip dengan React Portal,
+    mengganti nama aplikasi menjadi Print Flow, menghapus menu Langkah
+    dan card checklist Pengaturan, serta menambahkan upload logo usaha.
+    WAJIB jalankan /api/setup sekali (tabel business_branding baru).
+
+[3] 2026-09-08-redesign-modern-yellow-teal.txt
+    Redesign menyeluruh mengikuti referensi pemilik:
+    color scheme deep navy-teal + teal + golden yellow, ikon Lucide
+    modern, header/logo baru, hero, KPI, card prioritas, Tanya AI,
+    pipeline, navigasi desktop/tablet/mobile, dan ikon PWA baru.
+    Tidak perlu menjalankan /api/setup.
+
+[2] 2026-09-08-popup-foto-dan-lacak-whatsapp.txt
+    Dua fitur:
+    (a) tombol 🖼️ di card pekerjaan yang menampilkan popup galeri foto
+        tanpa harus membuka halaman detail;
+    (b) kirim link lacak + foto ke pelanggan via WhatsApp, lengkap
+        dengan halaman lacak publik /lacak/TOKEN.
+    Wajib jalankan /api/setup sekali (ada kolom baru: share_token).
+
+[1] 2026-09-07-fitur-lampiran-foto.txt
+    Fitur attachment gambar per pekerjaan.
+    Isi: cara pakai, batasan, hasil uji, langkah wajib /api/setup,
+    daftar file untuk upload ke GitHub, hitungan kuota Neon,
+    saran pemakaian di lapangan.
+
+
+================================================================
+RANGKUMAN SEMUA PERUBAHAN SEJAK AWAL
+================================================================
+
+UPDATE 34 - Dropdown Karyawan Shift & Icon Printer
+----------------------------------------------------------------
+Tanggal : 19-09-2026
+Status  : selesai, WAJIB /api/setup sekali
+Perubahan: dropdown akun Karyawan aktif; target user ID; penerimaan
+           hanya oleh tujuan; push targeted ID; icon PF diganti printer
+           simpel; manifest/icon version printer-1; SW v9
+APK     : perlu package ulang PWABuilder memakai keystore lama
+Detail  : lihat file [27] di atas
+
+UPDATE 33 - Aktivasi Push Notification Lengkap
+----------------------------------------------------------------
+Tanggal : 18-09-2026
+Status  : infrastruktur/wizard selesai; perlu VAPID Vercel + izin HP
+Perubahan: generator VAPID Owner, halaman /notifikasi Owner/Karyawan,
+           subscription status, wizard 3 tahap, old-key replacement,
+           trigger order baru + status + shift + produksi mitra
+Keamanan: private key hanya response no-store, tidak disimpan/log
+Detail  : lihat file [25] di atas
+
+UPDATE 32 - Panduan File Hasil PWABuilder
+----------------------------------------------------------------
+Tanggal : 17-09-2026
+Status  : dokumentasi, tidak perlu perubahan database
+File    : assetlinks.json, APK, AAB, signing.keystore, signing-info
+Langkah : copy package/SHA ke Vercel, Redeploy, verifikasi, reinstall;
+           simpan keystore; tambah fingerprint Play bila publish store
+Detail  : lihat file [24] di atas
+
+UPDATE 31 - Fix Address Bar APK & Cek Push
+----------------------------------------------------------------
+Tanggal : 17-09-2026
+Status  : infrastruktur selesai, perlu env Android + reinstall APK
+Masalah : APK fallback ke Chrome Custom Tab karena TWA belum verified
+Solusi  : /.well-known/assetlinks.json dari package/SHA fingerprint;
+           /api/apk/check menguji address bar + PWA + VAPID push
+Detail  : lihat file [23] di atas
+
+UPDATE 30 - Konfirmasi Production Domain PWA
+----------------------------------------------------------------
+Tanggal : 16-09-2026
+Status  : production domain benar, tidak perlu setup database
+Domain  : https://printflow-orcin.vercel.app
+Temuan : /api/pwa/check ok:true; dynamic icons 200; static icon 404
+          hanya fallback; domain acak tetap protected 302
+Tindakan: gunakan Production Domain di PWABuilder; promote deployment
+           terbaru dan pastikan sw.js menunjukkan v8
+Detail  : lihat file [22] di atas
+
+UPDATE 29 - Diagnosis Icon 302 / Vercel Deployment Protection
+----------------------------------------------------------------
+Tanggal : 16-09-2026
+Status  : diagnosis selesai, tidak perlu setup database
+Temuan : manifest/SW/icon ada, tetapi anonymous check mendapat 302;
+          browser manual bisa karena memiliki cookie login Vercel
+Solusi : gunakan Production Domain publik; diagnosis code protection;
+          manifest icon path relatif .png; service worker v8
+Detail : lihat file [21] di atas
+
+UPDATE 28 - Fix Manifest Tidak Terdeteksi & Icon Dinamis
+----------------------------------------------------------------
+Tanggal : 15-09-2026
+Status  : selesai, tidak perlu setup database
+Masalah : PNG tidak ikut upload manual; Chrome No manifest detected;
+           PWABuilder membaca manifest lama/tidak lengkap
+Solusi  : /api/pwa/manifest, icon dinamis 192/512, /api/pwa/check,
+           endpoint publik, SW v7; static PNG tetap fallback
+Detail  : lihat file [20] di atas
+
+UPDATE 27 - Edit Username, Icon PWA, & Exit Android
+----------------------------------------------------------------
+Tanggal : 15-09-2026
+Status  : selesai, tidak perlu setup database
+Perubahan: edit username unik + login ulang; icon 192/512/maskable/
+           Apple ukurannya valid; manifest shortcut/launch handler;
+           proxy membebaskan aset PWA; cache SW v6
+Dokumen : perilaku Back/Exit mobile web, PWA, TWA, dan WebView
+Detail  : lihat file [19] di atas
+
+UPDATE 26 - Fix Vercel File MobileMoreMenu Lama
+----------------------------------------------------------------
+Tanggal : 14-09-2026
+Status  : selesai, tidak perlu setup database
+Penyebab: upload manual tidak menghapus MobileMoreMenu.tsx lama yang
+           masih memakai role kasir, sehingga TypeScript gagal
+Solusi  : file kompatibilitas hanya Owner/Karyawan; boleh juga dihapus
+Detail  : lihat file [18] di atas
+
+UPDATE 25 - Pengaturan Responsive & Role Karyawan
+----------------------------------------------------------------
+Tanggal : 14-09-2026
+Status  : selesai, WAJIB /api/setup sekali
+Perubahan: Pengaturan no horizontal overflow; tombol/URL/card wrap;
+           role login hanya Owner dan Karyawan; akun Operator/Kasir
+           lama dimigrasikan otomatis, session lama dibatalkan
+Akses   : Karyawan gabungan produksi + kasir, tetap tanpa akses Owner
+Detail  : lihat file [17] di atas
+
+UPDATE 24 - Fix Panel User & Tombol Hero Sejajar
+----------------------------------------------------------------
+Tanggal : 13-09-2026
+Status  : selesai, tidak perlu setup database
+Perubahan: dropdown user mobile left-anchored + viewport-safe; tombol
+           Pekerjaan Baru/Semua Pekerjaan grid 2 kolom sejajar;
+           service-worker cache v4
+Detail  : lihat file [16] di atas
+
+UPDATE 23 - Fix Final Posisi Menu Mobile & Jam Lokal
+----------------------------------------------------------------
+Tanggal : 13-09-2026
+Status  : selesai, tidak perlu setup database
+Akar bug: backdrop-filter header membuat fixed nav relatif ke header
+Solusi  : mobile nav via React Portal ke body + CSS bottom !important;
+           header fixed atas; jam live berdasarkan perangkat/browser;
+           service-worker cache v3
+Detail  : lihat file [15] di atas
+
+UPDATE 22 - Fix Dropdown Mobile & Header User
+----------------------------------------------------------------
+Tanggal : 13-09-2026
+Status  : selesai, tidak perlu setup database
+Perubahan: bottom sheet dihapus; mobile header badge user kiri + titik
+           tiga kanan; dropdown muncul ke bawah; menu utama fixed bawah
+           Beranda/Kerjaan/Baru/Shift/Pelanggan; Mitra di dropdown
+Refresh : PWA mungkin perlu clear cache/reinstall karena SW lama
+Detail  : lihat file [14] di atas
+
+UPDATE 21 - Navigasi Mobile Bawah & Menu Lainnya
+----------------------------------------------------------------
+Tanggal : 12-09-2026
+Status  : selesai, tidak perlu setup database
+Perubahan: bottom nav Owner 5 item (Beranda/Kerjaan/Baru/Shift/
+           Lainnya); bottom sheet berisi Pelanggan/Mitra/Pengaturan/
+           Catatan/Status/Panduan; role-aware; header more hidden mobile
+Detail  : lihat file [13] di atas
+
+UPDATE 20 - Header Ringkas & Menu Titik Tiga
+----------------------------------------------------------------
+Tanggal : 12-09-2026
+Status  : selesai, tidak perlu setup database
+Perubahan: Pengaturan/Catatan/Status/Panduan masuk dropdown titik tiga
+           setelah badge user; menu utama/mobile lebih lega; nama user
+           tidak truncate pada desktop; dropdown aktif/escape/outside
+Role    : menu titik tiga hanya Owner
+Detail  : lihat file [12] di atas
+
+UPDATE 19 - Login User & Hak Akses
+----------------------------------------------------------------
+Tanggal : 12-09-2026
+Status  : selesai; wajib AUTH_SECRET + /api/setup + bootstrap Owner
+Perubahan: role Owner/Operator/Kasir, password bcrypt, JWT HttpOnly,
+           proxy RBAC, akun pertama, manajemen user, reset/nonaktif,
+           audit login, actor dari session, push user identity
+Keamanan: bootstrap transaction lock, brute-force 8x/15 menit,
+           revokasi segera saat user nonaktif/password/role berubah
+Detail  : lihat file [11] di atas
+
+UPDATE 18 - Prefetch & Navigasi Lebih Smooth
+----------------------------------------------------------------
+Tanggal : 11-09-2026
+Status  : selesai, tidak perlu setup database
+Perubahan: route utama diprefetch saat idle/hover/touch; progress baru
+           muncul setelah 180 ms agar transisi cepat tidak flicker;
+           filter pathname sama tidak memicu progress global
+Keputusan: tidak memakai cache data agresif agar status produksi segar
+Detail  : lihat file [10] di atas
+
+UPDATE 17 - Infrastruktur Web Push & PIC Operator
+----------------------------------------------------------------
+Tanggal : 11-09-2026
+Status  : kode selesai; perlu VAPID env + /api/setup + izin perangkat
+Perubahan: service worker push, subscription Neon, API push, sender
+           VAPID, trigger status/mutasi, tombol aktivasi/uji, offline
+           fallback aman, nama PIC pada Dashboard/Daftar Pekerjaan
+APK     : siap untuk PWA/TWA; tiap perangkat tetap wajib memberi izin
+Detail  : lihat file [9] di atas
+
+UPDATE 16 - Optimasi Responsivitas & Loading
+----------------------------------------------------------------
+Tanggal : 10-09-2026
+Status  : selesai, tidak perlu menjalankan /api/setup
+Perubahan: Dashboard tidak menunggu API AI eksternal, progress bar
+           navigasi instan, skeleton loading, respons tap mobile,
+           pool PostgreSQL dioptimalkan, endpoint /api/performance
+Diagnosis: dokumentasi cold start dan region Neon/Vercel
+Detail  : lihat file [8] di atas
+
+UPDATE 15 - Badge Shift & Rencana Push Notification Android
+----------------------------------------------------------------
+Tanggal : 10-09-2026
+Status  : badge selesai; push notification masih rancangan
+Perubahan: badge angka merah pada menu Shift (desktop/tablet/HP),
+           refresh awal + 30 detik + fokus + event langsung,
+           endpoint /api/handovers/pending-count
+Rencana : Web Push + service worker untuk PWA/TWA; login operator
+           diperlukan agar notifikasi dapat ditargetkan per orang
+Wajib   : tidak perlu /api/setup bila tabel shift sudah ada
+Detail  : lihat file [7] di atas
+
+UPDATE 14 - Serah Terima Shift & Paste Clipboard
+----------------------------------------------------------------
+Tanggal : 09-09-2026
+Status  : selesai, perlu menjalankan /api/setup sekali
+Perubahan: mutasi operator dengan posisi terakhir, kendala, tindakan
+           berikutnya, bukti penerimaan, operator aktif otomatis;
+           upload screenshot dengan Ctrl+V / Baca Clipboard
+Privasi : catatan shift tidak tampil ke pelanggan
+Wajib   : buka https://app-anda.vercel.app/api/setup
+Detail  : lihat file [6] di atas
+
+UPDATE 13 - Produksi Mitra / Lempar Order
+----------------------------------------------------------------
+Tanggal : 09-09-2026
+Status  : selesai, perlu menjalankan /api/setup sekali
+Perubahan: daftar mitra, status produksi luar, target kembali,
+           biaya vendor, margin kotor, QC, riwayat otomatis, badge
+           dashboard/daftar, dan halaman monitoring /mitra
+Privasi : nama/biaya/status mitra tidak muncul ke pelanggan
+Wajib   : buka https://app-anda.vercel.app/api/setup
+Detail  : lihat file [5] di atas
+
+UPDATE 12 - Fix popup, nama Print Flow, dan upload logo usaha
+----------------------------------------------------------------
+Tanggal : 09-09-2026
+Status  : selesai, perlu menjalankan /api/setup sekali
+Perubahan:
+  a) Popup foto dipindahkan ke React Portal agar tidak blink
+  b) Nama aplikasi diganti menjadi Print Flow
+  c) Menu Langkah dihapus dari navigasi utama
+  d) Card "Langkah yang sudah Anda tandai" di Pengaturan dihapus
+  e) Upload logo usaha (PNG/JPG/WEBP, max 2 MB) ditambahkan
+Wajib   : buka https://app-anda.vercel.app/api/setup
+Detail  : lihat file [4] di atas
+
+UPDATE 11 - Redesign modern yellow-teal
+----------------------------------------------------------------
+Tanggal : 08-09-2026
+Status  : selesai, tidak perlu menjalankan /api/setup
+Perubahan: sistem desain yellow-teal menyeluruh, header navy-teal,
+           logo robot modern, ikon Lucide, dashboard/hero/KPI baru,
+           panel Tanya AI baru, navigasi responsive, ikon PWA baru
+Warna   : #07384F, #0D9488, #14B8A6, #FBBF24, #F4F9F9
+Catatan : fungsi & data tidak berubah; warna alarm tetap semantik
+Detail  : lihat file [3] di atas
+
+UPDATE 10 - Popup foto di card + lacak WhatsApp
+----------------------------------------------------------------
+Tanggal : 08-09-2026
+Status  : selesai, perlu jalankan /api/setup sekali
+Perubahan:
+  a) Tombol "🖼️ N" di card pekerjaan (dashboard & daftar) ->
+     popup galeri foto tanpa buka halaman detail
+  b) Tombol "📲 Kirim via WhatsApp" di halaman detail ->
+     membuat tautan lacak + pesan WA terisi otomatis
+  c) Halaman publik /lacak/TOKEN untuk pelanggan
+     (status, progres, foto, riwayat; tanpa login)
+Keamanan: token acak 22 karakter, foto nota disembunyikan dari
+     pelanggan, data keuangan tidak ditampilkan, noindex
+Wajib   : buka https://app-anda.vercel.app/api/setup
+Detail  : lihat file [2] di atas
+
+UPDATE 9 - Fitur lampiran foto per pekerjaan
+----------------------------------------------------------------
+Tanggal : 07-09-2026
+Status  : selesai, perlu jalankan /api/setup sekali
+Alasan  : nama pekerjaan sering mirip, sulit dikenali dari nama saja
+Wajib   : buka https://app-anda.vercel.app/api/setup
+Detail  : lihat file [1] di atas
+
+UPDATE 8 - Dashboard dibuat lebih bersih
+----------------------------------------------------------------
+Tanggal : 07-09-2026
+Status  : selesai, tidak perlu langkah tambahan
+Perubahan: menghapus 2 card dari dashboard, yaitu
+           "🚀 Langkah selanjutnya" dan "📖 Butuh bantuan setup?"
+Alasan  : agar dashboard terlihat clean dan simpel
+Catatan : tidak ada yang hilang. Halaman /mulai tetap ada (menu
+           🚀 Langkah), halaman /panduan tetap ada (menu 📘 Panduan)
+File    : src/app/page.tsx
+
+UPDATE 7 - Menghapus sapaan "Selamat siang, Bos!"
+----------------------------------------------------------------
+Tanggal : 07-09-2026
+Status  : selesai, tidak perlu langkah tambahan
+Perubahan: judul hero diganti menjadi "Kondisi Percetakan Hari Ini 🖨️"
+Alasan  : diminta dihapus oleh pemilik
+Catatan : kode pemilih kata pagi/siang/sore/malam ikut dihapus
+           agar tidak ada kode mati
+File    : src/app/page.tsx
+
+UPDATE 6 - Checklist pascapemasangan & halaman Pengaturan
+----------------------------------------------------------------
+Tanggal : setelah deploy berhasil
+Status  : selesai
+Perubahan:
+  - Halaman /mulai     : checklist 8 langkah, progres terdeteksi
+                          otomatis dari isi database
+  - Halaman /pengaturan: hapus/isi data contoh, unduh cadangan CSV
+                          (pekerjaan, pelanggan, keuangan, riwayat),
+                          zona berbahaya dengan konfirmasi ketik,
+                          kondisi sistem
+  - API baru           : /api/export, /api/admin/reset, /api/settings
+File    : src/app/mulai/page.tsx, src/app/pengaturan/page.tsx,
+           src/lib/checklist.ts, src/components/AdminActions.tsx,
+           src/components/ChecklistToggle.tsx
+
+UPDATE 5 - Perbaikan halaman blank / hitam setelah deploy
+----------------------------------------------------------------
+Tanggal : setelah deploy pertama
+Status  : selesai
+Penyebab: halaman error bawaan Next.js berwarna hitam kalau
+           perangkat memakai mode gelap. Jadi itu bukan bug tampilan,
+           melainkan error 500 di server.
+Solusi  : layar peringatan berbahasa Indonesia + halaman diagnosis
+Halaman : /status  dan  /api/diagnose
+File    : src/components/ProblemScreen.tsx, src/app/error.tsx,
+           src/app/global-error.tsx, src/app/not-found.tsx,
+           src/lib/dbcheck.ts, src/db/index.ts
+Panduan : /panduan bagian 15.A
+
+UPDATE 4 - Database dibuat otomatis tanpa terminal
+----------------------------------------------------------------
+Status  : selesai
+Perubahan: halaman /api/setup membuat semua tabel secara idempoten.
+           Opsi ?seed=1 mengisi data contoh untuk latihan.
+File    : src/app/api/setup/route.ts, scripts/seed-demo.sql
+
+UPDATE 3 - Panduan lengkap untuk pemula
+----------------------------------------------------------------
+Status  : selesai
+File    : public/panduan-deploy-neon-vercel.md
+          dibaca di aplikasi lewat halaman /panduan
+Isi     : PRD, langkah GitHub - Neon - Vercel - APK Android,
+          daftar file yang boleh/jangan diupload, SOP harian,
+          troubleshooting, biaya, kamus istilah, roadmap
+
+UPDATE 2 - Mesin AI dua lapis
+----------------------------------------------------------------
+Status  : selesai
+Perubahan: lapis 1 mesin analisa internal (gratis, selalu jalan),
+           lapis 2 GPT/Claude (opsional, otomatis fallback)
+Skor    : 0-34 aman, 35-64 waspada, 65-89 berisiko, 90-100 terlambat
+File    : src/lib/ai.ts, src/lib/domain.ts
+
+UPDATE 1 - Aplikasi awal (MVP)
+----------------------------------------------------------------
+Status  : selesai
+Perubahan: dashboard, input pekerjaan, 9 status produksi, riwayat,
+           analisa risiko AI, Tanya AI, buku pelanggan, PWA
+
+
+================================================================
+KESEPAKATAN KE DEPAN (KONVENSI DOKUMENTASI)
+================================================================
+
+1) Kalau balasan panjang DAN penting untuk dokumentasi perubahan,
+   maka dibuatkan file .txt di folder ini.
+
+2) Nama file: TAHUN-BULAN-TANGGAL-judul-singkat.txt
+   Contoh: 2026-09-20-notifikasi-whatsapp.txt
+
+3) Isi file .txt selalu memuat bagian ini:
+   - Jawaban singkat / ringkasan
+   - Alasan perubahan
+   - Apa yang berubah (sebelum vs sesudah bila relevan)
+   - Langkah yang WAJIB dilakukan pemilik (misal jalankan /api/setup)
+   - Daftar file yang harus diupload ke GitHub
+   - Hasil pengujian
+   - Dampak ke kuota / biaya bila ada
+   - Saran langkah berikutnya
+
+4) File ini (00-DAFTAR-ISI.txt) diupdate setiap ada dokumentasi baru
+   supaya selalu menjadi peta terkini.
+
+5) Balasan pendek yang tidak berdampak ke kode tidak perlu
+   didokumentasikan, supaya folder ini tetap bersih.
+
+================================================================
+Terima kasih 🙏
+================================================================

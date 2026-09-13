@@ -1,0 +1,204 @@
+================================================================
+CATATAN UPDATE - HEADER RINGKAS & MENU TITIK TIGA
+Tanggal : 12 September 2026
+Status  : SELESAI
+Aplikasi: Print Flow
+================================================================
+
+
+1. RINGKASAN PERMINTAAN
+----------------------------------------------------------------
+
+Empat menu utilitas dipindahkan dari deretan menu utama ke dalam
+menu dropdown titik tiga:
+
+- Pengaturan
+- Catatan Perubahan
+- Status Sistem
+- Panduan
+
+Tombol titik tiga ditempatkan paling ujung kanan setelah badge user.
+Nama user pada badge diperbaiki agar tidak terpotong pada desktop.
+
+
+2. SUSUNAN HEADER BARU
+----------------------------------------------------------------
+
+Urutan dari kiri ke kanan:
+
+    Logo + Print Flow
+        -> Dashboard
+        -> Pekerjaan
+        -> Order Baru
+        -> Pelanggan
+        -> Mitra
+        -> Shift
+        -> Badge User
+        -> Tombol Titik Tiga
+
+Tombol titik tiga adalah elemen paling kanan.
+
+
+3. ISI DROPDOWN TITIK TIGA
+----------------------------------------------------------------
+
+A. PENGATURAN
+   Deskripsi: Logo, notifikasi, backup & sistem.
+
+B. CATATAN PERUBAHAN
+   Deskripsi: Dokumentasi setiap update aplikasi.
+
+C. STATUS SISTEM
+   Deskripsi: Diagnosis database dan koneksi.
+
+D. PANDUAN
+   Deskripsi: Petunjuk penggunaan dan deployment.
+
+Setiap item mempunyai:
+- Ikon Lucide modern
+- Judul
+- Deskripsi singkat
+- Highlight teal jika halaman tersebut sedang aktif
+- Tanda centang pada halaman aktif
+
+
+4. PERILAKU DROPDOWN
+----------------------------------------------------------------
+
+- Klik tombol titik tiga untuk membuka/menutup.
+- Klik di luar dropdown untuk menutup.
+- Tekan Escape untuk menutup.
+- Memilih menu otomatis menutup dropdown.
+- Dropdown otomatis menutup setelah pindah halaman.
+- Hover item melakukan prefetch agar navigasi cepat.
+- Posisi dropdown rata kanan sehingga tidak keluar layar.
+- Lebar dropdown menyesuaikan layar HP.
+
+Jika Owner sedang berada di salah satu halaman utilitas, tombol titik
+tiga berwarna kuning sebagai penanda aktif.
+
+
+5. HAK AKSES
+----------------------------------------------------------------
+
+Empat halaman tersebut adalah halaman Owner-only. Karena itu tombol
+titik tiga hanya ditampilkan untuk akun role Owner.
+
+Operator dan Kasir tidak melihat tombol tersebut dan tetap tidak bisa
+membuka URL-nya secara langsung karena proxy/RBAC tetap melindungi.
+
+
+6. NAVIGASI MOBILE
+----------------------------------------------------------------
+
+Pengaturan dihapus dari bottom navigation HP karena sudah tersedia
+melalui tombol titik tiga di header.
+
+Menu mobile Owner:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+- Pelanggan
+
+Menu mobile Operator:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+
+Menu mobile Kasir:
+- Beranda
+- Kerjaan
+- Baru
+- Pelanggan
+
+Jumlah kolom otomatis menyesuaikan role agar tidak ada ruang kosong.
+
+
+7. BADGE USER TIDAK TERPOTONG
+----------------------------------------------------------------
+
+Sebelumnya nama user memakai:
+- max-width kecil
+- class truncate
+
+Sekarang pada desktop lebar:
+- Tidak memakai truncate
+- Tidak memakai batas max-width nama
+- Menggunakan whitespace-nowrap
+- Role tetap tampil di bawah nama
+- Chevron menunjukkan dropdown akun dapat dibuka
+
+Pada layar sempit, teks nama tetap disembunyikan dan hanya inisial
+tampil agar header tidak overflow. Nama lengkap dapat dilihat dengan
+menekan badge user. Ini adalah perilaku responsive yang disengaja,
+bukan pemotongan nama.
+
+Dropdown user juga menampilkan nama lengkap menggunakan break-words,
+sehingga nama sangat panjang tetap terbaca seluruhnya.
+
+
+8. MENU AKUN TETAP TERPISAH
+----------------------------------------------------------------
+
+Badge user tetap berisi:
+- Nama dan role
+- Kelola Pengguna (khusus Owner)
+- Keluar
+
+Menu titik tiga khusus untuk:
+- Pengaturan
+- Dokumentasi
+- Status
+- Panduan
+
+Pemisahan ini menjaga struktur mudah dimengerti:
+- Badge user = identitas dan akun
+- Titik tiga = menu aplikasi tambahan
+
+
+9. FILE YANG BERUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/components/MoreMenu.tsx
+    public/dokumentasi-update/2026-09-12-header-ringkas-menu-titik-tiga.txt
+
+DIUBAH:
+    src/components/MainNav.tsx
+    src/components/UserMenu.tsx
+    src/app/layout.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Tidak ada perubahan database.
+Tidak perlu menjalankan /api/setup.
+
+
+10. CARA DEPLOY
+----------------------------------------------------------------
+
+1. Push/upload seluruh perubahan ke GitHub.
+2. Tunggu Vercel selesai deploy (Ready).
+3. Hard refresh aplikasi:
+   Windows : Ctrl + Shift + R
+   Android : tutup aplikasi lalu buka kembali
+4. Login sebagai Owner.
+5. Periksa titik tiga setelah badge user.
+6. Klik dan uji keempat menu.
+
+
+11. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+- Header lebih lega dan tidak terlalu penuh.
+- Enam menu operasional utama tetap satu klik.
+- Empat menu tambahan tersedia dalam satu dropdown.
+- Nama Owner tidak terpotong pada desktop.
+- Mobile bottom navigation lebih sederhana.
+- Hak akses role tetap aman.
+
+================================================================
+SELESAI - header Print Flow kini lebih ringkas dan rapi.
+================================================================

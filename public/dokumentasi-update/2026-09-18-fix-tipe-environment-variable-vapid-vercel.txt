@@ -1,0 +1,92 @@
+================================================================
+FIX TIPE ENVIRONMENT VARIABLE VAPID DI VERCEL
+Tanggal : 18 September 2026
+Aplikasi: Print Flow
+================================================================
+
+MASALAH
+----------------------------------------------------------------
+Vercel menampilkan peringatan merah:
+
+"Remove the public framework prefix to keep this value private.
+Public prefixes expose values to the browser. If that's safe, change
+the variable to Config."
+
+PENYEBAB
+----------------------------------------------------------------
+Tiga variable ditambahkan sekaligus menggunakan Type = Secret.
+Namun NEXT_PUBLIC_VAPID_PUBLIC_KEY memang sengaja harus tersedia di
+browser agar perangkat dapat membuat Push Subscription.
+
+Public key BUKAN rahasia. Private key tetap wajib rahasia.
+
+PENGATURAN YANG BENAR
+----------------------------------------------------------------
+
+1. NEXT_PUBLIC_VAPID_PUBLIC_KEY
+   Type  : Config
+   Value : public key VAPID (biasanya panjang 87 karakter)
+
+2. VAPID_PRIVATE_KEY
+   Type  : Secret
+   Value : private key VAPID (biasanya panjang 43 karakter)
+
+3. VAPID_SUBJECT
+   Type  : Config
+   Value : mailto:email-owner@gmail.com
+
+CARA PALING AMAN
+----------------------------------------------------------------
+Tambahkan satu per satu karena tipenya berbeda.
+
+A. Hapus dulu baris VAPID_PRIVATE_KEY dan VAPID_SUBJECT dari formulir
+yang sedang terbuka. Sisakan NEXT_PUBLIC_VAPID_PUBLIC_KEY.
+
+B. Ubah Type di atas menjadi Config.
+Simpan NEXT_PUBLIC_VAPID_PUBLIC_KEY.
+
+C. Klik Add Environment Variable lagi.
+Pilih Type = Secret.
+Isi VAPID_PRIVATE_KEY, lalu Save.
+
+D. Klik Add Environment Variable lagi.
+Pilih Type = Config.
+Isi VAPID_SUBJECT dengan format mailto:, lalu Save.
+
+Environment:
+- Production wajib
+- Preview boleh
+- Development boleh
+
+SETELAH SAVE
+----------------------------------------------------------------
+1. Vercel -> Deployments.
+2. Deployment terbaru -> tiga titik -> Redeploy.
+3. Tunggu Ready.
+4. Buka:
+   https://printflow-orcin.vercel.app/api/apk/check
+5. Cari:
+   "vapidConfigured": true
+6. Buka APK -> titik tiga -> Notifikasi Perangkat.
+7. Tekan Aktifkan Notifikasi -> Izinkan -> Uji Notifikasi.
+
+KEAMANAN
+----------------------------------------------------------------
+NEXT_PUBLIC_VAPID_PUBLIC_KEY boleh terlihat di browser. Itu normal.
+
+JANGAN pernah membagikan:
+- VAPID_PRIVATE_KEY
+- AUTH_SECRET
+- DATABASE_URL
+- signing.keystore
+- signing-info.txt
+
+VAPID_SUBJECT bukan rahasia, tetapi gunakan email yang benar dengan
+awalan mailto:.
+
+Tidak perlu membuat VAPID key baru. Key pada screenshot tetap dapat
+digunakan selama private key belum pernah dibagikan ke publik.
+
+================================================================
+SELESAI
+================================================================

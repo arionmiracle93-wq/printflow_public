@@ -1,0 +1,189 @@
+================================================================
+CATATAN UPDATE - NAVIGASI MOBILE BAWAH & MENU LAINNYA
+Tanggal : 12 September 2026
+Status  : SELESAI
+Aplikasi: Print Flow
+================================================================
+
+
+1. MASALAH
+----------------------------------------------------------------
+
+Owner pada tampilan mobile hanya melihat:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+- Pelanggan
+
+Menu lain tidak terlihat karena navigasi bawah sengaja dibatasi agar
+tidak terlalu padat. Akibatnya menu Mitra, Pengaturan, Catatan, Status,
+dan Panduan sulit ditemukan.
+
+Permintaan:
+- Menu mobile tetap berada di bawah layar agar mudah dijangkau.
+- Jika semua menu tidak muat, gunakan tombol titik tiga.
+
+
+2. SOLUSI BARU
+----------------------------------------------------------------
+
+Navigasi utama mobile Owner sekarang terdiri dari tepat 5 tombol:
+
+    Beranda | Kerjaan | Baru | Shift | Lainnya
+
+Tombol "Baru" tetap menjadi tombol kuning yang menonjol.
+Tombol Shift tetap menampilkan badge angka merah bila ada mutasi yang
+belum diterima.
+
+Tombol "Lainnya" memakai ikon titik tiga horizontal.
+
+
+3. PANEL BAWAH MENU LAINNYA
+----------------------------------------------------------------
+
+Saat "Lainnya" ditekan, panel muncul dari bagian bawah layar (bottom
+sheet). Panel berisi:
+
+- Pelanggan
+- Produksi Mitra
+- Pengaturan
+- Catatan Perubahan
+- Status Sistem
+- Panduan
+
+Setiap menu mempunyai:
+- Ikon modern
+- Nama
+- Penjelasan singkat
+- Penanda halaman aktif
+- Prefetch saat disentuh agar navigasi lebih cepat
+
+Panel dapat ditutup dengan:
+- Tombol X
+- Menekan area gelap di luar panel
+- Tombol Escape pada keyboard
+- Memilih salah satu menu
+
+Scroll halaman di belakang dikunci selama panel terbuka.
+
+
+4. POSISI NAVIGASI
+----------------------------------------------------------------
+
+Navigasi mobile tetap FIXED di bagian bawah layar.
+
+Keuntungannya:
+- Mudah dijangkau dengan ibu jari.
+- Tetap terlihat saat halaman di-scroll.
+- Mendukung safe-area perangkat Android/iPhone modern.
+- Tombol pekerjaan baru tetap menjadi pusat perhatian.
+
+Tombol titik tiga versi header disembunyikan pada mobile untuk
+mencegah dua menu "Lainnya" tampil bersamaan.
+
+Pada tablet/desktop, tombol titik tiga tetap berada setelah badge user
+di pojok kanan atas.
+
+
+5. MENU BERDASARKAN ROLE
+----------------------------------------------------------------
+
+OWNER - 5 tombol bawah:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+- Lainnya
+
+Isi Lainnya Owner:
+- Pelanggan
+- Mitra
+- Pengaturan
+- Catatan
+- Status
+- Panduan
+
+OPERATOR - 5 tombol bawah:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+- Lainnya
+
+Isi Lainnya Operator:
+- Produksi Mitra
+
+Operator tidak melihat Pengaturan/Status/Panduan karena Owner-only.
+Operator juga tidak melihat Pelanggan sesuai aturan role.
+
+KASIR/CS - 4 tombol bawah:
+- Beranda
+- Kerjaan
+- Baru
+- Lainnya
+
+Isi Lainnya Kasir:
+- Pelanggan
+
+Kasir tidak melihat Shift/Mitra sesuai hak aksesnya.
+Jumlah kolom otomatis menyesuaikan sehingga tidak ada ruang kosong.
+
+
+6. KEAMANAN
+----------------------------------------------------------------
+
+Menyembunyikan menu hanya untuk kenyamanan tampilan.
+Keamanan sebenarnya tetap dilakukan oleh proxy dan API RBAC.
+
+Artinya:
+- Operator tidak bisa membuka Pengaturan dengan mengetik URL langsung.
+- Kasir tidak bisa membuka Mitra/Shift langsung.
+- Hanya Owner yang dapat membuka menu utilitas Owner.
+
+
+7. FILE BARU DAN DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/components/MobileMoreMenu.tsx
+    public/dokumentasi-update/2026-09-12-navigasi-mobile-bawah-menu-lainnya.txt
+
+DIUBAH:
+    src/components/MainNav.tsx
+    src/components/MoreMenu.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Tidak ada perubahan database.
+Tidak perlu menjalankan /api/setup.
+
+
+8. CARA DEPLOY
+----------------------------------------------------------------
+
+1. Push/upload seluruh perubahan ke GitHub.
+2. Tunggu Vercel berstatus Ready.
+3. Di HP, tutup Print Flow sepenuhnya lalu buka kembali.
+4. Jika menu lama masih muncul, refresh atau bersihkan cache aplikasi
+   PWA/Chrome.
+5. Login sebagai Owner.
+6. Pastikan navigasi bawah berisi:
+   Beranda, Kerjaan, Baru, Shift, Lainnya.
+7. Tekan Lainnya dan periksa enam menu tambahan.
+
+
+9. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+- Navigasi selalu mudah dijangkau di bawah layar.
+- Tidak ada menu penting yang hilang.
+- Bar bawah tidak terlalu penuh.
+- Mitra dan Pelanggan mudah ditemukan melalui Lainnya.
+- Pengaturan/dukungan Owner tetap tersedia.
+- Tidak ada duplikasi tombol titik tiga di header mobile.
+- Badge mutasi Shift tetap bekerja.
+
+================================================================
+SELESAI - navigasi mobile lengkap, ringkas, dan mudah dijangkau.
+================================================================

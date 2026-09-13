@@ -1,0 +1,269 @@
+================================================================
+CATATAN UPDATE - FIX FINAL POSISI MENU MOBILE & JAM LOKAL
+Tanggal : 13 September 2026
+Status  : SELESAI
+Aplikasi: Print Flow
+================================================================
+
+
+1. MASALAH BERDASARKAN SCREENSHOT
+----------------------------------------------------------------
+
+Screenshot menunjukkan navigasi yang seharusnya berada di bawah justru
+muncul tepat di bagian atas layar, di atas Dashboard.
+
+Selain itu:
+- Badge user dan tombol titik tiga tidak terlihat.
+- Tanggal/jam Dashboard tidak sesuai tanggal/jam perangkat.
+
+Masalah ini bukan sekadar cache atau instruksi tidak diterapkan.
+Ditemukan penyebab CSS/browser yang spesifik pada Chrome Android.
+
+
+2. AKAR MASALAH NAVIGASI MOBILE
+----------------------------------------------------------------
+
+Navigasi mobile memakai:
+    position: fixed; bottom: 0;
+
+Tetapi komponen tersebut dirender sebagai anak dari Header.
+Header menggunakan:
+    backdrop-filter / backdrop-blur
+
+Pada Chrome Android, parent yang memakai backdrop-filter dapat membuat
+elemen fixed di dalamnya tidak lagi mengacu ke viewport layar. Elemen
+fixed menjadi seolah-olah mengacu pada kotak Header.
+
+Akibatnya:
+    bottom: 0
+
+dihitung sebagai bagian bawah HEADER, bukan bagian bawah LAYAR.
+Itulah alasan menu Beranda/Kerjaan/Baru/Shift/Pelanggan muncul di atas
+seperti terlihat pada screenshot.
+
+
+3. SOLUSI ROBUST: REACT PORTAL
+----------------------------------------------------------------
+
+Navigasi mobile sekarang dirender menggunakan React Portal:
+
+    createPortal(mobileNavigation, document.body)
+
+Artinya navigasi dipindahkan langsung ke document.body dan tidak lagi
+menjadi anak Header.
+
+Manfaat:
+- backdrop-filter Header tidak dapat memengaruhi posisi nav.
+- position fixed kembali mengacu ke viewport.
+- bottom: 0 benar-benar berarti bagian bawah layar.
+- Perilaku konsisten pada Chrome Android, PWA/TWA, dan desktop emulation.
+
+Teknik ini sama dengan solusi popup foto yang sebelumnya mengalami
+masalah fixed/transform.
+
+
+4. CSS POSISI EKSPLISIT
+----------------------------------------------------------------
+
+Class baru:
+    .mobile-bottom-nav
+
+Dikunci dengan:
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    z-index: 70 !important;
+    transform: translateZ(0);
+
+Penggunaan !important di sini disengaja untuk mengalahkan style cache
+atau utility CSS yang mungkin konflik pada browser/PWA lama.
+
+
+5. HEADER MOBILE FINAL
+----------------------------------------------------------------
+
+Header mobile dibuat fixed di atas:
+
+    [Badge User + Nama + Role]                 [⋮]
+
+Aturan CSS:
+    position: fixed !important;
+    top: 0;
+    width: 100%;
+    z-index: 80;
+
+Konten halaman mendapat padding-top 5rem agar tidak tertutup header.
+
+Logo + nama Print Flow disembunyikan pada layar mobile agar badge user
+dan tombol titik tiga mempunyai ruang yang cukup.
+Pada tablet/desktop logo tetap tampil.
+
+
+6. MENU UTAMA MOBILE FINAL
+----------------------------------------------------------------
+
+Owner, fixed di bawah layar:
+
+    Beranda | Kerjaan | Baru | Shift | Pelanggan
+
+- Tombol Baru tetap kuning/menonjol.
+- Badge mutasi Shift tetap aktif.
+- Navigasi dipindah dengan Portal.
+- Safe area Android/iPhone tetap didukung.
+- Konten halaman mendapat padding-bottom agar tidak tertutup nav.
+
+Operator:
+    Beranda | Kerjaan | Baru | Shift
+
+Kasir/CS:
+    Beranda | Kerjaan | Baru | Pelanggan
+
+
+7. DROPDOWN TITIK TIGA MOBILE
+----------------------------------------------------------------
+
+Titik tiga berada di kanan atas setelah badge user.
+Dropdown muncul ke bawah dari tombol, bukan bottom sheet.
+
+Owner melihat:
+- Produksi Mitra
+- Pengaturan
+- Catatan Perubahan
+- Status Sistem
+- Panduan
+
+Pelanggan sudah berada di menu bawah sehingga tidak diduplikasi.
+
+Operator melihat Produksi Mitra.
+Kasir tidak melihat titik tiga bila tidak memiliki menu tambahan.
+
+Dropdown:
+- Rata kanan
+- Maksimal selebar layar
+- Maksimal setinggi viewport (100dvh)
+- Scroll internal jika layar pendek
+- Tutup dengan klik/touch di luar
+- Tutup dengan Escape
+- Prefetch menu saat disentuh
+
+
+8. MASALAH TANGGAL/JAM
+----------------------------------------------------------------
+
+Sebelumnya Dashboard memakai:
+
+    formatDateTimeID(new Date())
+
+di Server Component.
+
+`new Date()` dijalankan di server Vercel, bukan di HP pengguna.
+Server bisa menggunakan zona waktu UTC atau region berbeda.
+Karena itu tanggal dan jam bisa berbeda dari perangkat.
+
+
+9. SOLUSI JAM LOKAL LIVE
+----------------------------------------------------------------
+
+Komponen baru:
+    src/components/LocalDateTime.tsx
+
+Jam sekarang:
+- Dihitung di browser/perangkat pengguna.
+- Mengikuti zona waktu sistem HP/laptop.
+- Update setiap 1 detik.
+- Refresh saat tab/aplikasi kembali terlihat.
+- Menampilkan zona waktu singkat jika browser menyediakannya.
+
+Contoh:
+    13 SEP 2026, 12.52.36 WIB
+
+Bukan lagi waktu server Vercel.
+
+Jika jam tetap salah setelah update, periksa pengaturan Android:
+    Settings -> Date & Time
+    aktifkan "Set time automatically"
+    aktifkan "Set time zone automatically"
+
+Print Flow akan mengikuti jam yang dilaporkan perangkat/browser.
+
+
+10. SERVICE WORKER CACHE
+----------------------------------------------------------------
+
+Versi cache dinaikkan:
+    print-flow-shell-v2 -> print-flow-shell-v3
+
+Service worker baru akan menghapus cache shell versi lama saat activate.
+Namun Chrome/PWA terkadang baru mengaktifkan worker setelah aplikasi
+ditutup dan dibuka kembali.
+
+
+11. LANGKAH SETELAH DEPLOY (PENTING)
+----------------------------------------------------------------
+
+1. Push semua file ke GitHub.
+2. Tunggu Vercel Ready.
+3. Di Android:
+   - Tutup semua tab Print Flow.
+   - Tutup PWA dari Recent Apps.
+   - Tunggu 5-10 detik.
+   - Buka kembali.
+4. Login kembali bila diminta.
+
+Jika masih menampilkan menu di atas:
+1. Buka Print Flow di Chrome.
+2. Tekan icon setting/site info di address bar.
+3. Site settings -> Storage / Clear & reset.
+4. Tutup Chrome, buka lagi.
+5. Login ulang.
+
+Jika memakai PWA terpasang:
+1. Hapus PWA/shortcut lama.
+2. Clear site data Chrome untuk domain tersebut.
+3. Buka URL Vercel lagi.
+4. Install ulang.
+
+Data pekerjaan TIDAK hilang karena tersimpan di Neon.
+Yang terhapus hanya cache/session perangkat, sehingga perlu login ulang.
+
+
+12. FILE BARU & DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/components/LocalDateTime.tsx
+    public/dokumentasi-update/2026-09-13-fix-final-posisi-menu-mobile-dan-jam-lokal.txt
+
+DIUBAH:
+    src/components/MainNav.tsx
+    src/components/MoreMenu.tsx
+    src/components/UserMenu.tsx
+    src/app/layout.tsx
+    src/app/page.tsx
+    src/app/globals.css
+    public/sw.js
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+DIHAPUS pada update sebelumnya:
+    src/components/MobileMoreMenu.tsx
+
+Tidak ada perubahan database.
+Tidak perlu menjalankan /api/setup.
+
+
+13. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+- Navigasi Beranda/Kerjaan/Baru/Shift/Pelanggan berada di bawah layar.
+- Header user + titik tiga berada di atas layar.
+- Navigasi bawah tidak dapat lagi diposisikan relatif terhadap Header.
+- Dropdown titik tiga turun dari kanan atas.
+- Tanggal/jam sesuai perangkat dan bergerak live.
+- Toolbar bawah Chrome tidak mengubah posisi navigasi aplikasi.
+
+================================================================
+SELESAI - akar bug fixed-position Chrome Android sudah diperbaiki.
+================================================================

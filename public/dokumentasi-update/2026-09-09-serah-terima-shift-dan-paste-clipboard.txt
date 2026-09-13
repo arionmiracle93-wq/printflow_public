@@ -1,0 +1,297 @@
+================================================================
+CATATAN UPDATE - SERAH TERIMA SHIFT & PASTE CLIPBOARD
+Tanggal : 09 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow - Monitoring Produksi Percetakan
+================================================================
+
+
+1. MASALAH KOMUNIKASI ANTAR SHIFT
+----------------------------------------------------------------
+
+Mutasi pekerjaan antar operator sering bermasalah bila hanya
+mengandalkan obrolan lisan atau chat WhatsApp:
+- Operator berikutnya tidak tahu posisi terakhir.
+- Tidak tahu file / bahan / sampel ada di mana.
+- Kendala mesin atau hasil warna tidak disebutkan.
+- Pekerjaan dianggap sudah diterima padahal belum dibaca.
+- Owner tidak tahu siapa yang sedang bertanggung jawab.
+
+Solusi terbaik bukan sekadar mengganti nama operator. Gunakan proses
+SERAH -> TERIMA dengan bukti konfirmasi.
+
+
+2. FORMAT KOMUNIKASI WAJIB: 4 INFORMASI
+----------------------------------------------------------------
+
+Setiap serah terima harus menjawab 4 hal:
+
+A. DARI SIAPA -> KEPADA SIAPA
+   Contoh: Dimas -> Yoga, Shift Malam.
+
+B. POSISI TERAKHIR
+   Harus konkret, bukan "masih cetak".
+   Baik : "Sudah cetak 200 dari 500 lembar, hasil ada di rak B."
+   Buruk: "Belum selesai."
+
+C. KENDALA / PERHATIAN
+   Contoh: "Tinta cyan tinggal 20%, warna lembar 1-50 agak gelap."
+   Jika tidak ada kendala, boleh dikosongkan.
+
+D. TINDAKAN BERIKUTNYA
+   Contoh: "Lanjut 300 lembar, cek warna setiap 100 lembar, setelah
+   itu pindah ke laminasi doff."
+
+Catatan tambahan dapat menyebut:
+- Lokasi file
+- Lokasi sampel
+- Approval pelanggan
+- Bahan cadangan
+- Nomor kontak yang harus dihubungi
+
+
+3. FITUR SERAH TERIMA SHIFT DI PRINT FLOW
+----------------------------------------------------------------
+
+LOKASI:
+    Buka detail satu pekerjaan -> card "Serah Terima Shift"
+
+ALUR OPERATOR LAMA:
+1. Klik "Buat Serah Terima".
+2. Isi operator asal dan operator tujuan.
+3. Pilih nama shift.
+4. Isi posisi terakhir.
+5. Isi tindakan berikutnya (wajib).
+6. Isi kendala dan catatan bila ada.
+7. Klik "Serahkan Pekerjaan".
+
+Status berubah menjadi:
+    "Menunggu diterima"
+
+ALUR OPERATOR BARU:
+1. Buka pekerjaan atau menu "Shift".
+2. Baca posisi, kendala, dan tindakan berikutnya.
+3. Cek fisik pekerjaan di mesin/rak.
+4. Isi nama penerima.
+5. Klik "Terima Pekerjaan".
+
+Setelah diterima:
+- Nama operator aktif pada pekerjaan otomatis berubah ke penerima.
+- Waktu penerimaan tercatat.
+- Riwayat produksi mendapat catatan otomatis.
+- Mutasi hilang dari daftar "menunggu".
+
+PENGAMAN:
+Satu pekerjaan hanya boleh memiliki satu serah-terima yang masih
+menunggu. Mutasi baru ditolak sampai mutasi lama diterima. Ini
+mencegah dua operator mengira orang lain yang bertanggung jawab.
+
+
+4. HALAMAN PUSAT /serah-terima
+----------------------------------------------------------------
+
+Menu baru di navigasi desktop:
+    "Shift"
+
+Halaman /serah-terima menampilkan semua pekerjaan yang belum diterima
+shift berikutnya, diurutkan berdasarkan deadline pelanggan.
+
+Setiap card menampilkan:
+- Kode & nama pekerjaan
+- Pelanggan
+- Operator asal -> operator tujuan
+- Posisi terakhir
+- Tindakan berikutnya
+- Kendala
+- Deadline
+- Waktu serah
+- Tombol buka & terima pekerjaan
+
+Jika kosong, muncul:
+    "Tidak ada mutasi yang menunggu"
+
+
+5. PRIVASI
+----------------------------------------------------------------
+
+Data serah-terima adalah komunikasi internal dan TIDAK tampil di
+halaman lacak pelanggan:
+- Nama operator asal/tujuan tidak ditampilkan dalam timeline publik.
+- Kendala internal tidak ditampilkan.
+- Tindakan berikutnya tidak ditampilkan.
+
+Pengujian:
+- Nama operator lama di halaman publik: 0 kemunculan
+- Kendala "Tinta cyan hampir habis": 0 kemunculan
+
+
+6. SOP SHIFT YANG DISARANKAN
+----------------------------------------------------------------
+
+15 MENIT SEBELUM SHIFT SELESAI:
+1. Operator lama membuka daftar pekerjaannya.
+2. Update status produksi sebenarnya.
+3. Buat serah terima untuk semua yang belum selesai.
+4. Letakkan bahan/sampel di lokasi yang disebut pada catatan.
+
+SAAT SHIFT BARU MULAI:
+1. Operator baru membuka menu Shift.
+2. Baca semua mutasi sebelum menyalakan produksi.
+3. Cocokkan catatan dengan barang fisik.
+4. Klik Terima Pekerjaan satu per satu.
+5. Bila ada ketidaksesuaian, hubungi operator lama sebelum menerima.
+
+ATURAN PENTING:
+- Jangan klik "Terima" sebelum melihat fisik pekerjaan.
+- Tulis angka nyata: 200/500 lembar, bukan "sebagian".
+- Tulis lokasi: rak B, meja finishing, folder komputer tertentu.
+- Kendala harus ditulis, walaupun sudah disampaikan lisan.
+- Owner cukup memeriksa menu Shift: idealnya kosong setelah pergantian.
+
+
+7. PASTE SCREENSHOT DARI CLIPBOARD
+----------------------------------------------------------------
+
+Permintaan:
+Upload gambar attachment melalui copy-paste dari clipboard Windows,
+karena screenshot otomatis tersimpan di clipboard.
+
+Status: SUDAH DITAMBAHKAN. ✅
+
+CARA 1 - CTRL + V (PALING MUDAH)
+1. Ambil screenshot di Windows:
+   - Windows + Shift + S
+   - Pilih area gambar
+2. Screenshot otomatis masuk clipboard.
+3. Buka detail pekerjaan -> Foto Pekerjaan.
+4. Pilih jenis foto dan isi keterangan bila perlu.
+5. Klik kotak bertuliskan:
+       "Klik kotak ini, lalu tekan Ctrl + V"
+6. Tekan Ctrl + V.
+7. Screenshot langsung dikompres dan diunggah.
+
+CARA 2 - TOMBOL BACA CLIPBOARD
+1. Ambil screenshot.
+2. Klik tombol "Baca Clipboard".
+3. Browser meminta izin akses clipboard (pertama kali).
+4. Klik Izinkan.
+
+Jika browser menolak akses tombol, Cara 1 (Ctrl+V) tetap bisa dipakai.
+
+BROWSER YANG DISARANKAN:
+- Google Chrome terbaru
+- Microsoft Edge terbaru
+
+Clipboard API membutuhkan HTTPS. Aplikasi Vercel otomatis memakai
+HTTPS, jadi aman. Pada localhost juga diizinkan browser.
+
+
+8. PERILAKU FOTO CLIPBOARD
+----------------------------------------------------------------
+
+Foto clipboard memakai alur yang sama dengan upload biasa:
+- Dikompres otomatis maksimal 1.400 px.
+- JPEG kualitas sekitar 72% bila hasil lebih kecil.
+- Mengikuti jenis foto yang sedang dipilih.
+- Mengikuti keterangan yang sedang diisi.
+- Masuk ke batas maksimal 8 foto per pekerjaan.
+- Ditampilkan pada popup job card.
+- Ikut terhapus bila pekerjaan dihapus.
+
+Jika clipboard bukan gambar, muncul pesan:
+    "Clipboard tidak berisi gambar. Ambil screenshot dulu, lalu
+    klik kotak dan tekan Ctrl+V."
+
+
+9. DATABASE BARU
+----------------------------------------------------------------
+
+Tabel:
+    shift_handovers
+
+Mencatat:
+- order_id
+- operator asal
+- operator tujuan
+- nama shift
+- posisi terakhir
+- kendala
+- tindakan berikutnya
+- catatan
+- status menunggu/diterima
+- waktu serah
+- waktu & nama penerima
+
+Attachment clipboard tidak membutuhkan tabel baru karena memakai
+tabel order_photos yang sudah ada.
+
+
+10. LANGKAH WAJIB SETELAH DEPLOY
+----------------------------------------------------------------
+
+Karena fitur shift menambah tabel baru, buka sekali:
+
+    https://alamat-aplikasi-anda.vercel.app/api/setup
+
+Aman dijalankan berulang dan tidak menghapus data.
+
+Setelah itu uji:
+1. Buka pekerjaan aktif.
+2. Buat serah terima Operator A -> Operator B.
+3. Buka menu Shift.
+4. Buka pekerjaan dan klik Terima Pekerjaan.
+5. Pastikan operator aktif berubah.
+6. Ambil screenshot Windows, lalu paste Ctrl+V di Foto Pekerjaan.
+
+
+11. FILE YANG PERLU DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+
+BARU:
+    src/lib/handover-queries.ts
+    src/components/HandoverManager.tsx
+    src/app/api/orders/[id]/handovers/route.ts
+    src/app/serah-terima/page.tsx
+    public/dokumentasi-update/2026-09-09-serah-terima-shift-dan-paste-clipboard.txt
+
+DIUBAH:
+    src/db/schema.ts
+    src/app/api/setup/route.ts
+    src/lib/dbcheck.ts
+    src/lib/queries.ts
+    src/components/PhotoManager.tsx
+    src/components/MainNav.tsx
+    src/app/pesanan/[id]/page.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Paling aman: upload seluruh project versi terbaru.
+
+
+12. HASIL PENGUJIAN
+----------------------------------------------------------------
+
+Membuat serah terima ....................... BERHASIL
+Data tampil di halaman /serah-terima ....... BERHASIL
+Operator penerima klik Terima .............. BERHASIL
+Operator aktif berubah otomatis ............ BERHASIL
+Mutasi hilang dari daftar menunggu .......... BERHASIL
+Riwayat serah & terima tercatat ............. BERHASIL
+Data shift tidak bocor ke pelanggan ......... BERHASIL
+Handler Ctrl+V terpasang .................... BERHASIL
+Clipboard API fallback terpasang ............ BERHASIL
+TypeScript & production build ............... BERHASIL
+
+
+13. BIAYA
+----------------------------------------------------------------
+
+Tidak ada biaya tambahan.
+- Data serah-terima berbentuk teks dan sangat kecil.
+- Clipboard diproses di browser.
+- Gambar memakai penyimpanan Neon yang sudah ada.
+- Tidak membutuhkan API berbayar.
+
+================================================================
+SELESAI - pergantian shift kini memiliki bukti serah dan bukti terima.
+================================================================

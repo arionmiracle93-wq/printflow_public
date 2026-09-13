@@ -1,0 +1,365 @@
+================================================================
+CATATAN UPDATE - USERNAME, ICON PWA, & EXIT ANDROID
+Tanggal : 15 September 2026
+Status  : SELESAI & DIUJI
+Aplikasi: Print Flow
+================================================================
+
+
+1. EDIT USERNAME
+----------------------------------------------------------------
+
+SEBELUM:
+Halaman Kelola Pengguna hanya menyediakan:
+- Ganti role
+- Reset password
+- Aktif/nonaktif akun
+
+SEKARANG:
+Ditambahkan tombol:
+    Ubah Username
+
+LOKASI:
+1. Login sebagai Owner.
+2. Klik badge user.
+3. Pilih Kelola Pengguna.
+4. Cari akun yang ingin diubah.
+5. Klik Ubah Username.
+6. Masukkan username baru.
+7. Konfirmasi perubahan.
+
+ATURAN USERNAME:
+- Minimal 3 karakter.
+- Maksimal 30 karakter.
+- Huruf kecil.
+- Boleh angka.
+- Boleh titik (.)
+- Boleh underscore (_)
+- Boleh minus (-)
+- Tidak boleh spasi.
+
+Contoh valid:
+    andi
+    rina.operator
+    kasir_utama
+    staff-malam
+
+Contoh tidak valid:
+    a
+    Pak Andi
+    @operator
+
+UNIK:
+Username tidak boleh sama dengan pengguna lain.
+Jika sudah dipakai, aplikasi memberi pesan:
+    "Username sudah dipakai pengguna lain."
+
+SESSION:
+Setelah username berubah, session lama user dibatalkan.
+User harus login ulang menggunakan:
+- Username baru
+- Password lama (password tidak berubah)
+
+Jika Owner mengubah username akun dirinya sendiri:
+- Muncul pemberitahuan.
+- Otomatis dialihkan ke halaman Login.
+- Login memakai username baru.
+
+ALASAN KEAMANAN:
+Cookie session lama masih memuat username lama. tokenVersion dinaikkan
+agar session lama tidak terus digunakan setelah identitas berubah.
+
+HASIL UJI:
+- stafflama -> staffbaru: BERHASIL
+- Login stafflama: DITOLAK 401
+- Login staffbaru: BERHASIL 200
+- Username tidak valid: DITOLAK 400
+- Username duplikat: DITOLAK 409
+- Ubah username Owner sendiri: session dicabut -> /login
+
+
+2. KESIAPAN ICON PWA
+----------------------------------------------------------------
+
+JAWABAN:
+Ya, icon aplikasi PWA/APK sudah tersedia dan sekarang sudah diperbaiki
+agar sesuai standar ukuran sebenarnya.
+
+DITEMUKAN:
+File icon-512.png sebelumnya bernama "512", tetapi dimensi gambar
+aslinya ternyata 1254 x 1254 piksel.
+
+Sebagian browser tetap dapat memakainya, tetapi validator PWA memeriksa
+dimensi nyata. File tersebut telah diperbaiki menjadi benar-benar
+512 x 512.
+
+ICON YANG TERSEDIA:
+
+A. public/icon-192.png
+   Ukuran: 192 x 192
+   Fungsi: icon PWA Android ukuran standar.
+
+B. public/icon-512.png
+   Ukuran: 512 x 512
+   Fungsi: icon utama resolusi tinggi / install prompt.
+
+C. public/icon-maskable-512.png
+   Ukuran: 512 x 512
+   Fungsi: icon Android adaptive/maskable.
+   Logo diberi safe padding agar kepala robot/titik kuning tidak
+   terpotong ketika Android membentuk icon bulat, squircle, atau kotak.
+
+D. public/apple-touch-icon.png
+   Ukuran: 180 x 180
+   Fungsi: icon Add to Home Screen di iPhone/iPad.
+
+Semua file diuji dan dapat diakses tanpa login:
+- /icon-192.png                HTTP 200
+- /icon-512.png                HTTP 200
+- /icon-maskable-512.png       HTTP 200
+- /apple-touch-icon.png        HTTP 200
+- /manifest.webmanifest        HTTP 200
+- /sw.js                       HTTP 200
+- /offline.html                HTTP 200
+
+
+3. MANIFEST PWA DIPERBAIKI
+----------------------------------------------------------------
+
+Manifest sekarang memiliki:
+- id: /
+- name: Print Flow — Monitoring Produksi Percetakan
+- short_name: Print Flow
+- start_url: /
+- scope: /
+- display: standalone
+- theme_color: #07384f
+- background_color: #f4f9f9
+- icon 192 any
+- icon 512 any
+- icon 512 maskable
+- shortcuts Pekerjaan Baru
+- shortcuts Daftar Pekerjaan
+- launch_handler: navigate-existing
+
+launch_handler navigate-existing membantu saat icon Print Flow ditekan
+berulang: aplikasi memfokuskan jendela yang sudah ada daripada membuka
+banyak instance baru (dukungan tergantung browser/Android).
+
+Metadata Next.js juga mencantumkan:
+- icon 192
+- icon 512
+- Apple touch icon 180
+
+
+4. APAKAH LOGO USAHA OTOMATIS MENJADI ICON PWA?
+----------------------------------------------------------------
+
+Tidak otomatis.
+
+Upload Logo Usaha di Pengaturan mengganti logo di HEADER Print Flow.
+Icon PWA/APK menggunakan file static:
+- icon-192.png
+- icon-512.png
+- icon-maskable-512.png
+
+Saat ini icon PWA memakai identitas robot Print Flow yellow-teal yang
+sudah disiapkan.
+
+Alasan dipisah:
+- Browser menyimpan icon instalasi sangat agresif.
+- Manifest membutuhkan file ukuran tertentu yang dapat diakses publik.
+- Logo header dari database bisa berubah kapan saja.
+- Icon APK/PWA sebaiknya stabil agar tidak berubah-ubah di HP user.
+
+Jika Anda ingin logo usaha menjadi icon APK/PWA, file icon tersebut
+dapat diganti secara manual dengan logo usaha yang sudah dibuat dalam
+ukuran 192/512/maskable sebelum generate APK.
+
+
+5. CARA MEMERIKSA PWA SEBELUM KONVERSI APK
+----------------------------------------------------------------
+
+Setelah deploy:
+
+1. Buka di Chrome desktop.
+2. Tekan F12 -> Application.
+3. Buka Manifest.
+4. Pastikan icon 192, 512, dan maskable terlihat tanpa error.
+5. Buka Service Workers.
+6. Pastikan /sw.js Activated and running.
+7. Coba Install App / Add to Home Screen.
+
+Di Android:
+1. Buka URL Print Flow di Chrome.
+2. Menu tiga titik Chrome.
+3. Pilih Install app / Tambahkan ke layar utama.
+4. Pastikan icon Print Flow tampil.
+5. Buka: seharusnya tanpa address bar browser (standalone).
+
+Jika address bar Chrome masih terlihat seperti screenshot browser,
+itu berarti sedang membuka versi mobile web, bukan PWA standalone.
+
+
+6. PERILAKU BACK & EXIT DI ANDROID
+----------------------------------------------------------------
+
+A. MOBILE WEB DI CHROME
+
+Tombol Back Android:
+- Kembali ke halaman web sebelumnya.
+- Tekan berulang sampai riwayat habis.
+- Setelah habis, kembali ke tab/halaman sebelumnya atau menutup konteks
+  Chrome sesuai perilaku browser.
+
+Address bar dan toolbar Chrome tetap terlihat.
+
+B. PWA YANG DI-INSTALL
+
+PWA berjalan dalam mode standalone tanpa toolbar Chrome.
+
+Tombol Back Android:
+- Jika ada riwayat navigasi Print Flow: kembali satu halaman.
+- Jika berada di halaman awal/root dan tidak ada riwayat: Android akan
+  keluar/minimize dari jendela PWA dan kembali ke layar/app sebelumnya.
+- Tombol Home selalu memindahkan aplikasi ke background.
+- Recent Apps dapat digunakan untuk menutup/swipe aplikasi.
+
+Secara penggunaan, perilakunya mirip aplikasi Android normal.
+
+C. APK PWA/TWA DARI PWABUILDER
+
+Trusted Web Activity menggunakan Activity Android yang menampilkan
+Print Flow fullscreen.
+
+Tombol Back:
+- Menelusuri history halaman web di dalam TWA.
+- Ketika history habis/root, Activity ditutup/minimize dan kembali ke
+  layar sebelumnya/home (tergantung cara aplikasi dibuka).
+
+D. APK WEBVIEW SEDERHANA
+
+Perilaku bergantung pembuat wrapper:
+- Wrapper yang baik: WebView back jika bisa; Activity finish jika root.
+- Wrapper buruk: Back bisa langsung menutup atau tidak bekerja.
+
+Karena itu gunakan PWABuilder/TWA, bukan generator WebView sembarang.
+
+
+7. APAKAH PERLU TOMBOL EXIT DI PRINT FLOW?
+----------------------------------------------------------------
+
+Tidak direkomendasikan.
+
+Alasan:
+- Aplikasi Android modern biasanya tidak memiliki tombol Exit.
+- Pengguna memakai Back/Home/Recent Apps.
+- JavaScript web tidak diizinkan menutup window yang tidak dibuka oleh
+  script sendiri (`window.close()` biasanya ditolak browser).
+- Tombol Exit palsu dapat membingungkan dan tidak konsisten antara
+  mobile web, PWA, dan TWA.
+
+Gunakan:
+- "Keluar" pada badge user untuk LOGOUT akun.
+- Tombol Back Android untuk kembali/menutup Activity.
+- Tombol Home untuk background.
+- Recent Apps swipe untuk menutup aplikasi.
+
+Penting:
+"Keluar" di menu user = logout session, bukan menutup aplikasi.
+
+
+8. SKENARIO KHUSUS NOTIFIKASI
+----------------------------------------------------------------
+
+Jika aplikasi dibuka dari push notification:
+- Notifikasi membuka URL pekerjaan tertentu.
+- Back dapat kembali ke halaman aplikasi yang sebelumnya terbuka.
+- Jika tidak ada instance/history sebelumnya, Back dapat keluar dari
+  TWA/PWA ke aplikasi sebelumnya.
+
+Ini perilaku normal Android.
+
+launch_handler navigate-existing membantu memfokuskan instance yang
+sudah ada bila didukung.
+
+
+9. SERVICE WORKER CACHE
+----------------------------------------------------------------
+
+Cache dinaikkan:
+    print-flow-shell-v5 -> print-flow-shell-v6
+
+Daftar shell icon sekarang mencakup:
+- icon-192.png
+- icon-512.png
+- icon-maskable-512.png
+- apple-touch-icon.png
+
+Catatan: icon instalasi biasanya sangat agresif di-cache Android.
+Setelah mengganti icon:
+- Hapus PWA lama.
+- Clear site data jika perlu.
+- Install ulang.
+
+
+10. FILE BARU & DIUBAH
+----------------------------------------------------------------
+
+BARU:
+    public/icon-192.png
+    public/icon-maskable-512.png
+    public/apple-touch-icon.png
+    public/dokumentasi-update/2026-09-15-edit-username-icon-pwa-dan-exit-android.txt
+
+DIUBAH:
+    src/app/api/users/[id]/route.ts
+    src/components/UserManagement.tsx
+    public/icon-512.png (dikoreksi menjadi benar-benar 512 x 512)
+    public/manifest.webmanifest
+    src/app/layout.tsx
+    src/proxy.ts (semua icon PWA dibuat publik)
+    public/sw.js
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+Tidak ada perubahan tabel database.
+Tidak perlu menjalankan /api/setup.
+
+
+11. CARA DEPLOY
+----------------------------------------------------------------
+
+1. Upload/push seluruh file terbaru ke GitHub.
+2. Pastikan keempat icon ikut di-upload.
+3. Tunggu Vercel Ready.
+4. Tutup PWA/Chrome lalu buka ulang.
+5. Untuk icon baru, hapus instalasi PWA lama dan install ulang.
+6. Uji Ubah Username melalui Kelola Pengguna.
+
+Tidak perlu mengubah DATABASE_URL/AUTH_SECRET.
+Tidak perlu /api/setup.
+
+
+12. IDE LANJUTAN
+----------------------------------------------------------------
+
+A. GANTI PASSWORD SENDIRI
+Karyawan dapat mengganti password tanpa meminta Owner.
+
+B. EDIT NAMA TAMPIL
+Owner dapat mengubah nama lengkap selain username.
+
+C. ICON USAHA GENERATOR
+Tambahkan tombol yang mengambil logo usaha, membuat icon 192/512 dan
+maskable secara otomatis. Perlu perhatian karena aset PWA static dan
+cache icon Android sangat kuat.
+
+D. UPDATE PROMPT PWA
+Berikan notifikasi di dalam aplikasi jika service worker versi baru
+tersedia, dengan tombol "Muat Ulang Versi Baru".
+
+================================================================
+SELESAI - edit username aktif, icon PWA lengkap, dan perilaku Android
+Back/Exit telah didokumentasikan.
+================================================================

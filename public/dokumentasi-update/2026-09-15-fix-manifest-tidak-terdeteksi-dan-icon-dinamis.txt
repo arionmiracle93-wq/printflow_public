@@ -1,0 +1,318 @@
+================================================================
+FIX PWA - MANIFEST TIDAK TERDETEKSI & ICON TIDAK ADA
+Tanggal : 15 September 2026
+Status  : DIPERBAIKI & DIUJI
+Aplikasi: Print Flow
+================================================================
+
+
+1. KONDISI DARI SCREENSHOT
+----------------------------------------------------------------
+
+Chrome DevTools menampilkan:
+
+    No manifest detected
+
+Sementara halaman Service Workers menunjukkan:
+
+    sw.js
+    activated and is running
+
+Artinya:
+- Service worker sudah ada dan aktif.
+- Tetapi halaman yang sedang dibuka tidak mempunyai link manifest yang
+  terbaca, atau manifest/icon terbaru belum ada pada deployment itu.
+
+PWABuilder juga menampilkan saran seperti:
+- Add a service worker
+- Add orientation
+- Add id
+- Add scope
+- Add lang
+- Add dir
+- Add categories
+
+Padahal field tersebut sudah ada pada manifest project terbaru.
+Ini menunjukkan PWABuilder memeriksa deployment/manifest versi lama
+atau file manifest terbaru belum ikut masuk ke GitHub/Vercel.
+
+
+2. KENAPA ICON TIDAK ADA DI FOLDER PUBLIC GITHUB?
+----------------------------------------------------------------
+
+Dalam project platform AI saat ini, folder public sebenarnya berisi:
+
+    public/icon-192.png
+    public/icon-512.png
+    public/icon-maskable-512.png
+    public/apple-touch-icon.png
+
+Dimensi sudah diverifikasi:
+- icon-192.png          = 192 x 192
+- icon-512.png          = 512 x 512
+- icon-maskable-512.png = 512 x 512
+- apple-touch-icon.png  = 180 x 180
+
+Jika file tersebut tidak terlihat di GitHub Anda, berarti file binary
+PNG belum ikut di-upload dari platform AI ke repository GitHub.
+
+Upload source manual tidak selalu membawa file hasil generate dari
+platform, terutama jika hanya memilih folder src atau file kode yang
+berubah.
+
+
+3. SOLUSI BARU: TIDAK BERGANTUNG PADA FILE PNG
+----------------------------------------------------------------
+
+Agar masalah ini tidak berulang, Print Flow sekarang mempunyai icon
+PWA DINAMIS yang dibuat oleh server dari kode.
+
+Endpoint:
+
+    /api/pwa/icon/192
+    /api/pwa/icon/512
+
+Keduanya menghasilkan:
+- Content-Type: image/png
+- Ukuran asli sesuai URL
+- Dapat diakses tanpa login
+- Tidak membutuhkan file PNG di folder public
+
+Icon menggunakan identitas Print Flow:
+- Background navy-teal
+- Kotak kuning
+- Inisial PF
+- Aksen kuning/teal
+
+File PNG di public tetap dipertahankan sebagai fallback, tetapi
+manifest utama tidak lagi bergantung kepadanya.
+
+
+4. MANIFEST DINAMIS
+----------------------------------------------------------------
+
+Manifest utama sekarang dilayani dari:
+
+    /api/pwa/manifest
+
+Layout halaman menyisipkan:
+
+    <link rel="manifest" href="/api/pwa/manifest">
+
+Manifest dapat diakses tanpa login dan menggunakan content type:
+
+    application/manifest+json
+
+Field utama:
+- id: /
+- name: Print Flow — Monitoring Produksi Percetakan
+- short_name: Print Flow
+- description
+- lang: id-ID
+- dir: ltr
+- start_url: /
+- scope: /
+- display: standalone
+- display_override: standalone, minimal-ui
+- orientation: portrait-primary
+- background_color
+- theme_color
+- categories: business, productivity, utilities
+- icons 192/512/maskable
+- shortcuts Pekerjaan Baru/Daftar Pekerjaan
+- launch_handler: navigate-existing
+- prefer_related_applications: false
+
+Icon memakai URL absolut sesuai domain deployment saat ini, sehingga
+PWABuilder tidak salah mencari domain.
+
+
+5. ENDPOINT DIAGNOSIS PWA
+----------------------------------------------------------------
+
+Endpoint baru:
+
+    /api/pwa/check
+
+Buka di browser:
+
+    https://alamat-aplikasi.vercel.app/api/pwa/check
+
+Hasil yang benar:
+
+    {
+      "ok": true,
+      "message": "Infrastruktur PWA utama siap..."
+    }
+
+Endpoint memeriksa:
+- Manifest dinamis
+- Service worker
+- Icon dinamis 192
+- Icon dinamis 512
+- Icon static fallback
+
+Jika `ok: true`, infrastruktur utama siap diperiksa PWABuilder.
+
+Tombol juga tersedia di:
+
+    Pengaturan -> Cek Kesiapan PWA
+
+
+6. HASIL PENGUJIAN
+----------------------------------------------------------------
+
+Link manifest di halaman Login:
+    <link rel="manifest" href="/api/pwa/manifest">  BERHASIL
+
+Manifest:
+    HTTP 200
+    Content-Type application/manifest+json
+
+Icon dinamis 192:
+    HTTP 200
+    Content-Type image/png
+    Dimensi 192 x 192
+
+Icon dinamis 512:
+    HTTP 200
+    Content-Type image/png
+    Dimensi 512 x 512
+
+Service worker:
+    HTTP 200
+    Content-Type application/javascript
+
+/api/pwa/check:
+    ok: true
+
+Semua endpoint di atas dapat dibuka tanpa login dan tidak redirect.
+
+
+7. FILE YANG WAJIB DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+
+Karena solusi dinamis berbentuk file kode, upload file berikut:
+
+    src/app/api/pwa/icon/[size]/route.ts
+    src/app/api/pwa/manifest/route.ts
+    src/app/api/pwa/check/route.ts
+    src/app/layout.tsx
+    src/proxy.ts
+    public/sw.js
+    src/app/pengaturan/page.tsx
+
+Dokumentasi:
+    public/dokumentasi-update/2026-09-15-fix-manifest-tidak-terdeteksi-dan-icon-dinamis.txt
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+PNG berikut tetap disarankan ikut di-upload sebagai fallback:
+
+    public/icon-192.png
+    public/icon-512.png
+    public/icon-maskable-512.png
+    public/apple-touch-icon.png
+
+Namun jika sulit meng-upload file PNG, icon dinamis tetap membuat
+manifest/PWABuilder berfungsi.
+
+PENTING:
+Pastikan GitHub menampilkan folder literal:
+
+    src/app/api/pwa/icon/[size]/route.ts
+
+Tanda kurung siku adalah bagian nama folder route Next.js.
+
+
+8. LANGKAH SETELAH DEPLOY
+----------------------------------------------------------------
+
+1. Push/upload file kode di bagian 7.
+2. Tunggu Vercel deployment berstatus Ready.
+3. Buka URL berikut satu per satu:
+
+    https://domain-anda/api/pwa/manifest
+    https://domain-anda/api/pwa/icon/192
+    https://domain-anda/api/pwa/icon/512
+    https://domain-anda/sw.js
+    https://domain-anda/api/pwa/check
+
+4. Semua harus HTTP 200.
+5. `/api/pwa/check` harus menampilkan ok:true.
+6. Tutup semua tab DevTools.
+7. Buka domain utama di tab baru.
+8. DevTools -> Application -> Manifest.
+9. Jika masih "No manifest detected":
+   - Klik kanan Reload -> Empty Cache and Hard Reload.
+   - Application -> Service Workers -> Update.
+   - Application -> Storage -> Clear site data.
+   - Tutup dan buka browser lagi.
+
+
+9. PWABUILDER
+----------------------------------------------------------------
+
+Setelah `/api/pwa/check` ok:true:
+
+1. Buka https://www.pwabuilder.com
+2. Masukkan DOMAIN UTAMA Print Flow, bukan URL deployment lama.
+3. Pastikan domain sama dengan domain yang baru saja diuji.
+4. Jalankan Start/Scan ulang.
+5. Jika hasil lama masih muncul, gunakan tombol re-scan/refresh dan
+   tunggu beberapa menit karena PWABuilder dapat menyimpan hasil scan.
+
+Jangan memasukkan:
+- URL /login
+- URL /api/pwa/manifest
+- URL preview deployment lama
+
+Masukkan contoh:
+    https://printflow-domain-anda.vercel.app
+
+
+10. SERVICE WORKER CACHE
+----------------------------------------------------------------
+
+Versi cache dinaikkan:
+
+    print-flow-shell-v6 -> print-flow-shell-v7
+
+Cache shell sekarang memakai icon dinamis:
+- /api/pwa/manifest
+- /api/pwa/icon/192
+- /api/pwa/icon/512
+
+Push notification juga memakai icon dinamis.
+
+
+11. TIDAK PERLU API SETUP
+----------------------------------------------------------------
+
+Perubahan ini tidak menambah tabel database.
+Tidak perlu menjalankan /api/setup.
+Tidak perlu mengubah DATABASE_URL atau AUTH_SECRET.
+
+
+12. CATATAN SCREENSHOT PWABUILDER
+----------------------------------------------------------------
+
+Peringatan "Add screenshots to showcase your app" bersifat opsional
+untuk pengalaman listing/instalasi yang lebih kaya. Bukan syarat dasar
+agar PWA dapat di-install.
+
+Peringatan `related_applications`, `file_handlers`, `protocol_handlers`,
+`widgets`, dan fitur eksperimental lain juga bukan error wajib.
+
+Yang wajib diprioritaskan:
+- Manifest terdeteksi
+- Service worker aktif
+- HTTPS
+- Icon 192 dan 512 valid
+- start_url/scope/display benar
+
+Semua komponen wajib tersebut sekarang sudah tersedia secara dinamis.
+
+================================================================
+SELESAI - PWA tidak lagi bergantung pada file icon binary yang mungkin
+terlewat saat upload manual.
+================================================================

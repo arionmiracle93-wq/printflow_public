@@ -1,0 +1,212 @@
+================================================================
+CATATAN UPDATE - FIX DROPDOWN MOBILE & HEADER USER
+Tanggal : 13 September 2026
+Status  : SELESAI
+Aplikasi: Print Flow
+================================================================
+
+
+1. MASALAH DARI GAMBAR
+----------------------------------------------------------------
+
+Menu "Lainnya" versi sebelumnya muncul sebagai bottom sheet dari bawah.
+Pada Chrome Android, browser juga mempunyai toolbar alamat/navigation
+di bagian bawah layar. Kombinasi keduanya membuat:
+
+- Panel terlihat terpotong.
+- Bagian menu tampak tertinggal di atas halaman.
+- Konten Panduan terlihat berada di tengah kondisi panel.
+- Navigasi terasa tidak seperti dropdown desktop.
+
+Permintaan baru:
+- Badge user berada di kiri atas.
+- Titik tiga berada di kanan atas.
+- Titik tiga membuka dropdown ke bawah seperti desktop.
+- Menu utama berada di bawah layar.
+
+Semua permintaan tersebut sudah diterapkan.
+
+
+2. LAYOUT MOBILE BARU
+----------------------------------------------------------------
+
+BAGIAN ATAS:
+
+    [Badge User + Nama + Role]                    [⋮]
+
+- Badge user berada di kiri.
+- Tombol titik tiga berada di ujung kanan.
+- Logo/nama Print Flow disembunyikan khusus pada layar mobile agar
+  ruang cukup untuk nama user dan tombol titik tiga.
+- Pada tablet/desktop logo Print Flow tetap tampil seperti biasa.
+
+BAGIAN BAWAH (FIXED):
+
+    Beranda | Kerjaan | Baru | Shift | Pelanggan
+
+- Tetap berada di bawah layar.
+- Mudah dijangkau ibu jari.
+- Tombol Baru tetap berwarna kuning dan menonjol.
+- Badge angka mutasi Shift tetap berfungsi.
+- Tidak ada bottom sheet Lainnya lagi.
+
+
+3. DROPDOWN TITIK TIGA MOBILE
+----------------------------------------------------------------
+
+Saat titik tiga kanan atas ditekan, dropdown muncul KE BAWAH dari
+tombol tersebut, sama seperti versi desktop.
+
+Isi Owner:
+- Produksi Mitra (khusus mobile karena tidak muat di bar bawah)
+- Pengaturan
+- Catatan Perubahan
+- Status Sistem
+- Panduan
+
+Pelanggan tidak perlu diduplikasi karena sudah ada di menu bawah.
+
+Perilaku dropdown:
+- Rata kanan terhadap tombol.
+- Lebar maksimal mengikuti viewport mobile.
+- Tinggi maksimal mengikuti tinggi layar (`100dvh`).
+- Jika konten lebih tinggi, bagian dropdown yang scroll, bukan halaman.
+- Klik di luar menutup dropdown.
+- Touch di luar menutup dropdown.
+- Escape menutup dropdown.
+- Klik menu menutup dropdown.
+- Navigasi diprefetch saat disentuh/disorot.
+
+
+4. NAMA USER PADA MOBILE
+----------------------------------------------------------------
+
+Sebelumnya badge user mobile hanya menampilkan inisial.
+
+Sekarang badge mobile menampilkan:
+- Inisial
+- Nama user
+- Role
+- Chevron dropdown akun
+
+Lebar maksimum badge menyesuaikan ruang tersisa sebelum tombol titik
+tiga. Nama tidak memakai `truncate`.
+
+RESPONSIVE:
+- Mobile: nama + role tampil.
+- Tablet: hanya inisial agar menu tablet tetap muat.
+- Desktop lebar: nama + role tampil penuh.
+
+Nama lengkap juga selalu dapat dibaca di dropdown akun.
+
+
+5. MENU PER ROLE
+----------------------------------------------------------------
+
+OWNER
+Bar bawah:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+- Pelanggan
+
+Titik tiga:
+- Mitra
+- Pengaturan
+- Catatan
+- Status
+- Panduan
+
+OPERATOR
+Bar bawah:
+- Beranda
+- Kerjaan
+- Baru
+- Shift
+
+Titik tiga:
+- Mitra
+
+KASIR / CS
+Bar bawah:
+- Beranda
+- Kerjaan
+- Baru
+- Pelanggan
+
+Tidak ada titik tiga karena tidak ada menu tambahan yang diizinkan.
+
+Role tetap dilindungi proxy/API; bukan hanya disembunyikan secara UI.
+
+
+6. KOMPONEN LAMA DIHAPUS
+----------------------------------------------------------------
+
+File berikut dihapus:
+    src/components/MobileMoreMenu.tsx
+
+Ini adalah komponen bottom sheet lama yang menyebabkan tampilan kurang
+cocok dengan toolbar bawah Chrome Android.
+
+Menghapusnya mencegah panel lama muncul kembali atau menjadi kode mati.
+
+
+7. FILE YANG BERUBAH
+----------------------------------------------------------------
+
+DIUBAH:
+    src/app/layout.tsx
+    src/components/MainNav.tsx
+    src/components/MoreMenu.tsx
+    src/components/UserMenu.tsx
+    public/dokumentasi-update/00-DAFTAR-ISI.txt
+    README.md
+
+DIHAPUS:
+    src/components/MobileMoreMenu.tsx
+
+BARU:
+    public/dokumentasi-update/2026-09-13-fix-dropdown-mobile-dan-header-user.txt
+
+Tidak ada perubahan database.
+Tidak perlu menjalankan /api/setup.
+
+
+8. CARA DEPLOY & REFRESH MOBILE
+----------------------------------------------------------------
+
+1. Push semua perubahan ke GitHub.
+2. Tunggu Vercel berstatus Ready.
+3. Karena service worker/PWA dapat menyimpan shell lama:
+   - Tutup semua tab Print Flow.
+   - Tutup aplikasi PWA dari recent apps.
+   - Buka kembali.
+4. Jika tampilan lama masih muncul:
+   Chrome -> Site Settings -> Storage -> Clear site data,
+   lalu login kembali.
+5. Jika memakai PWA yang di-install dan tetap lama:
+   - Hapus shortcut/aplikasi PWA.
+   - Buka URL di Chrome.
+   - Install kembali ke layar utama.
+
+Data pekerjaan tetap aman di Neon. Clear site data hanya menghapus
+cache/session browser dan mengharuskan login ulang.
+
+
+9. HASIL YANG DIHARAPKAN
+----------------------------------------------------------------
+
+Pada mobile Owner:
+- Header atas hanya badge user kiri + titik tiga kanan.
+- Nama user terlihat.
+- Klik titik tiga -> dropdown turun dari kanan atas.
+- Menu Mitra/Pengaturan/Catatan/Status/Panduan terbaca normal.
+- Menu utama selalu fixed di bawah.
+- Tidak ada panel putih besar yang naik dari bawah.
+- Tidak ada potongan menu tertinggal di atas konten.
+
+================================================================
+SELESAI - layout mobile mengikuti pola header akun + dropdown atas dan
+navigasi utama tetap di bagian bawah layar.
+================================================================

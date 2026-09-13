@@ -1,0 +1,59 @@
+================================================================
+ADDRESS BAR MUNCUL LAGI SETELAH APK DIBUAT ULANG
+Tanggal : 20 September 2026
+Aplikasi: Print Flow
+================================================================
+
+KESIMPULAN
+----------------------------------------------------------------
+Address bar dengan tombol X, nama domain, Share, dan menu Chrome berarti
+APK kembali menjadi Custom Tab karena verifikasi TWA gagal.
+
+Penyebab paling mungkin setelah mengganti icon/rebuild APK:
+1. APK baru memakai signing.keystore baru sehingga SHA-256 berubah.
+2. Package ID APK baru berbeda.
+3. Domain APK bukan persis printflow-orcin.vercel.app.
+4. assetlinks.json Production masih berisi fingerprint APK lama.
+
+LANGKAH CEK
+----------------------------------------------------------------
+1. Buka assetlinks.json dari FOLDER APK BARU dengan Notepad.
+2. Catat package_name dan sha256_cert_fingerprints.
+3. Buka Vercel Environment Variables.
+4. Pastikan ANDROID_PACKAGE_NAME sama persis.
+5. Masukkan fingerprint APK baru ke:
+   ANDROID_SHA256_CERT_FINGERPRINTS
+
+Jika APK lama dan baru perlu sama-sama terverifikasi, isi dua
+fingerprint dipisahkan koma:
+
+FINGERPRINT_LAMA,FINGERPRINT_BARU
+
+6. Save dan Redeploy Production.
+7. Buka Incognito:
+   https://printflow-orcin.vercel.app/.well-known/assetlinks.json
+8. Pastikan package dan fingerprint APK baru terlihat.
+9. Buka:
+   https://printflow-orcin.vercel.app/api/apk/check
+10. Pastikan addressBar.ready = true.
+11. Uninstall APK lama, tunggu 2-5 menit, install APK baru, lalu buka.
+
+CATATAN PENTING
+----------------------------------------------------------------
+Untuk update APK yang sama, gunakan signing.keystore LAMA saat build.
+Jika keystore sama, SHA-256 tetap sama dan Digital Asset Links tidak
+perlu diubah.
+
+Jika PWABuilder membuat folder baru berisi signing.keystore baru,
+kemungkinan fingerprint juga baru. Bandingkan assetlinks.json folder
+lama dan folder baru.
+
+Domain yang benar:
+https://printflow-orcin.vercel.app
+
+Jangan memakai deployment URL acak yang terkena Vercel Protection.
+
+Address bar tidak terkait push notification. Address bar ditentukan
+Digital Asset Links; push ditentukan VAPID + permission + subscription.
+
+================================================================
