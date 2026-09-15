@@ -48,7 +48,9 @@ export default async function CustomersPage() {
                     <p className="text-sm font-bold text-slate-900">{customer.name}</p>
                     <p className="text-xs text-slate-500">{customer.phone ?? "-"}</p>
                   </div>
-                  <span className="chip border-indigo-200 bg-indigo-50 text-indigo-700">{active} aktif</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="chip border-indigo-200 bg-indigo-50 text-indigo-700">{active} aktif</span>
+                  </div>
                 </div>
                 {customer.address ? <p className="mt-2 text-xs text-slate-500">📍 {customer.address}</p> : null}
                 {customer.notes ? <p className="mt-1 text-xs text-slate-500">📝 {customer.notes}</p> : null}
@@ -68,6 +70,9 @@ export default async function CustomersPage() {
                     ))}
                   </ul>
                 ) : null}
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <CustomerForm mode="edit" customer={customer} />
+                </div>
               </div>
             );
           })}

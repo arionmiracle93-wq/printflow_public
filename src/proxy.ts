@@ -6,8 +6,8 @@ const PUBLIC_PAGES = ["/login", "/setup-akun", "/offline.html"];
 const PUBLIC_PREFIXES = ["/lacak/", "/dokumentasi-update/"];
 const PUBLIC_API = ["/api/auth/login", "/api/auth/bootstrap", "/api/auth/status", "/api/health", "/api/setup"];
 const PUBLIC_API_PREFIXES = ["/api/photos/"];
-const OWNER_PAGE_PREFIXES = ["/pengaturan", "/catatan-perubahan", "/panduan", "/status", "/pengguna"];
-const OWNER_API_PREFIXES = ["/api/admin/", "/api/export", "/api/diagnose", "/api/performance", "/api/users"];
+const OWNER_PAGE_PREFIXES = ["/pengaturan", "/catatan-perubahan", "/panduan", "/status", "/pengguna", "/audit", "/sesi"];
+const OWNER_API_PREFIXES = ["/api/admin/", "/api/export", "/api/diagnose", "/api/performance", "/api/users", "/api/sessions"];
 
 function secret() {
   return new TextEncoder().encode(

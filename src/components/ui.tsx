@@ -3,6 +3,7 @@ import { ArrowUpRight, Building2, Lightbulb, ShieldCheck, UserRound } from "luci
 import { RISK_META, type OrderInsight, type RiskLevel } from "@/lib/ai";
 import { priorityMeta, statusMeta } from "@/lib/domain";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
+import { QuickStatusPopup } from "@/components/QuickStatusPopup";
 
 export function StatusBadge({ status }: { status: string }) {
   const meta = statusMeta(status);
@@ -96,8 +97,19 @@ export function InsightCard({
           ) : null}
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusBadge status={insight.status} />
-          <RiskBadge level={insight.riskLevel} score={insight.riskScore} />
+          <QuickStatusPopup
+            orderId={insight.orderId}
+            orderCode={insight.code}
+            orderTitle={insight.title}
+            currentStatus={insight.status}
+            hasOutsource={Boolean(outsource)}
+            trigger={
+              <span className="flex flex-col items-end gap-1">
+                <StatusBadge status={insight.status} />
+                <RiskBadge level={insight.riskLevel} score={insight.riskScore} />
+              </span>
+            }
+          />
         </div>
       </div>
       <p className="mt-3 text-sm font-semibold text-slate-700">{insight.headline}</p>

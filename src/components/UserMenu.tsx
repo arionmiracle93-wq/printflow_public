@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut, UserCog } from "lucide-react";
+import { ChevronDown, KeyRound, LogOut, UserCog } from "lucide-react";
 import { roleLabel, type UserRole } from "@/lib/auth-client";
 
 export function UserMenu({ name, role }: { name: string; role: UserRole }) {
@@ -62,6 +62,14 @@ export function UserMenu({ name, role }: { name: string; role: UserRole }) {
                 <UserCog size={14} /> Kelola Pengguna
               </Link>
             ) : null}
+            <Link
+              href="/ganti-password"
+              prefetch
+              onClick={() => setOpen(false)}
+              className="mt-1 flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-600 hover:bg-teal-50 hover:text-teal-700"
+            >
+              <KeyRound size={14} /> Ganti Password
+            </Link>
             <button
               type="button"
               onClick={logout}

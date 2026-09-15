@@ -9,8 +9,10 @@ import {
   Check,
   Factory,
   FileClock,
+  History,
   MoreVertical,
   Settings,
+  Smartphone,
   Stethoscope,
   type LucideIcon,
 } from "lucide-react";
@@ -60,6 +62,20 @@ const ITEMS: MoreItem[] = [
     label: "Status Sistem",
     description: "Diagnosis database dan koneksi",
     icon: Stethoscope,
+    roles: ["owner"],
+  },
+  {
+    href: "/audit",
+    label: "Audit Aktivitas",
+    description: "Riwayat login, status, mutasi & foto per akun",
+    icon: History,
+    roles: ["owner"],
+  },
+  {
+    href: "/sesi",
+    label: "Perangkat Aktif",
+    description: "Lihat & logout paksa perangkat yang login",
+    icon: Smartphone,
     roles: ["owner"],
   },
   {

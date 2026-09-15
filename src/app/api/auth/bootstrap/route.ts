@@ -2,7 +2,7 @@ import { hash } from "bcryptjs";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { setSessionCookie } from "@/lib/auth";
+import { createUserSession, setSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -25,7 +25,10 @@ export async function POST(request: Request) {
       return created;
     });
     if (!row) return Response.json({ ok: false, error: "Akun Owner sudah pernah dibuat. Silakan login." }, { status: 409 });
-    await setSessionCookie({ id: row.id, username: row.username, name: row.name, role: "owner", tokenVersion: row.tokenVersion });
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+    const userAgent = request.headers.get("user-agent")?.slice(0, 500) ?? null;
+    const sessionId = await createUserSession(row.id, ip, userAgent);
+    await setSessionCookie({ id: row.id, username: row.username, name: row.name, role: "owner", tokenVersion: row.tokenVersion, sessionId });
     return Response.json({ ok: true });
   } catch (error) {
     console.error("Bootstrap owner failed", error);

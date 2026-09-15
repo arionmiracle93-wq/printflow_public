@@ -123,6 +123,7 @@ export const orderPhotos = pgTable("order_photos", {
   mime: text("mime").notNull().default("image/jpeg"),
   sizeBytes: integer("size_bytes").notNull().default(0),
   caption: text("caption"),
+  uploadedBy: text("uploaded_by"),
   data: bytea("data").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -191,6 +192,23 @@ export const loginAudit = pgTable("login_audit", {
   ip: text("ip"),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * SESI PERANGKAT
+ * Satu baris = satu kali login dari satu perangkat/browser. Dipakai untuk
+ * fitur "lihat perangkat aktif & logout perangkat tertentu" milik owner.
+ */
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
 });
 
 /**

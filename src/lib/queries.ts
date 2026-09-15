@@ -259,6 +259,7 @@ export async function insertPhoto(input: {
   sizeBytes: number;
   caption: string | null;
   data: Buffer;
+  uploadedBy?: string | null;
 }): Promise<PhotoItem> {
   const [row] = await db
     .insert(orderPhotos)
@@ -268,6 +269,7 @@ export async function insertPhoto(input: {
       mime: input.mime,
       sizeBytes: input.sizeBytes,
       caption: input.caption,
+      uploadedBy: input.uploadedBy ?? null,
       data: input.data,
     })
     .returning({ id: orderPhotos.id, createdAt: orderPhotos.createdAt });

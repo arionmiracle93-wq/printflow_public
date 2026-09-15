@@ -6,9 +6,15 @@ import { ArrowRight, CheckCircle2, Clock3, Handshake, Send, UserRoundCheck } fro
 import { statusMeta, formatDateTimeID } from "@/lib/domain";
 import type { HandoverRecord } from "@/lib/handover-queries";
 import type { EmployeeOption } from "@/lib/user-queries";
+import { ShareHandoverWhatsApp } from "@/components/ShareHandoverWhatsApp";
 
 export function HandoverManager({
   orderId,
+  orderCode,
+  orderTitle,
+  customerName,
+  dueDate,
+  dueTime,
   currentOperator,
   orderStatus,
   records,
@@ -17,6 +23,11 @@ export function HandoverManager({
   employees,
 }: {
   orderId: number;
+  orderCode: string;
+  orderTitle: string;
+  customerName: string;
+  dueDate: string;
+  dueTime: string;
   currentOperator: string | null;
   orderStatus: string;
   records: HandoverRecord[];
@@ -118,6 +129,22 @@ export function HandoverManager({
             <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-700">Login sebagai: {receiver}</p>
             <button type="button" onClick={accept} disabled={busy} className="btn-primary"><CheckCircle2 size={15} /> Terima sebagai {receiver}</button>
           </div>
+          <ShareHandoverWhatsApp
+            handover={{
+              orderId,
+              orderCode,
+              orderTitle,
+              customerName,
+              fromOperator: pending.fromOperator,
+              toOperator: pending.toOperator,
+              shiftLabel: pending.shiftLabel,
+              lastPosition: pending.lastPosition,
+              nextAction: pending.nextAction,
+              blocker: pending.blocker,
+              dueDate,
+              dueTime,
+            }}
+          />
         </div>
       ) : null}
 

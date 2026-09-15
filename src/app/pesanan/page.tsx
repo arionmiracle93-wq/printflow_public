@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
+import { QuickStatusPopup } from "@/components/QuickStatusPopup";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/ui";
 import { analyzeOrder } from "@/lib/ai";
 import { safeDb } from "@/lib/dbcheck";
@@ -147,7 +148,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         </span>
                       ) : null}
                     </div>
-                    <StatusBadge status={order.status} />
+                    <QuickStatusPopup
+                      orderId={order.id}
+                      orderCode={order.code}
+                      orderTitle={order.title}
+                      currentStatus={order.status}
+                      hasOutsource={Boolean(outsourceMap.get(order.id))}
+                      trigger={<StatusBadge status={order.status} />}
+                    />
                   </div>
                   <div className="mt-3">
                     <ProgressBar value={insight.progress} tone={statusMeta(order.status).bar} />
@@ -222,7 +230,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         ) : null}
                       </td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={order.status} />
+                        <QuickStatusPopup
+                          orderId={order.id}
+                          orderCode={order.code}
+                          orderTitle={order.title}
+                          currentStatus={order.status}
+                          hasOutsource={Boolean(outsourceMap.get(order.id))}
+                          trigger={<StatusBadge status={order.status} />}
+                        />
                       </td>
                       <td className="w-32 px-4 py-3">
                         <ProgressBar value={insight.progress} tone={statusMeta(order.status).bar} />

@@ -1,3 +1,4 @@
+import { getCurrentUser } from "@/lib/auth";
 import { problemResponse } from "@/lib/dbcheck";
 import { MAX_PHOTO_BYTES, PHOTO_KINDS } from "@/lib/photos";
 import { countPhotos, insertPhoto, listPhotos, MAX_PHOTOS_PER_ORDER } from "@/lib/queries";
@@ -29,6 +30,7 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   try {
+    const me = await getCurrentUser();
     const form = await request.formData();
     const kindRaw = form.get("kind");
     const kind = typeof kindRaw === "string" && PHOTO_KINDS.includes(kindRaw) ? kindRaw : "referensi";
@@ -67,6 +69,7 @@ export async function POST(request: Request, { params }: Params) {
           mime: file.type || "image/jpeg",
           sizeBytes: buffer.length,
           caption: caption ?? file.name.slice(0, 120),
+          uploadedBy: me?.name ?? null,
           data: buffer,
         }),
       );

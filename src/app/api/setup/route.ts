@@ -175,6 +175,18 @@ const DDL = [
       updated_at timestamptz NOT NULL DEFAULT now(),
       CONSTRAINT business_branding_single_row CHECK (id = 1)
    )`,
+  `ALTER TABLE order_photos ADD COLUMN IF NOT EXISTS uploaded_by text`,
+  `CREATE TABLE IF NOT EXISTS user_sessions (
+      id serial PRIMARY KEY,
+      user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      ip text,
+      user_agent text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      last_seen_at timestamptz NOT NULL DEFAULT now(),
+      revoked_at timestamptz
+   )`,
+  `CREATE INDEX IF NOT EXISTS user_sessions_user_idx ON user_sessions (user_id)`,
+  `CREATE INDEX IF NOT EXISTS user_sessions_revoked_idx ON user_sessions (revoked_at)`,
 ];
 
 type SeedCustomer = [string, string | null, string | null, string, string];
@@ -312,6 +324,7 @@ export async function GET(request: Request) {
         "push_subscriptions",
         "shift_handovers",
         "business_branding",
+        "user_sessions",
       ],
       seeded,
       hint: seeded ? "Contoh data sudah diisi. Buka halaman utama aplikasi." : "Untuk mengisi contoh data, buka /api/setup?seed=1",

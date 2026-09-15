@@ -2,9 +2,9 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, userSessions } from "@/db/schema";
 import { USER_ROLES as ROLES, roleLabel, type UserRole } from "@/lib/auth-client";
 
 export const SESSION_COOKIE = "print_flow_session";
@@ -17,6 +17,7 @@ export type SessionPayload = JWTPayload & {
   name: string;
   role: UserRole;
   tokenVersion: number;
+  sessionId: number;
 };
 
 export type CurrentUser = {
@@ -25,6 +26,7 @@ export type CurrentUser = {
   name: string;
   role: UserRole;
   tokenVersion: number;
+  sessionId: number;
 };
 
 function secretValue(): string {
@@ -37,6 +39,12 @@ export function authSecretBytes() {
   return new TextEncoder().encode(secretValue());
 }
 
+/** Membuat baris sesi baru di database untuk satu kali login dari satu perangkat. */
+export async function createUserSession(userId: number, ip: string | null, userAgent: string | null): Promise<number> {
+  const [row] = await db.insert(userSessions).values({ userId, ip, userAgent }).returning({ id: userSessions.id });
+  return row.id;
+}
+
 export async function createSessionToken(user: CurrentUser) {
   return new SignJWT({
     userId: user.id,
@@ -44,6 +52,7 @@ export async function createSessionToken(user: CurrentUser) {
     name: user.name,
     role: user.role,
     tokenVersion: user.tokenVersion,
+    sessionId: user.sessionId,
   })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt()
@@ -64,7 +73,8 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       typeof payload.username !== "string" ||
       typeof payload.name !== "string" ||
       !ROLES.includes(payload.role as UserRole) ||
-      typeof payload.tokenVersion !== "number"
+      typeof payload.tokenVersion !== "number" ||
+      typeof payload.sessionId !== "number"
     ) return null;
     return payload as SessionPayload;
   } catch {
@@ -90,7 +100,8 @@ export async function clearSessionCookie() {
 }
 
 /**
- * Security boundary server: JWT valid saja tidak cukup; akun juga harus masih aktif dan version cocok.
+ * Security boundary server: JWT valid saja tidak cukup; akun juga harus masih aktif,
+ * version cocok, DAN sesi perangkat ini belum di-logout paksa oleh owner.
  *
  * Dibungkus cache() dari React: layout.tsx dan halaman (mis. detail pesanan)
  * sama-sama memanggil ini di satu request yang sama. Tanpa cache(), itu jadi
@@ -114,7 +125,16 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     }).from(users).where(eq(users.id, session.userId)).limit(1);
     const row = rows[0];
     if (!row || !row.active || row.tokenVersion !== session.tokenVersion || !ROLES.includes(row.role as UserRole)) return null;
-    return { id: row.id, username: row.username, name: row.name, role: row.role as UserRole, tokenVersion: row.tokenVersion };
+
+    const sessionRows = await db.select({ revokedAt: userSessions.revokedAt })
+      .from(userSessions)
+      .where(eq(userSessions.id, session.sessionId))
+      .limit(1);
+    if (!sessionRows[0] || sessionRows[0].revokedAt) return null;
+    // Tandai kapan sesi ini terakhir dipakai — tanpa menunggu, tidak memblokir respons.
+    void db.update(userSessions).set({ lastSeenAt: new Date() }).where(eq(userSessions.id, session.sessionId));
+
+    return { id: row.id, username: row.username, name: row.name, role: row.role as UserRole, tokenVersion: row.tokenVersion, sessionId: session.sessionId };
   } catch {
     return null;
   }
@@ -122,4 +142,39 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
 export function can(user: CurrentUser | null, roles: UserRole[]) {
   return Boolean(user && roles.includes(user.role));
+}
+
+export type ActiveSession = {
+  id: number;
+  userId: number;
+  userName: string;
+  ip: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  lastSeenAt: Date;
+  isCurrent: boolean;
+};
+
+/** Daftar semua sesi aktif (belum revoked) di seluruh akun — untuk halaman owner. */
+export async function listActiveSessions(currentSessionId: number): Promise<ActiveSession[]> {
+  const rows = await db
+    .select({
+      id: userSessions.id,
+      userId: userSessions.userId,
+      userName: users.name,
+      ip: userSessions.ip,
+      userAgent: userSessions.userAgent,
+      createdAt: userSessions.createdAt,
+      lastSeenAt: userSessions.lastSeenAt,
+    })
+    .from(userSessions)
+    .innerJoin(users, eq(users.id, userSessions.userId))
+    .where(isNull(userSessions.revokedAt))
+    .orderBy(desc(userSessions.lastSeenAt));
+  return rows.map((r) => ({ ...r, isCurrent: r.id === currentSessionId }));
+}
+
+/** Logout paksa satu perangkat tertentu. */
+export async function revokeSession(sessionId: number): Promise<void> {
+  await db.update(userSessions).set({ revokedAt: new Date() }).where(and(eq(userSessions.id, sessionId), isNull(userSessions.revokedAt)));
 }

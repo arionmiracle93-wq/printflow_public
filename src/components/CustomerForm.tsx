@@ -3,10 +3,31 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function CustomerForm() {
+type CustomerData = {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+};
+
+export function CustomerForm({
+  mode = "create",
+  customer,
+}: {
+  mode?: "create" | "edit";
+  customer?: CustomerData;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", notes: "" });
+  const [form, setForm] = useState({
+    name: customer?.name ?? "",
+    phone: customer?.phone ?? "",
+    email: customer?.email ?? "",
+    address: customer?.address ?? "",
+    notes: customer?.notes ?? "",
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,8 +36,9 @@ export function CustomerForm() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/customers", {
-        method: "POST",
+      const isEdit = mode === "edit" && customer;
+      const res = await fetch(isEdit ? `/api/customers/${customer.id}` : "/api/customers", {
+        method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -25,7 +47,7 @@ export function CustomerForm() {
         setError(json.error ?? "Gagal menyimpan pelanggan.");
         return;
       }
-      setForm({ name: "", phone: "", email: "", address: "", notes: "" });
+      if (mode === "create") setForm({ name: "", phone: "", email: "", address: "", notes: "" });
       setOpen(false);
       router.refresh();
     } finally {
@@ -35,15 +57,15 @@ export function CustomerForm() {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="btn-primary">
-        ➕ Tambah Pelanggan
+      <button type="button" onClick={() => setOpen(true)} className={mode === "edit" ? "btn-ghost" : "btn-primary"}>
+        {mode === "edit" ? "✏️ Edit" : "➕ Tambah Pelanggan"}
       </button>
     );
   }
 
   return (
     <form onSubmit={submit} className="card w-full space-y-3 p-4">
-      <h3 className="text-sm font-bold text-slate-900">Data Pelanggan Baru</h3>
+      <h3 className="text-sm font-bold text-slate-900">{mode === "edit" ? "Edit Data Pelanggan" : "Data Pelanggan Baru"}</h3>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Nama / Toko *</label>
@@ -57,7 +79,7 @@ export function CustomerForm() {
         <div>
           <label className="label">No. WhatsApp</label>
           <input
-            value={form.phone}
+            value={form.phone ?? ""}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             placeholder="08xxxxxxxxxx"
             className="input"
@@ -67,7 +89,7 @@ export function CustomerForm() {
           <label className="label">Email</label>
           <input
             type="email"
-            value={form.email}
+            value={form.email ?? ""}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="input"
           />
@@ -75,7 +97,7 @@ export function CustomerForm() {
         <div>
           <label className="label">Alamat</label>
           <input
-            value={form.address}
+            value={form.address ?? ""}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
             className="input"
           />
@@ -84,7 +106,7 @@ export function CustomerForm() {
           <label className="label">Catatan (kebiasaan order, harga khusus, dll)</label>
           <textarea
             rows={2}
-            value={form.notes}
+            value={form.notes ?? ""}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             className="input"
           />
@@ -93,7 +115,7 @@ export function CustomerForm() {
       {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? "Menyimpan…" : "💾 Simpan"}
+          {busy ? "Menyimpan…" : mode === "edit" ? "💾 Simpan Perubahan" : "💾 Simpan"}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="btn-ghost">
           Tutup

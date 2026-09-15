@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { estimateHours, humanDuration } from "@/lib/domain";
-import { MACHINES, OPERATOR_SUGGESTIONS, PRIORITIES, PRODUCT_TYPES, UNITS } from "@/lib/domain";
+import { MACHINES, PRIORITIES, PRODUCT_TYPES, UNITS } from "@/lib/domain";
 
 type CustomerOption = { id: number; name: string; phone: string | null };
 
 const inputCls = "input";
 
-export function NewOrderForm({ customers }: { customers: CustomerOption[] }) {
+export function NewOrderForm({ customers, operatorSuggestions = [] }: { customers: CustomerOption[]; operatorSuggestions?: string[] }) {
   const router = useRouter();
   const [customerId, setCustomerId] = useState<string>("__new");
   const [customerName, setCustomerName] = useState("");
@@ -170,7 +170,7 @@ export function NewOrderForm({ customers }: { customers: CustomerOption[] }) {
               className={inputCls}
             />
             <datalist id="operator-list">
-              {OPERATOR_SUGGESTIONS.map((o) => (
+              {operatorSuggestions.map((o) => (
                 <option key={o} value={o} />
               ))}
             </datalist>
