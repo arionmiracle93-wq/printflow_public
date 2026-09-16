@@ -1,0 +1,103 @@
+================================================================
+CATATAN UPDATE - HAPUS TEKS "PERKIRAAN SELESAI" YANG MEMBINGUNGKAN
+Tanggal : 22 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos)
+Aplikasi: Print Flow
+================================================================
+
+
+LATAR BELAKANG
+----------------------------------------------------------------
+Teks "Perkiraan selesai" sebenarnya menampilkan TANGGAL DEADLINE
+yang dijanjikan ke pelanggan, bukan perkiraan riil kapan pekerjaan
+akan rampung. Karena pekerjaan bisa saja selesai lebih cepat dari
+deadline, label ini berpotensi membingungkan pelanggan (dikira
+janji waktu selesai yang pasti, padahal itu batas akhir).
+
+
+1. TEMPLATE PESAN WHATSAPP
+----------------------------------------------------------------
+
+SEBELUM:
+Baris "• Perkiraan selesai: {tanggal} pukul {jam}" hanya
+disembunyikan KHUSUS saat status sudah Selesai. Selama pekerjaan
+masih berjalan, baris ini selalu muncul di pesan WhatsApp.
+
+SEKARANG:
+Baris "Perkiraan selesai" DIHAPUS SEPENUHNYA dari template pesan,
+baik untuk pekerjaan yang masih berjalan maupun yang sudah
+selesai. Isi pesan sekarang hanya:
+
+    Halo {nama pelanggan}
+    (kabar status pekerjaan)
+
+    • No. pesanan : {kode}
+    • Pekerjaan   : {judul}
+    • Status      : {emoji} {label status}
+
+    (ajakan buka tautan lacak)
+    {tautan}
+
+    Terima kasih sudah memesan
+
+Perubahan ini otomatis berlaku di SEMUA tombol yang mengirim/
+menyalin pesan ini, karena semuanya memanggil fungsi yang sama
+(buildWhatsAppMessage di src/lib/whatsapp-share.ts):
+    - Tombol "Kirim WA" di kartu dashboard
+    - Tombol "Salin teks pesan" di kartu dashboard
+    - Tombol Kirim WA / Salin di halaman detail pekerjaan
+
+
+2. HALAMAN LACAK PESANAN (PUBLIK)
+----------------------------------------------------------------
+
+SEBELUM:
+Kotak info "Perkiraan selesai" selalu tampil di halaman lacak,
+bahkan setelah pekerjaan berstatus Selesai — padahal tanggal
+tersebut sudah tidak relevan (pekerjaan sudah di tangan
+pelanggan / siap diambil).
+
+SEKARANG:
+Kotak info "Perkiraan selesai" HANYA tampil selama pekerjaan
+BELUM berstatus Selesai. Begitu status diupdate menjadi Selesai,
+kotak ini otomatis hilang dari halaman lacak, dan kotak "Jenis
+pesanan" melebar mengisi baris tersebut supaya tampilan tetap
+rapi (tidak bolong sebelah).
+
+Catatan penting: perubahan ini HANYA menyembunyikan kotak info
+di bagian atas halaman. Riwayat pengerjaan (timeline status) di
+bagian bawah halaman TIDAK berubah — histori tetap lengkap
+seperti biasa.
+
+
+3. BERKAS YANG BERUBAH
+----------------------------------------------------------------
+
+    src/lib/whatsapp-share.ts
+        buildWhatsAppMessage(): baris "Perkiraan selesai" dihapus
+        dari susunan pesan (bukan lagi kondisional per status).
+
+    src/app/lacak/[token]/page.tsx
+        Kotak info "Perkiraan selesai" dibungkus kondisi
+        "hanya tampil jika belum selesai". Helper Info() ditambah
+        prop className opsional untuk melebarkan kotak sebelahnya.
+
+TIDAK ADA perubahan database, skema, maupun endpoint API.
+
+
+4. CARA MENGUJI
+----------------------------------------------------------------
+
+1. Buka kartu pekerjaan yang statusnya MASIH BERJALAN di
+   dashboard, klik "Kirim WA" atau "Salin teks pesan". Pastikan
+   tidak ada baris "Perkiraan selesai" di teksnya.
+2. Update status pekerjaan tersebut menjadi Selesai, ulangi
+   langkah 1. Pesannya tetap tidak ada baris tersebut (sebelumnya
+   memang sudah tidak ada untuk status Selesai).
+3. Buka tautan /lacak/{token} pekerjaan yang MASIH BERJALAN.
+   Pastikan kotak "Perkiraan selesai" masih tampil seperti biasa.
+4. Update status pekerjaan tersebut menjadi Selesai, muat ulang
+   halaman /lacak/{token}. Pastikan kotak "Perkiraan selesai"
+   sudah hilang, dan kotak "Jenis pesanan" melebar penuh.
+
+================================================================

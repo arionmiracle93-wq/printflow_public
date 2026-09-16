@@ -1,0 +1,58 @@
+================================================================
+CATATAN UPDATE - FORMAT dd/mm/yyyy DISERAGAMKAN KE PANEL MITRA
+Tanggal : 26 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos)
+Aplikasi: Print Flow
+================================================================
+
+
+LATAR BELAKANG
+----------------------------------------------------------------
+Update kemarin (25 September) menerapkan format tanggal dd/mm/yyyy
+yang konsisten (komponen DateFieldID) hanya pada field "Tanggal
+harus jadi". Field "Target barang kembali" di panel Produksi Mitra
+masih pakai <input type="date"> bawaan browser, jadi formatnya
+masih bisa ikut-ikutan locale perangkat (tidak seragam).
+
+
+PERUBAHAN
+----------------------------------------------------------------
+Field "Target barang kembali" (panel kanan / Produksi Mitra, form
+Pekerjaan Baru) sekarang memakai komponen DateFieldID yang sama —
+selalu tampil dd/mm/yyyy, bisa diketik manual atau dipilih lewat
+ikon kalender, dan tanggal tidak valid otomatis ditolak.
+
+Sekarang KEDUA field tanggal di form Pekerjaan Baru sudah seragam:
+    - Tanggal harus jadi     -> dd/mm/yyyy
+    - Target barang kembali  -> dd/mm/yyyy
+
+Perilaku lain TIDAK berubah: auto-isi H-1 dari deadline pelanggan,
+peringatan risiko telat, dan validasi wajib-isi saat panel mitra
+diaktifkan tetap jalan seperti sebelumnya — cuma tampilan input-nya
+yang diganti.
+
+
+BERKAS YANG BERUBAH
+----------------------------------------------------------------
+    src/components/NewOrderForm.tsx
+        Field "Target barang kembali": <input type="date"> diganti
+        <DateFieldID />.
+
+TIDAK ADA berkas baru — DateFieldID.tsx sudah dibuat di update
+sebelumnya (25 September) dan tinggal dipakai ulang di sini.
+
+
+CARA MENGUJI
+----------------------------------------------------------------
+
+1. Buka /pesanan/baru, centang "Lempar pekerjaan ini ke mitra".
+2. Lihat field "Target barang kembali": pastikan sudah tampil
+   dd/mm/yyyy dengan ikon kalender di kanan, sama seperti field
+   "Tanggal harus jadi".
+3. Ubah "Tanggal harus jadi", pastikan "Target barang kembali"
+   masih ikut auto-mundur H-1 seperti biasa (selama belum diubah
+   manual).
+4. Ketik manual tanggal tidak valid di "Target barang kembali",
+   pastikan ditolak sama seperti field tanggal lainnya.
+
+================================================================

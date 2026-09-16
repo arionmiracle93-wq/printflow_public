@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, Building2, Lightbulb, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowUpRight, Building2, Lightbulb, RefreshCw, ShieldCheck, UserRound } from "lucide-react";
 import { RISK_META, type OrderInsight, type RiskLevel } from "@/lib/ai";
 import { priorityMeta, statusMeta } from "@/lib/domain";
+import { CopyMessageQuick } from "@/components/CopyMessageQuick";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
 import { QuickStatusPopup } from "@/components/QuickStatusPopup";
+import { ShareWhatsAppQuick } from "@/components/ShareWhatsAppQuick";
 
 export function StatusBadge({ status }: { status: string }) {
   const meta = statusMeta(status);
@@ -70,12 +72,26 @@ export function InsightCard({
   insight,
   photoCount = 0,
   outsource,
+  dueDate,
+  dueTime,
 }: {
   insight: OrderInsight;
   photoCount?: number;
   outsource?: { status: string; partnerName: string };
+  dueDate: string;
+  dueTime: string;
 }) {
   const meta = statusMeta(insight.status);
+  // Dipakai bersama oleh tombol "Kirim WA" dan "Salin teks pesan" agar isi pesannya identik.
+  const shareOrder = {
+    id: insight.orderId,
+    code: insight.code,
+    title: insight.title,
+    customerName: insight.customerName,
+    status: insight.status,
+    dueDate,
+    dueTime,
+  };
   return (
     <div className="card group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_12px_30px_rgba(15,75,84,.1)]">
       <div className={`absolute inset-y-0 left-0 w-1 ${meta.bar}`} />
@@ -125,9 +141,28 @@ export function InsightCard({
           <span>{insight.recommendations[0]}</span>
         </div>
       ) : null}
-      <a href={`/pesanan/${insight.orderId}`} className="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-teal-700 hover:underline">
-        Buka detail <ArrowUpRight size={13} />
-      </a>
+      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs font-extrabold text-teal-700 dark:text-teal-300">
+        <a href={`/pesanan/${insight.orderId}`} className="inline-flex items-center gap-1 hover:underline">
+          Buka detail <ArrowUpRight size={13} />
+        </a>
+        <span aria-hidden="true" className="h-3.5 w-px bg-current/50" />
+        <QuickStatusPopup
+          orderId={insight.orderId}
+          orderCode={insight.code}
+          orderTitle={insight.title}
+          currentStatus={insight.status}
+          hasOutsource={Boolean(outsource)}
+          trigger={
+            <span className="inline-flex items-center gap-1 hover:underline">
+              Update status <RefreshCw size={13} />
+            </span>
+          }
+        />
+        <span aria-hidden="true" className="h-3.5 w-px bg-current/50" />
+        <ShareWhatsAppQuick order={shareOrder} />
+        <span aria-hidden="true" className="h-3.5 w-px bg-current/50" />
+        <CopyMessageQuick order={shareOrder} />
+      </div>
     </div>
   );
 }

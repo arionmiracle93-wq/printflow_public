@@ -1,0 +1,55 @@
+================================================================
+CATATAN UPDATE - PERBAIKAN ICON DOBEL DI TOMBOL SIMPAN
+Tanggal : 24 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos)
+Aplikasi: Print Flow
+================================================================
+
+
+LATAR BELAKANG
+----------------------------------------------------------------
+Di form Pekerjaan Baru (/pesanan/baru), tombol simpan menampilkan
+DUA icon sekaligus:
+    - Icon outline hitam (icon Save dari lucide-react)
+    - Emoji disket berwarna (💾) yang sudah ada di teks tombol
+Terlihat dobel dan berantakan.
+
+
+PERUBAHAN
+----------------------------------------------------------------
+
+SEBELUM:
+    [icon outline hitam] 💾 Simpan & Mulai Pantau
+    [icon outline hitam] 💾 Simpan Pekerjaan + Mitra
+
+SEKARANG:
+    💾 Simpan & Mulai Pantau
+    💾 Simpan Pekerjaan + Mitra
+
+Icon outline (komponen <Save />) dihapus dari tombol, emoji 💾
+yang sudah ada di teks tetap dipertahankan sebagai satu-satunya
+icon. Import "Save" dari lucide-react yang jadi tidak terpakai
+juga sudah dibersihkan supaya tidak muncul peringatan lint.
+
+
+BERKAS YANG BERUBAH
+----------------------------------------------------------------
+
+    src/components/NewOrderForm.tsx
+        Tombol submit: hapus <Save size={15} /> + bersihkan import.
+
+TIDAK ADA perubahan lain. Layout 2 kolom, panel mitra, dan
+fungsi simpan tetap berjalan persis seperti sebelumnya — ini
+murni perbaikan tampilan icon.
+
+
+CARA MENGUJI
+----------------------------------------------------------------
+
+1. Buka /pesanan/baru.
+2. Lihat tombol biru di bawah. Pastikan hanya ada 1 icon (emoji
+   💾), tidak ada icon outline hitam terpisah di sebelahnya.
+3. Centang "Lempar pekerjaan ini ke mitra", pastikan teks tombol
+   berubah jadi "💾 Simpan Pekerjaan + Mitra" tanpa icon dobel.
+
+================================================================

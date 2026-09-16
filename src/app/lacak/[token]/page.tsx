@@ -25,6 +25,11 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
   const meta = statusMeta(order.status);
   const selesai = order.status === "selesai";
   const batal = order.status === "batal";
+  // "Siap Diambil/Dikirim" progress-nya 95% (belum "selesai" 100%), tapi buat
+  // pelanggan awam dua-duanya kedengeran sama saja "sudah kelar" — jadi teks
+  // deadline/perkiraan selesai disembunyikan mulai status ini, bukan cuma pas
+  // sudah benar-benar Selesai.
+  const deadlineIrrelevant = selesai || order.status === "siap";
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 py-2">
@@ -74,13 +79,17 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
           </div>
 
           {/* INFO */}
+          {/* "Perkiraan selesai" disembunyikan mulai status Siap Diambil/Dikirim
+              (bukan cuma pas Selesai) — lihat catatan deadlineIrrelevant di atas. */}
           <div className="grid gap-2 sm:grid-cols-2">
-            <Info label="Jenis pesanan" value={`${order.productType} · ${formatNumber(order.quantity)} ${order.unit}`} />
             <Info
-              label="Perkiraan selesai"
-              value={`${formatDateID(order.dueDate)} · ${order.dueTime}`}
-              tone={selesai ? "text-emerald-600" : "text-slate-800"}
+              label="Jenis pesanan"
+              value={`${order.productType} · ${formatNumber(order.quantity)} ${order.unit}`}
+              className={deadlineIrrelevant ? "sm:col-span-2" : undefined}
             />
+            {!deadlineIrrelevant ? (
+              <Info label="Perkiraan selesai" value={`${formatDateID(order.dueDate)} · ${order.dueTime}`} />
+            ) : null}
           </div>
 
           {order.notes ? (
@@ -142,9 +151,19 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
   );
 }
 
-function Info({ label, value, tone = "text-slate-800" }: { label: string; value: string; tone?: string }) {
+function Info({
+  label,
+  value,
+  tone = "text-slate-800",
+  className = "",
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+  className?: string;
+}) {
   return (
-    <div className="rounded-xl bg-slate-50 px-3 py-2">
+    <div className={`rounded-xl bg-slate-50 px-3 py-2 ${className}`}>
       <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
       <p className={`text-sm font-semibold ${tone}`}>{value}</p>
     </div>

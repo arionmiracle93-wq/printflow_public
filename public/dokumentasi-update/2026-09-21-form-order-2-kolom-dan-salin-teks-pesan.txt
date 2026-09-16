@@ -1,0 +1,177 @@
+================================================================
+CATATAN UPDATE - FORM ORDER 2 KOLOM & SALIN TEKS PESAN
+Tanggal : 21 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos)
+Aplikasi: Print Flow
+================================================================
+
+
+1. HALAMAN PEKERJAAN BARU JADI 2 KOLOM (DESKTOP)
+----------------------------------------------------------------
+
+SEBELUM:
+Halaman /pesanan/baru hanya berisi form order (pelanggan, detail
+cetakan, deadline & harga). Kalau pekerjaan mau dilempar ke mitra,
+alurnya:
+
+    Isi form  ->  Simpan  ->  Buka halaman detail pekerjaan
+              ->  Cari panel Produksi Mitra  ->  Isi lagi
+
+Jadi harus bolak-balik halaman untuk 1 pekerjaan.
+
+SEKARANG:
+Di layar lebar (breakpoint lg / >= 1024px) halaman dibagi 2 kolom
+yang berdampingan:
+
+    KOLOM KIRI                 |   KOLOM KANAN
+    Data Pekerjaan (wajib)     |   Produksi Mitra (opsional)
+    - Pelanggan                |   - Pilih / tambah mitra
+    - Detail cetakan           |   - Nama yang dicatat
+    - Deadline & harga         |   - Status di mitra
+                               |   - Biaya vendor
+                               |   - Target barang kembali + jam
+                               |   - Catatan untuk mitra
+
+Pembatas antar kolom dibuat TEGAS supaya tidak membingungkan:
+  a) Ada garis vertikal sungguhan di tengah (kolom grid 1px).
+  b) Tiap kolom punya kepala berwarna:
+       Kiri  = teal   "Kolom 1 - Data Pekerjaan"
+       Kanan = kuning "Kolom 2 (opsional) - Produksi Mitra"
+  c) Panel kanan diberi latar kuning lembut + border kuning.
+
+Struktur grid yang dipakai:
+    lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,25rem)]  gap 7
+
+
+2. TAMPILAN MOBILE
+----------------------------------------------------------------
+
+Di bawah breakpoint lg, layout otomatis kembali menjadi SATU KOLOM
+yang di-scroll (tidak dipaksa 2 kolom). Urutannya:
+
+    Data Pekerjaan
+    -- pembatas horizontal berlabel "Bagian 2 - Opsional" --
+    Produksi Mitra
+
+Tombol simpan dibuat sticky di bawah layar, jadi tidak perlu scroll
+jauh ke bawah setelah mengisi form panjang.
+
+
+3. SAKLAR PANEL MITRA
+----------------------------------------------------------------
+
+Panel kanan punya kotak centang:
+
+    [ ] Lempar pekerjaan ini ke mitra
+
+- TIDAK dicentang (default): panel diabaikan saat menyimpan.
+  Tidak ada data mitra kosong yang ikut tersimpan.
+- Dicentang: nama mitra dan target barang kembali menjadi WAJIB.
+  Kalau kosong, penyimpanan ditolak SEBELUM order dibuat, jadi
+  tidak ada order setengah jadi.
+
+
+4. FITUR TAMBAHAN HASIL 2 KOLOM
+----------------------------------------------------------------
+
+Karena harga (kiri) dan biaya vendor (kanan) kini terlihat
+bersamaan, ditambahkan:
+
+- Hitung margin langsung:
+      Harga pelanggan - Biaya mitra = Margin kotor (+ persen)
+  Margin minus otomatis berwarna merah.
+
+- Peringatan jadwal:
+  Kalau "Target barang kembali" >= deadline pelanggan, muncul
+  peringatan kuning agar disisakan waktu untuk QC dan revisi.
+
+- Target barang kembali terisi otomatis H-1 dari deadline
+  pelanggan, dan ikut menyesuaikan bila deadline diubah
+  (selama belum diubah manual).
+
+- Tombol tambah mitra baru tersedia langsung di panel kanan,
+  memakai endpoint /api/partners yang sudah ada.
+
+
+5. CARA PENYIMPANAN (PENTING)
+----------------------------------------------------------------
+
+Data mitra butuh ID order, jadi penyimpanan berjalan 2 langkah:
+
+    1) POST /api/orders                    -> order dibuat
+    2) POST /api/orders/{id}/outsource     -> data mitra disimpan
+
+Kalau langkah 2 gagal (misal internet putus), ORDER TETAP AMAN
+TERSIMPAN. Layar akan menampilkan pesan gagal plus tautan
+"Buka detail pekerjaan" untuk melengkapi data mitra di sana.
+Tidak ada pekerjaan yang hilang.
+
+
+6. TOMBOL PINTAS BARU DI KARTU DASHBOARD
+----------------------------------------------------------------
+
+SEBELUM:
+    Buka detail | Update status | Kirim WA
+
+SEKARANG:
+    Buka detail | Update status | Kirim WA | Salin teks pesan
+
+"Salin teks pesan" menyusun teks yang PERSIS SAMA dengan tombol
+Kirim WA (termasuk membuat/mengambil tautan lacak pelanggan),
+tetapi hanya menyalinnya ke clipboard.
+
+Kegunaan:
+- Tempel ke grup WhatsApp karyawan, Telegram, SMS, atau catatan.
+- Cadangan kalau pop-up WhatsApp diblokir browser.
+
+Setelah diklik, label berubah menjadi "Tersalin!" selama 2 detik.
+
+Catatan teknis:
+navigator.clipboard hanya tersedia di secure context (https atau
+localhost). Di WebView APK / http lokal bisa tidak ada, sehingga
+disediakan cadangan textarea + document.execCommand("copy"), dan
+cadangan terakhir berupa window.prompt berisi teksnya supaya
+tetap bisa diblok lalu disalin manual.
+
+
+7. BERKAS YANG BERUBAH
+----------------------------------------------------------------
+
+BARU:
+    src/components/CopyMessageQuick.tsx
+        Tombol "Salin teks pesan".
+
+DIUBAH:
+    src/components/NewOrderForm.tsx
+        Ditulis ulang: layout 2 kolom + panel produksi mitra.
+
+    src/app/pesanan/baru/page.tsx
+        Ikut mengambil listPartners() dan mengopernya ke form.
+
+    src/components/ui.tsx
+        InsightCard: objek shareOrder dipakai bersama, plus
+        tombol CopyMessageQuick di baris pintasan.
+
+TIDAK ADA perubahan database, skema, maupun endpoint API.
+Semua endpoint yang dipakai sudah ada sebelumnya.
+
+
+8. CARA MENGUJI
+----------------------------------------------------------------
+
+1. Buka /pesanan/baru di browser desktop (layar >= 1024px).
+   Pastikan tampil 2 kolom dengan garis pembatas di tengah.
+2. Kecilkan jendela sampai di bawah 1024px.
+   Pastikan berubah menjadi 1 kolom scroll.
+3. Isi form kiri saja, simpan. Pastikan order dibuat normal dan
+   tidak ada data mitra yang ikut tersimpan.
+4. Ulangi, tapi centang panel mitra dan isi nama mitra + target
+   kembali. Pastikan di halaman detail pekerjaan panel Produksi
+   Mitra sudah langsung terisi.
+5. Isi harga di kiri dan biaya vendor di kanan. Pastikan margin
+   berubah seketika, dan minus berwarna merah.
+6. Di dashboard, klik "Salin teks pesan" pada kartu pekerjaan,
+   lalu tempel di WhatsApp. Pastikan isinya sama dengan hasil
+   tombol "Kirim WA".
+
+================================================================

@@ -44,11 +44,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ size
           background: "linear-gradient(145deg, #06384d 0%, #075b68 55%, #0d9488 100%)",
           position: "relative",
           overflow: "hidden",
-          // Ikon biasa dikasih sudut membulat (squircle) supaya tidak
-          // kelihatan kaku kalau ditampilkan apa adanya tanpa masking OS.
-          // Untuk varian maskable, sudut TIDAK dibulatkan di sini — OS
-          // sendiri yang akan membentuknya, membulatkan dobel malah salah.
-          borderRadius: isMaskable ? 0 : px(112),
+          // Kanvas SENGAJA dibuat kotak penuh sampai ke tepi, TANPA sudut
+          // membulat sendiri di sini. Sebelumnya sudut dibulatkan manual di
+          // varian non-maskable, dengan asumsi tampilan "as-is" tanpa masking
+          // OS akan tetap terlihat rapi. Ternyata beberapa tempat yang
+          // menampilkan ikon ini apa adanya — misalnya thumbnail pratinjau
+          // tautan WhatsApp — TIDAK memotong sudutnya sendiri, jadi area di
+          // luar bentuk bulat (yang transparan) malah kelihatan sebagai
+          // "sudut putih" mengelilingi badge bulat. iOS tetap otomatis
+          // membulatkan apple-touch-icon dengan squircle-nya sendiri, jadi
+          // kotak penuh di sini tidak masalah untuk iOS — justru sesuai
+          // rekomendasi resmi Apple (jangan sisipkan rounding sendiri).
+          // Varian maskable juga sudah lama tidak dibulatkan sendiri di sini
+          // (OS yang membentuknya) — sekarang keduanya konsisten kotak penuh.
+          borderRadius: 0,
         },
       },
       React.createElement("div", {

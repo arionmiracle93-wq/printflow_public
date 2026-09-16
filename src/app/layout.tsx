@@ -22,10 +22,10 @@ export const metadata: Metadata = {
   manifest: "/api/pwa/manifest",
   icons: {
     icon: [
-      { url: "/api/pwa/icon/192.png?v=printer-1", sizes: "192x192", type: "image/png" },
-      { url: "/api/pwa/icon/512.png?v=printer-1", sizes: "512x512", type: "image/png" },
+      { url: "/api/pwa/icon/192.png?v=printer-2", sizes: "192x192", type: "image/png" },
+      { url: "/api/pwa/icon/512.png?v=printer-2", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/api/pwa/icon/192.png?v=printer-1", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/api/pwa/icon/192.png?v=printer-2", sizes: "192x192", type: "image/png" }],
   },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Print Flow" },
 };

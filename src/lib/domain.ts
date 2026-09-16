@@ -233,7 +233,15 @@ export function formatDateTimeID(value: Date | string | null | undefined): strin
   if (!value) return "-";
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return "-";
+  // PENTING: harus set timeZone eksplisit. Fungsi ini dipanggil di server
+  // component (dirender di server Vercel yang jalan di UTC), jadi kalau
+  // timeZone tidak diset, Intl.DateTimeFormat memakai zona waktu SERVER
+  // (UTC) — bukan zona waktu perangkat pengguna — dan jamnya kegeser 7 jam
+  // dari WIB. Di-hardcode ke Asia/Jakarta karena ini aplikasi percetakan
+  // lokal Indonesia, supaya jam yang tampil konsisten WIB untuk semua
+  // pengguna, di device apa pun dan di mana pun server-nya di-deploy.
   return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
     day: "numeric",
     month: "short",
     year: "numeric",

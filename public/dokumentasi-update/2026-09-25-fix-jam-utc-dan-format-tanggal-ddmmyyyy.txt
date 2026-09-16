@@ -1,0 +1,93 @@
+================================================================
+CATATAN UPDATE - JAM RIWAYAT KEGESER (UTC) & FORMAT TANGGAL dd/mm/yyyy
+Tanggal : 25 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos)
+Aplikasi: Print Flow
+================================================================
+
+
+1. JAM DI HALAMAN LACAK / RIWAYAT PENGERJAAN KEGESER 7 JAM
+----------------------------------------------------------------
+
+PENYEBAB:
+Fungsi formatDateTimeID() (dipakai untuk menampilkan jam di Riwayat
+Pengerjaan, halaman lacak pesanan, serah terima, audit, dan daftar
+sesi) memformat jam TANPA menentukan zona waktu (timeZone). Fungsi
+ini dijalankan di server component — dirender di server Vercel
+yang jalan di UTC. Karena tidak diberi tahu zona waktu, hasilnya
+ikut UTC, BUKAN jam perangkat pengguna maupun WIB. Selisih WIB
+dengan UTC adalah 7 jam, jadi jam yang tampil kegeser 7 jam dari
+jam sebenarnya.
+
+Ini beda akar masalah dengan jam di pojok dashboard (komponen
+LocalDateTime) yang SUDAH benar sejak awal, karena komponen itu
+memang sengaja dibuat "use client" supaya jalan di browser
+pengguna, bukan di server.
+
+PERBAIKAN:
+formatDateTimeID() sekarang di-set eksplisit timeZone: "Asia/
+Jakarta", jadi jam yang tampil selalu WIB, konsisten untuk semua
+pengguna di mana pun server di-deploy.
+
+HALAMAN YANG IKUT TERBENAHI (semua memakai fungsi yang sama):
+    - /lacak/[token]  (Riwayat Pengerjaan)
+    - Halaman detail pekerjaan (/pesanan/[id])
+    - Serah terima (/serah-terima)
+    - Log audit (AuditTimeline)
+    - Daftar sesi login (SessionsList)
+    - Panel serah terima ke mitra (HandoverManager)
+
+BERKAS: src/lib/domain.ts (formatDateTimeID)
+
+
+2. FORMAT TANGGAL "TANGGAL HARUS JADI" DIPAKSA dd/mm/yyyy
+----------------------------------------------------------------
+
+PENYEBAB:
+Field ini sebelumnya <input type="date"> bawaan browser. Tampilan
+formatnya (dd/mm/yyyy vs mm/dd/yyyy) ditentukan oleh locale/setelan
+bahasa perangkat masing-masing pengguna, BUKAN oleh aplikasi —
+jadi bisa beda-beda tampilannya tergantung HP/browser yang dipakai.
+
+PERBAIKAN:
+Dibuat komponen baru DateFieldID yang SELALU menampilkan format
+dd/mm/yyyy, apa pun perangkat & locale-nya:
+    - Bisa diketik manual (angka otomatis diberi tanda "/" —
+      ketik "17092026" otomatis jadi "17/09/2026").
+    - Ada tombol kalender kecil di kanan untuk membuka date-picker
+      bawaan perangkat; tanggal yang dipilih otomatis ditulis
+      ulang ke format dd/mm/yyyy.
+    - Tanggal yang tidak valid (mis. 31/04, 29/02 di tahun bukan
+      kabisat) otomatis ditolak, tidak tersimpan ke form.
+    - Di baliknya, nilai yang dikirim ke server tetap format ISO
+      (yyyy-mm-dd) seperti sebelumnya — jadi TIDAK mengubah data
+      yang tersimpan di database maupun cara kerja API.
+
+Diterapkan pada field "Tanggal harus jadi" di form Pekerjaan Baru.
+Field tanggal lain (mis. "Target barang kembali" di panel mitra)
+belum diubah — beri tahu saya kalau mau diseragamkan juga.
+
+BERKAS:
+    src/components/DateFieldID.tsx   (baru)
+    src/components/NewOrderForm.tsx  (pakai DateFieldID untuk dueDate)
+
+
+3. CARA MENGUJI
+----------------------------------------------------------------
+
+1. Buka pekerjaan apa saja, update statusnya, lalu buka Riwayat
+   Pengerjaan / halaman lacaknya. Cocokkan jam yang tampil dengan
+   jam saat itu di jam tangan/HP — sekarang harus sama persis
+   (WIB), bukan mundur 7 jam.
+2. Buka /pesanan/baru, lihat field "Tanggal harus jadi": pastikan
+   selalu tampil dd/mm/yyyy.
+3. Coba ketik manual angka, mis. "01122026" -> harus otomatis
+   jadi "01/12/2026".
+4. Coba ketik tanggal tidak valid, mis. "31042026" (April cuma 30
+   hari) -> tidak boleh berubah jadi tanggal Mei, dan submit form
+   tanpa tanggal tervalidasi harus ditolak (field wajib diisi).
+5. Klik ikon kalender di ujung kanan field -> date-picker bawaan
+   HP/browser harus muncul; pilih tanggal -> teks otomatis update
+   ke dd/mm/yyyy.
+
+================================================================

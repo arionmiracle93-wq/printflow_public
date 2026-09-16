@@ -1,0 +1,75 @@
+================================================================
+CATATAN UPDATE - PERKIRAAN SELESAI JUGA DISEMBUNYIKAN SAAT "SIAP"
+Tanggal : 23 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos)
+Aplikasi: Print Flow
+================================================================
+
+
+LATAR BELAKANG
+----------------------------------------------------------------
+Update sebelumnya (22 September) menyembunyikan kotak info
+"Perkiraan selesai" di halaman lacak HANYA saat status sudah
+"Selesai / Diserahkan" (progress 100%).
+
+Ternyata status "Siap Diambil / Dikirim" (progress 95%, satu
+tahap sebelum Selesai) juga bikin bingung: buat pelanggan awam,
+istilah "Siap" dan "Selesai" kedengarannya sama saja — dikira
+pekerjaan sudah benar-benar kelar. Kalau di titik itu masih ada
+tanggal deadline terpampang, pelanggan bisa salah paham.
+
+Ini murni beda istilah/konsep di aplikasi (Siap = sudah rampung
+dikerjakan tapi belum diserahkan; Selesai = sudah diserahkan),
+bukan kesalahan data.
+
+
+PERUBAHAN
+----------------------------------------------------------------
+
+SEBELUM:
+Kotak "Perkiraan selesai" disembunyikan hanya saat:
+    status == "selesai"
+
+SEKARANG:
+Kotak "Perkiraan selesai" disembunyikan mulai saat:
+    status == "siap"   ATAU   status == "selesai"
+
+Begitu status pekerjaan diupdate menjadi "Siap Diambil /
+Dikirim", kotak info deadline langsung hilang dari halaman
+lacak (bukan menunggu sampai status Selesai). Kotak "Jenis
+pesanan" di sebelahnya tetap melebar mengisi baris supaya
+tampilan tidak bolong sebelah.
+
+Bagian lain TIDAK berubah:
+- Riwayat pengerjaan (timeline) tetap lengkap seperti biasa.
+- Progress bar & label status tetap tampil apa adanya (95% Siap,
+  100% Selesai) — yang disembunyikan cuma kotak tanggal deadline.
+- Template pesan WhatsApp tidak perlu diubah lagi — baris
+  "Perkiraan selesai" di sana sudah dihapus total untuk semua
+  status sejak update 22 September.
+
+
+BERKAS YANG BERUBAH
+----------------------------------------------------------------
+
+    src/app/lacak/[token]/page.tsx
+        Kondisi penyembunyian kotak "Perkiraan selesai" diperluas
+        dari khusus status "selesai" menjadi status "siap" ATAU
+        "selesai" (variabel deadlineIrrelevant).
+
+TIDAK ADA perubahan database, skema, maupun endpoint API.
+
+
+CARA MENGUJI
+----------------------------------------------------------------
+
+1. Buka /lacak/{token} pekerjaan berstatus Antrian/Desain/Cetak/
+   Finishing/QC. Pastikan kotak "Perkiraan selesai" masih tampil.
+2. Update status pekerjaan menjadi "Siap Diambil / Dikirim".
+   Muat ulang halaman lacak. Pastikan kotak "Perkiraan selesai"
+   SUDAH HILANG di titik ini juga (sebelumnya baru hilang pas
+   Selesai).
+3. Update status menjadi "Selesai / Diserahkan". Pastikan kotak
+   tetap tidak muncul (perilaku ini sudah benar sejak sebelumnya).
+
+================================================================

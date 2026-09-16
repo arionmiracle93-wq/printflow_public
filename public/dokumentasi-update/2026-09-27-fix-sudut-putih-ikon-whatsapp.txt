@@ -1,0 +1,109 @@
+================================================================
+CATATAN UPDATE - SUDUT PUTIH DI IKON APLIKASI (PREVIEW WHATSAPP)
+Tanggal : 27 September 2026
+Status  : SELESAI (typecheck + eslint + next build lolos, diverifikasi
+          dengan render langsung + cek warna piksel di 4 sudut)
+Aplikasi: Print Flow
+================================================================
+
+
+LATAR BELAKANG
+----------------------------------------------------------------
+Ikon aplikasi yang dipakai sebagai thumbnail saat tautan Print
+Flow (mis. link lacak pesanan) dikirim di WhatsApp menampilkan
+badge bulat (squircle) di tengah, tapi bagian sudut kotaknya
+kelihatan berwarna PUTIH — bukan menyatu dengan badge.
+
+PENYEBAB
+----------------------------------------------------------------
+Ikon aplikasi (dipakai untuk favicon, apple-touch-icon, dan ikon
+manifest PWA) dibangkitkan lewat kode di
+src/app/api/pwa/icon/[size]/route.ts. Kanvas ikonnya sebelumnya
+diberi border-radius sendiri (dibulatkan manual jadi badge
+squircle) dengan asumsi tampilannya akan tetap rapi di tempat
+yang tidak menerapkan masking ikon sendiri.
+
+Ternyata WhatsApp menampilkan gambar link-preview APA ADANYA,
+TANPA memotong sudutnya sendiri. Jadi area kotak di luar bentuk
+bulat itu (yang transparan di file PNG-nya) malah terlihat
+sebagai "sudut putih" begitu WhatsApp menaruhnya di atas latar
+putih chat.
+
+Ini murni soal bentuk kanvas gambarnya, bukan soal desainnya —
+badge/ikon printer di dalamnya sama sekali tidak diubah.
+
+
+PERBAIKAN
+----------------------------------------------------------------
+Border-radius pada kanvas ikon dihapus (dibuat 0 / kotak penuh
+sampai ke tepi) untuk KEDUA varian — baik yang biasa (purpose
+"any") maupun yang maskable. Efeknya:
+
+    - Gradasi background sekarang mengisi kanvas 512x512 penuh,
+      tanpa area transparan/putih tersisa di sudut mana pun.
+    - Untuk iOS: tidak masalah kanvas kotak penuh, karena iOS
+      MEMANG selalu membulatkan apple-touch-icon dengan squircle-
+      nya sendiri secara otomatis (baked-in rounding di sumbernya
+      justru tidak direkomendasikan Apple).
+    - Untuk Android adaptive icon (varian maskable): sudah lama
+      tidak dibulatkan manual di sini juga — OS yang membentuk.
+    - Untuk WhatsApp & tempat lain yang menampilkan gambar apa
+      adanya: sekarang tidak ada lagi sudut putih, karena tidak
+      ada area transparan yang bisa "bocor" terlihat.
+
+Sudah diverifikasi dengan merender ulang ikon 512x512 dan mengecek
+warna piksel di keempat sudutnya — hasilnya solid mengikuti warna
+gradasi (bukan lagi putih/transparan).
+
+VERSI CACHE IKON DINAIKKAN
+----------------------------------------------------------------
+URL ikon punya header cache 1 tahun (immutable) dan WhatsApp juga
+menyimpan cache preview link cukup lama. Supaya perubahan ini
+benar-benar terlihat (bukan cuma di server, tapi juga di
+perangkat/WhatsApp yang sudah pernah mengambil ikon lama), query
+versi di URL ikon dinaikkan dari "v=printer-1" menjadi
+"v=printer-2" di semua tempat yang mereferensikannya.
+
+CATATAN PENTING SOAL WHATSAPP:
+Preview link yang SUDAH PERNAH dikirim sebelumnya di suatu chat
+WhatsApp kemungkinan masih menampilkan thumbnail lama (WhatsApp
+meng-cache preview per pesan yang sudah terkirim, ini di luar
+kendali aplikasi). Tautan yang dikirim BARU setelah update ini
+di-deploy akan mengambil ikon versi baru. Kalau mau memastikan,
+bisa dites dengan mengirim tautan baru (bukan forward pesan lama)
+ke nomor yang belum pernah menerima link Print Flow sebelumnya.
+
+
+BERKAS YANG BERUBAH
+----------------------------------------------------------------
+
+    src/app/api/pwa/icon/[size]/route.ts
+        borderRadius kanvas ikon dihapus (jadi 0, kotak penuh)
+        untuk semua varian.
+
+    src/app/layout.tsx
+        Versi query ikon: v=printer-1 -> v=printer-2 (3 tempat).
+
+    src/app/api/pwa/manifest/route.ts
+        Versi query ikon: v=printer-1 -> v=printer-2 (5 tempat).
+
+TIDAK ADA perubahan pada badge notifikasi (/api/pwa/badge/*) —
+itu berkas & tujuannya terpisah, tidak tersentuh oleh update ini.
+
+
+CARA MENGUJI
+----------------------------------------------------------------
+
+1. Setelah update ini di-deploy, buka langsung di browser:
+       https://<domain-anda>/api/pwa/icon/512.png?v=printer-2
+   Pastikan gradasinya penuh sampai ke tepi, tidak ada area
+   putih/transparan di sudut.
+2. Kirim TAUTAN BARU (bukan forward pesan lama) dari aplikasi ke
+   nomor WhatsApp yang belum pernah menerima link Print Flow
+   sebelumnya. Cek preview thumbnail-nya — sudut seharusnya sudah
+   tidak putih lagi.
+3. Cek juga ikon di Android/iOS (tambah ke layar utama via PWA)
+   dan favicon di tab browser — pastikan masih terlihat rapi
+   seperti sebelumnya (tidak ada regresi visual).
+
+================================================================

@@ -18,8 +18,52 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[36] 2026-09-27-fix-sudut-putih-ikon-whatsapp.txt
+    PALING BARU. Ikon aplikasi (favicon/apple-touch-icon/manifest)
+    terlihat ada sudut putih saat tautan Print Flow dikirim di
+    WhatsApp, karena kanvasnya dibulatkan manual padahal WhatsApp
+    menampilkan gambar apa adanya tanpa masking. Border-radius
+    kanvas dihapus (kotak penuh), versi cache ikon dinaikkan.
+
+[35] 2026-09-26-format-tanggal-panel-mitra.txt
+    Field "Target barang kembali" di panel Produksi
+    Mitra ikut diseragamkan pakai DateFieldID (dd/mm/yyyy), sama
+    seperti field "Tanggal harus jadi".
+
+[34] 2026-09-25-fix-jam-utc-dan-format-tanggal-ddmmyyyy.txt
+    Jam di Riwayat Pengerjaan/halaman lacak kegeser 7
+    jam karena diformat pakai zona waktu server (UTC), bukan WIB —
+    sekarang di-hardcode Asia/Jakarta. Field "Tanggal harus jadi"
+    di form Pekerjaan Baru sekarang selalu tampil dd/mm/yyyy, tidak
+    lagi ikut locale perangkat.
+
+[33] 2026-09-24-perbaikan-icon-dobel-tombol-simpan.txt
+    Tombol simpan di form Pekerjaan Baru menampilkan
+    2 icon sekaligus (outline hitam + emoji disket). Icon outline
+    dihapus, emoji tetap dipakai sebagai satu-satunya icon.
+
+[32] 2026-09-23-perkiraan-selesai-sembunyi-saat-siap.txt
+    Kotak "Perkiraan selesai" di halaman lacak kini
+    ikut disembunyikan mulai status "Siap Diambil/Dikirim", tidak
+    menunggu sampai "Selesai" — karena pelanggan awam sering
+    menyamakan kedua istilah tersebut.
+
+[31] 2026-09-22-hapus-teks-perkiraan-selesai.txt
+    Teks "Perkiraan selesai" (sebenarnya deadline yang
+    dijanjikan) dihapus dari template pesan WhatsApp karena
+    pekerjaan bisa selesai lebih cepat dari deadline. Di halaman
+    lacak pesanan publik, info ini otomatis hilang begitu status
+    sudah Selesai.
+
+[30] 2026-09-21-form-order-2-kolom-dan-salin-teks-pesan.txt
+    Halaman Pekerjaan Baru dibagi 2 kolom di desktop
+    (kiri data pekerjaan, kanan produksi mitra) dengan pembatas tegas,
+    mobile tetap 1 kolom scroll. Margin kotor terhitung langsung.
+    Kartu dashboard dapat tombol pintas "Salin teks pesan".
+    Tidak ada perubahan database maupun endpoint API.
+
 [29] 2026-09-20-fix-uji-push-setelah-revisi-icon.txt
-    PALING BARU. Push test tidak muncul: ditambahkan Uji Lokal (izin/SW),
+    Push test tidak muncul: ditambahkan Uji Lokal (izin/SW),
     Uji Push Server (Vercel/VAPID/Neon), detail error delivery, Perbaiki
     Subscription, reset per akun, dan SW version v10. Tidak perlu setup.
 
