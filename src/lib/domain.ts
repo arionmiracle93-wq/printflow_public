@@ -288,12 +288,37 @@ const PRODUCT_EFFORT: Record<string, number> = {
   Lainnya: 1,
 };
 
-/** Perkiraan jam kerja berdasarkan jenis produk + jumlah (dipakai AI & form). */
+/** Perkiraan jam kerja untuk SATU baris produk. */
 export function estimateHours(productType: string, quantity: number): number {
   const factor = PRODUCT_EFFORT[productType] ?? 1;
   const qty = Math.max(1, quantity || 1);
   const raw = 1.5 + factor * Math.log2(qty + 1) * 1.6;
   return Math.min(96, Math.max(1, Math.round(raw)));
+}
+
+/**
+ * Perkiraan jam kerja untuk SATU PEKERJAAN yang berisi beberapa produk.
+ *
+ * Bukan penjumlahan lurus: baris pertama dihitung penuh, baris berikutnya
+ * diberi bobot 70%. Alasannya praktis — kalau spanduk, stiker, dan kartu nama
+ * dikerjakan dalam satu order yang sama, sebagian pekerjaan (menyiapkan file,
+ * setting mesin, finishing, packing, serah terima) cuma dilakukan sekali,
+ * bukan diulang penuh tiap produk. Kalau dijumlah lurus, estimasinya jadi
+ * terlalu pesimis dan semua order multi-produk kelihatan "berisiko telat"
+ * padahal tidak.
+ */
+export function estimateHoursForItems(
+  items: { productType: string; quantity: number }[],
+): number {
+  if (!items.length) return 1;
+  const perItem = items
+    .map((item) => estimateHours(item.productType, item.quantity))
+    .sort((a, b) => b - a);
+  const total = perItem.reduce(
+    (sum, hours, index) => sum + (index === 0 ? hours : hours * 0.7),
+    0,
+  );
+  return Math.min(120, Math.max(1, Math.round(total)));
 }
 
 export function orderCode(seed: number): string {

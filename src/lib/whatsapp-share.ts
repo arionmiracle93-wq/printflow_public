@@ -1,4 +1,5 @@
 import { statusMeta } from "@/lib/domain";
+import { formatItem, type OrderItem } from "@/lib/order-items";
 
 export type ShareOrder = {
   id: number;
@@ -8,12 +9,34 @@ export type ShareOrder = {
   status: string;
   dueDate: string;
   dueTime: string;
+  /**
+   * Rincian produk di dalam pekerjaan. Sejak "jenis produk" dihapus dari
+   * tabel pekerjaan, isi pesan WhatsApp diambil dari daftar ini — jadi
+   * pelanggan melihat SEMUA barang yang dipesannya dalam satu pesan,
+   * bukan cuma satu jenis produk seperti versi sebelumnya.
+   */
+  items: OrderItem[];
 };
 
 /** Susun teks pesan WhatsApp untuk kabar status pekerjaan ke pelanggan. */
 export function buildWhatsAppMessage(order: ShareOrder, url: string): string {
   const meta = statusMeta(order.status);
   const selesai = order.status === "selesai";
+  const items = order.items ?? [];
+
+  // Satu item: ditulis inline supaya pesan tetap pendek.
+  // Banyak item: ditulis sebagai daftar bernomor agar mudah dicek pelanggan
+  // satu per satu saat barang diterima.
+  const rincian =
+    items.length === 0
+      ? []
+      : items.length === 1
+        ? [`• Pesanan     : ${formatItem(items[0])}`]
+        : [
+            `• Rincian (${items.length} item):`,
+            ...items.map((item, index) => `   ${index + 1}. ${formatItem(item)}`),
+          ];
+
   const lines = [
     `Halo ${order.customerName} 👋`,
     "",
@@ -23,8 +46,12 @@ export function buildWhatsAppMessage(order: ShareOrder, url: string): string {
     "",
     `• No. pesanan : ${order.code}`,
     `• Pekerjaan   : ${order.title}`,
+    ...rincian,
     `• Status      : ${meta.emoji} ${meta.label}`,
     "",
+    selesai && items.length > 1
+      ? `Mohon dicek kembali kelengkapan ${items.length} item di atas saat serah terima ya 🙏`
+      : undefined,
     selesai
       ? "Silakan lihat foto hasilnya di tautan ini 👇"
       : "Anda bisa memantau progres & foto pesanan lewat tautan ini 👇",

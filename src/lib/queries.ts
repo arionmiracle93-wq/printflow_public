@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { aiNotes, customers, orderEvents, orderPhotos, orders, settings } from "@/db/schema";
-import { ACTIVE_STATUSES, estimateHours, orderCode, type StatusKey } from "@/lib/domain";
+import { aiNotes, customers, orderEvents, orderItems, orderPhotos, orders, settings } from "@/db/schema";
+import { ACTIVE_STATUSES, estimateHoursForItems, orderCode, type StatusKey } from "@/lib/domain";
+import { type OrderItem, type OrderItemInput } from "@/lib/order-items";
 import type { AiOrder } from "@/lib/ai";
 
 export type OrderFilter = {
@@ -13,14 +14,12 @@ export type OrderFilter = {
   limit?: number;
 };
 
-const toAiOrder = (row: typeof orders.$inferSelect): AiOrder => ({
+const toAiOrder = (row: typeof orders.$inferSelect, items: OrderItem[]): AiOrder => ({
   id: row.id,
   code: row.code,
   customerName: row.customerName,
   title: row.title,
-  productType: row.productType,
-  quantity: row.quantity,
-  unit: row.unit,
+  items,
   machine: row.machine,
   operator: row.operator,
   status: row.status,
@@ -33,6 +32,42 @@ const toAiOrder = (row: typeof orders.$inferSelect): AiOrder => ({
   notes: row.notes,
   createdAt: row.createdAt.toISOString(),
 });
+
+/**
+ * Ambil item milik BANYAK pekerjaan sekaligus dalam satu query.
+ *
+ * Sengaja tidak memakai query per pekerjaan (N+1) karena halaman daftar &
+ * dashboard bisa memuat ratusan pekerjaan — satu query per pekerjaan akan
+ * menghabiskan slot koneksi Neon dan membuat halaman terasa berat.
+ */
+export async function itemsByOrderId(ids: number[]): Promise<Map<number, OrderItem[]>> {
+  const map = new Map<number, OrderItem[]>();
+  if (!ids.length) return map;
+  const rows = await db
+    .select({
+      id: orderItems.id,
+      orderId: orderItems.orderId,
+      productType: orderItems.productType,
+      quantity: orderItems.quantity,
+      unit: orderItems.unit,
+    })
+    .from(orderItems)
+    .where(inArray(orderItems.orderId, ids))
+    .orderBy(asc(orderItems.position), asc(orderItems.id));
+
+  for (const row of rows) {
+    const list = map.get(row.orderId) ?? [];
+    list.push({ id: row.id, productType: row.productType, quantity: row.quantity, unit: row.unit });
+    map.set(row.orderId, list);
+  }
+  return map;
+}
+
+/** Ambil item milik satu pekerjaan, sudah urut sesuai posisi. */
+export async function listOrderItems(orderId: number): Promise<OrderItem[]> {
+  const map = await itemsByOrderId([orderId]);
+  return map.get(orderId) ?? [];
+}
 
 export async function listOrders(filter: OrderFilter = {}): Promise<AiOrder[]> {
   const where = [];
@@ -48,11 +83,18 @@ export async function listOrders(filter: OrderFilter = {}): Promise<AiOrder[]> {
   }
   if (filter.q) {
     const like = `%${filter.q.toLowerCase()}%`;
+    // Pencarian ikut menjangkau nama produk di dalam pekerjaan, supaya
+    // mengetik "stiker" tetap menemukan job yang judulnya "Order Pak Budi"
+    // tapi isinya ada baris stiker.
     where.push(
       or(
         sql`lower(${orders.title}) like ${like}`,
         sql`lower(${orders.customerName}) like ${like}`,
         sql`lower(${orders.code}) like ${like}`,
+        sql`exists (
+          select 1 from order_items oi
+          where oi.order_id = ${orders.id} and lower(oi.product_type) like ${like}
+        )`,
       ),
     );
   }
@@ -64,12 +106,44 @@ export async function listOrders(filter: OrderFilter = {}): Promise<AiOrder[]> {
     .orderBy(asc(orders.dueDate), asc(orders.dueTime), desc(orders.id))
     .limit(filter.limit ?? 300);
 
-  return rows.map(toAiOrder);
+  const itemMap = await itemsByOrderId(rows.map((r) => r.id));
+  return rows.map((row) => toAiOrder(row, itemMap.get(row.id) ?? []));
 }
 
 export async function getOrderById(id: number) {
   const rows = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
-  return rows[0] ? toAiOrder(rows[0]) : null;
+  if (!rows[0]) return null;
+  return toAiOrder(rows[0], await listOrderItems(id));
+}
+
+/**
+ * Ganti seluruh isi item sebuah pekerjaan dengan daftar baru.
+ *
+ * Pola "hapus semua lalu tulis ulang" dipilih karena jumlah barisnya sedikit
+ * (maksimal 20) dan pengguna mengedit tabel item sebagai satu kesatuan —
+ * jauh lebih sederhana dan tidak mungkin meninggalkan baris yatim
+ * dibanding melacak baris mana yang ditambah/diubah/dihapus satu per satu.
+ * Estimasi jam kerja pekerjaan ikut dihitung ulang agar analisa risiko AI
+ * tetap nyambung dengan isi terbaru.
+ */
+export async function replaceOrderItems(orderId: number, items: OrderItemInput[]) {
+  await db.delete(orderItems).where(eq(orderItems.orderId, orderId));
+  if (items.length) {
+    await db.insert(orderItems).values(
+      items.map((item, index) => ({
+        orderId,
+        productType: item.productType,
+        quantity: item.quantity,
+        unit: item.unit,
+        position: index,
+      })),
+    );
+  }
+  await db
+    .update(orders)
+    .set({ estHours: estimateHoursForItems(items), updatedAt: new Date() })
+    .where(eq(orders.id, orderId));
+  return listOrderItems(orderId);
 }
 
 export async function getOrderEvents(orderId: number) {
@@ -113,9 +187,8 @@ export async function createOrder(payload: {
   customerName: string;
   customerId?: number | null;
   title: string;
-  productType: string;
-  quantity: number;
-  unit: string;
+  /** Daftar produk di dalam pekerjaan ini — boleh lebih dari satu baris. */
+  items: OrderItemInput[];
   machine: string;
   operator?: string | null;
   priority: string;
@@ -134,9 +207,6 @@ export async function createOrder(payload: {
       customerId: payload.customerId ?? null,
       customerName: payload.customerName,
       title: payload.title,
-      productType: payload.productType,
-      quantity: payload.quantity,
-      unit: payload.unit,
       machine: payload.machine,
       operator: payload.operator ?? null,
       status: "antrian",
@@ -145,21 +215,41 @@ export async function createOrder(payload: {
       paidAmount: payload.paidAmount,
       dueDate: payload.dueDate,
       dueTime: payload.dueTime,
-      estHours: estimateHours(payload.productType, payload.quantity),
+      estHours: estimateHoursForItems(payload.items),
       notes: payload.notes ?? null,
       pic: payload.pic || "Owner",
     })
     .returning();
 
+  if (payload.items.length) {
+    await db.insert(orderItems).values(
+      payload.items.map((item, index) => ({
+        orderId: created.id,
+        productType: item.productType,
+        quantity: item.quantity,
+        unit: item.unit,
+        position: index,
+      })),
+    );
+  }
+
+  // Rincian produk ikut ditulis di catatan riwayat pertama supaya jejak
+  // "pekerjaan ini awalnya berisi apa saja" tetap ada meski itemnya
+  // kemudian diubah/dihapus.
+  const rincian = payload.items
+    .map((item) => `${item.productType} ${item.quantity} ${item.unit}`)
+    .join(", ");
   await db.insert(orderEvents).values({
     orderId: created.id,
     fromStatus: null,
     toStatus: "antrian",
-    note: "Pekerjaan dibuat & masuk antrian.",
+    note: rincian
+      ? `Pekerjaan dibuat & masuk antrian. Isi: ${rincian}.`
+      : "Pekerjaan dibuat & masuk antrian.",
     actor: payload.pic || "Owner",
   });
 
-  return created;
+  return { ...created, items: await listOrderItems(created.id) };
 }
 
 export async function updateOrderStatus(
@@ -373,9 +463,8 @@ export type PublicTracking = {
   customerName: string;
   status: string;
   priority: string;
-  productType: string;
-  quantity: number;
-  unit: string;
+  /** Rincian produk yang dipesan — ditampilkan apa adanya ke pelanggan. */
+  items: OrderItem[];
   dueDate: string;
   dueTime: string;
   notes: string | null;
@@ -390,7 +479,7 @@ export async function getPublicTracking(token: string): Promise<PublicTracking |
   const order = rows[0];
   if (!order) return null;
 
-  const [events, photos] = await Promise.all([
+  const [events, photos, items] = await Promise.all([
     getOrderEvents(order.id),
     db
       .select({
@@ -403,6 +492,7 @@ export async function getPublicTracking(token: string): Promise<PublicTracking |
       .from(orderPhotos)
       .where(and(eq(orderPhotos.orderId, order.id), inArray(orderPhotos.kind, ["hasil", "referensi"])))
       .orderBy(asc(orderPhotos.id)),
+    listOrderItems(order.id),
   ]);
 
   return {
@@ -411,9 +501,7 @@ export async function getPublicTracking(token: string): Promise<PublicTracking |
     customerName: order.customerName,
     status: order.status,
     priority: order.priority,
-    productType: order.productType,
-    quantity: order.quantity,
-    unit: order.unit,
+    items,
     dueDate: order.dueDate,
     dueTime: order.dueTime,
     notes: order.notes,

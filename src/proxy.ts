@@ -4,7 +4,11 @@ import { jwtVerify } from "jose";
 const COOKIE = "print_flow_session";
 const PUBLIC_PAGES = ["/login", "/setup-akun", "/offline.html"];
 const PUBLIC_PREFIXES = ["/lacak/", "/dokumentasi-update/"];
-const PUBLIC_API = ["/api/auth/login", "/api/auth/bootstrap", "/api/auth/status", "/api/health", "/api/setup"];
+// /api/auth/logout sengaja publik: endpoint ini justru dipakai SAAT sesi sudah
+// tidak sah lagi (password di-reset owner, akun dinonaktifkan, cookie basi).
+// Kalau ikut dijaga, permintaan logout-nya sendiri akan ditolak 401 dan cookie
+// basi tidak pernah terhapus — pengguna terjebak tidak bisa kembali ke login.
+const PUBLIC_API = ["/api/auth/login", "/api/auth/logout", "/api/auth/bootstrap", "/api/auth/status", "/api/health", "/api/setup"];
 const PUBLIC_API_PREFIXES = ["/api/photos/"];
 const OWNER_PAGE_PREFIXES = ["/pengaturan", "/catatan-perubahan", "/panduan", "/status", "/pengguna", "/audit", "/sesi"];
 const OWNER_API_PREFIXES = ["/api/admin/", "/api/export", "/api/diagnose", "/api/performance", "/api/users", "/api/sessions"];

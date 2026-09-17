@@ -36,7 +36,7 @@ Aplikasi web yang **sudah berjalan penuh** (bukan mockup). Fitur yang bisa langs
 | Fitur | Penjelasan awam |
 |---|---|
 | **Dashboard** | Satu layar menampilkan kondisi percetakan hari ini: berapa pekerjaan jalan, berapa terlambat, berapa siap diambil, nilai order, dan pembayaran masuk. |
-| **Input pekerjaan** | Form 3 langkah: pelanggan → detail cetakan → deadline & harga. AI otomatis memperkirakan jam kerja. |
+| **Input pekerjaan** | Form 3 langkah: pelanggan → item pekerjaan → deadline & harga. Satu pekerjaan boleh berisi beberapa produk sekaligus (mis. spanduk + stiker + kartu nama). AI otomatis memperkirakan jam kerja dari seluruh item. |
 | **Alur status 9 tahap** | Antrian → Desain/Proof → Cetak → Finishing → QC → Siap Diambil → Selesai. Plus status khusus: *Ditunda* dan *Dibatalkan*. |
 | **Riwayat (audit trail)** | Setiap perubahan status dicatat: siapa, kapan, catatan apa. Berguna saat pelanggan menagih/berkelahi soal progress. |
 | **Analisa risiko AI** | Setiap pekerjaan diberi **skor risiko 0–100** + penjelasan "kenapa" + **saran tindakan** dalam bahasa Indonesia. |
@@ -124,7 +124,8 @@ apa yang harus dikerjakan duluan.
 | Tabel | Isi | Kegunaan |
 |---|---|---|
 | `customers` | nama, WhatsApp, email, alamat, catatan | Buku pelanggan |
-| `orders` | kode, judul, jenis produk, jumlah, satuan, mesin, operator, status, prioritas, harga, DP, tanggal & jam deadline, estimasi jam kerja, catatan | Satu baris = satu pekerjaan cetak |
+| `orders` | kode, judul, mesin, operator, status, prioritas, harga, DP, tanggal & jam deadline, estimasi jam kerja, catatan | Satu baris = satu pekerjaan cetak |
+| `order_items` | pekerjaan, jenis produk, jumlah, satuan, urutan | Rincian produk di dalam satu pekerjaan. Satu pekerjaan bisa punya banyak baris |
 | `order_events` | pekerjaan, status lama, status baru, catatan, aktor, waktu | Riwayat/jejak produksi |
 | `ai_notes` | pekerjaan, skor risiko, level risiko, pesan, sumber | Arsip saran AI, bisa dibaca ulang |
 | `settings` | key–value | Simpan preferensi ringan |

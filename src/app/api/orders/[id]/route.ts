@@ -3,7 +3,8 @@ import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { isStatusKey } from "@/lib/domain";
 import { problemResponse } from "@/lib/dbcheck";
-import { getOrderById, getOrderEvents, saveAiNote, updateOrderStatus } from "@/lib/queries";
+import { getOrderById, getOrderEvents, replaceOrderItems, saveAiNote, updateOrderStatus } from "@/lib/queries";
+import { sanitizeItems } from "@/lib/order-items";
 import { analyzeOrder } from "@/lib/ai";
 import { notifyInBackground } from "@/lib/push";
 import { statusMeta } from "@/lib/domain";
@@ -92,11 +93,26 @@ export async function PATCH(request: Request, { params }: Params) {
     if (typeof body.notes === "string") patch.notes = body.notes;
     if (typeof body.dueDate === "string") patch.dueDate = body.dueDate;
     if (typeof body.dueTime === "string") patch.dueTime = body.dueTime;
-    if (body.quantity !== undefined) patch.quantity = Math.max(1, Number(body.quantity) || 1);
     if (body.price !== undefined) patch.price = Math.max(0, Number(body.price) || 0);
     if (body.paidAmount !== undefined) patch.paidAmount = Math.max(0, Number(body.paidAmount) || 0);
 
     await db.update(orders).set(patch).where(eq(orders.id, orderId));
+
+    // Item pekerjaan dikirim sebagai satu daftar utuh (bukan per baris), jadi
+    // hanya diproses bila field `items` memang ikut dikirim. Kalau field ini
+    // tidak ada di body, daftar item lama dibiarkan apa adanya — supaya
+    // simpan-cepat (ubah harga/deadline saja) tidak menghapus isi pekerjaan.
+    if (body.items !== undefined) {
+      const items = sanitizeItems(body.items);
+      if (!items.length) {
+        return Response.json(
+          { ok: false, error: "Pekerjaan harus punya minimal satu baris produk." },
+          { status: 400 },
+        );
+      }
+      await replaceOrderItems(orderId, items);
+    }
+
     const updated = await getOrderById(orderId);
     return Response.json({ ok: true, data: updated });
   } catch (error) {

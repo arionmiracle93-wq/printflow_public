@@ -39,7 +39,15 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const [user, requestHeaders] = await Promise.all([getCurrentUser(), headers()]);
   // Security boundary kedua: JWT valid tetapi akun dinonaktifkan/password di-reset.
-  if (requestHeaders.get("x-print-flow-protected") === "1" && !user) redirect("/login");
+  //
+  // PENTING: jangan redirect langsung ke "/login". JWT di cookie masih valid
+  // secara tanda tangan (berlaku 12 jam), jadi middleware akan menganggap
+  // pengguna masih login dan melempar balik ke "/" — berputar tanpa henti.
+  // Lewat /api/auth/logout, cookie basinya dihapus dulu, baru ke halaman login
+  // lengkap dengan penjelasan kenapa sesinya berakhir.
+  if (requestHeaders.get("x-print-flow-protected") === "1" && !user) {
+    redirect("/api/auth/logout?alasan=sesi-berakhir");
+  }
   return (
     <html lang="id" suppressHydrationWarning>
       <head>

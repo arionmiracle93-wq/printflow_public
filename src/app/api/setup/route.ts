@@ -19,9 +19,6 @@ const DDL = [
       customer_id integer REFERENCES customers(id) ON DELETE SET NULL,
       customer_name text NOT NULL,
       title text NOT NULL,
-      product_type text NOT NULL DEFAULT 'Lainnya',
-      quantity integer NOT NULL DEFAULT 1,
-      unit text NOT NULL DEFAULT 'pcs',
       machine text NOT NULL DEFAULT 'Digital Print',
       operator text,
       status text NOT NULL DEFAULT 'antrian',
@@ -36,6 +33,45 @@ const DDL = [
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
    )`,
+  // ITEM PEKERJAAN: rincian produk (jenis + jumlah + satuan) di dalam satu
+  // pekerjaan. Satu pekerjaan boleh punya banyak baris item, tapi tetap
+  // satu status/mesin/operator/deadline untuk keseluruhan pekerjaan.
+  `CREATE TABLE IF NOT EXISTS order_items (
+      id serial PRIMARY KEY,
+      order_id integer NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      product_type text NOT NULL,
+      quantity integer NOT NULL DEFAULT 1,
+      unit text NOT NULL DEFAULT 'pcs',
+      position integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items (order_id)`,
+  // Migrasi dari versi lama (satu jenis produk per pekerjaan di tabel
+  // `orders`) ke tabel `order_items`. Dibungkus DO-block yang mengecek dulu
+  // apakah kolom lama masih ada, supaya statement ini aman dijalankan
+  // berulang kali (setelah kolomnya di-drop di bawah, blok ini otomatis
+  // tidak melakukan apa-apa lagi).
+  `DO $$
+   BEGIN
+     IF EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'orders'
+         AND column_name = 'product_type'
+     ) THEN
+       INSERT INTO order_items (order_id, product_type, quantity, unit, position)
+       SELECT o.id, coalesce(o.product_type, 'Lainnya'), greatest(coalesce(o.quantity, 1), 1),
+              coalesce(o.unit, 'pcs'), 0
+       FROM orders o
+       WHERE NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.id);
+     END IF;
+   END $$`,
+  // Setelah dipindahkan ke order_items, kolom jenis produk/jumlah/satuan di
+  // tabel orders sudah tidak dipakai lagi — satu pekerjaan sekarang bisa
+  // berisi banyak produk sekaligus.
+  `ALTER TABLE orders DROP COLUMN IF EXISTS product_type`,
+  `ALTER TABLE orders DROP COLUMN IF EXISTS quantity`,
+  `ALTER TABLE orders DROP COLUMN IF EXISTS unit`,
   `CREATE TABLE IF NOT EXISTS order_events (
       id serial PRIMARY KEY,
       order_id integer NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -199,12 +235,12 @@ const SEED_CUSTOMERS: SeedCustomer[] = [
   ["Bu Rina (Event Organizer)", "087812345678", "rina.eo@mail.com", "Jl. Cempaka 3", "Urgent biasanya, bayar DP 50%"],
 ];
 
+type SeedOrderItem = { productType: string; quantity: number; unit: string };
+
 type SeedOrder = {
   customer: string;
   title: string;
-  productType: string;
-  quantity: number;
-  unit: string;
+  items: SeedOrderItem[];
   machine: string;
   operator: string | null;
   status: string;
@@ -218,14 +254,19 @@ type SeedOrder = {
 };
 
 const SEED_ORDERS: SeedOrder[] = [
-  { customer: "Bu Rina (Event Organizer)", title: "Backdrop seminar 3x2 meter", productType: "Spanduk / Banner", quantity: 2, unit: "pcs", machine: "Large Format / Outdoor", operator: "Yoga", status: "cetak", priority: "urgent", price: 900000, paidAmount: 450000, dayOffset: 0, dueTime: "15:00", estHours: 6, notes: "Desain sudah OK. Butuh mata ayam & tali." },
-  { customer: "Kopi Senja", title: "Stiker gelas 300 pcs", productType: "Stiker / Label", quantity: 300, unit: "pcs", machine: "Digital Print 1", operator: "Dimas", status: "finishing", priority: "normal", price: 450000, paidAmount: 450000, dayOffset: 1, dueTime: "17:00", estHours: 5, notes: "Bahan vinyl glossy, potong kiss-cut." },
-  { customer: "Toko Berkah Jaya", title: "Kartu nama 5 box", productType: "Kartu Nama", quantity: 500, unit: "pcs", machine: "Digital Print 2", operator: "Bu Rina", status: "siap", priority: "normal", price: 175000, paidAmount: 175000, dayOffset: -1, dueTime: "16:00", estHours: 3, notes: "Sudah dilaminasi doff." },
-  { customer: "Kantor Desa Sukamaju", title: "Buku profil desa 10 eksemplar", productType: "Buku / Yasinan", quantity: 10, unit: "set", machine: "Mesin Offset", operator: "Pak Andi", status: "antrian", priority: "tinggi", price: 3200000, paidAmount: 1000000, dayOffset: 4, dueTime: "14:00", estHours: 22, notes: "Menunggu file revisi bab 2 dari sekretaris." },
-  { customer: "SMP Negeri 3", title: "Sertifikat lomba 120 lembar", productType: "Nota / Kop Surat", quantity: 120, unit: "lembar", machine: "Digital Print 1", operator: "Dimas", status: "desain", priority: "normal", price: 600000, paidAmount: 0, dayOffset: 2, dueTime: "10:00", estHours: 6, notes: "Menunggu daftar nama pemenang." },
-  { customer: "Toko Berkah Jaya", title: "Nota NPL 40 blok", productType: "Nota / Kop Surat", quantity: 40, unit: "box", machine: "Mesin Offset", operator: "Pak Andi", status: "selesai", priority: "normal", price: 880000, paidAmount: 880000, dayOffset: -3, dueTime: "17:00", estHours: 9, notes: "Sudah diambil sendiri oleh pemilik toko." },
-  { customer: "Bu Rina (Event Organizer)", title: "Undangan pernikahan klien 250 pcs", productType: "Undangan", quantity: 250, unit: "pcs", machine: "Finishing & Binding", operator: "Tim Finishing", status: "ditunda", priority: "tinggi", price: 3750000, paidAmount: 1500000, dayOffset: -1, dueTime: "12:00", estHours: 26, notes: "Menunggu pelunasan DP kedua sebelum produksi." },
-  { customer: "Kopi Senja", title: "Banner promo grand opening", productType: "Spanduk / Banner", quantity: 3, unit: "meter", machine: "Large Format / Outdoor", operator: "Yoga", status: "qc", priority: "normal", price: 300000, paidAmount: 300000, dayOffset: 1, dueTime: "17:00", estHours: 4, notes: "Cek hasil warna sebelum diserahkan." },
+  { customer: "Bu Rina (Event Organizer)", title: "Backdrop seminar 3x2 meter", items: [{ productType: "Spanduk / Banner", quantity: 2, unit: "pcs" }], machine: "Large Format / Outdoor", operator: "Yoga", status: "cetak", priority: "urgent", price: 900000, paidAmount: 450000, dayOffset: 0, dueTime: "15:00", estHours: 6, notes: "Desain sudah OK. Butuh mata ayam & tali." },
+  { customer: "Kopi Senja", title: "Stiker gelas 300 pcs", items: [{ productType: "Stiker / Label", quantity: 300, unit: "pcs" }], machine: "Digital Print 1", operator: "Dimas", status: "finishing", priority: "normal", price: 450000, paidAmount: 450000, dayOffset: 1, dueTime: "17:00", estHours: 5, notes: "Bahan vinyl glossy, potong kiss-cut." },
+  // Contoh 1 pekerjaan berisi BEBERAPA jenis produk sekaligus (fitur multi-item).
+  { customer: "Toko Berkah Jaya", title: "Order Pak Budi — paket promosi toko", items: [
+      { productType: "Spanduk / Banner", quantity: 2, unit: "pcs" },
+      { productType: "Stiker / Label", quantity: 500, unit: "lembar" },
+      { productType: "Kartu Nama", quantity: 1, unit: "box" },
+    ], machine: "Digital Print 2", operator: "Bu Rina", status: "siap", priority: "normal", price: 950000, paidAmount: 950000, dayOffset: -1, dueTime: "16:00", estHours: 8, notes: "Sudah dilaminasi doff. 1x kirim WA untuk semua item." },
+  { customer: "Kantor Desa Sukamaju", title: "Buku profil desa 10 eksemplar", items: [{ productType: "Buku / Yasinan", quantity: 10, unit: "set" }], machine: "Mesin Offset", operator: "Pak Andi", status: "antrian", priority: "tinggi", price: 3200000, paidAmount: 1000000, dayOffset: 4, dueTime: "14:00", estHours: 22, notes: "Menunggu file revisi bab 2 dari sekretaris." },
+  { customer: "SMP Negeri 3", title: "Sertifikat lomba 120 lembar", items: [{ productType: "Nota / Kop Surat", quantity: 120, unit: "lembar" }], machine: "Digital Print 1", operator: "Dimas", status: "desain", priority: "normal", price: 600000, paidAmount: 0, dayOffset: 2, dueTime: "10:00", estHours: 6, notes: "Menunggu daftar nama pemenang." },
+  { customer: "Toko Berkah Jaya", title: "Nota NPL 40 blok", items: [{ productType: "Nota / Kop Surat", quantity: 40, unit: "box" }], machine: "Mesin Offset", operator: "Pak Andi", status: "selesai", priority: "normal", price: 880000, paidAmount: 880000, dayOffset: -3, dueTime: "17:00", estHours: 9, notes: "Sudah diambil sendiri oleh pemilik toko." },
+  { customer: "Bu Rina (Event Organizer)", title: "Undangan pernikahan klien 250 pcs", items: [{ productType: "Undangan", quantity: 250, unit: "pcs" }], machine: "Finishing & Binding", operator: "Tim Finishing", status: "ditunda", priority: "tinggi", price: 3750000, paidAmount: 1500000, dayOffset: -1, dueTime: "12:00", estHours: 26, notes: "Menunggu pelunasan DP kedua sebelum produksi." },
+  { customer: "Kopi Senja", title: "Banner promo grand opening", items: [{ productType: "Spanduk / Banner", quantity: 3, unit: "meter" }], machine: "Large Format / Outdoor", operator: "Yoga", status: "qc", priority: "normal", price: 300000, paidAmount: 300000, dayOffset: 1, dueTime: "17:00", estHours: 4, notes: "Cek hasil warna sebelum diserahkan." },
 ];
 
 export async function GET(request: Request) {
@@ -265,16 +306,13 @@ export async function GET(request: Request) {
           const code = `PJ-${year}-${String(index).padStart(4, "0")}`;
           const result = await db.execute<{ id: number }>(sql`
             insert into orders (
-              code, customer_id, customer_name, title, product_type, quantity, unit, machine,
+              code, customer_id, customer_name, title, machine,
               operator, status, priority, price, paid_amount, due_date, due_time, est_hours, notes
             ) values (
               ${code},
               ${customerIds.get(order.customer) ?? null},
               ${order.customer},
               ${order.title},
-              ${order.productType},
-              ${order.quantity},
-              ${order.unit},
               ${order.machine},
               ${order.operator},
               ${order.status},
@@ -290,6 +328,14 @@ export async function GET(request: Request) {
           `);
           const inserted = (result.rows as { id: number }[])[0];
           if (inserted) {
+            let position = 0;
+            for (const item of order.items) {
+              await db.execute(sql`
+                insert into order_items (order_id, product_type, quantity, unit, position)
+                values (${inserted.id}, ${item.productType}, ${item.quantity}, ${item.unit}, ${position})
+              `);
+              position += 1;
+            }
             await db.execute(sql`
               insert into order_events (order_id, from_status, to_status, note, actor)
               values (${inserted.id}, null, 'antrian', 'Pekerjaan dibuat & masuk antrian.', 'Owner')
@@ -313,6 +359,7 @@ export async function GET(request: Request) {
       tables: [
         "customers",
         "orders",
+        "order_items",
         "order_events",
         "ai_notes",
         "settings",

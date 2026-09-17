@@ -1,0 +1,193 @@
+================================================================
+MULTI PRODUK DALAM SATU PEKERJAAN (TABEL "ITEM PEKERJAAN")
+Tanggal : 28-09-2026
+Status  : selesai, WAJIB menjalankan /api/setup sekali
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Sekarang satu pekerjaan bisa berisi beberapa produk sekaligus.
+
+Contoh pekerjaan "Order Pak Budi":
+   1. Spanduk / Banner  ·  2 pcs
+   2. Stiker / Label    ·  500 lembar
+   3. Kartu Nama        ·  1 box
+
+Ketiganya jalan bareng: SATU kartu, SATU status, SATU deadline,
+SATU mesin, SATU operator, SATU kali kirim WA, SATU tautan lacak.
+
+Kolom "Jenis produk" yang dulu menempel di pekerjaan sudah DIHAPUS.
+Identitas pekerjaan sekarang diambil dari NAMA PEKERJAAN, sedangkan
+isi pesanan diambil dari daftar item yang diinput.
+
+
+ALASAN PERUBAHAN
+----------------------------------------------------------------
+Sebelumnya satu pekerjaan hanya punya satu jenis produk, satu
+jumlah, dan satu satuan. Kalau pelanggan memesan 3 macam barang
+sekaligus, pemilik terpaksa membuat 3 pekerjaan terpisah. Akibatnya:
+  - status harus diupdate 3 kali untuk satu pesanan yang sama
+  - pelanggan menerima 3 pesan WhatsApp dan 3 tautan lacak
+  - daftar pekerjaan penuh oleh baris yang sebenarnya satu order
+  - rekap keuangan terpecah, sulit tahu total satu order berapa
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) DATABASE
+   BARU  : tabel "order_items"
+           (order_id, product_type, quantity, unit, position)
+   HAPUS : kolom product_type, quantity, unit di tabel "orders"
+
+   Data lama TIDAK HILANG. Saat /api/setup dijalankan, setiap
+   pekerjaan lama otomatis dipindahkan menjadi 1 baris item.
+   Migrasi ini aman diulang berkali-kali (idempoten).
+
+B) FORM PEKERJAAN BARU
+   Kartu "2. Detail cetakan" menjadi "2. Item pekerjaan":
+   sebuah tabel yang bisa ditambah/dikurangi barisnya.
+   Mesin, operator, dan prioritas dipindah ke bagian bawah kartu
+   dengan judul "Berlaku untuk seluruh pekerjaan", supaya jelas
+   mana yang per-produk dan mana yang untuk satu job.
+   Desktop tampil sebagai tabel, mobile sebagai kartu bertumpuk.
+
+C) HALAMAN DETAIL PEKERJAAN
+   Ada kartu baru "Item Pekerjaan" di tab Ringkasan. Isinya bisa
+   diubah kapan saja (tambah produk, ubah jumlah, hapus baris)
+   tanpa membuat pekerjaan baru. Estimasi jam kerja AI otomatis
+   dihitung ulang setiap item disimpan.
+
+D) PESAN WHATSAPP
+   Template pesan sekarang mengambil data dari daftar item:
+     - 1 item   : ditulis langsung dalam satu baris
+     - >1 item  : ditulis sebagai daftar bernomor
+   Kalau pekerjaan sudah Selesai dan isinya lebih dari satu item,
+   pesan menambahkan imbauan agar pelanggan mengecek kelengkapan
+   barang saat serah terima.
+
+E) HALAMAN LACAK PELANGGAN (/lacak/TOKEN)
+   Kotak "Jenis pesanan" diganti "Rincian pesanan (N item)" berisi
+   daftar semua produk beserta jumlah dan satuannya, sehingga
+   pelanggan bisa mencocokkan sendiri barang yang diterima.
+
+F) DAFTAR PEKERJAAN & DASHBOARD
+   Tiap kartu menampilkan ringkasan isi pesanan, contoh:
+   "Spanduk / Banner · 2 pcs + Stiker / Label · 500 lembar +1 lainnya"
+   disertai lencana jumlah produk bila lebih dari satu.
+
+G) PENCARIAN
+   Kolom cari sekarang juga menjangkau nama produk di dalam
+   pekerjaan. Mengetik "stiker" tetap menemukan pekerjaan berjudul
+   "Order Pak Budi" selama di dalamnya ada baris stiker.
+
+H) UNDUH CADANGAN CSV
+   - "Pekerjaan" & "Keuangan": isi produk digabung dalam satu kolom
+     "Isi Pesanan", jadi satu baris CSV tetap satu pekerjaan.
+   - BARU "Rincian Item per Produk": satu baris CSV = satu produk.
+     Cocok untuk menghitung total per jenis produk sebulan.
+
+I) ESTIMASI JAM KERJA AI
+   Bukan penjumlahan lurus. Produk terbesar dihitung penuh, produk
+   berikutnya diberi bobot 70%, karena sebagian pekerjaan (setting
+   mesin, finishing, packing, serah terima) hanya dilakukan sekali
+   untuk satu order. Kalau dijumlah lurus, semua order multi-produk
+   akan terlihat "berisiko telat" padahal sebenarnya tidak.
+
+
+LANGKAH WAJIB PEMILIK
+----------------------------------------------------------------
+1. Upload semua file ke GitHub, tunggu Vercel selesai deploy.
+2. Buka di browser:  https://app-anda.vercel.app/api/setup
+3. Tunggu sampai muncul tulisan  { "ok": true, ... }
+4. Kembali ke aplikasi, tekan Refresh.
+
+Tanpa langkah nomor 2, aplikasi akan menampilkan pesan
+"Tabel database belum dibuat" karena tabel order_items belum ada.
+
+
+ENDPOINT BARU
+----------------------------------------------------------------
+GET  /api/orders/{id}/items   baca daftar produk sebuah pekerjaan
+PUT  /api/orders/{id}/items   ganti seluruh daftar produk sekaligus
+
+Memakai PUT "ganti semua", bukan tambah/hapus per baris, karena
+tabel item diedit sebagai satu kesatuan lalu disimpan sekali. Cara
+ini tidak meninggalkan data setengah jadi bila koneksi terputus
+di tengah pengeditan.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+BARU:
+  src/lib/order-items.ts
+  src/components/OrderItemsEditor.tsx
+  src/components/OrderItemsManager.tsx
+  src/app/api/orders/[id]/items/route.ts
+  public/dokumentasi-update/2026-09-28-multi-produk-item-pekerjaan.txt
+
+DIUBAH:
+  src/db/schema.ts
+  src/lib/dbcheck.ts
+  src/lib/domain.ts
+  src/lib/ai.ts
+  src/lib/queries.ts
+  src/lib/whatsapp-share.ts
+  src/components/NewOrderForm.tsx
+  src/components/AdminActions.tsx
+  src/components/ui.tsx
+  src/app/api/setup/route.ts
+  src/app/api/export/route.ts
+  src/app/api/orders/route.ts
+  src/app/api/orders/[id]/route.ts
+  src/app/pesanan/page.tsx
+  src/app/pesanan/[id]/page.tsx
+  src/app/lacak/[token]/page.tsx
+  scripts/seed-demo.sql
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Paling aman: timpa seluruh isi folder src/, public/, dan scripts/
+dengan yang baru, supaya tidak ada file lama tertinggal.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos, tidak ada error tipe
+  npx next build      : Compiled successfully
+  Route /api/orders/[id]/items terdaftar di hasil build
+  Sisa error eslint yang ada semuanya bawaan lama (Date.now saat
+  render, dsb) di file yang tidak disentuh update ini.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada tambahan biaya. Tabel order_items hanya berisi teks dan
+angka (tidak ada gambar), ukurannya sangat kecil dibanding tabel
+foto. Pembacaan item memakai satu query gabungan untuk semua
+pekerjaan sekaligus, bukan satu query per pekerjaan, sehingga
+jumlah koneksi ke Neon tidak bertambah.
+
+
+CATATAN PENTING
+----------------------------------------------------------------
+Pekerjaan sekarang WAJIB punya minimal satu baris produk. Baris
+terakhir tidak bisa dihapus (tombol hapusnya otomatis nonaktif).
+Kalau ordernya memang batal, ubah statusnya menjadi "Dibatalkan"
+atau hapus pekerjaannya, jangan mengosongkan itemnya.
+
+Jenis produk dan satuan boleh diketik bebas, tidak harus memilih
+dari daftar. Daftar yang muncul hanya saran agar penulisan tetap
+seragam.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+1. Harga masih satu angka untuk seluruh pekerjaan. Kalau nanti
+   ingin harga per item (harga satuan x jumlah, lalu dijumlahkan
+   otomatis), tabel order_items tinggal ditambah kolom harga.
+2. Status per item (misal spanduk sudah selesai tapi stiker masih
+   dicetak) sengaja BELUM dibuat, sesuai permintaan: satu pekerjaan
+   tetap satu status supaya alur kerja tidak menjadi rumit.
+
+================================================================

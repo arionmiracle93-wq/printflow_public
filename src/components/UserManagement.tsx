@@ -19,6 +19,7 @@ export function UserManagement() {
   const [form, setForm] = useState({ name: "", username: "", password: "", role: "karyawan" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   async function load() {
@@ -40,20 +41,41 @@ export function UserManagement() {
     setBusy(false);
   }
 
+  type PatchResult = {
+    ok?: boolean;
+    error?: string;
+    currentSessionRevoked?: boolean;
+    selfUpdated?: boolean;
+    reloginRequired?: boolean;
+    targetName?: string;
+    changed?: { password?: boolean; username?: boolean; role?: boolean; active?: boolean };
+  };
+
   async function patch(id: number, data: Record<string, unknown>) {
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setNotice(null);
     const res = await fetch(`/api/users/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    const json = (await res.json()) as { ok?: boolean; error?: string; currentSessionRevoked?: boolean };
+    const json = (await res.json()) as PatchResult;
     if (!json.ok) {
       setError(json.error ?? "Gagal mengubah pengguna.");
       setBusy(false);
       return;
     }
-    if (json.currentSessionRevoked) {
-      alert("Username akun Anda berhasil diubah. Silakan login ulang memakai username baru.");
-      window.location.href = "/login";
-      return;
+
+    // Susun pesan sesuai apa yang BENAR-BENAR diubah. Versi lama selalu
+    // menyebut "username" walaupun yang ditekan adalah Reset Password,
+    // sehingga owner bingung kenapa tiba-tiba diminta login ulang.
+    const c = json.changed ?? {};
+    const nama = json.targetName ?? "Pengguna";
+    const apa = c.password ? "Password" : c.username ? "Username" : c.role ? "Role" : c.active ? "Status akun" : "Data";
+
+    if (json.selfUpdated) {
+      setNotice(`${apa} akun Anda sendiri berhasil diubah. Anda tetap login di perangkat ini, tetapi perangkat lain yang memakai akun Anda otomatis keluar dan harus login ulang.`);
+    } else if (json.reloginRequired) {
+      setNotice(`${apa} ${nama} berhasil diubah. Semua perangkat ${nama} otomatis keluar dan harus login ulang${c.password ? " memakai password baru" : ""}.`);
+    } else {
+      setNotice(`${apa} ${nama} berhasil diperbarui.`);
     }
+
     await load(); setBusy(false);
   }
 
@@ -72,6 +94,13 @@ export function UserManagement() {
     const password = prompt(`Password baru untuk ${user.name} (minimal 8 karakter):`);
     if (!password) return;
     if (password.length < 8) { setError("Password minimal 8 karakter."); return; }
+    // Beri tahu dampaknya SEBELUM dieksekusi. Reset password mencabut seluruh
+    // sesi pengguna tersebut — kalau dia sedang mengerjakan order, dia akan
+    // langsung terlempar ke halaman login.
+    const peringatan = user.id
+      ? `Reset password ${user.name}?\n\nSemua perangkat yang sedang login sebagai @${user.username} akan langsung keluar dan harus login ulang memakai password baru. Pastikan password barunya sudah Anda catat dan sampaikan ke yang bersangkutan.`
+      : "";
+    if (!confirm(peringatan)) return;
     await patch(user.id, { password });
   }
 
@@ -96,6 +125,7 @@ export function UserManagement() {
       ) : null}
 
       {error ? <p className="break-words rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</p> : null}
+      {notice ? <p className="break-words rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">{notice}</p> : null}
 
       <div className="grid min-w-0 gap-3 md:grid-cols-2">
         {users.map((user) => (

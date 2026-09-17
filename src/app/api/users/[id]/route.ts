@@ -2,7 +2,7 @@ import { hash } from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { getCurrentUser, ROLES } from "@/lib/auth";
+import { getCurrentUser, ROLES, setSessionCookie, type UserRole } from "@/lib/auth";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const current = await getCurrentUser();
@@ -33,13 +33,43 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (revoke) patch.tokenVersion = sql`${users.tokenVersion} + 1` as unknown as number;
 
   try {
-    const [row] = await db.update(users).set(patch).where(eq(users.id, id)).returning({ id: users.id, name: users.name, username: users.username, role: users.role, active: users.active });
+    const [row] = await db.update(users).set(patch).where(eq(users.id, id)).returning({ id: users.id, name: users.name, username: users.username, role: users.role, active: users.active, tokenVersion: users.tokenVersion });
     if (!row) return Response.json({ ok: false, error: "Pengguna tidak ditemukan." }, { status: 404 });
+
+    // Owner mengubah AKUN SENDIRI (mis. reset password miliknya dari halaman
+    // Pengguna). Perangkat lain miliknya tetap ter-logout karena tokenVersion
+    // naik, tetapi perangkat yang sedang dipakai ini langsung diberi cookie
+    // baru — sama seperti perilaku halaman "Ganti Password". Tanpa ini, owner
+    // ikut terlempar ke halaman login padahal dia hanya mengelola akun.
+    const mengubahDiriSendiri = id === current.id && revoke;
+    if (mengubahDiriSendiri) {
+      await setSessionCookie({
+        id: row.id,
+        username: row.username,
+        name: row.name,
+        role: row.role as UserRole,
+        tokenVersion: row.tokenVersion,
+        sessionId: current.sessionId,
+      });
+    }
+
     return Response.json({
       ok: true,
-      data: row,
+      data: { id: row.id, name: row.name, username: row.username, role: row.role, active: row.active },
       reloginRequired: revoke,
-      currentSessionRevoked: id === current.id && revoke,
+      // Sesi perangkat ini TIDAK lagi ikut dicabut saat owner mengubah akunnya
+      // sendiri — cookie-nya sudah diperbarui di atas.
+      currentSessionRevoked: false,
+      selfUpdated: mengubahDiriSendiri,
+      // Dipakai UI untuk menyusun pesan yang tepat sasaran.
+      changed: {
+        password: typeof body.password === "string" && body.password.length >= 8,
+        username: typeof body.username === "string",
+        role: typeof body.role === "string",
+        active: typeof body.active === "boolean",
+      },
+      targetName: row.name,
+      targetUsername: row.username,
     });
   } catch (error) {
     if ((error as { code?: string }).code === "23505") return Response.json({ ok: false, error: "Username sudah dipakai pengguna lain." }, { status: 409 });

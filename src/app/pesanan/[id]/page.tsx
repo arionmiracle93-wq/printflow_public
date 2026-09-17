@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OrderQuickEdit, OrderStatusControls } from "@/components/OrderControls";
 import { OrderDetailTabs } from "@/components/OrderDetailTabs";
+import { OrderItemsManager } from "@/components/OrderItemsManager";
+import { summarizeItems } from "@/lib/order-items";
 import { PhotoManager } from "@/components/PhotoManager";
 import { ShareWhatsApp } from "@/components/ShareWhatsApp";
 import { OutsourceManager } from "@/components/OutsourceManager";
@@ -23,7 +25,6 @@ import {
   deadlineOf,
   formatDateID,
   formatDateTimeID,
-  formatNumber,
   formatRupiah,
   humanDuration,
   statusMeta,
@@ -178,7 +179,10 @@ function DetailBody({
     <>
       <div className="card p-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Info label="Jenis / Jumlah" value={`${order.productType} · ${formatNumber(order.quantity)} ${order.unit}`} />
+          <Info
+            label={`Isi pesanan (${order.items.length} produk)`}
+            value={summarizeItems(order.items, 3)}
+          />
           <Info label="Mesin / Operator" value={`${order.machine}${order.operator ? ` · ${order.operator}` : ""}`} />
           <Info label="Deadline" value={`${formatDateID(order.dueDate)} · ${order.dueTime}`} />
           <Info
@@ -221,6 +225,9 @@ function DetailBody({
           <p className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">📝 {order.notes}</p>
         ) : null}
       </div>
+
+      {/* Rincian produk di dalam pekerjaan ini — bisa langsung diubah di sini. */}
+      <OrderItemsManager orderId={order.id} initialItems={order.items} />
 
       <div className="card overflow-hidden">
         <div className="border-b border-slate-200 bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-white">
@@ -322,6 +329,7 @@ function DetailBody({
           status: order.status,
           dueDate: order.dueDate,
           dueTime: order.dueTime,
+          items: order.items,
         }}
         initialToken={null}
       />
@@ -461,7 +469,10 @@ function FallbackDetailBody({
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Info label="Jenis / Jumlah" value={`${order.productType} · ${formatNumber(order.quantity)} ${order.unit}`} />
+          <Info
+            label={`Isi pesanan (${order.items.length} produk)`}
+            value={summarizeItems(order.items, 3)}
+          />
           <Info label="Mesin / Operator" value={`${order.machine}${order.operator ? ` · ${order.operator}` : ""}`} />
           <Info label="Deadline" value={`${formatDateID(order.dueDate)} · ${order.dueTime}`} />
           <Info

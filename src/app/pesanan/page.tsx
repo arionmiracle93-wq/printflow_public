@@ -13,12 +13,12 @@ import {
   STATUSES,
   deadlineOf,
   formatDateID,
-  formatNumber,
   formatRupiah,
   humanDuration,
   statusMeta,
 } from "@/lib/domain";
 import { listOrders } from "@/lib/queries";
+import { summarizeItems } from "@/lib/order-items";
 
 export const dynamic = "force-dynamic";
 
@@ -136,8 +136,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                     <div>
                       <p className="text-[11px] font-bold text-indigo-600">{order.code}</p>
                       <p className="text-sm font-bold text-slate-900">{order.title}</p>
-                      <p className="text-xs text-slate-500">
-                        {order.customerName} · {formatNumber(order.quantity)} {order.unit}
+                      <p className="text-xs text-slate-500">{order.customerName}</p>
+                      <p className="text-[11px] text-slate-500">
+                        📦 {summarizeItems(order.items)}
+                        {order.items.length > 1 ? (
+                          <span className="ml-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700">
+                            {order.items.length} produk
+                          </span>
+                        ) : null}
                       </p>
                       <p className={`mt-1 text-[11px] font-bold ${order.operator ? "text-teal-700" : "text-amber-600"}`}>
                         👤 PIC: {order.operator || "Belum ditentukan"}
@@ -207,8 +213,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         </Link>
                         <p className="text-[11px] font-bold text-indigo-500">{order.code}</p>
                         <p className="text-[11px] text-slate-500">
-                          {order.productType} · {formatNumber(order.quantity)} {order.unit} · {order.machine}
+                          📦 {summarizeItems(order.items, 3)}
+                          {order.items.length > 1 ? (
+                            <span className="ml-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700">
+                              {order.items.length} produk
+                            </span>
+                          ) : null}
                         </p>
+                        <p className="text-[11px] text-slate-400">{order.machine}</p>
                         <p className={`mt-0.5 text-[11px] font-bold ${order.operator ? "text-teal-700" : "text-amber-600"}`}>
                           👤 PIC: {order.operator || "Belum ditentukan"}
                         </p>

@@ -2,6 +2,7 @@ import { createOrder, listOrders } from "@/lib/queries";
 import { problemResponse } from "@/lib/dbcheck";
 import { getCurrentUser } from "@/lib/auth";
 import { notifyInBackground } from "@/lib/push";
+import { sanitizeItems, summarizeItems } from "@/lib/order-items";
 
 export const dynamic = "force-dynamic";
 
@@ -53,14 +54,24 @@ export async function POST(request: Request) {
     );
   }
 
+  // Satu pekerjaan boleh berisi banyak produk. Minimal harus ada satu baris,
+  // supaya pesan WhatsApp & halaman lacak punya isi untuk ditampilkan
+  // (sejak "jenis produk" dihapus dari pekerjaan, daftar ini satu-satunya
+  // sumber data produk).
+  const items = sanitizeItems(body.items);
+  if (!items.length) {
+    return Response.json(
+      { ok: false, error: "Minimal isi satu baris produk (jenis + jumlah + satuan) di tabel Item Pekerjaan." },
+      { status: 400 },
+    );
+  }
+
   try {
     const created = await createOrder({
       customerName,
       customerId: body.customerId ? num(body, "customerId") : null,
       title,
-      productType: str(body, "productType", "Lainnya"),
-      quantity: Math.max(1, num(body, "quantity", 1)),
-      unit: str(body, "unit", "pcs"),
+      items,
       machine: str(body, "machine", "Digital Print 1"),
       operator: str(body, "operator") || null,
       priority: str(body, "priority", "normal"),
@@ -73,7 +84,7 @@ export async function POST(request: Request) {
     });
     notifyInBackground({
       title: "Pekerjaan baru masuk",
-      body: `${created.code} — ${created.title} untuk ${created.customerName}.`,
+      body: `${created.code} — ${created.title} (${summarizeItems(items)}) untuk ${created.customerName}.`,
       url: `/pesanan/${created.id}`,
       tag: `order-${created.id}`,
     });

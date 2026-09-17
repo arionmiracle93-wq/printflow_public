@@ -4,6 +4,7 @@ import { db, databaseHost, databaseUrl, isLocalDatabase } from "@/db";
 export const REQUIRED_TABLES = [
   "customers",
   "orders",
+  "order_items",
   "order_events",
   "ai_notes",
   "settings",

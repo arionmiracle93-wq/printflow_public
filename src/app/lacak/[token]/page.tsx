@@ -81,16 +81,35 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
           {/* INFO */}
           {/* "Perkiraan selesai" disembunyikan mulai status Siap Diambil/Dikirim
               (bukan cuma pas Selesai) — lihat catatan deadlineIrrelevant di atas. */}
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Info
-              label="Jenis pesanan"
-              value={`${order.productType} · ${formatNumber(order.quantity)} ${order.unit}`}
-              className={deadlineIrrelevant ? "sm:col-span-2" : undefined}
-            />
-            {!deadlineIrrelevant ? (
-              <Info label="Perkiraan selesai" value={`${formatDateID(order.dueDate)} · ${order.dueTime}`} />
-            ) : null}
+          {/* Rincian pesanan diambil dari daftar item yang diinput operator,
+              jadi pelanggan bisa mencocokkan SEMUA barang yang dipesannya —
+              bukan cuma satu jenis produk seperti versi sebelumnya. */}
+          <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              Rincian pesanan ({order.items.length} item)
+            </p>
+            {order.items.length === 0 ? (
+              <p className="mt-1 text-sm font-semibold text-slate-800">{order.title}</p>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {order.items.map((item, index) => (
+                  <li key={item.id} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-semibold text-slate-800">
+                      <span className="mr-1.5 text-[11px] font-bold text-slate-400">{index + 1}.</span>
+                      {item.productType}
+                    </span>
+                    <span className="shrink-0 font-bold text-slate-700">
+                      {formatNumber(item.quantity)} {item.unit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
+          {!deadlineIrrelevant ? (
+            <Info label="Perkiraan selesai" value={`${formatDateID(order.dueDate)} · ${order.dueTime}`} />
+          ) : null}
 
           {order.notes ? (
             <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">📝 {order.notes}</p>

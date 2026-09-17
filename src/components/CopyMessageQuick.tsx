@@ -61,7 +61,7 @@ export function CopyMessageQuick({ order, className = "" }: { order: ShareOrder;
       onClick={handleClick}
       disabled={busy}
       title="Salin teks pesan status (termasuk tautan lacak) ke clipboard"
-      className={`inline-flex items-center gap-1 hover:underline disabled:cursor-wait disabled:opacity-60 ${
+      className={`inline-flex items-center gap-1 disabled:cursor-wait disabled:opacity-60 ${
         copied ? "text-teal-600 dark:text-teal-300" : ""
       } ${className}`}
     >

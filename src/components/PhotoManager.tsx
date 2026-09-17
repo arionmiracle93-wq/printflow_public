@@ -3,37 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Camera, ClipboardPaste, ImagePlus } from "lucide-react";
+import { compressImage } from "@/lib/photo-client";
 import { MAX_PHOTOS_PER_ORDER, photoKindLabel, type PhotoItem } from "@/lib/photos";
 
 const KINDS = ["referensi", "hasil", "nota"] as const;
-
-/** Perkecil gambar di HP sebelum dikirim supaya hemat kuota database & kuota internet. */
-async function compressImage(file: File, maxEdge = 1400, quality = 0.72): Promise<Blob> {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close?.();
-
-    return await new Promise<Blob>((resolve) => {
-      canvas.toBlob(
-        (blob) => resolve(blob && blob.size < file.size ? blob : file),
-        "image/jpeg",
-        quality,
-      );
-    });
-  } catch {
-    return file;
-  }
-}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

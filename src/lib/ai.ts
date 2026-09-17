@@ -1,22 +1,22 @@
 import {
   ACTIVE_STATUSES,
   deadlineOf,
-  estimateHours,
+  estimateHoursForItems,
   hoursBetween,
   humanDuration,
   priorityMeta,
   statusMeta,
   type StatusKey,
 } from "@/lib/domain";
+import { summarizeItems, type OrderItem } from "@/lib/order-items";
 
 export type AiOrder = {
   id: number;
   code: string;
   customerName: string;
   title: string;
-  productType: string;
-  quantity: number;
-  unit: string;
+  /** Rincian produk di dalam pekerjaan ini (bisa lebih dari satu). */
+  items: OrderItem[];
   machine: string;
   operator: string | null;
   status: string;
@@ -37,6 +37,10 @@ export type OrderInsight = {
   code: string;
   title: string;
   customerName: string;
+  /** Rincian produk pekerjaan ini (dipakai kartu dashboard & daftar). */
+  items: OrderItem[];
+  /** Ringkasan satu baris dari `items`, sudah siap ditampilkan. */
+  itemsSummary: string;
   operator: string | null;
   status: string;
   statusLabel: string;
@@ -51,7 +55,7 @@ export type OrderInsight = {
   recommendations: string[];
 };
 
-export { estimateHours } from "@/lib/domain";
+export { estimateHours, estimateHoursForItems } from "@/lib/domain";
 
 function riskLevelOf(score: number): RiskLevel {
   if (score >= 90) return "terlambat";
@@ -92,7 +96,7 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
   const deadline = deadlineOf(order.dueDate, order.dueTime);
   const hoursLeft = hoursBetween(now, deadline);
   const done = meta.progress;
-  const totalEstimate = order.estHours > 0 ? order.estHours : estimateHours(order.productType, order.quantity);
+  const totalEstimate = order.estHours > 0 ? order.estHours : estimateHoursForItems(order.items);
   const workLeftHours = Math.max(0, (totalEstimate * (100 - done)) / 100);
   const priorityBoost = { rendah: -6, normal: 0, tinggi: 8, urgent: 15 }[order.priority] ?? 0;
 
@@ -143,7 +147,16 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
       recommendations.push("Kunci approval desain sekarang supaya tidak bolak-balik revisi.");
     } else {
       reasons.push("Kapasitas waktu masih cukup untuk menyelesaikan pekerjaan ini.");
-      recommendations.push("Pertahankan ritme produksi dan cek ulang besok.");
+    }
+    if (order.items.length > 1) {
+      reasons.push(
+        `Pekerjaan ini berisi ${order.items.length} jenis produk: ${summarizeItems(order.items, 4)}. Semuanya harus siap sebelum diserahkan.`,
+      );
+      if (order.status === "siap" || order.status === "qc") {
+        recommendations.push(
+          `Cek ulang kelengkapan ${order.items.length} item sebelum diserahkan — jangan sampai ada satu produk yang tertinggal.`,
+        );
+      }
     }
     if (order.priority === "urgent") {
       reasons.push("Ditandai URGENT oleh pemilik, jadi dipantau lebih ketat.");
@@ -177,6 +190,8 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
     code: order.code,
     title: order.title,
     customerName: order.customerName,
+    items: order.items,
+    itemsSummary: summarizeItems(order.items),
     operator: order.operator,
     status: order.status,
     statusLabel: meta.label,
@@ -471,7 +486,8 @@ function contextOf(orders: AiOrder[]): string {
   if (!orders.length) return "Belum ada pekerjaan aktif.";
   const rows = orders.slice(0, 40).map((o) => {
     const a = analyzeOrder(o);
-    return `${a.code} | ${o.title} | pelanggan ${o.customerName} | status ${a.statusLabel} | prioritas ${o.priority} | qty ${o.quantity}${o.unit} | mesin ${o.machine} | deadline ${o.dueDate} ${o.dueTime} | progres ${a.progress}% | risiko ${a.riskScore}/100 (${a.riskLevel})`;
+    const isi = o.items.length ? summarizeItems(o.items, 6) : "belum ada rincian produk";
+    return `${a.code} | ${o.title} | pelanggan ${o.customerName} | isi (${o.items.length} produk): ${isi} | status ${a.statusLabel} | prioritas ${o.priority} | mesin ${o.machine} | deadline ${o.dueDate} ${o.dueTime} | progres ${a.progress}% | risiko ${a.riskScore}/100 (${a.riskLevel})`;
   });
   return rows.join("\n");
 }

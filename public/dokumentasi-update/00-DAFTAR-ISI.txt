@@ -18,8 +18,17 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[37] 2026-09-28-multi-produk-item-pekerjaan.txt
+    PALING BARU. Satu pekerjaan kini bisa berisi beberapa
+    produk sekaligus lewat tabel baru "Item Pekerjaan" (jenis +
+    jumlah + satuan per baris), sementara status/deadline/mesin/
+    operator tetap satu untuk seluruh job. Kolom "jenis produk"
+    di pekerjaan dihapus; pesan WhatsApp, halaman lacak, daftar,
+    dan CSV kini mengambil data dari daftar item. WAJIB membuka
+    /api/setup sekali — data lama dimigrasikan otomatis.
+
 [36] 2026-09-27-fix-sudut-putih-ikon-whatsapp.txt
-    PALING BARU. Ikon aplikasi (favicon/apple-touch-icon/manifest)
+    Ikon aplikasi (favicon/apple-touch-icon/manifest)
     terlihat ada sudut putih saat tautan Print Flow dikirim di
     WhatsApp, karena kanvasnya dibulatkan manual padahal WhatsApp
     menampilkan gambar apa adanya tanpa masking. Border-radius

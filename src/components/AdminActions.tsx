@@ -166,7 +166,15 @@ export function AdminActions({ hasDemoData }: { hasDemoData: boolean }) {
           <a href="/api/export?type=riwayat" className="btn-ghost">
             🕘 Riwayat Produksi (CSV)
           </a>
+          <a href="/api/export?type=item" className="btn-ghost sm:col-span-2">
+            📦 Rincian Item per Produk (CSV)
+          </a>
         </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+          File &ldquo;Pekerjaan&rdquo; berisi satu baris per pekerjaan (isi produknya digabung dalam satu kolom),
+          sedangkan &ldquo;Rincian Item&rdquo; memecah tiap produk jadi barisnya sendiri — cocok untuk menghitung
+          total per jenis produk.
+        </p>
       </div>
     </div>
   );

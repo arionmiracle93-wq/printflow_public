@@ -4,8 +4,11 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Building2, ClipboardList, Phone, Plus, Truck, X } from "lucide-react";
 import { DateFieldID } from "@/components/DateFieldID";
-import { estimateHours, formatRupiah, humanDuration } from "@/lib/domain";
+import { NewOrderPhotoPicker, type PendingPhoto } from "@/components/NewOrderPhotoPicker";
+import { OrderItemsEditor } from "@/components/OrderItemsEditor";
+import { estimateHoursForItems, formatRupiah, humanDuration } from "@/lib/domain";
 import { MACHINES, PRIORITIES, PRODUCT_TYPES, UNITS } from "@/lib/domain";
+import { summarizeItems, type OrderItemInput } from "@/lib/order-items";
 import { OUTSOURCE_STATUSES, PARTNER_KINDS, partnerKindLabel } from "@/lib/outsource";
 
 type CustomerOption = { id: number; name: string; phone: string | null };
@@ -37,9 +40,11 @@ export function NewOrderForm({
   const [customerId, setCustomerId] = useState<string>("__new");
   const [customerName, setCustomerName] = useState("");
   const [title, setTitle] = useState("");
-  const [productType, setProductType] = useState(PRODUCT_TYPES[0]);
-  const [quantity, setQuantity] = useState("100");
-  const [unit, setUnit] = useState(UNITS[0]);
+  // Satu pekerjaan bisa berisi beberapa produk sekaligus. Dimulai dengan satu
+  // baris kosong supaya pengguna langsung bisa mengetik tanpa klik tambah.
+  const [items, setItems] = useState<OrderItemInput[]>([
+    { productType: PRODUCT_TYPES[0], quantity: 1, unit: UNITS[0] },
+  ]);
   const [machine, setMachine] = useState(MACHINES[0]);
   const [operator, setOperator] = useState("");
   const [priority, setPriority] = useState("normal");
@@ -48,7 +53,12 @@ export function NewOrderForm({
   const [dueDate, setDueDate] = useState(defaultDate(2));
   const [dueTime, setDueTime] = useState("17:00");
   const [notes, setNotes] = useState("");
+  // Foto yang dipilih di form ini — belum terunggah, baru dikirim ke server
+  // setelah pekerjaannya berhasil disimpan dan dapat orderId. Lihat submit().
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [saving, setSaving] = useState(false);
+  // Teks progres yang tampil di tombol Simpan selagi foto diunggah satu per satu.
+  const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<number | null>(null);
 
@@ -67,10 +77,10 @@ export function NewOrderForm({
   const [newPartner, setNewPartner] = useState({ name: "", kind: "vendor", phone: "", address: "" });
   const [partnerBusy, setPartnerBusy] = useState(false);
 
-  const estimate = useMemo(
-    () => estimateHours(productType, Number.parseInt(quantity || "1", 10)),
-    [productType, quantity],
-  );
+  // Estimasi jam kerja dihitung dari SEMUA produk di dalam pekerjaan ini,
+  // bukan cuma satu jenis seperti versi sebelumnya.
+  const itemsTerisi = useMemo(() => items.filter((i) => i.productType.trim()), [items]);
+  const estimate = useMemo(() => estimateHoursForItems(itemsTerisi), [itemsTerisi]);
 
   const orderPrice = Math.max(0, Number(price) || 0);
   const cost = Math.max(0, Number(vendorCost) || 0);
@@ -123,6 +133,10 @@ export function NewOrderForm({
       setError("Nama pelanggan, nama pekerjaan, dan deadline wajib diisi.");
       return;
     }
+    if (!itemsTerisi.length) {
+      setError("Isi minimal satu baris produk di tabel Item Pekerjaan (jenis + jumlah + satuan).");
+      return;
+    }
     // Validasi kolom kanan DULU supaya tidak terlanjur membuat order lalu gagal di tengah jalan.
     if (useOutsource && (!partnerName.trim() || !expectedDate)) {
       setError("Kolom mitra aktif: nama mitra dan target barang kembali wajib diisi (atau matikan panel mitra).");
@@ -137,9 +151,7 @@ export function NewOrderForm({
           customerId: customerId === "__new" ? null : Number(customerId),
           customerName: finalName,
           title,
-          productType,
-          quantity: Number.parseInt(quantity || "1", 10),
-          unit,
+          items: itemsTerisi,
           machine,
           operator,
           priority,
@@ -156,6 +168,40 @@ export function NewOrderForm({
         return;
       }
       const orderId = json.data.id;
+
+      // Foto yang sudah dipilih di kartu "4. Foto pekerjaan" diunggah SEKARANG,
+      // baru bisa terjadi setelah orderId ada. Dilakukan SEBELUM langkah mitra
+      // di bawah supaya fotonya tetap aman tersimpan walau bagian mitra gagal.
+      if (pendingPhotos.length) {
+        let gagal = 0;
+        for (let i = 0; i < pendingPhotos.length; i += 1) {
+          const photo = pendingPhotos[i];
+          setStage(`Mengunggah foto ${i + 1}/${pendingPhotos.length}…`);
+          try {
+            const form = new FormData();
+            form.append(
+              "files",
+              new File([photo.blob], `foto-${orderId}-${Date.now()}-${i}.jpg`, { type: photo.blob.type || "image/jpeg" }),
+            );
+            form.append("kind", photo.kind);
+            if (photo.caption) form.append("caption", photo.caption);
+            const resFoto = await fetch(`/api/orders/${orderId}/photos`, { method: "POST", body: form });
+            const jsonFoto = (await resFoto.json()) as { ok: boolean };
+            if (!jsonFoto.ok) gagal += 1;
+          } catch {
+            gagal += 1;
+          }
+        }
+        setStage(null);
+        if (gagal > 0) {
+          // Pekerjaannya sendiri sudah AMAN tersimpan — jangan sampai owner
+          // mengira semuanya gagal. Yang gagal tinggal diunggah ulang dari
+          // halaman detail (kartu Foto Pekerjaan di sana sama persis).
+          alert(
+            `Pekerjaan berhasil disimpan, tapi ${gagal} dari ${pendingPhotos.length} foto gagal diunggah (koneksi terputus?). Silakan unggah ulang dari halaman detail pekerjaan.`,
+          );
+        }
+      }
 
       if (useOutsource) {
         const res2 = await fetch(`/api/orders/${orderId}/outsource`, {
@@ -188,6 +234,7 @@ export function NewOrderForm({
       setError("Tidak dapat menghubungi server.");
     } finally {
       setSaving(false);
+      setStage(null);
     }
   }
 
@@ -235,85 +282,81 @@ export function NewOrderForm({
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Contoh: Spanduk opening 3x1 meter"
+                  placeholder="Contoh: Order Pak Budi — paket promosi toko"
                   className={inputCls}
                 />
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  Beri nama yang mewakili seluruh pesanan. Rincian produknya diisi di kartu berikutnya.
+                </p>
               </div>
             </div>
           </section>
 
+          {/* ITEM PEKERJAAN — satu pekerjaan boleh berisi banyak produk.
+              Status, mesin, operator, dan deadline tetap satu untuk
+              keseluruhan pekerjaan (diatur di kartu ini juga, di bawah). */}
           <section className="card p-4 md:p-5">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">2. Detail cetakan</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <label className="label">Jenis produk</label>
-                <select value={productType} onChange={(e) => setProductType(e.target.value)} className={inputCls}>
-                  {PRODUCT_TYPES.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="label">Jumlah</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className={inputCls}
-                />
-              </div>
-              <div>
-                <label className="label">Satuan</label>
-                <select value={unit} onChange={(e) => setUnit(e.target.value)} className={inputCls}>
-                  {UNITS.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="label">Mesin / tahapan utama</label>
-                <select value={machine} onChange={(e) => setMachine(e.target.value)} className={inputCls}>
-                  {MACHINES.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="label">Operator / penanggung jawab</label>
-                <input
-                  value={operator}
-                  onChange={(e) => setOperator(e.target.value)}
-                  list="operator-list"
-                  placeholder="Boleh dikosongkan"
-                  className={inputCls}
-                />
-                <datalist id="operator-list">
-                  {operatorSuggestions.map((o) => (
-                    <option key={o} value={o} />
-                  ))}
-                </datalist>
-              </div>
-              <div>
-                <label className="label">Prioritas</label>
-                <select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputCls}>
-                  {PRIORITIES.map((p) => (
-                    <option key={p.key} value={p.key}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">2. Item pekerjaan</h2>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  Boleh lebih dari satu produk dalam satu pekerjaan. Contoh: Spanduk 2 pcs + Stiker 500 lembar + Kartu
+                  nama 1 box — semuanya jalan bareng, satu status, satu kali kirim WA.
+                </p>
               </div>
             </div>
+
+            <div className="mt-3">
+              <OrderItemsEditor items={items} onChange={setItems} disabled={saving} />
+            </div>
+
+            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-white/10">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Berlaku untuk seluruh pekerjaan
+              </p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div>
+                  <label className="label">Mesin / tahapan utama</label>
+                  <select value={machine} onChange={(e) => setMachine(e.target.value)} className={inputCls}>
+                    {MACHINES.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Operator / penanggung jawab</label>
+                  <input
+                    value={operator}
+                    onChange={(e) => setOperator(e.target.value)}
+                    list="operator-list"
+                    placeholder="Boleh dikosongkan"
+                    className={inputCls}
+                  />
+                  <datalist id="operator-list">
+                    {operatorSuggestions.map((o) => (
+                      <option key={o} value={o} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <label className="label">Prioritas</label>
+                  <select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputCls}>
+                    {PRIORITIES.map((p) => (
+                      <option key={p.key} value={p.key}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <p className="mt-3 rounded-xl bg-teal-50 px-3 py-2 text-xs font-medium text-teal-800 dark:bg-teal-500/10 dark:text-teal-200">
-              🤖 AI memperkirakan pekerjaan ini butuh ± <strong>{estimate} jam kerja</strong> ({humanDuration(estimate)}).
-              Angka ini dipakai untuk menghitung risiko telat.
+              🤖 AI memperkirakan pekerjaan ini butuh ± <strong>{estimate} jam kerja</strong> ({humanDuration(estimate)})
+              untuk {itemsTerisi.length} produk{itemsTerisi.length ? `: ${summarizeItems(itemsTerisi, 3)}` : ""}. Angka
+              ini dipakai untuk menghitung risiko telat.
             </p>
           </section>
 
@@ -566,6 +609,23 @@ export function NewOrderForm({
               </div>
             )}
           </div>
+
+          {/* FOTO — kartu kedua di kolom ini, sama-sama opsional seperti
+              Produksi Mitra di atasnya. Disimpan di memori browser dulu
+              (belum ada orderId), baru benar-benar diunggah begitu tombol
+              Simpan di bawah ditekan dan pekerjaannya berhasil dibuat. */}
+          <section className="card p-4 md:p-5">
+            <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900 dark:text-slate-100">
+              📷 Foto pekerjaan <span className="font-normal text-slate-400">(opsional)</span>
+            </h2>
+            <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              Lampirkan desain dari pelanggan atau foto referensi sekarang juga, supaya tidak perlu buka halaman
+              detail lagi cuma untuk itu.
+            </p>
+            <div className="mt-3">
+              <NewOrderPhotoPicker photos={pendingPhotos} onChange={setPendingPhotos} disabled={saving} />
+            </div>
+          </section>
         </div>
       </div>
 
@@ -585,9 +645,16 @@ export function NewOrderForm({
 
       <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap gap-2 rounded-t-2xl border-t border-slate-200/70 bg-[var(--page)]/92 px-1 py-3 backdrop-blur dark:border-white/10">
         <button type="submit" disabled={saving} className="btn-primary">
-          {saving ? "Menyimpan…" : useOutsource ? "💾 Simpan Pekerjaan + Mitra" : "💾 Simpan & Mulai Pantau"}
+          {saving ? (stage ?? "Menyimpan…") : useOutsource ? "💾 Simpan Pekerjaan + Mitra" : "💾 Simpan & Mulai Pantau"}
         </button>
-        <button type="button" onClick={() => router.push("/pesanan")} className="btn-ghost">
+        <button
+          type="button"
+          onClick={() => {
+            if (pendingPhotos.length && !confirm(`Batalkan? ${pendingPhotos.length} foto yang sudah dipilih akan hilang.`)) return;
+            router.push("/pesanan");
+          }}
+          className="btn-ghost"
+        >
           Batal
         </button>
       </div>

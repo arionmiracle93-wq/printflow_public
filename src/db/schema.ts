@@ -36,6 +36,8 @@ export const customers = pgTable("customers", {
 /**
  * PEKERJAAN / ORDER CETAK
  * Satu baris = satu pekerjaan cetak yang dipantau statusnya.
+ * Detail produk (jenis + jumlah + satuan) TIDAK lagi disimpan di sini —
+ * satu pekerjaan bisa berisi banyak produk, lihat tabel `orderItems`.
  */
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
@@ -45,9 +47,6 @@ export const orders = pgTable("orders", {
   }),
   customerName: text("customer_name").notNull(),
   title: text("title").notNull(),
-  productType: text("product_type").notNull().default("Lainnya"),
-  quantity: integer("quantity").notNull().default(1),
-  unit: text("unit").notNull().default("pcs"),
   machine: text("machine").notNull().default("Digital Print"),
   operator: text("operator"),
   status: text("status").notNull().default("antrian"),
@@ -66,6 +65,28 @@ export const orders = pgTable("orders", {
   shareToken: text("share_token").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * ITEM PEKERJAAN
+ * Rincian produk di dalam satu pekerjaan. Satu pekerjaan (order) bisa
+ * punya banyak baris item — masing-masing jenis produk, jumlah, dan
+ * satuannya sendiri — tapi tetap satu status/mesin/operator/deadline
+ * untuk keseluruhan pekerjaan (dicatat di tabel `orders`).
+ * Contoh: pekerjaan "Order Pak Budi" bisa berisi baris
+ * "Spanduk · 2 · pcs" + "Stiker · 500 · lembar" + "Kartu Nama · 1 · box".
+ */
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+  productType: text("product_type").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unit: text("unit").notNull().default("pcs"),
+  /** Urutan tampil baris item di dalam satu pekerjaan. */
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 /**
@@ -268,6 +289,8 @@ export const businessBranding = pgTable("business_branding", {
 export type Customer = typeof customers.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type NewOrder = typeof orders.$inferInsert;
+export type OrderItemRow = typeof orderItems.$inferSelect;
+export type NewOrderItem = typeof orderItems.$inferInsert;
 export type OrderEvent = typeof orderEvents.$inferSelect;
 export type AiNote = typeof aiNotes.$inferSelect;
 export type OrderPhoto = typeof orderPhotos.$inferSelect;
