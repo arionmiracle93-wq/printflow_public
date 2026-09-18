@@ -625,14 +625,5 @@ KESEPAKATAN KE DEPAN (KONVENSI DOKUMENTASI)
    didokumentasikan, supaya folder ini tetap bersih.
 
 ================================================================
-2026-09-29 — REVISI UI TAMPILAN MODERN & NYAMAN DI HP
-   Berkas: 2026-09-29-revisi-ui-tampilan-modern.txt
-   Ringkas : Sistem desain terpusat, header & navigasi baru, dashboard
-             ber-sapaan, bilah filter menempel, StageRail per tahap,
-             popup status lebih besar, marka baru. Tanpa perubahan
-             basis data, API, PWA, maupun variabel lingkungan.
-================================================================
-
-================================================================
 Terima kasih 🙏
 ================================================================
