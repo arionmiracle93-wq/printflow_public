@@ -69,24 +69,16 @@ export function KpiCard({
 }
 
 // Gaya tombol aksi kartu pekerjaan: glassmorphism simpel (border tipis + blur +
-// tint transparan) dengan teks warna solid per-aksi supaya kontrasnya jauh lebih
-// terlihat dibanding versi lama (teks teal di atas latar teal muda).
-// `text-slate-700`/`dark:text-slate-100` pada varian "copy" sengaja dipilih agar
-// urutan warna Tailwind (slate → ... → teal) membuat highlight "Tersalin!" teal
-// bawaan `CopyMessageQuick` tetap menang saat status copied aktif.
+// tint transparan), diseragamkan jadi satu warna netral untuk semua tombol.
+// Teks warna solid (bukan pastel-di-atas-pastel) supaya kontrasnya jelas.
+// `text-slate-700`/`dark:text-slate-100` sengaja dipilih agar urutan warna
+// Tailwind (slate → ... → teal) membuat highlight "Tersalin!" teal bawaan
+// `CopyMessageQuick` tetap menang saat status copied aktif.
 const GLASS_BTN_BASE =
   "flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-2xl border text-[12px] font-extrabold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] px-2 py-2 text-center";
 
-const GLASS_BTN_ACCENT = {
-  detail:
-    "border-teal-300/50 bg-teal-400/10 text-teal-800 shadow-[inset_0_1px_0_rgba(255,255,255,.55),0_2px_10px_rgba(13,148,136,.12)] hover:bg-teal-400/20 hover:border-teal-300/70 dark:border-teal-300/20 dark:bg-teal-300/10 dark:text-teal-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-teal-300/20",
-  status:
-    "border-amber-300/50 bg-amber-400/10 text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,.55),0_2px_10px_rgba(217,119,6,.12)] hover:bg-amber-400/20 hover:border-amber-300/70 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-amber-300/20",
-  whatsapp:
-    "border-emerald-300/50 bg-emerald-400/10 text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.55),0_2px_10px_rgba(5,150,105,.12)] hover:bg-emerald-400/20 hover:border-emerald-300/70 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-emerald-300/20",
-  copy:
-    "border-slate-300/50 bg-slate-400/10 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,.55),0_2px_10px_rgba(51,65,85,.10)] hover:bg-slate-400/20 hover:border-slate-300/70 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-white/[0.12]",
-};
+const GLASS_BTN_ACCENT =
+  "border-slate-300/50 bg-slate-400/10 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,.55),0_2px_10px_rgba(51,65,85,.10)] hover:bg-slate-400/20 hover:border-slate-300/70 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-white/[0.12]";
 
 export function InsightCard({
   insight,
@@ -173,7 +165,7 @@ export function InsightCard({
         </div>
       ) : null}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <a href={`/pesanan/${insight.orderId}`} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT.detail}`}>
+        <a href={`/pesanan/${insight.orderId}`} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`}>
           Buka detail <ArrowUpRight size={13} />
         </a>
         <QuickStatusPopup
@@ -183,13 +175,13 @@ export function InsightCard({
           currentStatus={insight.status}
           hasOutsource={Boolean(outsource)}
           trigger={
-            <span className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT.status}`}>
+            <span className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`}>
               Update status <RefreshCw size={13} />
             </span>
           }
         />
-        <ShareWhatsAppQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT.whatsapp}`} />
-        <CopyMessageQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT.copy}`} />
+        <ShareWhatsAppQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`} />
+        <CopyMessageQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`} />
       </div>
     </div>
   );

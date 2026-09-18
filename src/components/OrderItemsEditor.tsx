@@ -1,8 +1,84 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { PRODUCT_TYPES, UNITS, formatNumber } from "@/lib/domain";
 import { MAX_ITEMS_PER_ORDER, type OrderItemInput } from "@/lib/order-items";
+
+/**
+ * Input teks + dropdown pilihan siap pakai.
+ * ----------------------------------------------------------------
+ * Sebelumnya field ini pakai `<input list="...">` (HTML datalist bawaan
+ * browser). Datalist tidak konsisten muncul di WebView Android (dipakai
+ * APK hasil PWA) — di beberapa perangkat dropdown-nya sama sekali tidak
+ * tampil. Komponen ini menggantinya dengan dropdown kustom yang pasti
+ * kelihatan & bisa di-tap di semua platform, tapi teksnya tetap bisa
+ * diketik manual kalau pilihannya belum ada di daftar.
+ */
+function QuickPick({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: readonly string[];
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setOpen(true)}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="input pr-9"
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        aria-label="Pilih dari daftar"
+        className="absolute inset-y-0 right-1 flex w-8 items-center justify-center text-slate-400 transition hover:text-teal-600 disabled:opacity-40 dark:text-slate-500 dark:hover:text-teal-300"
+      >
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && !disabled ? (
+        <>
+          {/* Lapisan transparan buat nutup dropdown pas klik di luar. */}
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#101e29]">
+            {options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                }}
+                className={`block w-full rounded-lg px-2.5 py-1.5 text-left text-sm font-medium transition ${
+                  opt === value
+                    ? "bg-teal-50 text-teal-700 dark:bg-white/10 dark:text-teal-300"
+                    : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
 
 /**
  * TABEL ITEM PEKERJAAN (bisa diedit)
@@ -75,13 +151,12 @@ export function OrderItemsEditor({
             <div className="mt-2 space-y-2">
               <div>
                 <label className="label">Jenis produk</label>
-                <input
-                  list="product-type-list"
+                <QuickPick
                   value={item.productType}
-                  onChange={(e) => updateRow(index, { productType: e.target.value })}
+                  onChange={(v) => updateRow(index, { productType: v })}
+                  options={PRODUCT_TYPES}
                   disabled={disabled}
                   placeholder="Contoh: Spanduk / Banner"
-                  className="input"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -100,12 +175,11 @@ export function OrderItemsEditor({
                 </div>
                 <div>
                   <label className="label">Satuan</label>
-                  <input
-                    list="unit-list"
+                  <QuickPick
                     value={item.unit}
-                    onChange={(e) => updateRow(index, { unit: e.target.value })}
+                    onChange={(v) => updateRow(index, { unit: v })}
+                    options={UNITS}
                     disabled={disabled}
-                    className="input"
                   />
                 </div>
               </div>
@@ -131,13 +205,12 @@ export function OrderItemsEditor({
               <tr key={index}>
                 <td className="px-3 py-2 text-xs font-bold text-slate-400">{index + 1}</td>
                 <td className="px-3 py-2">
-                  <input
-                    list="product-type-list"
+                  <QuickPick
                     value={item.productType}
-                    onChange={(e) => updateRow(index, { productType: e.target.value })}
+                    onChange={(v) => updateRow(index, { productType: v })}
+                    options={PRODUCT_TYPES}
                     disabled={disabled}
                     placeholder="Contoh: Spanduk / Banner"
-                    className="input"
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -153,12 +226,11 @@ export function OrderItemsEditor({
                   />
                 </td>
                 <td className="px-3 py-2">
-                  <input
-                    list="unit-list"
+                  <QuickPick
                     value={item.unit}
-                    onChange={(e) => updateRow(index, { unit: e.target.value })}
+                    onChange={(v) => updateRow(index, { unit: v })}
+                    options={UNITS}
                     disabled={disabled}
-                    className="input"
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -177,19 +249,6 @@ export function OrderItemsEditor({
           </tbody>
         </table>
       </div>
-
-      {/* Pilihan siap pakai untuk kedua tampilan — tetap boleh diketik bebas
-          kalau jenis produknya belum ada di daftar. */}
-      <datalist id="product-type-list">
-        {PRODUCT_TYPES.map((p) => (
-          <option key={p} value={p} />
-        ))}
-      </datalist>
-      <datalist id="unit-list">
-        {UNITS.map((u) => (
-          <option key={u} value={u} />
-        ))}
-      </datalist>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button type="button" onClick={addRow} disabled={disabled || !bisaTambah} className="btn-secondary">
