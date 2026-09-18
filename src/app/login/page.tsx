@@ -16,10 +16,12 @@ export default function LoginPage() {
     <div className="mx-auto flex min-h-[70vh] max-w-4xl items-center py-2">
       <div className="card grid w-full overflow-hidden !p-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         {/* Panel brand */}
-        <div className="relative isolate overflow-hidden bg-[#07384f] p-6 text-white md:p-7">
-          <span aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,rgba(20,184,166,.42),transparent_48%,rgba(251,191,36,.18))]" />
-          <span aria-hidden="true" className="absolute -bottom-16 -right-10 -z-10 h-40 w-40 rotate-12 rounded-[2rem] bg-amber-300/85" />
+        <div className="relative isolate overflow-hidden bg-[#062f43] p-6 text-white md:p-7">
+          <span aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,rgba(20,184,166,.46),transparent_46%,rgba(251,191,36,.2))]" />
+          <span aria-hidden="true" className="absolute -bottom-16 -right-10 -z-10 h-40 w-40 rotate-12 rounded-[2rem] bg-amber-300/85 blur-[1px]" />
           <span aria-hidden="true" className="absolute -left-14 -top-16 -z-10 h-56 w-56 rounded-full border-[40px] border-teal-300/10" />
+          <span aria-hidden="true" className="absolute right-8 top-4 -z-10 h-32 w-32 rounded-full bg-teal-300/20 blur-3xl" />
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(251,191,36,.6),transparent)]" />
 
           <BrandMark size={52} />
           <h1 className="mt-4 text-2xl font-black leading-tight tracking-tight md:text-3xl">Print Flow</h1>

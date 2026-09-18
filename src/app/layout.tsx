@@ -71,10 +71,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           Navigasi utama hanya muncul di tablet ke atas; di HP navigation-nya
           pindah ke bawah (lihat MainNav → portal .mobile-bottom-nav).
         */}
-        <header className="app-header sticky top-0 z-30 border-b border-white/10 bg-[linear-gradient(105deg,#062f43_0%,#07384f_46%,#0a4a56_100%)] text-white shadow-[0_10px_34px_-18px_rgba(2,26,36,.95)] backdrop-blur-xl no-print">
+        <header className="app-header sticky top-0 z-30 border-b border-white/10 bg-[linear-gradient(110deg,#05283a_0%,#07384f_44%,#0b4c5a_100%)] text-white shadow-[0_12px_40px_-20px_rgba(2,26,36,.98)] backdrop-blur-xl no-print">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,rgba(45,212,191,.55),rgba(251,191,36,.5),transparent)]"
+            className="pointer-events-none absolute -top-24 right-10 h-40 w-40 rounded-full bg-teal-300/10 blur-3xl"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,rgba(45,212,191,.6),rgba(251,191,36,.55),transparent)]"
           />
           <div className="mx-auto flex max-w-[1440px] items-center gap-3 px-3 py-2 sm:px-4 lg:px-6">
             <Link
@@ -132,7 +136,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 <FileClock size={13} /> Catatan Perubahan
               </Link>
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/70 bg-amber-50 px-2 py-1 text-[10px] font-extrabold text-amber-700">
-                <Sparkles size={11} /> UI Revisi 2
+                <Sparkles size={11} /> UI Revisi 3
               </span>
             </div>
           </div>

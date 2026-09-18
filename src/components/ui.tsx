@@ -182,17 +182,21 @@ export function KpiCard({
     <div className="card card-hover group relative overflow-hidden !p-3 md:!p-4">
       <span
         aria-hidden="true"
-        className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${rail[accent]} opacity-70 transition-opacity duration-300 group-hover:opacity-100`}
+        className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${rail[accent]} opacity-80 transition-opacity duration-300 group-hover:opacity-100`}
+      />
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute -right-6 -top-8 h-20 w-20 rounded-full bg-gradient-to-br ${rail[accent]} opacity-[.07] blur-2xl transition-opacity duration-300 group-hover:opacity-[.14]`}
       />
       <div className="flex items-start justify-between gap-2">
-        <span className={`flex h-7 w-7 items-center justify-center rounded-lg md:h-9 md:w-9 md:rounded-xl ${tiles[accent]}`}>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg shadow-sm ring-1 ring-inset ring-black/[.03] md:h-9 md:w-9 md:rounded-xl ${tiles[accent]}`}>
           {icon}
         </span>
         {trailing ? <span className="shrink-0">{trailing}</span> : null}
       </div>
       <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[.09em] text-slate-500 md:mt-3">{label}</p>
-      <p className={`money mt-0.5 text-lg font-black tracking-tight md:text-2xl ${tone}`}>{value}</p>
-      {hint ? <p className="mt-0.5 text-[11px] font-medium text-slate-400">{hint}</p> : null}
+      <p className={`money mt-0.5 text-lg font-black leading-none tracking-tight md:text-[1.7rem] ${tone}`}>{value}</p>
+      {hint ? <p className="mt-1 text-[11px] font-medium text-slate-400">{hint}</p> : null}
     </div>
   );
 }

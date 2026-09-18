@@ -25,20 +25,20 @@
 
   /* Permukaan & teks */
   --surface: #ffffff;
-  --surface-2: #f7fbfb;
-  --surface-3: #eef6f6;
-  --page: #f2f8f8;
-  --text-body: #0f2937;
-  --text-muted: #5c7383;
-  --line: #e2ecec;
-  --line-strong: #cfe0df;
+  --surface-2: #f6fbfb;
+  --surface-3: #ecf5f5;
+  --page: #eef6f5;
+  --text-body: #0b2531;
+  --text-muted: #587184;
+  --line: #e4eeed;
+  --line-strong: #cadedb;
 
-  /* Bayangan & sudut */
-  --shadow-card: 0 1px 2px rgba(7, 56, 79, .05), 0 8px 26px -12px rgba(7, 56, 79, .16);
-  --shadow-pop: 0 18px 48px -14px rgba(7, 56, 79, .28);
-  --shadow-lift: 0 14px 34px -12px rgba(15, 75, 84, .22);
-  --radius-card: 1.15rem;
-  --radius-btn: .8rem;
+  /* Bayangan & sudut — revisi 3: lebih lembut & berlapis untuk kesan premium */
+  --shadow-card: 0 1px 2px rgba(7, 56, 79, .045), 0 10px 30px -16px rgba(7, 56, 79, .18);
+  --shadow-pop: 0 24px 60px -18px rgba(7, 56, 79, .32);
+  --shadow-lift: 0 20px 44px -18px rgba(15, 75, 84, .28);
+  --radius-card: 1.25rem;
+  --radius-btn: .85rem;
 
   /* Fokus aksesibilitas — terlihat di terang maupun gelap */
   --focus-ring: 0 0 0 3px rgba(13, 148, 136, .32);
@@ -48,19 +48,19 @@
 .dark {
   color-scheme: dark;
 
-  --surface: #101e29;
-  --surface-2: #142936;
-  --surface-3: #1a3444;
-  --page: #081420;
-  --text-body: #e7f1ef;
-  --text-muted: #93a8a6;
-  --line: #1e3a48;
-  --line-strong: #27485a;
+  --surface: #112230;
+  --surface-2: #152c3a;
+  --surface-3: #1b3646;
+  --page: #071320;
+  --text-body: #e9f2f0;
+  --text-muted: #95aaa8;
+  --line: #21414f;
+  --line-strong: #2b4e60;
 
   --brand-navy: #0a2c3e;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px -14px rgba(0, 0, 0, .55);
-  --shadow-pop: 0 22px 56px -16px rgba(0, 0, 0, .7);
-  --shadow-lift: 0 16px 36px -14px rgba(0, 0, 0, .6);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, .32), 0 12px 32px -16px rgba(0, 0, 0, .6);
+  --shadow-pop: 0 26px 62px -18px rgba(0, 0, 0, .72);
+  --shadow-lift: 0 20px 42px -16px rgba(0, 0, 0, .62);
   --focus-ring: var(--focus-ring-dark);
 }
 
@@ -80,9 +80,10 @@ body {
   letter-spacing: -.006em;
   background-color: var(--page);
   background-image:
-    radial-gradient(circle at 6% -4%, rgba(20, 184, 166, .13), transparent 30rem),
-    radial-gradient(circle at 96% 4%, rgba(251, 191, 36, .12), transparent 26rem),
-    radial-gradient(circle at 50% 120%, rgba(13, 148, 136, .07), transparent 34rem);
+    radial-gradient(circle at 4% -6%, rgba(20, 184, 166, .16), transparent 32rem),
+    radial-gradient(circle at 98% 2%, rgba(251, 191, 36, .13), transparent 28rem),
+    radial-gradient(circle at 82% 62%, rgba(56, 189, 248, .06), transparent 30rem),
+    radial-gradient(circle at 50% 122%, rgba(13, 148, 136, .08), transparent 36rem);
   background-attachment: fixed;
   color: var(--text-body);
   transition: background-color .22s ease, color .22s ease;
@@ -113,15 +114,17 @@ body {
 @layer components {
   /* KARTU — permukaan utama semua panel aplikasi */
   .card {
-    @apply min-w-0 max-w-full border p-4;
+    @apply relative min-w-0 max-w-full border p-4;
     border-radius: var(--radius-card);
     border-color: var(--line);
     background-color: var(--surface);
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #ffffff) 0%, var(--surface) 42%);
     box-shadow: var(--shadow-card);
-    transition: box-shadow .22s ease, border-color .22s ease, transform .22s ease;
+    transition: box-shadow .24s ease, border-color .24s ease, transform .24s cubic-bezier(.22, 1, .36, 1);
   }
+  .dark .card { background-image: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, #ffffff) 0%, var(--surface) 46%); }
   .card-hover {
-    @apply hover:-translate-y-[2px];
+    @apply hover:-translate-y-[3px];
   }
   .card-hover:hover {
     border-color: var(--line-strong);
@@ -136,17 +139,21 @@ body {
     min-height: 42px;
   }
   .btn-primary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-[#07384f] transition-all hover:bg-amber-300 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 px-4 py-2.5 text-sm font-extrabold text-[#07384f] transition-all active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
     border-radius: var(--radius-btn);
     min-height: 42px;
-    box-shadow: 0 6px 18px -6px rgba(251, 191, 36, .55), inset 0 1px 0 rgba(255, 255, 255, .45);
+    background-image: linear-gradient(135deg, #fcd34d 0%, #fbbf24 55%, #f8b616 100%);
+    box-shadow: 0 8px 22px -8px rgba(251, 191, 36, .6), inset 0 1px 0 rgba(255, 255, 255, .55);
   }
+  .btn-primary:hover { background-image: linear-gradient(135deg, #fde68a 0%, #fcd34d 55%, #fbbf24 100%); box-shadow: 0 10px 26px -8px rgba(251, 191, 36, .68), inset 0 1px 0 rgba(255, 255, 255, .6); }
   .btn-secondary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 bg-teal-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-teal-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white transition-all active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
     border-radius: var(--radius-btn);
     min-height: 42px;
-    box-shadow: 0 6px 18px -8px rgba(13, 148, 136, .6);
+    background-image: linear-gradient(135deg, #14b8a6 0%, #0d9488 60%, #0f766e 100%);
+    box-shadow: 0 8px 20px -8px rgba(13, 148, 136, .62), inset 0 1px 0 rgba(255, 255, 255, .18);
   }
+  .btn-secondary:hover { background-image: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 60%, #0d9488 100%); box-shadow: 0 10px 24px -8px rgba(13, 148, 136, .7), inset 0 1px 0 rgba(255, 255, 255, .22); }
   .btn-ghost {
     @apply inline-flex cursor-pointer items-center justify-center gap-2 border px-4 py-2.5 text-sm font-bold transition-all active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
     border-radius: var(--radius-btn);
@@ -168,15 +175,15 @@ body {
 
   /* FORM */
   .input {
-    @apply w-full border px-3 py-2.5 text-sm outline-none transition placeholder:opacity-70;
-    border-radius: .8rem;
+    @apply w-full border px-3.5 py-2.5 text-sm outline-none transition placeholder:opacity-70;
+    border-radius: .85rem;
     border-color: var(--line);
-    background-color: var(--surface);
+    background-color: var(--surface-2);
     color: var(--text-body);
     min-height: 44px;
   }
-  .input:hover { border-color: var(--line-strong); }
-  .input:focus { border-color: var(--brand-teal-bright); box-shadow: var(--focus-ring); }
+  .input:hover { border-color: var(--line-strong); background-color: var(--surface); }
+  .input:focus { border-color: var(--brand-teal-bright); background-color: var(--surface); box-shadow: var(--focus-ring); }
   .dark .input { background-color: #0c1c27; border-color: var(--line); color: var(--text-body); }
   .dark .input:focus { border-color: #2dd4bf; box-shadow: var(--focus-ring-dark); }
   .label {
@@ -186,8 +193,9 @@ body {
 
   /* CHIP / BADGE */
   .chip {
-    @apply inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-bold leading-tight;
+    @apply inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-[3px] text-[11px] font-bold leading-tight;
     border-color: var(--line);
+    backdrop-filter: saturate(1.05);
   }
 
   .progress-track {
@@ -203,8 +211,9 @@ body {
   .dark .section-title { color: var(--text-body); }
 
   .icon-tile {
-    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl;
-    background-color: color-mix(in srgb, var(--brand-teal) 12%, transparent);
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset;
+    background-image: linear-gradient(150deg, color-mix(in srgb, var(--brand-teal) 16%, transparent), color-mix(in srgb, var(--brand-teal) 8%, transparent));
+    --tw-ring-color: color-mix(in srgb, var(--brand-teal) 18%, transparent);
     color: var(--brand-teal);
   }
   .dark .icon-tile { background-color: rgba(20, 184, 166, .16); color: #4fd8c4; }
@@ -217,11 +226,11 @@ body {
      Kesan "kaca" dicapai dengan tint + border + inset highlight saja. */
   .gbtn {
     @apply inline-flex min-h-[42px] w-full cursor-pointer items-center justify-center gap-1.5 border px-2 py-2 text-center text-[12px] font-extrabold transition-all duration-200 active:scale-[.97] disabled:opacity-55;
-    border-radius: .85rem;
-    border-color: color-mix(in srgb, var(--brand-navy) 14%, transparent);
-    background-color: color-mix(in srgb, var(--surface) 78%, var(--surface-3));
+    border-radius: .9rem;
+    border-color: color-mix(in srgb, var(--brand-navy) 13%, transparent);
+    background-color: color-mix(in srgb, var(--surface) 82%, var(--surface-3));
     color: var(--brand-navy);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 2px 10px -6px rgba(51, 65, 85, .45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .65), 0 3px 12px -7px rgba(51, 65, 85, .5);
   }
   .gbtn:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--brand-teal) 45%, transparent); }
   .gbtn:active { transform: translateY(0); }
@@ -245,6 +254,7 @@ body {
     @apply inline-flex items-center gap-1 rounded-2xl border p-1;
     border-color: var(--line);
     background-color: var(--surface-2);
+    box-shadow: inset 0 1px 2px rgba(7, 56, 79, .04);
   }
   .seg-item {
     @apply relative inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all;
@@ -253,8 +263,9 @@ body {
   .seg-item:hover { color: var(--text-body); }
   .seg-item[data-active="true"] {
     background-color: var(--surface);
+    background-image: linear-gradient(180deg, #ffffff, var(--surface));
     color: var(--brand-navy);
-    box-shadow: 0 1px 2px rgba(7, 56, 79, .08), 0 6px 16px -10px rgba(7, 56, 79, .35);
+    box-shadow: 0 1px 2px rgba(7, 56, 79, .1), 0 8px 18px -10px rgba(7, 56, 79, .4);
   }
   .dark .seg-item[data-active="true"] { background-color: var(--surface-3); color: #eef6f4; }
 
