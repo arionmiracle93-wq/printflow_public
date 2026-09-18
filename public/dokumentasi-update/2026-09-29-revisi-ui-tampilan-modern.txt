@@ -1,0 +1,99 @@
+================================================================
+REVISI UI — TAMPILAN MODERN & NYAMAN DI HP
+Tanggal   : 2026-09-29
+Dampak    : HANYA tampilan (CSS + komponen React). Tidak menyentuh
+            basis data, API, logika login, rumus risiko, PWA, maupun
+            variabel lingkungan. Tidak ada paket baru yang wajib dipasang.
+================================================================
+
+1. APA YANG DIUBAH
+------------------
+a) Sistem desain (src/app/globals.css)
+   - Semua warna, sudut, bayangan, dan jarak kini diambil dari satu
+     blok variabel (:root dan .dark). Mau ganti warna brand? Cukup ubah
+     di satu tempat, seluruh halaman ikut.
+   - Kartu, tombol, input, label, dan chip diseragamkan.
+   - Cincin fokus (focus-visible) ditambahkan: navigasi pakai keyboard
+     dan tombol kecil di HP jadi jelas terlihat.
+   - Area sentuh minimal 42-46 px (anjuran Android/iOS).
+   - prefers-reduced-motion dihormati; animasi dikurangi untuk perangkat
+     lemah dan untuk WebView APK.
+   - Sengaja TANPA backdrop-blur pada elemen yang diulang banyak
+     (tombol kartu), karena blur adalah penyebab utama scroll patah
+     di WebView Android.
+   - Lapisan adaptasi mode gelap & pemetaan warna lama (indigo -> teal)
+     DIPERTAHANKAN utuh, jadi tidak ada halaman yang kehilangan gaya.
+
+b) Header & navigasi (layout.tsx, MainNav.tsx, UserMenu.tsx, MoreMenu.tsx)
+   - Header memakai gradasi navy -> teal dengan garis tepi bercahaya.
+   - Logo + nama usaha kini tampil juga di HP (sebelumnya disembunyikan).
+   - Tablet: menu diringkas jadi ikon saja (anti berdesakan), dengan
+     tooltip dan aria-label.
+   - Menu bawah HP: penanda garis bergradasi di item aktif, tombol
+     "Baru" dibuat menonjol.
+   - Menu akun: kartu identitas + penanda sesi aktif, ditutup dengan Esc.
+   - Menu titik tiga: dikelompokkan "Harian" dan "Sistem & pemilik".
+
+c) Dashboard (src/app/page.tsx)
+   - Sapaan mengikuti jam WIB perangkat (pagi/siang/sore/malam).
+   - Jam hidup dipindah ke pill sendiri; tombol aksi sejajar dan rata kanan.
+   - Blok "Saran tindakan" berdampingan dengan ringkasan harian, plus
+     tiga angka cepat (aktif / telat / siap ambil).
+   - Enam kartu KPI dengan rel warna + tautan "Lihat".
+   - Kartu prioritas pekerjaan diberi nomor urut 1..6.
+   - Sebaran tahap dibuat dua kolom dengan jumlah dan persentase.
+   - Kartu "Deadline hari ini" hanya muncul bila benar-benar ada.
+
+d) Daftar pekerjaan (src/app/pesanan/page.tsx)
+   - Bilah filter menempel di bawah header (tab + pencarian + penyaring).
+   - Chip "filter aktif" bisa diklik untuk melepas satu penyaring.
+   - Baris ringkasan: jumlah pekerjaan dan total nilai yang tampil.
+   - Kartu HP diringkas; tabel desktop memakai kepala tabel menempel,
+     angka uang rata kanan dengan tabular-nums, dan hover baris.
+
+e) Komponen kartu (src/components/ui.tsx)
+   - StageRail: tujuh segmen tahap produksi, tahap terlewati terisi warna.
+   - DeadlineChip: tanggal + sisa waktu ("sisa 5 jam" / "telat 2 hari").
+   - Badge status memakai titik warna; badge risiko menampilkan skornya.
+   - Deret tombol aksi memakai kelas .gbtn + varian warna (teal/amber/
+     sky/green) sehingga fungsi berbeda tidak terlihat sama.
+
+f) Popup ganti status (QuickStatusPopup.tsx)
+   - Menampilkan status berjalan di judul popup.
+   - Tombol status lebih besar (46 px) dan menampilkan bar progres tahap,
+     jadi operator tahu ke mana pekerjaan akan berpindah.
+
+g) Marka aplikasi (BrandMark.tsx, AppLogo.tsx)
+   - Ikon robot generik diganti markanya sendiri: kertas keluar dari
+     mesin cetak + titik amber "lampu siap". Logo usaha dari basis data
+     tetap menjadi prioritas tampilan.
+
+h) Muat & login
+   - loading.tsx memakai kerangka muat (skeleton) mengikuti bentuk halaman.
+   - Halaman login menjadi dua panel: brand + penjelasan, dan form.
+
+2. TIDAK DIUBAH
+---------------
+Seluruh berkas di src/app/api, src/lib, src/db, skema tabel, PWA
+(manifest, sw.js, ikon), halaman detail pekerjaan, form order baru,
+produksi mitra, serah terima shift, audit, sesi, pengaturan, panduan,
+dan halaman diagnosis dibiarkan apa adanya.
+
+3. CARA PAKAI
+-------------
+Berkas lengkap ada di:
+  public/revisi-ui/printflow/            (pohon folder sama seperti repo)
+  public/revisi-ui/printflow-revisi-ui.zip (satu berkas siap unduh)
+Hanya berkas yang diubah juga tersedia di:
+  public/revisi-ui/berkas-revisi/
+
+Timpa repository dengan folder src dan public + berkas konfigurasi,
+push ke GitHub, Vercel deploy ulang. Tidak perlu mengubah Neon, tidak
+perlu membuat ulang APK (ikon tidak berubah).
+
+4. LANGKAH BERIKUTNYA (BELUM DITERJEMAHKAN KE KODE)
+---------------------------------------------------
+ - Halaman detail pekerjaan bisa disamakan gayanya bila dashboard baru
+   sudah disetujui.
+ - Opsi mode gelap penuh untuk kartu cetak (printing view).
+ - Penjadwalan otomatis sortir "deadline terdekat + prioritas".
