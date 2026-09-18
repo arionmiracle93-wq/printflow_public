@@ -1,0 +1,132 @@
+================================================================
+REDESAIN KARTU HERO DASHBOARD — GAYA FOTO, SIAP DIISI FOTO ASLI
+Tanggal : 29-09-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Kartu paling atas di Dashboard (dulu blok biru tua "Kondisi
+Percetakan Hari Ini" + kotak "Ringkasan AI") diganti tampilannya
+jadi kartu foto — nuansa hero banner ala aplikasi mobile modern
+(referensi: desain UI aplikasi kedai kopi), tapi disesuaikan untuk
+percetakan. Isi & fungsinya tetap sama, cuma dikemas ulang supaya
+lebih ringkas dan enak dilihat:
+
+  - Sapaan otomatis (pagi/siang/sore/malam) + jam lokal
+  - Judul pendek + satu kata disorot warna kuning (aksen brand)
+  - Cuplikan ringkasan AI (1 baris, tidak lagi paragraf panjang)
+  - 2 tombol aksi cepat, sekarang bentuk pil (pill button)
+  - Sorotan AI (highlights) kini bergantian otomatis satu per satu
+    dengan titik indikator di bawahnya — mirip carousel foto pada
+    referensi — bukan daftar panjang seperti sebelumnya
+  - Kotak "Tindakan yang disarankan" dipindah jadi kartu terpisah
+    tepat di bawah hero, supaya kartu foto tidak penuh teks
+
+
+ALASAN PERUBAHAN
+----------------------------------------------------------------
+Diminta pemilik: ganti gaya kartu teratas mengikuti referensi
+desain yang lebih modern & fotografis, teks boleh diperkecil, dan
+tetap harus enak dilihat di tema terang maupun gelap.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/page.tsx
+   Bagian <section> hero lama (blok "HERO MODERN YELLOW–TEAL")
+   diganti total. Sekarang kartu punya 3 lapisan latar:
+     1. Foto (bg-image) + gradasi gelap di atasnya, dari kiri-atas
+        (paling gelap, tempat teks) ke kanan-bawah (lebih terang).
+     2. Dua cahaya lembut warna kuning & teal di pojok (aksen
+        brand yang sama seperti hero lama, cuma lebih halus).
+     3. Tekstur titik halftone tipis (nuansa proses cetak).
+   Kotak "Tindakan yang disarankan hari ini" dipindah keluar dari
+   hero, jadi <section className="card"> sendiri persis di
+   bawahnya. Bagian KPI, "Prioritas AI", dan seterusnya TIDAK
+   disentuh sama sekali.
+
+B) FOTO LATAR (PENTING — LANGKAH MANUAL PEMILIK)
+   Kode mengambil foto dari:
+       /public/images/dashboard-hero.jpg
+   File ini BELUM ada di paket update — pemilik perlu menambahkan
+   sendiri foto asli percetakan (contoh: tumpukan hasil cetak foto,
+   sesi pas foto/ID, rak hasil cetak rapi, mesin cetak yang lagi
+   jalan). Rekomendasi: foto landscape, minimal 1600×900px, terang
+   di sisi kanan (sisi kiri akan tertutup gradasi gelap tempat teks
+   berada — lihat pola pada gambar referensi kedai kopi).
+   Selama file ini belum ditambahkan, kartu TETAP tampil rapi
+   (gradasi gelap + tekstur titik saja, foto-nya "kosong" tapi
+   tidak pecah/rusak) — begitu foto ditambahkan, otomatis muncul
+   tanpa perlu ubah kode apa pun.
+
+C) src/components/Greeting.tsx (BARU)
+   Komponen kecil yang menampilkan "Selamat pagi/siang/sore/malam"
+   berdasarkan jam perangkat pengunjung, dengan pola render yang
+   sama seperti LocalDateTime (nilai netral dulu saat render
+   server, baru disesuaikan di browser) supaya tidak ada peringatan
+   hydration di console.
+
+D) src/components/HeroHighlightsCarousel.tsx (BARU)
+   Menampilkan sorotan AI satu baris pada satu waktu, berganti
+   otomatis tiap 4.5 detik, dilengkapi titik indikator yang bisa
+   diklik untuk lompat ke sorotan tertentu. Sumber datanya tetap
+   sama seperti sebelumnya (insight.highlights dari src/lib/ai.ts),
+   cuma cara tampilnya yang berubah.
+
+E) src/app/globals.css
+   Tambahan dua util kecil, dipakai khusus oleh hero baru:
+     .print-halftone   — tekstur titik latar (opacity beda utk
+                          tema gelap lewat aturan ".dark .print-halftone")
+     .hero-fade + @keyframes heroFade
+                        — animasi teks sorotan AI muncul halus
+                          setiap kali berganti
+
+
+TEMA GELAP / TERANG
+----------------------------------------------------------------
+Kartu hero baru ini SENGAJA tetap gelap di kedua tema (sama seperti
+pola pada referensi desain — kartu foto kontras dengan latar
+halaman, bukan ikut warna terang saat tema terang). Yang menyesuaikan
+antar tema cuma detail halus: border, shadow, dan opacity tekstur
+titik, supaya kartu tidak terasa seperti "lubang hitam" saat
+seluruh halaman sudah gelap. Tombol, KPI, dan kartu lain di bawah
+hero tidak diubah — tetap ikut tema terang/gelap seperti biasa.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos, tidak ada error tipe
+  npx next build      : Compiled successfully, semua 60 route
+                         (termasuk /) tetap terdaftar normal
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+BARU:
+  src/components/Greeting.tsx
+  src/components/HeroHighlightsCarousel.tsx
+  public/dokumentasi-update/2026-09-29-redesign-hero-dashboard-foto-percetakan.txt
+
+DIUBAH:
+  src/app/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+TAMBAHKAN SENDIRI (tidak disertakan, opsional tapi disarankan):
+  public/images/dashboard-hero.jpg  — foto asli percetakan Anda
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+1. Kalau nanti mau kartu hero benar-benar jadi carousel foto
+   (bukan cuma satu foto statis), tinggal siapkan 2-3 foto lagi
+   dan pola HeroHighlightsCarousel.tsx bisa dicontek untuk gonta-
+   ganti gambar latarnya juga, bukan cuma teksnya.
+2. Nama file foto sengaja fleksibel di /public/images/ — kalau
+   mau pakai nama lain, tinggal ganti satu baris path di
+   src/app/page.tsx (cari kata "dashboard-hero.jpg").
+
+================================================================

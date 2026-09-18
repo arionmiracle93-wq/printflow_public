@@ -59,14 +59,8 @@ export default async function DashboardPage() {
           disesuaikan untuk percetakan. Foto asli dipasang lewat /public/images/dashboard-hero.jpg;
           selama belum ada, lapisan gradasi + tekstur halftone di bawah ini tetap tampil rapi. */}
       <section className="relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white shadow-[0_20px_46px_rgba(3,16,23,.35)] dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
-        {/* Foto latar (ganti dengan foto asli percetakan Anda) + gradasi gelap utk keterbacaan teks */}
-        <div
-          className="absolute inset-0 -z-20 bg-[#07141d] bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "linear-gradient(100deg, rgba(5,15,21,.95) 6%, rgba(6,20,27,.82) 40%, rgba(6,20,27,.5) 68%, rgba(6,20,27,.28) 100%), url('/images/dashboard-hero.jpg')",
-          }}
-        />
+        {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop — lihat .hero-photo-bg di globals.css */}
+        <div className="hero-photo-bg absolute inset-0 -z-20" />
         {/* Aksen brand (amber + teal) tetap ada, kini jadi cahaya lembut di belakang foto */}
         <div className="absolute -bottom-24 -right-10 -z-10 h-56 w-56 rounded-full bg-amber-300/25 blur-3xl" />
         <div className="absolute -top-16 -left-10 -z-10 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />

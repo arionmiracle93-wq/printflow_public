@@ -1,0 +1,129 @@
+================================================================
+HERO DASHBOARD: OVERLAY FOTO RESPONSIVE (BEDA MOBILE VS DESKTOP)
+Tanggal : 30-09-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Penyempurnaan kecil dari update sebelumnya (29-09-2026, redesain
+hero foto). Sebelumnya foto+gradasi hero ditulis inline lewat satu
+`style` di page.tsx, jadi gradasinya SAMA PERSIS di HP maupun
+desktop. Sekarang dipindah jadi class CSS `.hero-photo-bg` di
+globals.css dengan aturan berbeda di bawah/di atas 768px lebar
+layar, karena:
+
+  - Di HP, kartu hero hampir persegi dan teks memenuhi seluruh
+    lebar kartu → butuh gelap yang MERATA di semua sisi.
+  - Di desktop, kartu hero jadi sangat lebar (bisa 4x lebih lebar
+    dari tingginya) sementara teks cuma di kolom kiri → gradasinya
+    dibuat miring kiri-ke-kanan supaya foto lebih "bernapas" di
+    sisi kanan yang kosong.
+
+Fungsinya sama, fotonya tetap satu file yang sama
+(/public/images/dashboard-hero.jpg) — cuma cara nge-gelapinnya yang
+kini otomatis nyesuain lebar layar.
+
+
+ALASAN PERUBAHAN
+----------------------------------------------------------------
+Pemilik nanya soal tampilan mobile: apakah rasio foto perlu beda,
+dan berapa foto yang perlu disiapkan. Setelah dicek, rasio kartu
+hero MEMANG jauh berbeda antar ukuran layar (lihat bagian
+"PERKIRAAN RASIO KARTU" di bawah), jadi wajar kalau satu foto bisa
+terlihat pas di satu ukuran tapi ke-crop kurang pas di ukuran lain.
+Solusinya dua lapis: (1) overlay yang otomatis nyesuain per layar
+[update ini], dan (2) opsi pasang foto/crop terpisah utk mobile
+kalau pemilik mau hasil maksimal [lihat bagian FOTO di bawah].
+
+
+PERKIRAAN RASIO KARTU HERO (lebar : tinggi)
+----------------------------------------------------------------
+Tinggi kartu relatif tetap (isinya cuma sapaan, judul, 2 tombol,
+1 baris insight) — yang berubah banyak adalah LEBAR kartu ikut
+lebar layar. Kira-kira:
+
+  HP        (~360–430px lebar layar) : kartu ~1.2–1.4 : 1 (hampir kotak)
+  Tablet    (~768–1023px)            : kartu ~2.3–2.8 : 1
+  Desktop   (~1024px ke atas)        : kartu ~3.5–4.5 : 1 (lebar/panorama)
+
+Ini krn area konten dashboard maksimal 1440px (lihat max-w-[1440px]
+di src/app/layout.tsx), sementara tinggi kartu nyaris tidak berubah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/page.tsx
+   Div lapisan foto tidak lagi pakai prop `style` inline, cuma
+   className="hero-photo-bg absolute inset-0 -z-20". Logikanya
+   pindah semua ke CSS supaya bisa pakai @media query (React inline
+   style tidak bisa berisi media query).
+
+B) src/app/globals.css
+   Class baru `.hero-photo-bg`: aturan dasar (mobile, di bawah
+   768px) pakai gradasi atas-ke-bawah yang rata gelapnya. Di dalam
+   `@media (min-width: 768px)` (breakpoint sama seperti "md" di
+   Tailwind), gradasinya diganti versi miring kiri-ke-kanan (persis
+   yang dipakai update 29-09-2026, tidak berubah untuk desktop).
+
+
+TENTANG FOTO — BERAPA YANG PERLU DISIAPKAN?
+----------------------------------------------------------------
+JAWABAN SINGKAT: 1 foto CUKUP, 2 foto LEBIH BAGUS. Tidak wajib 2.
+
+OPSI A — 1 foto saja (paling praktis)
+  Simpan sebagai /public/images/dashboard-hero.jpg. Karena rasio
+  kartu berubah drastis (lihat tabel di atas), amannya:
+    - Orientasi landscape, resolusi tinggi (disarankan ≥2000px
+      lebar) supaya tetap tajam saat dicrop lebar di desktop.
+    - Subjek utama (mis. tumpukan hasil cetak, orang lagi motret
+      pas foto) diposisikan DI TENGAH foto, tidak terlalu mepet ke
+      tepi atas/bawah maupun kiri/kanan — ini "zona aman" yang akan
+      selalu ikut kelihatan di semua ukuran layar berkat CSS
+      background-size:cover.
+    - Hindari foto yang subjek utamanya nempel di pojok atau di
+      bagian atas/bawah frame — itu yang paling sering hilang saat
+      dicrop lebar di desktop (bagian atas & bawah foto paling
+      banyak terpotong di kartu desktop yang pipih).
+
+OPSI B — 2 foto/crop terpisah (hasil maksimal)
+  Tambahkan file /public/images/dashboard-hero-mobile.jpg, lalu di
+  globals.css ganti url() di dalam blok dasar `.hero-photo-bg`
+  (yang di LUAR @media) supaya menunjuk ke file mobile ini —
+  bagian di DALAM `@media (min-width: 768px)` tetap menunjuk ke
+  dashboard-hero.jpg seperti sekarang. Spesifikasi:
+    - Desktop (dashboard-hero.jpg)         : ~1800×500px (rasio ±3.6:1)
+    - Mobile  (dashboard-hero-mobile.jpg)  : ~1000×800px (rasio ±1.25:1)
+  Kedua file boleh hasil crop dari 1 foto sumber beresolusi besar,
+  tidak harus foto yang beda.
+
+Baris CSS yang perlu diganti kalau pilih Opsi B ada di
+src/app/globals.css, dicari komentar "Kalau nanti mau pasang
+foto/crop KHUSUS mobile".
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos, tidak ada error tipe
+  npx next build      : Compiled successfully
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-09-30-hero-overlay-responsive-mobile-desktop.txt
+
+Catatan: file src/components/Greeting.tsx dan
+src/components/HeroHighlightsCarousel.tsx dari update 29-09-2026
+TIDAK berubah lagi di update ini — kalau sudah diupload sebelumnya,
+tidak perlu diupload ulang. Kalau belum sama sekali, pakai paket zip
+terbaru yang sudah berisi semuanya jadi satu.
+
+================================================================

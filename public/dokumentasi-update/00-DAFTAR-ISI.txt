@@ -18,8 +18,25 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[39] 2026-09-30-hero-overlay-responsive-mobile-desktop.txt
+    PALING BARU. Penyempurnaan hero foto (update sebelumnya):
+    gradasi gelap di atas foto kini beda antara HP (rata di semua
+    sisi, karena teks memenuhi lebar kartu) dan desktop (miring
+    kiri-kanan, karena teks cuma di kolom kiri). Foto tetap 1 file
+    yang sama; ada juga opsi pasang crop kedua khusus mobile kalau
+    mau hasil maksimal (opsional, lihat isi file ini).
+
+[38] 2026-09-29-redesign-hero-dashboard-foto-percetakan.txt
+    Kartu paling atas di Dashboard ("Kondisi
+    Percetakan Hari Ini") diganti jadi kartu foto bergaya hero
+    banner (referensi: UI aplikasi kedai kopi, disesuaikan utk
+    percetakan) — sapaan otomatis, judul ringkas, sorotan AI kini
+    bergantian dengan titik indikator, tombol jadi bentuk pil.
+    Perlu tambahkan sendiri foto di public/images/dashboard-hero.jpg
+    (opsional — tanpa foto pun kartu tetap tampil rapi).
+
 [37] 2026-09-28-multi-produk-item-pekerjaan.txt
-    PALING BARU. Satu pekerjaan kini bisa berisi beberapa
+    Satu pekerjaan kini bisa berisi beberapa
     produk sekaligus lewat tabel baru "Item Pekerjaan" (jenis +
     jumlah + satuan per baris), sementara status/deadline/mesin/
     operator tetap satu untuk seluruh job. Kolom "jenis produk"
