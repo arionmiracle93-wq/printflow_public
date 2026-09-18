@@ -93,7 +93,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-teal-300/35 bg-[#07556a]/65 p-4 shadow-inner backdrop-blur-md">
+        <div className="mt-6 rounded-2xl border border-teal-300/35 bg-[#07556a]/90 p-4 shadow-inner">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10">
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* KPI */}
-      <section className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
+      <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
         <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} />
         <KpiCard label="Terlambat" value={String(insight.stats.late)} tone={insight.stats.late > 0 ? "text-rose-600" : "text-teal-700"} icon={<Clock3 size={18} />} accent={insight.stats.late > 0 ? "rose" : "teal"} hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"} />
         <KpiCard label="Waspada / risiko" value={String(insight.stats.risky)} tone="text-amber-600" icon={<ShieldAlert size={18} />} accent="yellow" />
