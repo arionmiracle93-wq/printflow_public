@@ -2,26 +2,21 @@ import Link from "next/link";
 import {
   ArrowRight,
   Banknote,
-  CheckCircle2,
   CircleDollarSign,
   ClipboardList,
   Clock3,
   Flame,
   FolderOpen,
-  Lightbulb,
-  ListTodo,
   PackageCheck,
   Plus,
-  RefreshCw,
   ShieldAlert,
-  Sparkles,
   Workflow,
 } from "lucide-react";
 import { AiAssistant } from "@/components/AiAssistant";
-import { BrandMark } from "@/components/BrandMark";
-import { LocalDateTime } from "@/components/LocalDateTime";
+import { DashboardHero, AiSummaryBand, StatTile } from "@/components/DashboardHero";
 import { ProblemScreen } from "@/components/ProblemScreen";
-import { InsightCard, KpiCard, ProgressBar } from "@/components/ui";
+import { InsightCard, ProgressBar } from "@/components/ui";
+import { getCurrentUser } from "@/lib/auth";
 import { safeDb } from "@/lib/dbcheck";
 import { buildDashboardInsight } from "@/lib/ai";
 import { STATUSES, formatRupiah, statusMeta } from "@/lib/domain";
@@ -41,6 +36,7 @@ export default async function DashboardPage() {
     return <ProblemScreen problem={result.problem} hint="Dashboard butuh database untuk menghitung status pekerjaan." />;
   }
 
+  const user = await getCurrentUser();
   const orders = result.data.rows;
   const photoMap = result.data.counts;
   const outsourceMap = result.data.outsourced;
@@ -54,90 +50,30 @@ export default async function DashboardPage() {
   const maxCount = Math.max(1, ...STATUSES.map((s) => counts.get(s.key) ?? 0));
 
   return (
-    <div className="space-y-5">
-      {/* HERO MODERN YELLOW–TEAL */}
-      <section className="relative isolate overflow-hidden rounded-[1.35rem] border border-teal-400/20 bg-[#07384f] p-5 text-white shadow-[0_18px_45px_rgba(7,56,79,.18)] md:p-7">
-        <div className="absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border-[70px] border-teal-400/10" />
-        <div className="absolute -bottom-32 right-24 -z-10 h-72 w-72 rounded-full bg-teal-400/10 blur-2xl" />
-        <div className="absolute -bottom-20 -right-16 -z-10 h-44 w-44 rotate-12 rounded-[2rem] bg-amber-300" />
-        <div className="absolute inset-0 -z-20 bg-[linear-gradient(130deg,rgba(20,184,166,.38),transparent_45%,rgba(8,145,178,.2))]" />
+    <div className="space-y-4 md:space-y-5">
+      {/* HERO — banner foto realistis bergaya aplikasi referensi */}
+      <DashboardHero name={user?.name ?? "Pemilik"} />
 
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-3xl">
-            <p className="text-[11px] font-extrabold uppercase tracking-[.12em] text-amber-300">
-              <LocalDateTime />
-            </p>
-            <div className="mt-2 flex items-center gap-3">
-              <h1 className="text-2xl font-black leading-tight tracking-tight md:text-4xl">Kondisi Percetakan Hari Ini</h1>
-              <BrandMark compact />
-            </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-50/80">
-              Pantau status produksi, sisa waktu, dan risiko keterlambatan dalam satu tampilan yang ringkas.
-            </p>
-          </div>
-          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
-            <Link
-              href="/pesanan/baru"
-              className="btn-primary min-w-0 whitespace-nowrap px-2 py-2.5 text-[11px] sm:px-4 sm:text-sm"
-            >
-              <Plus size={15} strokeWidth={2.7} className="shrink-0 sm:h-[17px] sm:w-[17px]" />
-              <span>Pekerjaan Baru</span>
-            </Link>
-            <Link
-              href="/pesanan"
-              className="btn min-w-0 whitespace-nowrap border border-white/30 bg-white/10 px-2 py-2.5 text-[11px] text-white hover:bg-white/15 sm:px-4 sm:text-sm"
-            >
-              <ListTodo size={15} className="shrink-0 sm:h-[17px] sm:w-[17px]" />
-              <span>Semua Pekerjaan</span>
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-teal-300/35 bg-[#07556a]/90 p-4 shadow-inner">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10">
-                <Sparkles size={18} className="text-amber-300" />
-              </span>
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-[.08em] text-white">Ringkasan AI</p>
-                <p className="text-[10px] text-cyan-100/70">Analisis produksi terkini</p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-300/30 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-cyan-50">
-              <RefreshCw size={11} /> Update otomatis {summary.source !== "engine" ? `· ${summary.source}` : ""}
-            </span>
-          </div>
-          <p className="mt-3 whitespace-pre-wrap text-sm font-medium leading-relaxed text-white">{summary.summary}</p>
-          <ul className="mt-3 grid gap-2 text-xs text-cyan-50/80 md:grid-cols-2">
-            {insight.highlights.slice(0, 6).map((h) => (
-              <li key={h} className="flex gap-2"><CheckCircle2 size={13} className="mt-0.5 shrink-0 text-teal-300" /><span>{h}</span></li>
-            ))}
-          </ul>
-          {insight.actions.length ? (
-            <div className="mt-4 rounded-xl border-l-4 border-amber-400 bg-white/95 p-3 text-[#1e293b] shadow-sm">
-              <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[.08em] text-[#0f766e]">
-                <Lightbulb size={14} /> Tindakan yang disarankan hari ini
-              </p>
-              <ul className="mt-1.5 space-y-1 text-xs font-medium">
-                {insight.actions.slice(0, 5).map((a) => (
-                  <li key={a} className="flex gap-1.5"><ArrowRight size={13} className="mt-0.5 shrink-0 text-amber-500" /><span>{a}</span></li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      {/* KPI */}
+      {/* KPI — category tiles */}
       <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
-        <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} />
-        <KpiCard label="Terlambat" value={String(insight.stats.late)} tone={insight.stats.late > 0 ? "text-rose-600" : "text-teal-700"} icon={<Clock3 size={18} />} accent={insight.stats.late > 0 ? "rose" : "teal"} hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"} />
-        <KpiCard label="Waspada / risiko" value={String(insight.stats.risky)} tone="text-amber-600" icon={<ShieldAlert size={18} />} accent="yellow" />
-        <KpiCard label="Siap diambil" value={String(insight.stats.readyToPickup)} tone="text-teal-700" icon={<PackageCheck size={18} />} />
-        <KpiCard label="Nilai order aktif" value={formatRupiah(insight.stats.revenueActive)} tone="text-sky-700" icon={<CircleDollarSign size={18} />} accent="blue" />
-        <KpiCard label="DP / terbayar" value={formatRupiah(insight.stats.paidAmount)} tone="text-teal-700" icon={<Banknote size={18} />} />
+        <StatTile label="Pekerjaan aktif" value={String(insight.stats.totalActive)} accent="teal" icon={<ClipboardList size={19} />} />
+        <StatTile
+          label="Terlambat"
+          value={String(insight.stats.late)}
+          alert={insight.stats.late > 0}
+          accent={insight.stats.late > 0 ? "rose" : "teal"}
+          tone={insight.stats.late > 0 ? "text-rose-600" : "text-teal-700"}
+          hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"}
+          icon={<Clock3 size={19} />}
+        />
+        <StatTile label="Waspada / risiko" value={String(insight.stats.risky)} accent="yellow" tone="text-amber-600" icon={<ShieldAlert size={19} />} />
+        <StatTile label="Siap diambil" value={String(insight.stats.readyToPickup)} accent="teal" tone="text-teal-700" icon={<PackageCheck size={19} />} />
+        <StatTile label="Nilai order aktif" value={formatRupiah(insight.stats.revenueActive)} accent="blue" tone="text-sky-700" icon={<CircleDollarSign size={19} />} />
+        <StatTile label="DP / terbayar" value={formatRupiah(insight.stats.paidAmount)} accent="teal" tone="text-teal-700" icon={<Banknote size={19} />} />
       </section>
+
+      {/* RINGKASAN AI — promo band dengan foto hasil produksi */}
+      <AiSummaryBand summary={summary.summary} source={summary.source} highlights={insight.highlights} actions={insight.actions} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <section className="space-y-4 lg:col-span-2">
