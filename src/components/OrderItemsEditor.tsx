@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { PRODUCT_TYPES, UNITS, formatNumber } from "@/lib/domain";
 import { MAX_ITEMS_PER_ORDER, type OrderItemInput } from "@/lib/order-items";
+
+// Samakan dengan class `max-h-52` (13rem) pada menu di bawah — dipakai buat
+// menghitung apakah menu harus dibuka ke atas kalau ruang di bawah mepet.
+const QUICKPICK_MENU_MAX_HEIGHT = 208;
+const QUICKPICK_MENU_GAP = 4;
+
+type QuickPickMenuPos = { left: number; width: number; top?: number; bottom?: number };
 
 /**
  * Input teks + dropdown pilihan siap pakai.
@@ -14,6 +22,26 @@ import { MAX_ITEMS_PER_ORDER, type OrderItemInput } from "@/lib/order-items";
  * tampil. Komponen ini menggantinya dengan dropdown kustom yang pasti
  * kelihatan & bisa di-tap di semua platform, tapi teksnya tetap bisa
  * diketik manual kalau pilihannya belum ada di daftar.
+ *
+ * REVISI: menu dropdown-nya di-render lewat React Portal ke `document.body`,
+ * bukan lagi `position: absolute` di tempat. Dua alasan:
+ *
+ * 1. Tabel "Item pekerjaan" dibungkus `overflow-hidden` (biar sudut
+ *    rounded-nya rapi) — dropdown yang cuma `absolute` di dalamnya jadi
+ *    KEPOTONG begitu melewati batas kartu/tabel itu.
+ * 2. Beberapa elemen di app ini (header, tab bar, sticky action bar) pakai
+ *    `backdrop-blur`. Elemen ber-`backdrop-filter` jadi containing block
+ *    baru buat turunan `position: fixed`/`absolute` di dalamnya — persis
+ *    bug Chrome Android yang bikin posisinya meleset (lihat catatan yang
+ *    sama di `globals.css` soal `.mobile-bottom-nav`, yang dibereskan
+ *    dengan cara serupa: di-portal keluar + posisi dikunci manual).
+ *
+ * Portal ke `document.body` + posisi dihitung manual dari
+ * `getBoundingClientRect()` (lalu di-refresh saat scroll/resize/keyboard
+ * muncul) membereskan dua-duanya sekaligus: menunya keluar total dari
+ * kartu yang `overflow-hidden`, dan tidak lagi jadi turunan elemen
+ * ber-`backdrop-blur` manapun, jadi posisinya selalu dihitung relatif ke
+ * viewport yang sebenarnya.
  */
 function QuickPick({
   value,
@@ -29,9 +57,51 @@ function QuickPick({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<QuickPickMenuPos | null>(null);
+  // Portal cuma boleh dipakai setelah mount (butuh `document`), sama seperti
+  // pola yang dipakai `MainNav` buat nge-portal nav bawah keluar dari header.
+  const [mounted, setMounted] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => setMounted(true), []);
+
+  // Hitung ulang posisi menu tiap kali dibuka, dan tiap kali ada scroll/resize
+  // selama menu masih terbuka — termasuk scroll di dalam kartu/tabel manapun
+  // (bukan cuma window, makanya listener scroll pakai `capture: true`) dan
+  // perubahan viewport karena keyboard HP muncul (`visualViewport`).
+  useEffect(() => {
+    if (!open) return;
+
+    function reposition() {
+      const el = anchorRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportH = window.visualViewport?.height ?? window.innerHeight;
+      const spaceBelow = viewportH - rect.bottom;
+      const bukaKeAtas = spaceBelow < QUICKPICK_MENU_MAX_HEIGHT && rect.top > spaceBelow;
+      setMenuPos(
+        bukaKeAtas
+          ? { left: rect.left, width: rect.width, bottom: viewportH - rect.top + QUICKPICK_MENU_GAP }
+          : { left: rect.left, width: rect.width, top: rect.bottom + QUICKPICK_MENU_GAP },
+      );
+    }
+
+    reposition();
+    const vv = window.visualViewport;
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    vv?.addEventListener("resize", reposition);
+    vv?.addEventListener("scroll", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+      vv?.removeEventListener("resize", reposition);
+      vv?.removeEventListener("scroll", reposition);
+    };
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={anchorRef}>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -50,32 +120,45 @@ function QuickPick({
       >
         <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && !disabled ? (
-        <>
-          {/* Lapisan transparan buat nutup dropdown pas klik di luar. */}
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#101e29]">
-            {options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  onChange(opt);
-                  setOpen(false);
+      {open && !disabled && mounted && menuPos
+        ? createPortal(
+            <>
+              {/* Lapisan transparan buat nutup dropdown pas klik di luar. */}
+              <div className="fixed inset-0 z-[85]" onClick={() => setOpen(false)} />
+              <div
+                style={{
+                  position: "fixed",
+                  left: menuPos.left,
+                  width: menuPos.width,
+                  top: menuPos.top,
+                  bottom: menuPos.bottom,
+                  maxHeight: QUICKPICK_MENU_MAX_HEIGHT,
                 }}
-                className={`block w-full rounded-lg px-2.5 py-1.5 text-left text-sm font-medium transition ${
-                  opt === value
-                    ? "bg-teal-50 text-teal-700 dark:bg-white/10 dark:text-teal-300"
-                    : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
-                }`}
+                className="z-[86] overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#101e29]"
               >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
+                {options.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      onChange(opt);
+                      setOpen(false);
+                    }}
+                    className={`block w-full rounded-lg px-2.5 py-1.5 text-left text-sm font-medium transition ${
+                      opt === value
+                        ? "bg-teal-50 text-teal-700 dark:bg-white/10 dark:text-teal-300"
+                        : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
