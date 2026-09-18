@@ -57,13 +57,25 @@ export function KpiCard({
     rose: "bg-rose-50 text-rose-600",
     blue: "bg-sky-50 text-sky-600",
   };
+  // Ukuran di bawah `md:` (mobile) sengaja diperkecil biar 6 kartu KPI tidak
+  // terasa besar-besar di layar HP — dari `md:` ke atas (tablet/desktop)
+  // semua angka dikembalikan persis seperti semula (p-4, tile 9x9, ikon 18px,
+  // value text-2xl, dst), jadi tampilan desktop tidak berubah sama sekali.
   return (
-    <div className="card group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,75,84,.11)]">
+    <div className="card group relative overflow-hidden p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,75,84,.11)] md:p-4">
       <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-teal-400 to-amber-300 opacity-0 transition group-hover:opacity-100" />
-      <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${tiles[accent]}`}>{icon}</div>
-      <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[.09em] text-slate-500">{label}</p>
-      <p className={`mt-1 text-2xl font-black tracking-tight ${tone}`}>{value}</p>
-      {hint ? <p className="mt-1 text-[11px] font-medium text-slate-400">{hint}</p> : null}
+      <div
+        className={`flex h-7 w-7 items-center justify-center rounded-xl [&>svg]:h-3.5 [&>svg]:w-3.5 md:h-9 md:w-9 md:[&>svg]:h-[18px] md:[&>svg]:w-[18px] ${tiles[accent]}`}
+      >
+        {icon}
+      </div>
+      <p className="mt-1.5 text-[9px] font-extrabold uppercase tracking-[.07em] text-slate-500 md:mt-3 md:text-[10px] md:tracking-[.09em]">
+        {label}
+      </p>
+      <p className={`mt-0.5 text-lg font-black tracking-tight md:mt-1 md:text-2xl ${tone}`}>{value}</p>
+      {hint ? (
+        <p className="mt-0.5 text-[9px] font-medium text-slate-400 md:mt-1 md:text-[11px]">{hint}</p>
+      ) : null}
     </div>
   );
 }

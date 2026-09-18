@@ -130,7 +130,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* KPI */}
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <section className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
         <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} />
         <KpiCard label="Terlambat" value={String(insight.stats.late)} tone={insight.stats.late > 0 ? "text-rose-600" : "text-teal-700"} icon={<Clock3 size={18} />} accent={insight.stats.late > 0 ? "rose" : "teal"} hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"} />
         <KpiCard label="Waspada / risiko" value={String(insight.stats.risky)} tone="text-amber-600" icon={<ShieldAlert size={18} />} accent="yellow" />
