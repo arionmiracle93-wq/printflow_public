@@ -7,16 +7,21 @@ import {
   Clock3,
   Flame,
   FolderOpen,
+  Lightbulb,
+  ListTodo,
   PackageCheck,
   Plus,
   ShieldAlert,
+  Sparkles,
   Workflow,
 } from "lucide-react";
 import { AiAssistant } from "@/components/AiAssistant";
-import { DashboardHero, AiSummaryBand, StatTile } from "@/components/DashboardHero";
+import { BrandMark } from "@/components/BrandMark";
+import { Greeting } from "@/components/Greeting";
+import { HeroHighlightsCarousel } from "@/components/HeroHighlightsCarousel";
+import { LocalDateTime } from "@/components/LocalDateTime";
 import { ProblemScreen } from "@/components/ProblemScreen";
-import { InsightCard, ProgressBar } from "@/components/ui";
-import { getCurrentUser } from "@/lib/auth";
+import { InsightCard, KpiCard, ProgressBar } from "@/components/ui";
 import { safeDb } from "@/lib/dbcheck";
 import { buildDashboardInsight } from "@/lib/ai";
 import { STATUSES, formatRupiah, statusMeta } from "@/lib/domain";
@@ -36,7 +41,6 @@ export default async function DashboardPage() {
     return <ProblemScreen problem={result.problem} hint="Dashboard butuh database untuk menghitung status pekerjaan." />;
   }
 
-  const user = await getCurrentUser();
   const orders = result.data.rows;
   const photoMap = result.data.counts;
   const outsourceMap = result.data.outsourced;
@@ -50,31 +54,95 @@ export default async function DashboardPage() {
   const maxCount = Math.max(1, ...STATUSES.map((s) => counts.get(s.key) ?? 0));
 
   return (
-    <div className="space-y-4 md:space-y-5">
-      <style dangerouslySetInnerHTML={{ __html: `.app-header { display: none !important; } .app-main { padding-top: 1rem !important; }` }} />
-      {/* HERO — banner foto realistis bergaya aplikasi referensi */}
-      <DashboardHero name={user?.name ?? "Pemilik"} role={user?.role ?? "owner"} />
-
-      {/* KPI — category tiles */}
-      <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
-        <StatTile label="Pekerjaan aktif" value={String(insight.stats.totalActive)} accent="teal" icon={<ClipboardList size={19} />} />
-        <StatTile
-          label="Terlambat"
-          value={String(insight.stats.late)}
-          alert={insight.stats.late > 0}
-          accent={insight.stats.late > 0 ? "rose" : "teal"}
-          tone={insight.stats.late > 0 ? "text-rose-600" : "text-teal-700"}
-          hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"}
-          icon={<Clock3 size={19} />}
+    <div className="space-y-5">
+      {/* HERO FOTO — kartu utama gaya "photo banner", terinspirasi referensi UI kedai kopi,
+          disesuaikan untuk percetakan. Foto asli dipasang lewat /public/images/dashboard-hero.jpg;
+          selama belum ada, lapisan gradasi + tekstur halftone di bawah ini tetap tampil rapi. */}
+      <section className="relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white shadow-[0_20px_46px_rgba(3,16,23,.35)] dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
+        {/* Foto latar (ganti dengan foto asli percetakan Anda) + gradasi gelap utk keterbacaan teks */}
+        <div
+          className="absolute inset-0 -z-20 bg-[#07141d] bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "linear-gradient(100deg, rgba(5,15,21,.95) 6%, rgba(6,20,27,.82) 40%, rgba(6,20,27,.5) 68%, rgba(6,20,27,.28) 100%), url('/images/dashboard-hero.jpg')",
+          }}
         />
-        <StatTile label="Waspada / risiko" value={String(insight.stats.risky)} accent="yellow" tone="text-amber-600" icon={<ShieldAlert size={19} />} />
-        <StatTile label="Siap diambil" value={String(insight.stats.readyToPickup)} accent="teal" tone="text-teal-700" icon={<PackageCheck size={19} />} />
-        <StatTile label="Nilai order aktif" value={formatRupiah(insight.stats.revenueActive)} accent="blue" tone="text-sky-700" icon={<CircleDollarSign size={19} />} />
-        <StatTile label="DP / terbayar" value={formatRupiah(insight.stats.paidAmount)} accent="teal" tone="text-teal-700" icon={<Banknote size={19} />} />
+        {/* Aksen brand (amber + teal) tetap ada, kini jadi cahaya lembut di belakang foto */}
+        <div className="absolute -bottom-24 -right-10 -z-10 h-56 w-56 rounded-full bg-amber-300/25 blur-3xl" />
+        <div className="absolute -top-16 -left-10 -z-10 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />
+        <div className="print-halftone absolute inset-0 -z-10" />
+
+        <div className="relative flex flex-col gap-4 p-5 md:p-7">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
+                <Greeting /> <span aria-hidden>👋</span>
+              </p>
+              <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[.1em] text-white/50">
+                <LocalDateTime />
+              </p>
+            </div>
+            <BrandMark compact />
+          </div>
+
+          <div className="max-w-md">
+            <h1 className="text-xl font-black leading-tight tracking-tight md:text-[1.75rem]">
+              Produksi cetak, <span className="text-amber-300">terpantau</span> tepat waktu
+            </h1>
+            <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-white/70 md:text-sm">
+              {summary.summary}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/pesanan/baru"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-[#07384f] shadow-[0_8px_18px_rgba(0,0,0,.28)] transition-transform active:scale-[0.97] sm:text-xs"
+            >
+              <Plus size={14} strokeWidth={2.8} className="shrink-0" /> Pekerjaan Baru <ArrowRight size={12} className="shrink-0" />
+            </Link>
+            <Link
+              href="/pesanan"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20 sm:text-xs"
+            >
+              <ListTodo size={14} className="shrink-0" /> Semua Pekerjaan
+            </Link>
+          </div>
+
+          <div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-300">
+              <Sparkles size={10} /> Insight AI
+            </span>
+            <HeroHighlightsCarousel items={insight.highlights.slice(0, 5)} />
+          </div>
+        </div>
       </section>
 
-      {/* RINGKASAN AI — promo band dengan foto hasil produksi */}
-      <AiSummaryBand summary={summary.summary} source={summary.source} highlights={insight.highlights} actions={insight.actions} />
+      {insight.actions.length ? (
+        <section className="card p-4 md:p-5">
+          <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[.08em] text-teal-700 dark:text-teal-300">
+            <Lightbulb size={14} /> Tindakan yang disarankan hari ini
+          </p>
+          <ul className="mt-2 space-y-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+            {insight.actions.slice(0, 5).map((a) => (
+              <li key={a} className="flex gap-1.5">
+                <ArrowRight size={13} className="mt-0.5 shrink-0 text-amber-500" />
+                <span>{a}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* KPI */}
+      <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
+        <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} />
+        <KpiCard label="Terlambat" value={String(insight.stats.late)} tone={insight.stats.late > 0 ? "text-rose-600" : "text-teal-700"} icon={<Clock3 size={18} />} accent={insight.stats.late > 0 ? "rose" : "teal"} hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"} />
+        <KpiCard label="Waspada / risiko" value={String(insight.stats.risky)} tone="text-amber-600" icon={<ShieldAlert size={18} />} accent="yellow" />
+        <KpiCard label="Siap diambil" value={String(insight.stats.readyToPickup)} tone="text-teal-700" icon={<PackageCheck size={18} />} />
+        <KpiCard label="Nilai order aktif" value={formatRupiah(insight.stats.revenueActive)} tone="text-sky-700" icon={<CircleDollarSign size={18} />} accent="blue" />
+        <KpiCard label="DP / terbayar" value={formatRupiah(insight.stats.paidAmount)} tone="text-teal-700" icon={<Banknote size={18} />} />
+      </section>
 
       <div className="grid gap-5 lg:grid-cols-3">
         <section className="space-y-4 lg:col-span-2">

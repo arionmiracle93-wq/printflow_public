@@ -116,6 +116,34 @@ body {
 .scroll-x::-webkit-scrollbar-thumb { background: #99d6cf; border-radius: 999px; }
 .dark .scroll-x::-webkit-scrollbar-thumb { background: #1f4a52; }
 
+/* Tekstur titik halftone — nuansa proses cetak, dipakai sbg lapisan
+   dekoratif di belakang foto hero dashboard (tetap terlihat rapi
+   walau foto asli belum dipasang). */
+.print-halftone {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.85) 1px, transparent 1.6px);
+  background-size: 12px 12px;
+  opacity: 0.14;
+}
+
+.dark .print-halftone {
+  opacity: 0.08;
+}
+
+@keyframes heroFade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-fade {
+  animation: heroFade 0.4s ease-out;
+}
+
 @keyframes navigation-progress {
   0% { transform: translateX(-110%); width: 25%; }
   55% { width: 48%; }
