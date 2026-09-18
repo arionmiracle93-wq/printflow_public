@@ -63,18 +63,23 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <NavigationFeedback />
         <ServiceWorkerRegister />
         <ExitOnBackConfirm />
-        <header className="app-header sticky top-0 z-30 border-b border-white/10 bg-[#07384f]/95 shadow-[0_8px_30px_rgba(7,56,79,.14)] backdrop-blur-xl no-print">
-          <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-2.5 lg:px-6">
-            <Link href="/" className="group hidden shrink-0 items-center gap-2.5 md:flex">
+        <header className="app-header sticky top-0 z-30 border-b border-white/[0.09] bg-[#06303f]/85 shadow-[0_10px_34px_rgba(7,56,79,.22)] backdrop-blur-2xl no-print">
+          {/* Garis aksen tipis: penanda brand teal → kuning di sisi paling atas layar. */}
+          <div className="h-[3px] w-full bg-gradient-to-r from-teal-400 via-cyan-300 to-amber-300" />
+          <div className="mx-auto flex max-w-[1440px] items-center gap-3 px-3 py-2.5 sm:px-4 lg:px-6">
+            <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="Ke Dashboard Print Flow">
               <AppLogo />
               <span className="leading-tight">
-                <span className="block text-sm font-extrabold tracking-tight text-white md:text-base">Print Flow</span>
-                <span className="hidden text-[10px] font-medium text-cyan-100/70 sm:block">Monitoring Produksi Percetakan</span>
+                <span className="block text-[15px] font-extrabold tracking-tight text-white md:text-base">Print&nbsp;Flow</span>
+                <span className="hidden text-[10px] font-medium tracking-wide text-cyan-100/65 sm:block">
+                  Monitoring Produksi Percetakan
+                </span>
               </span>
             </Link>
             {user ? (
-              <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">
+              <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <MainNav role={user.role} />
+                <span className="mx-0.5 hidden h-6 w-px bg-white/15 md:block" />
                 <UserMenu name={user.name} role={user.role} />
                 <ThemeToggle />
                 <MoreMenu role={user.role} />
@@ -87,7 +92,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
         <footer className="mx-auto max-w-[1440px] px-4 pb-24 pt-3 text-xs text-slate-400 md:pb-8 no-print">
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-teal-100 pt-5">
-            <p>Print Flow · Produksi lebih terpantau, pelanggan lebih tenang.</p>
+            <p className="flex items-center gap-2">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-teal-400" />
+              Print Flow · Produksi lebih terpantau, pelanggan lebih tenang.
+            </p>
             <div className="flex items-center gap-3">
               <Link href="/panduan" className="font-bold text-teal-700 hover:underline">Panduan</Link>
               <Link href="/catatan-perubahan" className="inline-flex items-center gap-1 font-bold text-teal-700 hover:underline">

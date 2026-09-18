@@ -76,15 +76,15 @@ function NavLink({
       onMouseEnter={() => onIntent?.(item.href)}
       onFocus={() => onIntent?.(item.href)}
       onTouchStart={() => onIntent?.(item.href)}
-      className={`inline-flex items-center gap-1.5 rounded-xl font-semibold transition-all ${
+      className={`group relative inline-flex items-center gap-1.5 rounded-[var(--r-md)] font-semibold tracking-tight transition-all duration-200 ${
         compact ? "px-2.5 py-2 text-xs" : "px-3 py-2 text-[13px]"
       } ${
         active
-          ? "bg-teal-500 text-white shadow-[0_5px_18px_rgba(20,184,166,.25)]"
-          : "text-cyan-50/80 hover:bg-white/10 hover:text-white"
+          ? "bg-gradient-to-b from-teal-400/95 to-teal-500 text-white shadow-[0_1px_0_rgba(255,255,255,.25)_inset,0_6px_18px_rgba(20,184,166,.32)]"
+          : "text-cyan-50/75 hover:bg-white/[0.12] hover:text-white"
       }`}
     >
-      <Icon size={15} strokeWidth={active ? 2.5 : 2} />
+      <Icon size={15} strokeWidth={active ? 2.6 : 2} />
       {item.label}
       <CountBadge count={shiftCount} />
     </Link>
@@ -168,7 +168,7 @@ export function MainNav({ role = "owner" }: { role?: UserRole }) {
 
       {mounted
         ? createPortal(
-            <nav className="mobile-bottom-nav border-t border-teal-100 bg-white/95 shadow-[0_-8px_30px_rgba(8,47,73,.12)] backdrop-blur-xl md:hidden no-print dark:border-teal-900/40 dark:bg-[#0b1c28]/95 dark:shadow-[0_-8px_30px_rgba(0,0,0,.4)]">
+            <nav className="mobile-bottom-nav border-t border-slate-200/70 bg-white/92 shadow-[0_-10px_34px_rgba(8,47,73,.14)] backdrop-blur-2xl md:hidden no-print dark:border-white/[0.07] dark:bg-[#0a1a25]/92 dark:shadow-[0_-10px_34px_rgba(0,0,0,.5)]">
               <ul className="mx-auto grid max-w-lg grid-cols-5 px-1 pb-[env(safe-area-inset-bottom)]">
                 {MOBILE_LINKS.filter(allowed).map((item) => {
                   const Icon = item.icon;
@@ -180,20 +180,24 @@ export function MainNav({ role = "owner" }: { role?: UserRole }) {
                         href={item.href}
                         prefetch
                         onTouchStart={() => prefetch(item.href)}
-                        className={`relative flex flex-col items-center gap-1 px-1 py-2 text-[10px] font-bold ${
+                        className={`relative flex flex-col items-center gap-1 px-1 pb-2 pt-2.5 text-[10px] font-bold tracking-tight transition-colors ${
                           active ? "text-teal-700 dark:text-teal-300" : "text-slate-400 dark:text-slate-500"
                         }`}
                       >
+                        {/* Penanda tab aktif: garis kecil menempel di tepi atas bar. */}
+                        {active && !primary ? (
+                          <span className="absolute inset-x-5 top-0 h-[3px] rounded-b-full bg-gradient-to-r from-teal-400 to-cyan-400" />
+                        ) : null}
                         <span
-                          className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition ${
+                          className={`relative flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] transition-all duration-200 ${
                             primary
-                              ? "-mt-4 h-11 w-11 bg-amber-400 text-[#07384f] shadow-[0_8px_20px_rgba(251,191,36,.35)]"
+                              ? "-mt-5 h-12 w-12 rounded-[1.1rem] bg-gradient-to-b from-amber-300 to-amber-400 text-[#3b2604] ring-4 ring-white/90 shadow-[0_10px_24px_rgba(251,191,36,.45)] dark:ring-[#0a1a25]/90"
                               : active
-                                ? "bg-teal-50 text-teal-700"
+                                ? "scale-105 bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300"
                                 : ""
                           }`}
                         >
-                          <Icon size={primary ? 22 : 19} strokeWidth={2.3} />
+                          <Icon size={primary ? 23 : 19} strokeWidth={2.3} />
                           {item.href === "/serah-terima" ? (
                             <CountBadge count={pendingCount} floating />
                           ) : null}

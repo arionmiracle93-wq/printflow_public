@@ -57,13 +57,25 @@ export function KpiCard({
     rose: "bg-rose-50 text-rose-600",
     blue: "bg-sky-50 text-sky-600",
   };
+  // Pita warna tipis di tepi atas kartu — memberi identitas per metrik
+  // tanpa menambah elemen berat yang bikin dashboard ramai.
+  const ribbons = {
+    teal: "from-teal-400 to-cyan-300",
+    yellow: "from-amber-300 to-yellow-200",
+    rose: "from-rose-400 to-orange-300",
+    blue: "from-sky-400 to-cyan-300",
+  };
   return (
-    <div className="card group relative overflow-hidden p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,75,84,.11)] md:p-4">
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-teal-400 to-amber-300 opacity-0 transition group-hover:opacity-100" />
-      <div className={`flex h-7 w-7 items-center justify-center rounded-lg md:h-9 md:w-9 md:rounded-xl ${tiles[accent]}`}>{icon}</div>
-      <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[.09em] text-slate-500 md:mt-3">{label}</p>
-      <p className={`mt-1 text-lg font-black tracking-tight md:text-2xl ${tone}`}>{value}</p>
-      {hint ? <p className="mt-1 text-[11px] font-medium text-slate-400">{hint}</p> : null}
+    <div className="card card-hover group relative overflow-hidden p-3 md:p-4">
+      <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${ribbons[accent]} opacity-70 transition-opacity duration-200 group-hover:opacity-100`} />
+      <div className="flex items-start justify-between gap-2">
+        <p className="mt-0.5 text-[10px] font-extrabold uppercase leading-tight tracking-[.09em] text-slate-500">{label}</p>
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--r-sm)] md:h-9 md:w-9 md:rounded-[var(--r-md)] ${tiles[accent]}`}>
+          {icon}
+        </div>
+      </div>
+      <p className={`mt-2 text-xl font-black leading-none tracking-tight tabular-nums md:mt-3 md:text-[1.7rem] ${tone}`}>{value}</p>
+      {hint ? <p className="mt-1.5 text-[11px] font-medium text-slate-400">{hint}</p> : null}
     </div>
   );
 }
@@ -80,10 +92,10 @@ export function KpiCard({
 // Tailwind (slate → ... → teal) membuat highlight "Tersalin!" teal bawaan
 // `CopyMessageQuick` tetap menang saat status copied aktif.
 const GLASS_BTN_BASE =
-  "flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-2xl border text-[12px] font-extrabold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] px-2 py-2 text-center";
+  "flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-[var(--r-md)] border text-[12px] font-extrabold tracking-tight transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] px-2 py-2 text-center";
 
 const GLASS_BTN_ACCENT =
-  "border-slate-300/60 bg-slate-400/15 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,.55),0_2px_10px_rgba(51,65,85,.10)] hover:bg-slate-400/25 hover:border-slate-300/80 dark:border-white/15 dark:bg-white/[0.08] dark:text-slate-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-white/[0.14]";
+  "border-slate-300/55 bg-slate-400/12 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,.6),0_2px_8px_rgba(51,65,85,.08)] hover:bg-slate-400/22 hover:border-slate-300/80 dark:border-white/15 dark:bg-white/[0.07] dark:text-slate-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06)] dark:hover:bg-white/[0.13]";
 
 export function InsightCard({
   insight,
@@ -112,15 +124,17 @@ export function InsightCard({
     items: insight.items,
   };
   return (
-    <div className="card group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_12px_30px_rgba(15,75,84,.1)]">
-      <div className={`absolute inset-y-0 left-0 w-1 ${meta.bar}`} />
+    <div className="card card-hover group relative overflow-hidden p-4 pl-5">
+      <div className={`absolute inset-y-0 left-0 w-[5px] ${meta.bar}`} />
       <div className="flex flex-wrap items-start justify-between gap-2 pl-1">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-wide text-teal-700">
-            {insight.code}
+            <span className="rounded-md bg-teal-50 px-1.5 py-0.5 font-mono text-[10px] tracking-tight dark:bg-teal-500/15">
+              {insight.code}
+            </span>
             <PhotoQuickPeek orderId={insight.orderId} code={insight.code} count={photoCount} />
           </p>
-          <p className="mt-0.5 truncate text-sm font-extrabold text-[#07384f]">{insight.title}</p>
+          <p className="mt-1 truncate text-[15px] font-extrabold leading-snug text-[#07384f]">{insight.title}</p>
           <p className="text-xs text-slate-500">{insight.customerName}</p>
           <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
             <Package size={11} className="shrink-0" />

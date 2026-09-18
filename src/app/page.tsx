@@ -56,22 +56,27 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-5">
       {/* HERO MODERN YELLOW–TEAL */}
-      <section className="relative isolate overflow-hidden rounded-[1.35rem] border border-teal-400/20 bg-[#07384f] p-5 text-white shadow-[0_18px_45px_rgba(7,56,79,.18)] md:p-7">
-        <div className="absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border-[70px] border-teal-400/10" />
-        <div className="absolute -bottom-32 right-24 -z-10 h-72 w-72 rounded-full bg-teal-400/10 blur-2xl" />
-        <div className="absolute -bottom-20 -right-16 -z-10 h-44 w-44 rotate-12 rounded-[2rem] bg-amber-300" />
-        <div className="absolute inset-0 -z-20 bg-[linear-gradient(130deg,rgba(20,184,166,.38),transparent_45%,rgba(8,145,178,.2))]" />
+      <section className="relative isolate overflow-hidden rounded-[1.5rem] border border-teal-400/20 bg-[#06303f] p-5 text-white shadow-[0_22px_55px_rgba(7,56,79,.22)] md:p-7">
+        {/* Latar dekoratif: gradien lembut + satu bentuk aksen, sengaja dibuat
+            lebih tenang dari versi sebelumnya supaya teks jadi fokus utama. */}
+        <div className="absolute inset-0 -z-20 bg-[radial-gradient(900px_420px_at_0%_0%,rgba(20,184,166,.42),transparent_60%),radial-gradient(700px_360px_at_100%_10%,rgba(8,145,178,.32),transparent_60%)]" />
+        <div className="absolute -right-24 -top-28 -z-10 h-80 w-80 rounded-full border-[56px] border-teal-300/[0.07]" />
+        <div className="absolute -bottom-24 -right-10 -z-10 h-56 w-56 rotate-12 rounded-[2.5rem] bg-amber-300/90 blur-[2px]" />
+        <div className="absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-3xl">
-            <p className="text-[11px] font-extrabold uppercase tracking-[.12em] text-amber-300">
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.12em] text-amber-200">
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
               <LocalDateTime />
             </p>
-            <div className="mt-2 flex items-center gap-3">
-              <h1 className="text-2xl font-black leading-tight tracking-tight md:text-4xl">Kondisi Percetakan Hari Ini</h1>
+            <div className="mt-2.5 flex items-center gap-3">
+              <h1 className="text-[1.6rem] font-black leading-[1.1] tracking-tight md:text-[2.4rem]">
+                Kondisi Percetakan Hari Ini
+              </h1>
               <BrandMark compact />
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-50/80">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-50/75">
               Pantau status produksi, sisa waktu, dan risiko keterlambatan dalam satu tampilan yang ringkas.
             </p>
           </div>
@@ -93,10 +98,10 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-teal-300/35 bg-[#07556a]/90 p-4 shadow-inner">
+        <div className="mt-6 rounded-[1.15rem] border border-white/15 bg-white/[0.07] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[var(--r-md)] border border-amber-300/30 bg-amber-300/15">
                 <Sparkles size={18} className="text-amber-300" />
               </span>
               <div>

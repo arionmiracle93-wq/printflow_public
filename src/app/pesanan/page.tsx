@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList, Plus, Search, SearchX } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
 import { QuickStatusPopup } from "@/components/QuickStatusPopup";
@@ -56,29 +57,33 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-extrabold text-slate-900 md:text-2xl">📋 Daftar Pekerjaan</h1>
-          <p className="text-sm text-slate-500">
-            {orders.length} pekerjaan ditampilkan · diurutkan dari deadline terdekat
-          </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="icon-tile h-11 w-11 rounded-[var(--r-lg)]">
+            <ClipboardList size={20} />
+          </span>
+          <div>
+            <h1 className="page-title">Daftar Pekerjaan</h1>
+            <p className="page-subtitle">
+              <span className="font-bold tabular-nums text-teal-700 dark:text-teal-300">{orders.length}</span> pekerjaan
+              ditampilkan · diurutkan dari deadline terdekat
+            </p>
+          </div>
         </div>
         <Link href="/pesanan/baru" className="btn-primary">
-          ➕ Pekerjaan Baru
+          <Plus size={16} strokeWidth={2.7} /> Pekerjaan Baru
         </Link>
       </div>
 
       {/* FILTER */}
       <div className="card p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-xl bg-slate-100 p-1">
+        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
+          <div className="segmented w-full overflow-x-auto scroll-x lg:w-auto">
             {TABS.map((tab) => (
               <Link
                 key={tab.key}
                 href={`/pesanan?scope=${tab.key}`}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                  scope === tab.key ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
-                }`}
+                className={`segmented-item whitespace-nowrap ${scope === tab.key ? "segmented-item-active" : ""}`}
               >
                 {tab.label}
               </Link>
@@ -86,12 +91,18 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
           </div>
           <form className="flex flex-1 flex-wrap items-center gap-2" action="/pesanan" method="get">
             <input type="hidden" name="scope" value={scope} />
-            <input
-              name="q"
-              defaultValue={q}
-              placeholder="Cari kode / nama pekerjaan / pelanggan…"
-              className="input sm:max-w-xs"
-            />
+            <div className="relative min-w-0 flex-1 sm:max-w-xs">
+              <Search
+                size={15}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                name="q"
+                defaultValue={q}
+                placeholder="Cari kode / pekerjaan / pelanggan…"
+                className="input pl-9"
+              />
+            </div>
             <select name="status" defaultValue={status} className="input sm:max-w-[190px]">
               <option value="all">Semua status</option>
               {STATUSES.map((s) => (
@@ -109,19 +120,21 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
               ))}
             </select>
             <button type="submit" className="btn-ghost">
-              🔍 Filter
+              <Search size={15} /> Filter
             </button>
           </form>
         </div>
       </div>
 
       {orders.length === 0 ? (
-        <div className="card p-10 text-center">
-          <p className="text-4xl">🔎</p>
-          <p className="mt-2 font-bold text-slate-700">Tidak ada pekerjaan yang cocok</p>
-          <p className="mt-1 text-sm text-slate-500">Coba ubah filter, atau buat pekerjaan baru.</p>
+        <div className="empty-state">
+          <span className="flex h-16 w-16 items-center justify-center rounded-[var(--r-xl)] bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
+            <SearchX size={30} />
+          </span>
+          <p className="mt-4 text-sm font-extrabold text-[#07384f]">Tidak ada pekerjaan yang cocok</p>
+          <p className="mt-1 text-xs text-slate-500">Coba ubah filter di atas, atau buat pekerjaan baru.</p>
           <Link href="/pesanan/baru" className="btn-primary mt-4">
-            ➕ Buat Pekerjaan
+            <Plus size={16} strokeWidth={2.7} /> Buat Pekerjaan
           </Link>
         </div>
       ) : (
@@ -131,7 +144,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
             {orders.map((order) => {
               const insight = analyzeOrder(order, now);
               return (
-                <Link key={order.id} href={`/pesanan/${order.id}`} className="card block p-4">
+                <Link key={order.id} href={`/pesanan/${order.id}`} className="card card-hover block p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-[11px] font-bold text-indigo-600">{order.code}</p>
@@ -189,16 +202,16 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
           {/* DESKTOP TABLE */}
           <div className="card hidden overflow-hidden md:block">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200/80 bg-slate-50 text-[10.5px] font-extrabold uppercase tracking-[.07em] text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Kode / Pekerjaan</th>
-                  <th className="px-4 py-3">Pelanggan</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Progres</th>
-                  <th className="px-4 py-3">Deadline</th>
-                  <th className="px-4 py-3">Prioritas</th>
-                  <th className="px-4 py-3 text-right">Nilai</th>
-                  <th className="px-4 py-3">Risiko AI</th>
+                  <th className="px-4 py-3.5">Kode / Pekerjaan</th>
+                  <th className="px-4 py-3.5">Pelanggan</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5">Progres</th>
+                  <th className="px-4 py-3.5">Deadline</th>
+                  <th className="px-4 py-3.5">Prioritas</th>
+                  <th className="px-4 py-3.5 text-right">Nilai</th>
+                  <th className="px-4 py-3.5">Risiko AI</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -206,7 +219,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                   const insight = analyzeOrder(order, now);
                   const hoursLeft = deadlineOf(order.dueDate, order.dueTime).getTime() - now.getTime();
                   return (
-                    <tr key={order.id} className="hover:bg-slate-50">
+                    <tr key={order.id} className="transition-colors hover:bg-teal-50/40">
                       <td className="px-4 py-3">
                         <Link href={`/pesanan/${order.id}`} className="font-semibold text-slate-900 hover:text-indigo-600">
                           {order.title}
