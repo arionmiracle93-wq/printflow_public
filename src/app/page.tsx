@@ -51,6 +51,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-4 md:space-y-5">
+      <style dangerouslySetInnerHTML={{ __html: `.app-header { display: none !important; } .app-main { padding-top: 1rem !important; }` }} />
       {/* HERO — banner foto realistis bergaya aplikasi referensi */}
       <DashboardHero name={user?.name ?? "Pemilik"} />
 

@@ -112,33 +112,23 @@ export function InsightCard({
     items: insight.items,
   };
   return (
-    <div className="card group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_12px_30px_rgba(15,75,84,.1)]">
+    <div className="card group relative overflow-hidden p-3.5 transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-lg dark:bg-[#1a2633]">
       <div className={`absolute inset-y-0 left-0 w-1 ${meta.bar}`} />
       <div className="flex flex-wrap items-start justify-between gap-2 pl-1">
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-wide text-teal-700">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-teal-600 dark:text-teal-400">
             {insight.code}
             <PhotoQuickPeek orderId={insight.orderId} code={insight.code} count={photoCount} />
           </p>
-          <p className="mt-0.5 truncate text-sm font-extrabold text-[#07384f]">{insight.title}</p>
-          <p className="text-xs text-slate-500">{insight.customerName}</p>
-          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
-            <Package size={11} className="shrink-0" />
+          <p className="mt-0.5 truncate text-[13px] font-bold text-[#07384f] dark:text-slate-100">{insight.title}</p>
+          <p className="text-[11px] text-slate-500">{insight.customerName}</p>
+          <p className="mt-0.5 flex items-center gap-1 text-[10px] text-slate-400">
+            <Package size={10} className="shrink-0" />
             <span className="truncate">{insight.itemsSummary}</span>
-            {insight.items.length > 1 ? (
-              <span className="shrink-0 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-extrabold text-teal-700">
-                {insight.items.length}
-              </span>
-            ) : null}
           </p>
-          <p className={`mt-1 flex items-center gap-1 text-[11px] font-bold ${insight.operator ? "text-teal-700" : "text-amber-600"}`}>
-            <UserRound size={11} /> PIC: {insight.operator || "Belum ditentukan"}
+          <p className={`mt-1 flex items-center gap-1 text-[10px] font-bold ${insight.operator ? "text-teal-600" : "text-amber-600"}`}>
+            <UserRound size={10} /> {insight.operator || "No PIC"}
           </p>
-          {outsource ? (
-            <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700">
-              <Building2 size={10} /> Mitra: {outsource.partnerName}
-            </span>
-          ) : null}
         </div>
         <div className="flex flex-col items-end gap-1">
           <QuickStatusPopup
@@ -156,22 +146,22 @@ export function InsightCard({
           />
         </div>
       </div>
-      <p className="mt-3 text-sm font-semibold text-slate-700">{insight.headline}</p>
+      <p className="mt-2 text-[12px] font-medium leading-relaxed text-slate-600 dark:text-slate-300">{insight.headline}</p>
       <div className="mt-2"><ProgressBar value={insight.progress} tone={meta.bar} /></div>
-      <ul className="mt-3 space-y-1.5 text-xs leading-relaxed text-slate-500">
-        {insight.reasons.slice(0, 2).map((reason) => (
+      <ul className="mt-2.5 space-y-1 text-[11px] leading-relaxed text-slate-500">
+        {insight.reasons.slice(0, 1).map((reason) => (
           <li key={reason} className="flex gap-1.5"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-teal-400" /><span>{reason}</span></li>
         ))}
       </ul>
       {insight.recommendations[0] ? (
-        <div className="mt-3 flex gap-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs font-medium text-amber-900">
-          <Lightbulb size={14} className="mt-0.5 shrink-0 text-amber-500" />
-          <span>{insight.recommendations[0]}</span>
+        <div className="mt-3 flex gap-2 rounded-xl border border-amber-100 bg-amber-50/50 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 dark:border-amber-900/30 dark:bg-amber-900/10 dark:text-amber-200">
+          <Lightbulb size={12} className="mt-0.5 shrink-0 text-amber-500" />
+          <span className="line-clamp-2">{insight.recommendations[0]}</span>
         </div>
       ) : null}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <a href={`/pesanan/${insight.orderId}`} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`}>
-          Buka detail <ArrowUpRight size={13} />
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
+        <a href={`/pesanan/${insight.orderId}`} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT} !min-h-[36px] !rounded-xl !text-[11px]`}>
+          Detail <ArrowUpRight size={12} />
         </a>
         <QuickStatusPopup
           orderId={insight.orderId}
@@ -180,13 +170,13 @@ export function InsightCard({
           currentStatus={insight.status}
           hasOutsource={Boolean(outsource)}
           trigger={
-            <span className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`}>
-              Update status <RefreshCw size={13} />
+            <span className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT} !min-h-[36px] !rounded-xl !text-[11px]`}>
+              Update <RefreshCw size={12} />
             </span>
           }
         />
-        <ShareWhatsAppQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`} />
-        <CopyMessageQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT}`} />
+        <ShareWhatsAppQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT} !min-h-[36px] !rounded-xl !text-[11px]`} />
+        <CopyMessageQuick order={shareOrder} className={`${GLASS_BTN_BASE} ${GLASS_BTN_ACCENT} !min-h-[36px] !rounded-xl !text-[11px]`} />
       </div>
     </div>
   );
