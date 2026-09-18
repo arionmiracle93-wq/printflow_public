@@ -53,7 +53,7 @@ export default async function DashboardPage() {
     <div className="space-y-4 md:space-y-5">
       <style dangerouslySetInnerHTML={{ __html: `.app-header { display: none !important; } .app-main { padding-top: 1rem !important; }` }} />
       {/* HERO — banner foto realistis bergaya aplikasi referensi */}
-      <DashboardHero name={user?.name ?? "Pemilik"} />
+      <DashboardHero name={user?.name ?? "Pemilik"} role={user?.role ?? "owner"} />
 
       {/* KPI — category tiles */}
       <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
