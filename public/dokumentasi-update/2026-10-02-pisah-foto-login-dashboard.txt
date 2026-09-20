@@ -1,0 +1,60 @@
+================================================================
+FOTO LOGIN DIPISAH DARI FOTO DASHBOARD
+Tanggal : 02-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Susulan kecil dari update sebelumnya (01-10-2026, redesain login).
+Awalnya panel foto login sengaja dibuat pakai file yang SAMA dengan
+hero Dashboard (satu foto dipakai 2 tempat, biar praktis). Ternyata
+pemilik mau foto yang beda untuk login. Sekarang sudah dipisah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/globals.css
+   .login-photo-bg sekarang ambil dari
+       /public/images/login-hero.jpg
+   (sebelumnya menunjuk ke dashboard-hero.jpg yang sama dengan hero
+   Dashboard). Gradasi & tekstur di atasnya tidak berubah.
+
+B) src/app/login/page.tsx
+   Cuma komentar yang diperbarui, tidak ada perubahan kode/logika.
+
+
+FOTO YANG PERLU DISIAPKAN SEKARANG (TOTAL, SEMUA HALAMAN)
+----------------------------------------------------------------
+  /public/images/dashboard-hero.jpg   → hero Dashboard (landscape,
+                                          subjek di tengah frame)
+  /public/images/login-hero.jpg       → panel login (karena
+                                          panelnya selalu berbentuk
+                                          kolom sempit — lebih ramah
+                                          kalau fotonya juga condong
+                                          potret/vertikal, atau
+                                          landscape dgn subjek yang
+                                          nyaman dicrop dari pojok
+                                          kiri-atas, bukan tengah)
+Keduanya opsional (belum wajib diisi) — selama belum ada, kartu
+tetap tampil rapi (gradasi + tekstur titik saja).
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos
+  npx next build      : Compiled successfully
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/globals.css
+  src/app/login/page.tsx (komentar saja)
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-02-pisah-foto-login-dashboard.txt
+
+================================================================

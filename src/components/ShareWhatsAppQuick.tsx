@@ -54,9 +54,9 @@ export function ShareWhatsAppQuick({ order, className = "" }: { order: ShareOrde
       type="button"
       onClick={handleClick}
       disabled={busy}
-      className={`inline-flex items-center gap-1 disabled:cursor-wait disabled:opacity-60 ${className}`}
+      className={`${className} disabled:cursor-wait disabled:opacity-60`}
     >
-      Kirim WA {busy ? <Loader2 size={13} className="animate-spin" /> : <MessageCircle size={13} />}
+      Kirim WA {busy ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} />}
     </button>
   );
 }

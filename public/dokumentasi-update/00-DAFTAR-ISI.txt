@@ -18,8 +18,37 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[43] 2026-10-04-login-lebih-terang.txt
+    PALING BARU. Panel foto Login dibikin lebih terang: tekstur
+    titik halftone dihapus (khusus login, hero Dashboard tetap
+    ada), dan gradasi gelapnya diturunkan jauh karena teksnya cuma
+    sedikit ("Print Flow" + ikon). Ditambah text-shadow tipis biar
+    teks tetap kebaca walau foto terang.
+
+[42] 2026-10-03-foto-mobile-desktop-terpisah.txt
+    Foto hero Dashboard & panel Login sekarang BENERAN
+    bisa beda antara versi HP dan desktop (sebelumnya 2 blok
+    CSS-nya sudah ada tapi masih nunjuk ke file yang sama). Total
+    ada 4 slot foto opsional: dashboard-hero(.jpg / -mobile.jpg)
+    dan login-hero(.jpg / -mobile.jpg). PENTING: kalau sebelumnya
+    sudah isi foto & berharap tetap muncul di HP, perlu tambahkan
+    juga versi "-mobile.jpg"-nya — lihat isi file ini.
+
+[41] 2026-10-02-pisah-foto-login-dashboard.txt
+    Foto panel login sekarang pakai file sendiri
+    (public/images/login-hero.jpg), tidak lagi berbagi file yang
+    sama dengan hero Dashboard (dashboard-hero.jpg). Cuma soal
+    sumber foto, tidak ada perubahan tampilan/kode lain.
+
+[40] 2026-10-01-redesain-login-2-kolom-foto.txt
+    Halaman /login jadi kartu 2 kolom: kiri foto
+    (gaya sama seperti hero Dashboard, teks cuma "Print Flow" +
+    ikon logo di pojok), kanan form login (tidak berubah). Di HP,
+    panel foto pindah ke atas & lebih pendek. Fungsi login sama
+    persis seperti sebelumnya.
+
 [39] 2026-09-30-hero-overlay-responsive-mobile-desktop.txt
-    PALING BARU. Penyempurnaan hero foto (update sebelumnya):
+    Penyempurnaan hero foto (update sebelumnya):
     gradasi gelap di atas foto kini beda antara HP (rata di semua
     sisi, karena teks memenuhi lebar kartu) dan desktop (miring
     kiri-kanan, karena teks cuma di kolom kiri). Foto tetap 1 file

@@ -1,0 +1,76 @@
+================================================================
+FOTO MOBILE VS DESKTOP KINI BENERAN BISA BEDA (HERO + LOGIN)
+Tanggal : 03-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Sebelumnya, walau kartu hero Dashboard sudah punya 2 blok CSS
+terpisah (mobile & desktop, dari update 30-09-2026), KEDUANYA masih
+menunjuk ke file foto yang SAMA — jadi kalau diisi 1 foto, foto itu
+juga yang muncul di HP maupun desktop (cuma gradasinya yang beda).
+Panel login pun 1 file dipakai di semua ukuran layar.
+
+Sekarang KEDUANYA (hero Dashboard & panel login) benar-benar bisa
+pakai foto berbeda untuk HP vs desktop, tinggal isi 2 file per
+halaman.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/globals.css
+   .hero-photo-bg
+     - Mobile (di bawah 768px)   → /public/images/dashboard-hero-mobile.jpg  (BARU, sebelumnya ikut file desktop)
+     - Desktop (768px ke atas)   → /public/images/dashboard-hero.jpg          (tidak berubah)
+
+   .login-photo-bg
+     - Mobile (di bawah 768px)   → /public/images/login-hero-mobile.jpg      (BARU)
+     - Desktop (768px ke atas)   → /public/images/login-hero.jpg              (tidak berubah)
+
+   Gradasi tetap seperti sebelumnya (hero: beda arah mobile/desktop;
+   login: sama, cuma foto-nya yang beda per breakpoint).
+
+B) src/app/page.tsx & src/app/login/page.tsx
+   Komentar diperbarui menyebutkan kedua nama file per halaman.
+
+
+DAFTAR LENGKAP FOTO (4 FILE, SEMUA OPSIONAL)
+----------------------------------------------------------------
+  public/images/dashboard-hero.jpg          → hero Dashboard, desktop
+  public/images/dashboard-hero-mobile.jpg   → hero Dashboard, HP
+  public/images/login-hero.jpg              → panel Login, desktop
+  public/images/login-hero-mobile.jpg       → panel Login, HP
+
+PENTING soal kompatibilitas: sebelum update ini, kalau pemilik SUDAH
+sempat mengisi dashboard-hero.jpg atau login-hero.jpg dan berharap
+foto itu tetap muncul di tampilan HP juga, sekarang TIDAK lagi
+otomatis — versi HP butuh file *-mobile.jpg sendiri, kalau belum
+diisi maka tampilan HP jadi gradasi+tekstur polos (tidak pecah, cuma
+foto-nya kosong). Ini bukan bug — memang disengaja sesuai permintaan
+pemilik supaya foto HP & desktop bisa beda. Kalau ternyata belum
+sempat siapkan foto ke-2 dan mau foto lama tetap tampil di HP juga
+untuk sementara, paling gampang: copy file yang sudah ada, ganti
+namanya jadi versi "-mobile" (isinya sama persis dulu), baru nanti
+diganti foto lain kapan pun mau.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos
+  npx next build      : Compiled successfully
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/globals.css
+  src/app/page.tsx (komentar saja)
+  src/app/login/page.tsx (komentar saja)
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-03-foto-mobile-desktop-terpisah.txt
+
+================================================================

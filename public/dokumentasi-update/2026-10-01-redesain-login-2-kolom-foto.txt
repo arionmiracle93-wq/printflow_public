@@ -1,0 +1,87 @@
+================================================================
+REDESAIN HALAMAN LOGIN — 2 KOLOM, PANEL KIRI JADI FOTO
+Tanggal : 01-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Halaman /login diubah dari kartu kecil satu kolom (banner teal polos
+di atas + form di bawah) jadi kartu lebar 2 kolom: kolom kiri foto
+(gaya sama seperti hero Dashboard), kolom kanan form login — sesuai
+referensi desain yang dikasih pemilik. Fungsinya TIDAK berubah sama
+sekali, cuma tata letaknya.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   Ditulis ulang total (sebelumnya 1 file kecil ~10 baris).
+   Sekarang:
+     - Kartu lebar maks 768px (max-w-3xl), grid 2 kolom mulai layar
+       ≥768px (md). Di HP, panel foto pindah ke ATAS (lebih pendek,
+       ~144–176px) dan form di bawahnya, bukan sejajar.
+     - Panel kiri/atas: HANYA ikon logo usaha (AppLogo — otomatis
+       pakai logo yang sudah diupload Owner, atau ikon printer
+       default kalau belum ada) + teks "Print Flow". Subjudul
+       "Monitoring Produksi Percetakan" dan 3 poin fitur di
+       referensi TIDAK disertakan lagi, sesuai permintaan pemilik
+       ("teksnya paling cuma Print Flow + ikon").
+     - Panel kanan: form login-nya SAMA PERSIS seperti sebelumnya
+       (komponen LoginForm.tsx tidak disentuh) — cuma sekarang
+       ada di kolom kanan, bukan di bawah banner.
+
+B) src/app/globals.css
+   Class baru `.login-photo-bg`: gradasi gelap menempel dari
+   pojok kiri-atas (arah 150deg) lalu memudar. Ini SENGAJA beda
+   dari `.hero-photo-bg` milik Dashboard — panel login lebarnya
+   cuma setengah kartu (nggak pernah selebar hero Dashboard yang
+   bisa sampai 4x lebih lebar dari tingginya), jadi gradasi
+   berbasis pojok ini aman dipakai di ukuran panel berapa pun
+   tanpa perlu @media terpisah utk mobile/desktop.
+   Foto memakai file yang SAMA dengan hero Dashboard
+   (/public/images/dashboard-hero.jpg) — kalau mau foto lain
+   khusus login, tinggal ganti url() di dalam .login-photo-bg.
+
+
+KEPUTUSAN KECIL YANG DIAMBIL (boleh diralat kalau tidak sesuai)
+----------------------------------------------------------------
+Catatan "Lupa password? Minta Owner membuka Kelola Pengguna..."
+yang di referensi ada di panel kiri, gue pindahkan ke BAWAH form
+(panel kanan) — bukan dihapus — supaya info yang cukup berguna itu
+tidak hilang, sambil tetap menuruti permintaan "teks di foto cuma
+Print Flow + ikon". Kalau pemilik lebih suka info ini dihilangkan
+saja, tinggal bilang.
+
+
+TEMA GELAP/TERANG
+----------------------------------------------------------------
+Sekalian dibetulkan: judul "Masuk ke akun Anda" sebelumnya pakai
+warna navy tanpa varian gelap (nyaris tidak kebaca kalau tema gelap
+aktif). Sekarang ada dark:text-slate-100. Bagian lain form (input,
+label, tombol) sudah lama pakai class bersama (.input/.label/
+.btn-primary) yang sudah otomatis nyesuain tema.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos, tidak ada error tipe
+  npx next build      : Compiled successfully
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-01-redesain-login-2-kolom-foto.txt
+
+Tidak ada file lain yang berubah (LoginForm.tsx, AppLogo.tsx dan
+komponen Dashboard dari update sebelumnya tidak disentuh).
+
+================================================================

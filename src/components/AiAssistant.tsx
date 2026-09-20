@@ -40,7 +40,7 @@ export function AiAssistant() {
   }
 
   return (
-    <div className="card overflow-hidden">
+    <div className="panel-glass overflow-hidden">
       <div className="relative overflow-hidden bg-gradient-to-r from-[#07556a] to-teal-600 px-4 py-4 text-white">
         <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-amber-300/20" />
         <div className="relative flex items-center justify-between gap-2">

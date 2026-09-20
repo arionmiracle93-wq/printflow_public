@@ -61,12 +61,10 @@ export function CopyMessageQuick({ order, className = "" }: { order: ShareOrder;
       onClick={handleClick}
       disabled={busy}
       title="Salin teks pesan status (termasuk tautan lacak) ke clipboard"
-      className={`inline-flex items-center gap-1 disabled:cursor-wait disabled:opacity-60 ${
-        copied ? "text-teal-600 dark:text-teal-300" : ""
-      } ${className}`}
+      className={`${className} ${copied ? "!border-emerald-300 !bg-emerald-50 !text-emerald-800" : ""} disabled:cursor-wait disabled:opacity-60`}
     >
       {copied ? "Tersalin!" : "Salin teks pesan"}{" "}
-      {busy ? <Loader2 size={13} className="animate-spin" /> : copied ? <Check size={13} /> : <Copy size={13} />}
+      {busy ? <Loader2 size={14} className="animate-spin" /> : copied ? <Check size={14} /> : <Copy size={14} />}
     </button>
   );
 }

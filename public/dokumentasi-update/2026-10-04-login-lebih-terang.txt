@@ -1,0 +1,64 @@
+================================================================
+PANEL LOGIN DIBIKIN LEBIH TERANG (HALFTONE DIHAPUS, GELAP DIKURANGI)
+Tanggal : 04-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Panel foto login diminta lebih terang karena teksnya cuma sedikit
+("Print Flow" + ikon di pojok, bukan paragraf panjang kayak hero
+Dashboard) — jadi gak butuh gelap sebanyak itu buat tetap kebaca.
+
+Dua perubahan:
+  1. Tekstur titik halftone di panel login DIHAPUS total (di hero
+     Dashboard tetap ada, tidak disentuh).
+  2. Gradasi gelap di panel login diturunkan jauh — dari hampir
+     hitam pekat di pojok (opacity .92) jadi cuma redup tipis
+     (opacity .55), dan area yang gelap juga dipersempit (mulai
+     transparan sekitar 40% dari pojok, sebelumnya baru transparan
+     di ujung foto).
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/login/page.tsx
+   Div `.print-halftone` di panel foto login dihapus. Baris teks
+   "Print Flow" + ikon ditambah text-shadow tipis
+   (`[text-shadow:0_1px_10px_rgba(0,0,0,.45)]`) supaya tetap kebaca
+   jelas walau gradasi gelapnya sekarang jauh lebih tipis — jaga-
+   jaga kalau foto yang dipasang nanti terang/ramai warnanya.
+
+B) src/app/globals.css
+   .login-photo-bg (blok mobile & desktop, dua-duanya): opacity
+   gradasi diturunkan dari 0.92/0.6/0.22/0.12 jadi 0.55/0.28/0.1/0.03,
+   titik "hampir transparan"-nya juga dimajukan (dari 50% ke 42%
+   posisi gradasi) supaya sebagian besar foto kelihatan terang.
+
+
+CATATAN
+----------------------------------------------------------------
+Perubahan ini KHUSUS panel Login. Hero Dashboard (halftone +
+gradasi) tidak diubah sama sekali — di sana teksnya lebih banyak
+(judul, subjudul, 2 tombol, insight AI) jadi tetap butuh gelap
+yang cukup supaya semua teks itu kebaca jelas.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos
+  npx next build      : Compiled successfully
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-04-login-lebih-terang.txt
+
+================================================================

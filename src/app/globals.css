@@ -11,7 +11,7 @@
   --brand-yellow: #fbbf24;
   --brand-yellow-soft: #fef3c7;
   --surface: #ffffff;
-  --page: #f4f9f9;
+  --page: #eef6f5;
   --text-body: #0f2937;
 }
 
@@ -34,8 +34,13 @@ body {
   overflow-x: clip;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background:
-    radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.09), transparent 25rem),
-    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.09), transparent 24rem),
+    radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.1), transparent 26rem),
+    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.1), transparent 25rem),
+    radial-gradient(circle at 55% 26%, rgba(56, 189, 248, 0.05), transparent 32rem),
+    radial-gradient(circle at 10% 46%, rgba(20, 184, 166, 0.06), transparent 32rem),
+    radial-gradient(circle at 92% 64%, rgba(251, 191, 36, 0.055), transparent 30rem),
+    radial-gradient(circle at 45% 78%, rgba(56, 189, 248, 0.045), transparent 30rem),
+    radial-gradient(circle at 14% 92%, rgba(20, 184, 166, 0.05), transparent 28rem),
     var(--page);
   color: var(--text-body);
   transition: background-color .2s ease, color .2s ease;
@@ -43,8 +48,13 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.06), transparent 25rem),
-    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.045), transparent 24rem),
+    radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.07), transparent 26rem),
+    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.05), transparent 25rem),
+    radial-gradient(circle at 55% 26%, rgba(56, 189, 248, 0.04), transparent 32rem),
+    radial-gradient(circle at 10% 46%, rgba(20, 184, 166, 0.05), transparent 32rem),
+    radial-gradient(circle at 92% 64%, rgba(251, 191, 36, 0.04), transparent 30rem),
+    radial-gradient(circle at 45% 78%, rgba(56, 189, 248, 0.035), transparent 30rem),
+    radial-gradient(circle at 14% 92%, rgba(20, 184, 166, 0.04), transparent 28rem),
     var(--page);
 }
 
@@ -61,6 +71,14 @@ body {
 @layer components {
   .card {
     @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.07] dark:bg-[#101e29] dark:shadow-[0_7px_24px_rgba(0,0,0,.4)];
+  }
+
+  /* Kesan "kaca" TANPA backdrop-blur — mahal buat GPU/WebView APK kalau
+     dipasang di banyak elemen sekaligus. Efek kaca di sini cuma dari tint
+     transparan + border terang tipis (highlight ala tepian kaca) + shadow
+     berlapis, supaya mesh gradient di body tetap samar keliatan nembus. */
+  .panel-glass {
+    @apply relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-white/70 bg-white/70 shadow-[0_8px_28px_rgba(15,75,84,.08),inset_0_1px_0_rgba(255,255,255,.6)] dark:border-white/[0.09] dark:bg-white/[0.045] dark:shadow-[0_8px_28px_rgba(0,0,0,.4),inset_0_1px_0_rgba(255,255,255,.04)];
   }
 
   .btn {
@@ -116,18 +134,20 @@ body {
 .scroll-x::-webkit-scrollbar-thumb { background: #99d6cf; border-radius: 999px; }
 .dark .scroll-x::-webkit-scrollbar-thumb { background: #1f4a52; }
 
-/* Foto hero dashboard: satu file foto sudah cukup (CSS cover otomatis
-   nyesuain), tapi overlay-nya sengaja beda per ukuran layar — di HP
-   kontennya selebar kartu (butuh gelap merata), di desktop teks cuma
-   di kiri (foto boleh lebih kelihatan di kanan). Kalau nanti mau pasang
-   foto/crop KHUSUS mobile, tinggal ganti url di blok @media di bawah. */
+/* Foto hero dashboard: mobile & desktop kini pakai FILE BEDA
+   (mobile = dashboard-hero-mobile.jpg, desktop = dashboard-hero.jpg),
+   sekalian gradasinya beda karena kontennya sendiri beda posisi —
+   di HP kontennya selebar kartu (butuh gelap merata), di desktop
+   teks cuma di kiri (foto boleh lebih kelihatan di kanan). Kalau
+   cuma mau 1 foto dulu, aman — panel tetap tampil rapi (gradasi +
+   tekstur titik) selama salah satu file belum ada. */
 .hero-photo-bg {
   background-color: #07141d;
   background-size: cover;
   background-position: center;
   background-image:
-    linear-gradient(180deg, rgba(5, 15, 21, 0.9) 0%, rgba(6, 20, 27, 0.78) 60%, rgba(6, 20, 27, 0.68) 100%),
-    url("/images/dashboard-hero.jpg");
+    linear-gradient(180deg, rgba(5, 15, 21, 0.72) 0%, rgba(6, 20, 27, 0.6) 60%, rgba(6, 20, 27, 0.5) 100%),
+    url("/images/dashboard-hero-mobile.jpg");
 }
 
 @media (min-width: 768px) {
@@ -141,6 +161,42 @@ body {
         rgba(6, 20, 27, 0.28) 100%
       ),
       url("/images/dashboard-hero.jpg");
+  }
+}
+
+/* Foto panel login: beda dari .hero-photo-bg karena panelnya SELALU
+   sempit (setengah lebar kartu) walau di layar desktop — jadi gradasi
+   dibuat nempel dari pojok kiri-atas (tempat ikon+"Print Flow") lalu
+   memudar, bukan berdasarkan lebar viewport (gradasinya SAMA di
+   mobile maupun desktop, cuma foto-nya yang beda). Foto BEDA dari
+   hero Dashboard — file-nya sendiri: login-hero-mobile.jpg (HP) &
+   login-hero.jpg (desktop). */
+.login-photo-bg {
+  background-color: #07141d;
+  background-size: cover;
+  background-position: center;
+  background-image:
+    linear-gradient(
+      150deg,
+      rgba(5, 15, 21, 0.55) 0%,
+      rgba(6, 20, 27, 0.28) 22%,
+      rgba(6, 20, 27, 0.1) 42%,
+      rgba(6, 20, 27, 0.03) 100%
+    ),
+    url("/images/login-hero-mobile.jpg");
+}
+
+@media (min-width: 768px) {
+  .login-photo-bg {
+    background-image:
+      linear-gradient(
+        150deg,
+        rgba(5, 15, 21, 0.55) 0%,
+        rgba(6, 20, 27, 0.28) 22%,
+        rgba(6, 20, 27, 0.1) 42%,
+        rgba(6, 20, 27, 0.03) 100%
+      ),
+      url("/images/login-hero.jpg");
   }
 }
 
