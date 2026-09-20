@@ -69,8 +69,13 @@ body {
 }
 
 @layer components {
+  /* Mode terang: solid seperti semula. Mode gelap: dibuat senada dengan
+     .panel-glass (tint transparan + border terang tipis + inset highlight)
+     supaya gradient mesh di body konsisten tembus di SEMUA kartu di SEMUA
+     halaman, bukan cuma di panel-panel besar Dashboard. Tanpa backdrop-blur
+     (sama seperti .panel-glass) supaya tetap ringan di GPU/WebView APK. */
   .card {
-    @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.07] dark:bg-[#101e29] dark:shadow-[0_7px_24px_rgba(0,0,0,.4)];
+    @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.09] dark:bg-white/[0.045] dark:shadow-[0_7px_24px_rgba(0,0,0,.4),inset_0_1px_0_rgba(255,255,255,.04)];
   }
 
   /* Kesan "kaca" TANPA backdrop-blur — mahal buat GPU/WebView APK kalau
