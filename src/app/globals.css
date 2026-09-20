@@ -151,7 +151,7 @@ body {
   background-size: cover;
   background-position: center;
   background-image:
-    linear-gradient(180deg, rgba(5, 15, 21, 0.72) 0%, rgba(6, 20, 27, 0.6) 60%, rgba(6, 20, 27, 0.5) 100%),
+    linear-gradient(180deg, rgba(5, 15, 21, 0.6) 0%, rgba(6, 20, 27, 0.48) 60%, rgba(6, 20, 27, 0.4) 100%),
     url("/images/dashboard-hero-mobile.jpg");
 }
 
@@ -160,10 +160,10 @@ body {
     background-image:
       linear-gradient(
         100deg,
-        rgba(5, 15, 21, 0.95) 6%,
-        rgba(6, 20, 27, 0.82) 40%,
-        rgba(6, 20, 27, 0.5) 68%,
-        rgba(6, 20, 27, 0.28) 100%
+        rgba(5, 15, 21, 0.85) 6%,
+        rgba(6, 20, 27, 0.7) 40%,
+        rgba(6, 20, 27, 0.38) 68%,
+        rgba(6, 20, 27, 0.18) 100%
       ),
       url("/images/dashboard-hero.jpg");
   }

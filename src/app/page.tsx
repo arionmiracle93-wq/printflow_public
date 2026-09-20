@@ -67,7 +67,7 @@ export default async function DashboardPage() {
         <div className="absolute -top-16 -left-10 -z-10 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />
         <div className="print-halftone absolute inset-0 -z-10 hidden md:block" />
 
-        <div className="relative flex flex-col gap-4 p-5 md:p-7">
+        <div className="relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
@@ -115,6 +115,7 @@ export default async function DashboardPage() {
 
       {insight.actions.length ? (
         <section className="panel-glass p-4 md:p-5">
+          <div className="pointer-events-none absolute inset-0 -z-10 dark:bg-[linear-gradient(135deg,rgba(45,212,191,.30)_0%,rgba(45,212,191,.08)_42%,rgba(251,191,36,.24)_100%)]" />
           <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[.08em] text-teal-700 dark:text-teal-300">
             <Lightbulb size={14} /> Tindakan yang disarankan hari ini
           </p>
