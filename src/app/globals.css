@@ -48,13 +48,13 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.07), transparent 26rem),
-    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.05), transparent 25rem),
-    radial-gradient(circle at 55% 26%, rgba(56, 189, 248, 0.04), transparent 32rem),
-    radial-gradient(circle at 10% 46%, rgba(20, 184, 166, 0.05), transparent 32rem),
-    radial-gradient(circle at 92% 64%, rgba(251, 191, 36, 0.04), transparent 30rem),
-    radial-gradient(circle at 45% 78%, rgba(56, 189, 248, 0.035), transparent 30rem),
-    radial-gradient(circle at 14% 92%, rgba(20, 184, 166, 0.04), transparent 28rem),
+    radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.13), transparent 26rem),
+    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.09), transparent 25rem),
+    radial-gradient(circle at 55% 26%, rgba(56, 189, 248, 0.075), transparent 32rem),
+    radial-gradient(circle at 10% 46%, rgba(20, 184, 166, 0.09), transparent 32rem),
+    radial-gradient(circle at 92% 64%, rgba(251, 191, 36, 0.075), transparent 30rem),
+    radial-gradient(circle at 45% 78%, rgba(56, 189, 248, 0.065), transparent 30rem),
+    radial-gradient(circle at 14% 92%, rgba(20, 184, 166, 0.075), transparent 28rem),
     var(--page);
 }
 
@@ -75,7 +75,7 @@ body {
      halaman, bukan cuma di panel-panel besar Dashboard. Tanpa backdrop-blur
      (sama seperti .panel-glass) supaya tetap ringan di GPU/WebView APK. */
   .card {
-    @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.09] dark:bg-white/[0.045] dark:shadow-[0_7px_24px_rgba(0,0,0,.4),inset_0_1px_0_rgba(255,255,255,.04)];
+    @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.12] dark:bg-white/[0.028] dark:shadow-[0_7px_24px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.06)];
   }
 
   /* Kesan "kaca" TANPA backdrop-blur — mahal buat GPU/WebView APK kalau
@@ -83,7 +83,7 @@ body {
      transparan + border terang tipis (highlight ala tepian kaca) + shadow
      berlapis, supaya mesh gradient di body tetap samar keliatan nembus. */
   .panel-glass {
-    @apply relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-white/70 bg-white/70 shadow-[0_8px_28px_rgba(15,75,84,.08),inset_0_1px_0_rgba(255,255,255,.6)] dark:border-white/[0.09] dark:bg-white/[0.045] dark:shadow-[0_8px_28px_rgba(0,0,0,.4),inset_0_1px_0_rgba(255,255,255,.04)];
+    @apply relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-white/70 bg-white/70 shadow-[0_8px_28px_rgba(15,75,84,.08),inset_0_1px_0_rgba(255,255,255,.6)] dark:border-white/[0.12] dark:bg-white/[0.028] dark:shadow-[0_8px_28px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.06)];
   }
 
   .btn {
