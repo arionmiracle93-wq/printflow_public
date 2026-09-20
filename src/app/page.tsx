@@ -115,7 +115,7 @@ export default async function DashboardPage() {
 
       {insight.actions.length ? (
         <section className="panel-glass p-4 md:p-5">
-          <div className="pointer-events-none absolute inset-0 -z-10 dark:bg-[linear-gradient(135deg,rgba(45,212,191,.30)_0%,rgba(45,212,191,.08)_42%,rgba(251,191,36,.24)_100%)]" />
+          <div className="pointer-events-none absolute inset-0 -z-10 dark:bg-[linear-gradient(135deg,rgba(45,212,191,.28)_0%,rgba(56,189,248,.16)_50%,rgba(251,191,36,.14)_100%)]" />
           <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[.08em] text-teal-700 dark:text-teal-300">
             <Lightbulb size={14} /> Tindakan yang disarankan hari ini
           </p>
@@ -144,7 +144,8 @@ export default async function DashboardPage() {
         {/* Glow ambient lembut — nerusin identitas warna dari hero (teal+amber) supaya
             area konten utama ini nggak terasa hampa setelah lewat dari hero foto. */}
         <div className="pointer-events-none absolute -left-16 top-10 -z-10 h-64 w-64 rounded-full bg-teal-400/10 blur-3xl dark:bg-teal-400/[0.07]" />
-        <div className="pointer-events-none absolute -right-10 bottom-0 -z-10 h-56 w-56 rounded-full bg-amber-300/10 blur-3xl dark:bg-amber-300/[0.06]" />
+        <div className="pointer-events-none absolute -right-10 bottom-0 -z-10 h-56 w-56 rounded-full bg-amber-300/10 blur-3xl dark:bg-amber-300/[0.04]" />
+        <div className="pointer-events-none absolute -right-24 bottom-0 -z-10 h-80 w-80 rounded-full blur-3xl dark:bg-sky-400/[0.075]" />
         <section className="space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between gap-3">
             <h2 className="section-title flex items-center gap-2"><Flame size={20} className="text-amber-500" /> Prioritas AI: urutan kerja</h2>
