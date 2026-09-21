@@ -6,4 +6,4 @@ const TAB_PHOTOS: Partial<Record<TabKey, string>> = {
   // lainnya: "/images/pesanan-detail-lainnya.jpg",
 };
 
-376 x 523 mm
+376 x 523
