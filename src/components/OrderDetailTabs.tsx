@@ -5,6 +5,20 @@ import { useState, type ReactNode } from "react";
 
 type TabKey = "ringkasan" | "mitra" | "komunikasi" | "foto" | "lainnya";
 
+/**
+ * Foto khusus per tab untuk kolom ke-3 di layar desktop.
+ * Taruh file fotonya di folder `public/images/`, lalu isi path-nya di sini.
+ * Tab yang belum diisi (dibiarkan kosong) otomatis tampil placeholder
+ * putus-putus seperti biasa — jadi aman diisi belakangan satu-satu.
+ */
+const TAB_PHOTOS: Partial<Record<TabKey, string>> = {
+  /ringkasan: "/images/pesanan-detail-ringkasan.jpg",
+  mitra: "/images/pesanan-detail-mitra.jpg",
+  komunikasi: "/images/pesanan-detail-komunikasi.jpg",
+  foto: "/images/pesanan-detail-foto.jpg",
+  lainnya: "/images/pesanan-detail-lainnya.jpg",
+};
+
 export function OrderDetailTabs({
   header,
   ringkasan,
@@ -138,13 +152,23 @@ export function OrderDetailTabs({
           Tinggal diganti manual dengan foto asli kapan pun siap.
           ============================================================ */}
       <div className="hidden xl:col-start-3 xl:row-start-1 xl:row-span-2 xl:block xl:self-start xl:sticky xl:top-20">
-        <OrderPhotoPlaceholder />
+        <OrderPhotoPlaceholder src={TAB_PHOTOS[tab]} />
       </div>
     </div>
   );
 }
 
-function OrderPhotoPlaceholder() {
+function OrderPhotoPlaceholder({ src }: { src?: string }) {
+  if (src) {
+    return (
+      <div
+        key={src}
+        className="hero-fade relative isolate h-[calc(100vh-6.5rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-cover bg-center shadow-[0_18px_50px_rgba(4,20,28,.35)]"
+        style={{ backgroundImage: `url(${src})` }}
+      />
+    );
+  }
+
   return (
     <div className="panel-glass relative isolate flex h-[calc(100vh-6.5rem)] flex-col items-center justify-center gap-3 overflow-hidden border-dashed px-6 text-center">
       <div className="pointer-events-none absolute -left-10 -top-10 -z-10 h-48 w-48 rounded-full bg-teal-400/15 blur-3xl dark:bg-teal-400/10" />
