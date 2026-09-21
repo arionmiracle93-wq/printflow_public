@@ -12,7 +12,7 @@ type TabKey = "ringkasan" | "mitra" | "komunikasi" | "foto" | "lainnya";
  * putus-putus seperti biasa — jadi aman diisi belakangan satu-satu.
  */
 const TAB_PHOTOS: Partial<Record<TabKey, string>> = {
-  /ringkasan: "/images/pesanan-detail-ringkasan.jpg",
+  ringkasan: "/images/pesanan-detail-ringkasan.jpg",
   mitra: "/images/pesanan-detail-mitra.jpg",
   komunikasi: "/images/pesanan-detail-komunikasi.jpg",
   foto: "/images/pesanan-detail-foto.jpg",
