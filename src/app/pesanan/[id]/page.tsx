@@ -408,23 +408,23 @@ function DetailBody({
   );
 
   return (
-    <div className="space-y-4">
-      <Link href="/pesanan" className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline dark:text-teal-300">
-        ← Kembali ke daftar pekerjaan
-      </Link>
-
-      <OrderHeader order={order} insight={insight} />
-
-      <OrderDetailTabs
-        ringkasan={ringkasanContent}
-        mitra={mitraContent}
-        komunikasi={komunikasiContent}
-        foto={fotoContent}
-        lainnya={lainnyaContent}
-        mitraActive={mitraActive}
-        komunikasiPending={komunikasiPending}
-      />
-    </div>
+    <OrderDetailTabs
+      header={
+        <>
+          <Link href="/pesanan" className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline dark:text-teal-300">
+            ← Kembali ke daftar pekerjaan
+          </Link>
+          <OrderHeader order={order} insight={insight} />
+        </>
+      }
+      ringkasan={ringkasanContent}
+      mitra={mitraContent}
+      komunikasi={komunikasiContent}
+      foto={fotoContent}
+      lainnya={lainnyaContent}
+      mitraActive={mitraActive}
+      komunikasiPending={komunikasiPending}
+    />
   );
 }
 
