@@ -21,7 +21,7 @@ import { Greeting } from "@/components/Greeting";
 import { HeroHighlightsCarousel } from "@/components/HeroHighlightsCarousel";
 import { LocalDateTime } from "@/components/LocalDateTime";
 import { ProblemScreen } from "@/components/ProblemScreen";
-import { InsightCard, KpiCard, ProgressBar, STATUS_ICONS } from "@/components/ui";
+import { InsightCard, KpiCard, KpiRiskDonut, ProgressBar, STATUS_ICONS } from "@/components/ui";
 import { safeDb } from "@/lib/dbcheck";
 import { buildDashboardInsight } from "@/lib/ai";
 import { STATUSES, formatRupiah, statusMeta } from "@/lib/domain";
@@ -216,6 +216,11 @@ export default async function DashboardPage() {
         </section>
 
         <section className="space-y-4">
+          <KpiRiskDonut
+            aman={Math.max(0, insight.stats.totalActive - insight.stats.risky - insight.stats.late)}
+            waspada={insight.stats.risky}
+            terlambat={insight.stats.late}
+          />
           <AiAssistant />
           <div className="panel-glass p-5">
             <div className="flex items-center gap-3">

@@ -15,6 +15,7 @@ import {
   Palette,
   PackageCheck,
   PauseCircle,
+  PieChart,
   Printer,
   RefreshCw,
   Scissors,
@@ -319,4 +320,86 @@ export function InsightCard({
 
 export function SafeIcon() {
   return <ShieldCheck size={18} />;
+}
+
+// Donut chart ringan (SVG polos, tanpa library chart) yang menampilkan proporsi
+// pekerjaan aktif menurut level risiko — dipasang di kolom kanan Dashboard,
+// di atas panel Tanya AI, biar layout 2 kolom terasa seimbang.
+export function KpiRiskDonut({
+  aman,
+  waspada,
+  terlambat,
+}: {
+  aman: number;
+  waspada: number;
+  terlambat: number;
+}) {
+  const total = aman + waspada + terlambat;
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const segments = [
+    { key: "aman", label: "Aman", value: aman, ring: "#10b981", dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+    { key: "waspada", label: "Waspada / risiko", value: waspada, ring: "#f59e0b", dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
+    { key: "terlambat", label: "Terlambat", value: terlambat, ring: "#f43f5e", dot: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" },
+  ];
+
+  let drawn = 0;
+
+  return (
+    <div className="panel-glass p-5">
+      <div className="flex items-center gap-3">
+        <span className="icon-tile">
+          <PieChart size={18} />
+        </span>
+        <div>
+          <h3 className="text-sm font-extrabold text-[#07384f] dark:text-slate-100">Distribusi risiko pekerjaan</h3>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            {total > 0 ? `Dari ${total} pekerjaan aktif` : "Belum ada pekerjaan aktif"}
+          </p>
+        </div>
+      </div>
+
+      {total === 0 ? (
+        <p className="mt-4 text-xs text-slate-400">Grafik akan muncul begitu ada pekerjaan berjalan.</p>
+      ) : (
+        <div className="mt-4 flex items-center gap-5">
+          <svg viewBox="0 0 100 100" className="h-28 w-28 shrink-0 -rotate-90" role="img" aria-label="Distribusi risiko pekerjaan aktif">
+            <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="14" className="stroke-slate-100 dark:stroke-white/10" />
+            {segments.map((seg) => {
+              if (seg.value <= 0) return null;
+              const length = (seg.value / total) * circumference;
+              const offset = -drawn;
+              drawn += length;
+              return (
+                <circle
+                  key={seg.key}
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="none"
+                  stroke={seg.ring}
+                  strokeWidth="14"
+                  strokeDasharray={`${length} ${circumference - length}`}
+                  strokeDashoffset={offset}
+                  strokeLinecap={segments.filter((s) => s.value > 0).length > 1 ? "butt" : "round"}
+                />
+              );
+            })}
+          </svg>
+          <ul className="flex-1 space-y-2.5">
+            {segments.map((seg) => (
+              <li key={seg.key} className="flex items-center justify-between gap-2 text-xs">
+                <span className="flex items-center gap-1.5 font-bold text-slate-600 dark:text-slate-300">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${seg.dot}`} /> {seg.label}
+                </span>
+                <span className={`font-extrabold ${seg.text}`}>
+                  {seg.value} <span className="font-medium text-slate-400 dark:text-slate-500">· {Math.round((seg.value / total) * 100)}%</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
