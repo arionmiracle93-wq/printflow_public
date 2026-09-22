@@ -13,6 +13,16 @@ export default function LoginPage() {
             Cuma "Print Flow" + ikon di pojok kiri-atas, sisanya foto asli percetakan
             (isi /public/images/login-hero.jpg [desktop] & login-hero-mobile.jpg [HP] — foto sendiri, beda dari hero Dashboard). */}
         <div className="login-photo-bg relative isolate h-36 overflow-hidden text-white sm:h-44 md:h-auto md:min-h-[420px]">
+          <video
+            className="login-hero-video absolute inset-0 -z-20 hidden h-full w-full object-cover md:block"
+            src="/videos/login-hero.mp4"
+            poster="/images/login-hero.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="none"
+          />
           <div className="absolute -bottom-16 -left-10 -z-10 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />
           <div className="absolute -top-14 right-0 -z-10 h-40 w-40 rounded-full bg-amber-300/15 blur-3xl" />
           <div className="relative flex items-center gap-2.5 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.45)] md:p-6">
