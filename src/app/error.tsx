@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Gauge, RefreshCw, ServerCrash, Stethoscope } from "lucide-react";
 import { useEffect } from "react";
 
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -12,7 +13,9 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
     <div className="mx-auto max-w-2xl py-10">
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-5 py-4 text-white">
-          <h1 className="text-xl font-extrabold">😅 Terjadi kendala di aplikasi</h1>
+          <h1 className="flex items-center gap-2 text-xl font-extrabold">
+            <ServerCrash size={22} strokeWidth={2.3} /> Terjadi kendala di aplikasi
+          </h1>
           <p className="mt-1 text-sm text-rose-50">
             Jangan khawatir — data Anda tetap aman di database. Coba langkah di bawah ini.
           </p>
@@ -30,14 +33,14 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={reset} className="btn-primary">
-              🔄 Coba Lagi
+            <button type="button" onClick={reset} className="btn-primary inline-flex items-center gap-1.5">
+              <RefreshCw size={15} /> Coba Lagi
             </button>
-            <Link href="/" className="btn-ghost">
-              🏠 Ke Dashboard
+            <Link href="/" className="btn-ghost inline-flex items-center gap-1.5">
+              <Gauge size={15} /> Ke Dashboard
             </Link>
-            <Link href="/status" className="btn-ghost">
-              🩺 Diagnosis
+            <Link href="/status" className="btn-ghost inline-flex items-center gap-1.5">
+              <Stethoscope size={15} /> Diagnosis
             </Link>
           </div>
         </div>

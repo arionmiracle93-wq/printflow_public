@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy, Send } from "lucide-react";
 import { useState } from "react";
 import { formatDateID } from "@/lib/domain";
 
@@ -77,11 +78,11 @@ export function ShareHandoverWhatsApp({ handover }: { handover: HandoverShareDat
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={share} className="btn-ghost flex-1 border-emerald-200 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 dark:border-emerald-800/50 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/40">
-        📲 Kirim manual via WhatsApp
+      <button type="button" onClick={share} className="btn-ghost inline-flex flex-1 items-center justify-center gap-1.5 border-emerald-200 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 dark:border-emerald-800/50 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/40">
+        <Send size={14} /> Kirim manual via WhatsApp
       </button>
       <button type="button" onClick={copy} className="btn-ghost px-3" title="Salin teks pesan">
-        {copied ? "✅" : "📋"}
+        {copied ? <Check size={15} /> : <Copy size={15} />}
       </button>
     </div>
   );

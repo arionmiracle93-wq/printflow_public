@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, BookOpen, Check, CheckCircle2, Clock, Flag, PartyPopper, Plus, Rocket, Settings, Stethoscope } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { ChecklistToggle } from "@/components/ChecklistToggle";
 import { buildChecklist } from "@/lib/checklist";
@@ -23,8 +24,16 @@ export default async function MulaiPage() {
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-5 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-200">Checklist pascapemasangan</p>
-          <h1 className="mt-1 text-xl font-extrabold md:text-2xl">
-            {progress.percent === 100 ? "🎉 Semua langkah wajib selesai!" : "🚀 Langkah selanjutnya untuk Anda"}
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold md:text-2xl">
+            {progress.percent === 100 ? (
+              <>
+                <PartyPopper size={22} strokeWidth={2.2} /> Semua langkah wajib selesai!
+              </>
+            ) : (
+              <>
+                <Rocket size={22} strokeWidth={2.2} /> Langkah selanjutnya untuk Anda
+              </>
+            )}
           </h1>
           <p className="mt-1 text-sm text-indigo-100">
             {progress.percent === 100
@@ -50,8 +59,8 @@ export default async function MulaiPage() {
       {/* LANGKAH BERIKUTNYA */}
       {nextItem ? (
         <div className="card border-indigo-200 bg-indigo-50/70 p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-indigo-600">
-            👉 Kerjakan ini dulu (langkah {nextItem.step})
+          <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-indigo-600">
+            <ArrowRight size={13} /> Kerjakan ini dulu (langkah {nextItem.step})
           </p>
           <p className="mt-1 text-base font-extrabold text-slate-900">{nextItem.title}</p>
           <p className="mt-1 text-sm text-slate-700">{nextItem.why}</p>
@@ -74,7 +83,7 @@ export default async function MulaiPage() {
                     item.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
                   }`}
                 >
-                  {item.done ? "✓" : item.step}
+                  {item.done ? <Check size={16} strokeWidth={3} /> : item.step}
                 </span>
                 <div>
                   <p className="text-sm font-bold text-slate-900">
@@ -88,8 +97,8 @@ export default async function MulaiPage() {
                   <p className="mt-1 text-sm text-slate-600">{item.why}</p>
                 </div>
               </div>
-              <span className={`chip shrink-0 ${item.done ? "border-emerald-300 bg-emerald-100 text-emerald-700" : "border-slate-200 bg-white text-slate-600"}`}>
-                {item.done ? "✅ " : "⏳ "}
+              <span className={`chip inline-flex shrink-0 items-center gap-1 ${item.done ? "border-emerald-300 bg-emerald-100 text-emerald-700" : "border-slate-200 bg-white text-slate-600"}`}>
+                {item.done ? <CheckCircle2 size={12} /> : <Clock size={12} />}
                 {item.doneLabel ?? (item.done ? "selesai" : "belum")}
               </span>
             </div>
@@ -122,21 +131,23 @@ export default async function MulaiPage() {
       </ol>
 
       <div className="card p-4">
-        <h3 className="text-sm font-bold text-slate-900">📍 Setelah semua selesai</h3>
+        <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <Flag size={16} /> Setelah semua selesai
+        </h3>
         <p className="mt-1 text-sm text-slate-600">
           Rutinitas Anda tinggal: <strong>pagi</strong> baca Ringkasan AI di dashboard (3 menit) →{" "}
-          <strong>saat order masuk</strong> klik ➕ Pekerjaan Baru (1 menit) → <strong>saat produksi</strong> klik status
+          <strong>saat order masuk</strong> klik <Plus size={12} className="inline" /> Pekerjaan Baru (1 menit) → <strong>saat produksi</strong> klik status
           (5 detik per tahap). Laporan &amp; cadangan cukup sebulan sekali.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link href="/pengaturan" className="btn-ghost">
-            ⚙️ Pengaturan &amp; Cadangan
+          <Link href="/pengaturan" className="btn-ghost inline-flex items-center gap-1.5">
+            <Settings size={14} /> Pengaturan &amp; Cadangan
           </Link>
-          <Link href="/panduan" className="btn-ghost">
-            📘 Panduan &amp; Roadmap
+          <Link href="/panduan" className="btn-ghost inline-flex items-center gap-1.5">
+            <BookOpen size={14} /> Panduan &amp; Roadmap
           </Link>
-          <Link href="/status" className="btn-ghost">
-            🩺 Status Sistem
+          <Link href="/status" className="btn-ghost inline-flex items-center gap-1.5">
+            <Stethoscope size={14} /> Status Sistem
           </Link>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
+import { AlertTriangle, Bot, Factory, History, Image as ImageIcon, StickyNote, UserRound } from "lucide-react";
 import { OrderQuickEdit, OrderStatusControls } from "@/components/OrderControls";
 import { OrderDetailTabs } from "@/components/OrderDetailTabs";
 import { OrderItemsManager } from "@/components/OrderItemsManager";
@@ -17,7 +19,7 @@ import { listActiveEmployees } from "@/lib/user-queries";
 import { safeDb } from "@/lib/dbcheck";
 import type { AiOrder } from "@/lib/ai";
 import { MAX_PHOTOS_PER_ORDER, listPhotos } from "@/lib/queries";
-import { PriorityBadge, ProgressBar, RiskBadge, StatusBadge } from "@/components/ui";
+import { PriorityBadge, ProgressBar, RiskBadge, STATUS_ICONS, StatusBadge } from "@/components/ui";
 import { analyzeOrder } from "@/lib/ai";
 import {
   MACHINES,
@@ -99,7 +101,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 function UpgradeNotice() {
   return (
     <div className="card border-amber-200 bg-amber-50 p-4">
-      <p className="text-sm font-bold text-amber-900">🖼️ Fitur foto siap dipakai — satu langkah lagi</p>
+      <p className="flex items-center gap-1.5 text-sm font-bold text-amber-900">
+        <ImageIcon size={15} /> Fitur foto siap dipakai — satu langkah lagi
+      </p>
       <p className="mt-1 text-xs text-amber-800">
         Tabel penyimpan foto belum ada di database Anda. Buka alamat ini sekali di browser, lalu kembali ke halaman ini:
       </p>
@@ -188,11 +192,15 @@ function DetailBody({
           <Info
             label="Sisa waktu"
             value={
-              hoursLeft < 0 && !meta.done
-                ? `⚠️ Terlambat ${humanDuration(hoursLeft)}`
-                : meta.done
-                  ? "Selesai"
-                  : humanDuration(hoursLeft)
+              hoursLeft < 0 && !meta.done ? (
+                <span className="inline-flex items-center gap-1">
+                  <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
+                </span>
+              ) : meta.done ? (
+                "Selesai"
+              ) : (
+                humanDuration(hoursLeft)
+              )
             }
           />
           <Info label="Total harga" value={formatRupiah(order.price)} />
@@ -222,7 +230,9 @@ function DetailBody({
         </div>
 
         {order.notes ? (
-          <p className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">📝 {order.notes}</p>
+          <p className="mt-4 flex items-start gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <StickyNote size={14} className="mt-0.5 shrink-0" /> {order.notes}
+          </p>
         ) : null}
       </div>
 
@@ -231,7 +241,9 @@ function DetailBody({
 
       <div className="card overflow-hidden">
         <div className="border-b border-slate-200 bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-white">
-          <p className="text-sm font-bold">🤖 Analisa AI untuk pekerjaan ini</p>
+          <p className="flex items-center gap-1.5 text-sm font-bold">
+            <Bot size={15} /> Analisa AI untuk pekerjaan ini
+          </p>
           <p className="text-[11px] text-indigo-100">Dihitung dari sisa pekerjaan vs sisa waktu &amp; prioritas</p>
         </div>
         <div className="space-y-3 p-4">
@@ -381,26 +393,31 @@ function DetailBody({
         }}
       />
       <div className="card p-4">
-        <h3 className="text-sm font-bold text-slate-900">🕘 Riwayat / Jejak Produksi</h3>
+        <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <History size={16} /> Riwayat / Jejak Produksi
+        </h3>
         <p className="text-xs text-slate-500">Siapa mengubah apa dan kapan — berguna saat ada keluhan pelanggan.</p>
         <ol className="mt-3 space-y-3 border-l-2 border-slate-100 pl-4">
           {events.length === 0 ? (
             <li className="text-sm text-slate-500">Belum ada riwayat.</li>
           ) : (
-            events.map((event) => (
-              <li key={event.id} className="relative">
-                <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
-                <p className="text-sm font-semibold text-slate-800">
-                  {event.fromStatus ? `${eventStatusLabel(event.fromStatus)} → ` : ""}
-                  {event.toStatus.startsWith("mitra:") ? "🏭 " : statusMeta(event.toStatus).emoji + " "}
-                  {eventStatusLabel(event.toStatus)}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {formatDateTimeID(event.createdAt)} · oleh {event.actor}
-                </p>
-                {event.note ? <p className="mt-0.5 text-xs text-slate-600">&ldquo;{event.note}&rdquo;</p> : null}
-              </li>
-            ))
+            events.map((event) => {
+              const EventIcon = event.toStatus.startsWith("mitra:") ? Factory : STATUS_ICONS[event.toStatus] ?? UserRound;
+              return (
+                <li key={event.id} className="relative">
+                  <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                    {event.fromStatus ? `${eventStatusLabel(event.fromStatus)} → ` : ""}
+                    <EventIcon size={13} className="shrink-0" />
+                    {eventStatusLabel(event.toStatus)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatDateTimeID(event.createdAt)} · oleh {event.actor}
+                  </p>
+                  {event.note ? <p className="mt-0.5 text-xs text-slate-600">&ldquo;{event.note}&rdquo;</p> : null}
+                </li>
+              );
+            })
           )}
         </ol>
       </div>
@@ -478,11 +495,15 @@ function FallbackDetailBody({
           <Info
             label="Sisa waktu"
             value={
-              hoursLeft < 0 && !meta.done
-                ? `⚠️ Terlambat ${humanDuration(hoursLeft)}`
-                : meta.done
-                  ? "Selesai"
-                  : humanDuration(hoursLeft)
+              hoursLeft < 0 && !meta.done ? (
+                <span className="inline-flex items-center gap-1">
+                  <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
+                </span>
+              ) : meta.done ? (
+                "Selesai"
+              ) : (
+                humanDuration(hoursLeft)
+              )
             }
           />
           <Info label="Total harga" value={formatRupiah(order.price)} />
@@ -499,7 +520,9 @@ function FallbackDetailBody({
       <OrderStatusControls orderId={order.id} currentStatus={order.status} />
 
       <div className="card p-4">
-        <h3 className="text-sm font-bold text-slate-900">🕘 Riwayat / Jejak Produksi</h3>
+        <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <History size={16} /> Riwayat / Jejak Produksi
+        </h3>
         <ol className="mt-3 space-y-3 border-l-2 border-slate-100 pl-4">
           {events.length === 0 ? (
             <li className="text-sm text-slate-500">Belum ada riwayat.</li>
@@ -543,7 +566,7 @@ function eventStatusLabel(value: string): string {
   return statusMeta(value).label;
 }
 
-function Info({ label, value, tone = "text-slate-800" }: { label: string; value: string; tone?: string }) {
+function Info({ label, value, tone = "text-slate-800" }: { label: string; value: ReactNode; tone?: string }) {
   return (
     <div className="rounded-xl bg-slate-50 px-3 py-2">
       <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>

@@ -1,8 +1,8 @@
 "use client";
 
+import { AlertTriangle, Building2, CheckCircle2, ExternalLink, Phone, Plus, Save, Trash2, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Building2, ExternalLink, Phone, Plus, Save, Trash2, Truck } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { OUTSOURCE_STATUSES, PARTNER_KINDS, outsourceStatusMeta, partnerKindLabel } from "@/lib/outsource";
 import { formatRupiah } from "@/lib/domain";
 import type { OutsourceRecord } from "@/lib/outsource-queries";
@@ -34,7 +34,7 @@ export function OutsourceManager({
   const [notes, setNotes] = useState(current?.notes ?? "");
   const [qcResult, setQcResult] = useState(current?.qcResult ?? "");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<ReactNode | null>(null);
   const [addPartner, setAddPartner] = useState(false);
   const [newPartner, setNewPartner] = useState({ name: "", kind: "vendor", phone: "", address: "" });
 
@@ -67,7 +67,11 @@ export function OutsourceManager({
       if (!json.ok) setMessage(json.error ?? "Gagal menyimpan produksi mitra.");
       else {
         setEnabled(true);
-        setMessage("✅ Data produksi mitra tersimpan dan riwayat diperbarui.");
+        setMessage(
+          <span className="inline-flex items-center gap-1.5">
+            <CheckCircle2 size={13} className="shrink-0" /> Data produksi mitra tersimpan dan riwayat diperbarui.
+          </span>,
+        );
         router.refresh();
       }
     } finally { setBusy(false); }
@@ -150,7 +154,11 @@ export function OutsourceManager({
           <Metric label="Biaya mitra" value={formatRupiah(cost)} />
           <Metric label="Margin kotor" value={`${formatRupiah(margin)} (${marginPercent}%)`} danger={margin < 0} />
         </div>
-        {expectedDate >= customerDueDate ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">⚠️ Target barang kembali sama atau melewati deadline pelanggan. Sisakan waktu minimal untuk QC, revisi, dan pengiriman.</p> : null}
+        {expectedDate >= customerDueDate ? (
+          <p className="flex items-start gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" /> Target barang kembali sama atau melewati deadline pelanggan. Sisakan waktu minimal untuk QC, revisi, dan pengiriman.
+          </p>
+        ) : null}
         {selected?.phone ? <a href={`https://wa.me/${selected.phone.replace(/\D/g, "").replace(/^0/, "62")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 hover:underline"><Phone size={13} /> Hubungi {selected.name} via WhatsApp</a> : null}
 
         <div className="flex flex-wrap gap-2"><button type="button" onClick={save} disabled={busy} className="btn-primary"><Save size={15} /> {busy ? "Menyimpan…" : "Simpan Produksi Mitra"}</button>{current ? <button type="button" onClick={remove} disabled={busy} className="btn-danger"><Trash2 size={15} /> Hapus Pengaturan</button> : null}</div>

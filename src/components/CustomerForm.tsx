@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil, Plus, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -57,8 +58,16 @@ export function CustomerForm({
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className={mode === "edit" ? "btn-ghost" : "btn-primary"}>
-        {mode === "edit" ? "✏️ Edit" : "➕ Tambah Pelanggan"}
+      <button type="button" onClick={() => setOpen(true)} className={mode === "edit" ? "btn-ghost inline-flex items-center gap-1.5" : "btn-primary inline-flex items-center gap-1.5"}>
+        {mode === "edit" ? (
+          <>
+            <Pencil size={14} /> Edit
+          </>
+        ) : (
+          <>
+            <Plus size={15} /> Tambah Pelanggan
+          </>
+        )}
       </button>
     );
   }
@@ -114,8 +123,14 @@ export function CustomerForm({
       </div>
       {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
       <div className="flex gap-2">
-        <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? "Menyimpan…" : mode === "edit" ? "💾 Simpan Perubahan" : "💾 Simpan"}
+        <button type="submit" disabled={busy} className="btn-primary inline-flex items-center gap-1.5">
+          {busy ? (
+            "Menyimpan…"
+          ) : (
+            <>
+              <Save size={14} /> {mode === "edit" ? "Simpan Perubahan" : "Simpan"}
+            </>
+          )}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="btn-ghost">
           Tutup

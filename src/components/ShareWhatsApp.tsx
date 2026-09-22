@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy, MessageCircle, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { buildWhatsAppMessage, openWhatsAppShare, WHATSAPP_SHARE_WINDOW, type ShareOrder } from "@/lib/whatsapp-share";
@@ -68,18 +69,34 @@ export function ShareWhatsApp({ order, initialToken }: { order: ShareOrder; init
 
   return (
     <div className="card p-4">
-      <h3 className="text-sm font-bold text-slate-900">💬 Kabari Pelanggan via WhatsApp</h3>
+      <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+        <MessageCircle size={16} /> Kabari Pelanggan via WhatsApp
+      </h3>
       <p className="mt-1 text-xs text-slate-500">
         Membuat tautan lacak (berisi status + foto) lalu menyiapkan pesan WhatsApp-nya. Pelanggan tidak perlu
         bertanya “pesanan saya sampai mana?”.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={share} disabled={busy} className="btn-primary">
-          {busy ? "Menyiapkan…" : "📲 Kirim via WhatsApp"}
+        <button type="button" onClick={share} disabled={busy} className="btn-primary inline-flex items-center gap-1.5">
+          {busy ? (
+            "Menyiapkan…"
+          ) : (
+            <>
+              <Send size={14} /> Kirim via WhatsApp
+            </>
+          )}
         </button>
-        <button type="button" onClick={copy} disabled={busy} className="btn-ghost">
-          {copied ? "✅ Pesan tersalin!" : "📋 Salin Teks Pesan"}
+        <button type="button" onClick={copy} disabled={busy} className="btn-ghost inline-flex items-center gap-1.5">
+          {copied ? (
+            <>
+              <Check size={14} /> Pesan tersalin!
+            </>
+          ) : (
+            <>
+              <Copy size={14} /> Salin Teks Pesan
+            </>
+          )}
         </button>
       </div>
 

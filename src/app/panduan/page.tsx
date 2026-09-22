@@ -1,3 +1,4 @@
+import { AlertTriangle, BookOpen, Download, FileText } from "lucide-react";
 import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
@@ -25,25 +26,27 @@ export default function PanduanPage() {
     <div className="space-y-4">
       <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 md:text-2xl">📘 Panduan Lengkap (Bahasa Awam)</h1>
+          <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl">
+            <BookOpen size={22} strokeWidth={2.3} /> Panduan Lengkap (Bahasa Awam)
+          </h1>
           <p className="text-sm text-slate-500">
             Langkah demi langkah: GitHub → Neon → Vercel → APK Android. Termasuk PRD, daftar file untuk GitHub, dan
             troubleshooting (termasuk solusi halaman blank/hitam).
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/catatan-perubahan" className="btn-ghost">
-            📄 Catatan Perubahan
+          <Link href="/catatan-perubahan" className="btn-ghost inline-flex items-center gap-1.5">
+            <FileText size={14} /> Catatan Perubahan
           </Link>
-          <a href="/panduan-deploy-neon-vercel.md" target="_blank" rel="noreferrer" className="btn-primary">
-            ⬇️ Buka / unduh file .md
+          <a href="/panduan-deploy-neon-vercel.md" target="_blank" rel="noreferrer" className="btn-primary inline-flex items-center gap-1.5">
+            <Download size={14} /> Buka / unduh file .md
           </a>
         </div>
       </div>
 
       {error ? (
         <div className="card border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          ⚠️ {error} Silakan buka langsung{" "}
+          <AlertTriangle size={14} className="mr-1 inline" /> {error} Silakan buka langsung{" "}
           <a href="/panduan-deploy-neon-vercel.md" className="font-bold underline">
             /panduan-deploy-neon-vercel.md
           </a>

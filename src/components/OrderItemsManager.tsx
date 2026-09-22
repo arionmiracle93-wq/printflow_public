@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Package, Save } from "lucide-react";
+import { AlertCircle, CheckCircle2, Package, Pencil, Save } from "lucide-react";
 import { OrderItemsEditor } from "@/components/OrderItemsEditor";
 import { formatNumber } from "@/lib/domain";
 import { type OrderItem, type OrderItemInput } from "@/lib/order-items";
@@ -32,6 +32,7 @@ export function OrderItemsManager({
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageOk, setMessageOk] = useState(true);
 
   function startEdit() {
     // Selalu mulai dari data tersimpan terbaru, bukan sisa draft sebelumnya.
@@ -52,6 +53,7 @@ export function OrderItemsManager({
   async function save() {
     const bersih = draft.filter((i) => i.productType.trim());
     if (!bersih.length) {
+      setMessageOk(false);
       setMessage("Minimal harus ada satu baris produk yang terisi.");
       return;
     }
@@ -65,14 +67,17 @@ export function OrderItemsManager({
       });
       const json = (await res.json()) as { ok: boolean; data?: OrderItem[]; error?: string };
       if (!json.ok || !json.data) {
+        setMessageOk(false);
         setMessage(json.error ?? "Gagal menyimpan item pekerjaan.");
         return;
       }
       setSaved(json.data);
       setEditing(false);
-      setMessage("✅ Item pekerjaan tersimpan. Estimasi jam kerja ikut dihitung ulang.");
+      setMessageOk(true);
+      setMessage("Item pekerjaan tersimpan. Estimasi jam kerja ikut dihitung ulang.");
       router.refresh();
     } catch {
+      setMessageOk(false);
       setMessage("Tidak dapat menghubungi server.");
     } finally {
       setBusy(false);
@@ -93,8 +98,8 @@ export function OrderItemsManager({
           </p>
         </div>
         {!editing ? (
-          <button type="button" onClick={startEdit} className="btn-ghost shrink-0">
-            ✏️ Ubah item
+          <button type="button" onClick={startEdit} className="btn-ghost inline-flex shrink-0 items-center gap-1.5">
+            <Pencil size={14} /> Ubah item
           </button>
         ) : null}
       </div>
@@ -148,12 +153,13 @@ export function OrderItemsManager({
 
       {message ? (
         <p
-          className={`mt-3 rounded-xl px-3 py-2 text-xs font-semibold ${
-            message.startsWith("✅")
+          className={`mt-3 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ${
+            messageOk
               ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
               : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
           }`}
         >
+          {messageOk ? <CheckCircle2 size={14} className="shrink-0" /> : <AlertCircle size={14} className="shrink-0" />}
           {message}
         </p>
       ) : null}

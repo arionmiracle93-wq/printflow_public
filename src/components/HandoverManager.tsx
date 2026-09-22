@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ArrowRight, CheckCircle2, Clock3, Handshake, Send, UserRoundCheck } from "lucide-react";
 import { statusMeta, formatDateTimeID } from "@/lib/domain";
 import type { HandoverRecord } from "@/lib/handover-queries";
@@ -49,7 +49,7 @@ export function HandoverManager({
   });
   const receiver = loggedInName;
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<ReactNode | null>(null);
 
   async function submit() {
     if (!form.toUserId) {
@@ -65,7 +65,7 @@ export function HandoverManager({
     });
     const json = (await res.json()) as { ok: boolean; error?: string };
     setMessage(json.ok
-      ? "✅ Serah terima dibuat. Karyawan tujuan dan Owner akan menerima notifikasi jika push aktif."
+      ? <span className="inline-flex items-center gap-1.5"><CheckCircle2 size={13} className="shrink-0" /> Serah terima dibuat. Karyawan tujuan dan Owner akan menerima notifikasi jika push aktif.</span>
       : json.error ?? "Gagal menyimpan.");
     if (json.ok) {
       setOpen(false);
@@ -86,7 +86,7 @@ export function HandoverManager({
     });
     const json = (await res.json()) as { ok: boolean; error?: string };
     setMessage(json.ok
-      ? "✅ Pekerjaan diterima. Nama operator aktif sudah diperbarui."
+      ? <span className="inline-flex items-center gap-1.5"><CheckCircle2 size={13} className="shrink-0" /> Pekerjaan diterima. Nama operator aktif sudah diperbarui.</span>
       : json.error ?? "Gagal menerima.");
     if (json.ok) {
       window.dispatchEvent(new Event("handover-count-changed"));

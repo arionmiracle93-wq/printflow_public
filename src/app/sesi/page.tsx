@@ -1,3 +1,4 @@
+import { Smartphone } from "lucide-react";
 import { SessionsList } from "@/components/SessionsList";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { safeDb } from "@/lib/dbcheck";
@@ -15,7 +16,9 @@ export default async function SesiPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-extrabold text-slate-900 md:text-2xl">📱 Perangkat Aktif</h1>
+        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl">
+          <Smartphone size={22} strokeWidth={2.3} /> Perangkat Aktif
+        </h1>
         <p className="text-sm text-slate-500">
           Semua perangkat yang sedang login, dari semua akun. Logout paksa kalau ada yang mencurigakan atau perangkat hilang.
         </p>

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Building2, ClipboardList, Phone, Plus, Truck, X } from "lucide-react";
+import { AlertTriangle, Bot, Building2, Camera, ClipboardList, Phone, Plus, Save, Truck, X } from "lucide-react";
 import { DateFieldID } from "@/components/DateFieldID";
 import { NewOrderPhotoPicker, type PendingPhoto } from "@/components/NewOrderPhotoPicker";
 import { OrderItemsEditor } from "@/components/OrderItemsEditor";
@@ -353,10 +353,13 @@ export function NewOrderForm({
               </div>
             </div>
 
-            <p className="mt-3 rounded-xl bg-teal-50 px-3 py-2 text-xs font-medium text-teal-800 dark:bg-teal-500/10 dark:text-teal-200">
-              🤖 AI memperkirakan pekerjaan ini butuh ± <strong>{estimate} jam kerja</strong> ({humanDuration(estimate)})
-              untuk {itemsTerisi.length} produk{itemsTerisi.length ? `: ${summarizeItems(itemsTerisi, 3)}` : ""}. Angka
-              ini dipakai untuk menghitung risiko telat.
+            <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-teal-50 px-3 py-2 text-xs font-medium text-teal-800 dark:bg-teal-500/10 dark:text-teal-200">
+              <Bot size={14} className="mt-0.5 shrink-0" />
+              <span>
+                AI memperkirakan pekerjaan ini butuh ± <strong>{estimate} jam kerja</strong> ({humanDuration(estimate)})
+                untuk {itemsTerisi.length} produk{itemsTerisi.length ? `: ${summarizeItems(itemsTerisi, 3)}` : ""}. Angka
+                ini dipakai untuk menghitung risiko telat.
+              </span>
             </p>
           </section>
 
@@ -590,9 +593,12 @@ export function NewOrderForm({
                 </div>
 
                 {lateRisk ? (
-                  <p className="rounded-xl border border-amber-300 bg-amber-100/70 px-3 py-2 text-xs font-semibold text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200">
-                    ⚠️ Target barang kembali sama/melewati deadline pelanggan ({dueDate}). Sisakan waktu untuk QC dan
-                    revisi.
+                  <p className="flex items-start gap-1.5 rounded-xl border border-amber-300 bg-amber-100/70 px-3 py-2 text-xs font-semibold text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200">
+                    <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                    <span>
+                      Target barang kembali sama/melewati deadline pelanggan ({dueDate}). Sisakan waktu untuk QC dan
+                      revisi.
+                    </span>
                   </p>
                 ) : null}
 
@@ -616,7 +622,7 @@ export function NewOrderForm({
               Simpan di bawah ditekan dan pekerjaannya berhasil dibuat. */}
           <section className="card p-4 md:p-5">
             <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900 dark:text-slate-100">
-              📷 Foto pekerjaan <span className="font-normal text-slate-400">(opsional)</span>
+              <Camera size={16} /> Foto pekerjaan <span className="font-normal text-slate-400">(opsional)</span>
             </h2>
             <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Lampirkan desain dari pelanggan atau foto referensi sekarang juga, supaya tidak perlu buka halaman
@@ -644,8 +650,14 @@ export function NewOrderForm({
       ) : null}
 
       <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap gap-2 rounded-t-2xl border-t border-slate-200/70 bg-[var(--page)]/92 px-1 py-3 backdrop-blur dark:border-white/10">
-        <button type="submit" disabled={saving} className="btn-primary">
-          {saving ? (stage ?? "Menyimpan…") : useOutsource ? "💾 Simpan Pekerjaan + Mitra" : "💾 Simpan & Mulai Pantau"}
+        <button type="submit" disabled={saving} className="btn-primary inline-flex items-center gap-1.5">
+          {saving ? (
+            stage ?? "Menyimpan…"
+          ) : (
+            <>
+              <Save size={15} /> {useOutsource ? "Simpan Pekerjaan + Mitra" : "Simpan & Mulai Pantau"}
+            </>
+          )}
         </button>
         <button
           type="button"

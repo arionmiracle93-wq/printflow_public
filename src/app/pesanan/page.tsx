@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList, Clock, Factory, Image as ImageIcon, Package, Plus, Search, User } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
 import { QuickStatusPopup } from "@/components/QuickStatusPopup";
@@ -58,13 +59,15 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 md:text-2xl">📋 Daftar Pekerjaan</h1>
+          <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl">
+            <ClipboardList size={22} strokeWidth={2.3} /> Daftar Pekerjaan
+          </h1>
           <p className="text-sm text-slate-500">
             {orders.length} pekerjaan ditampilkan · diurutkan dari deadline terdekat
           </p>
         </div>
-        <Link href="/pesanan/baru" className="btn-primary">
-          ➕ Pekerjaan Baru
+        <Link href="/pesanan/baru" className="btn-primary inline-flex items-center gap-1.5">
+          <Plus size={15} strokeWidth={2.5} /> Pekerjaan Baru
         </Link>
       </div>
 
@@ -108,8 +111,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 </option>
               ))}
             </select>
-            <button type="submit" className="btn-ghost">
-              🔍 Filter
+            <button type="submit" className="btn-ghost inline-flex items-center gap-1.5">
+              <Search size={14} /> Filter
             </button>
           </form>
         </div>
@@ -117,11 +120,11 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
 
       {orders.length === 0 ? (
         <div className="card p-10 text-center">
-          <p className="text-4xl">🔎</p>
+          <Search size={40} strokeWidth={1.6} className="mx-auto text-slate-300" />
           <p className="mt-2 font-bold text-slate-700">Tidak ada pekerjaan yang cocok</p>
           <p className="mt-1 text-sm text-slate-500">Coba ubah filter, atau buat pekerjaan baru.</p>
-          <Link href="/pesanan/baru" className="btn-primary mt-4">
-            ➕ Buat Pekerjaan
+          <Link href="/pesanan/baru" className="btn-primary mt-4 inline-flex items-center gap-1.5">
+            <Plus size={15} strokeWidth={2.5} /> Buat Pekerjaan
           </Link>
         </div>
       ) : (
@@ -137,20 +140,20 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                       <p className="text-[11px] font-bold text-indigo-600">{order.code}</p>
                       <p className="text-sm font-bold text-slate-900">{order.title}</p>
                       <p className="text-xs text-slate-500">{order.customerName}</p>
-                      <p className="text-[11px] text-slate-500">
-                        📦 {summarizeItems(order.items)}
+                      <p className="flex items-center gap-1 text-[11px] text-slate-500">
+                        <Package size={12} className="shrink-0" /> {summarizeItems(order.items)}
                         {order.items.length > 1 ? (
                           <span className="ml-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700">
                             {order.items.length} produk
                           </span>
                         ) : null}
                       </p>
-                      <p className={`mt-1 text-[11px] font-bold ${order.operator ? "text-teal-700" : "text-amber-600"}`}>
-                        👤 PIC: {order.operator || "Belum ditentukan"}
+                      <p className={`mt-1 flex items-center gap-1 text-[11px] font-bold ${order.operator ? "text-teal-700" : "text-amber-600"}`}>
+                        <User size={12} className="shrink-0" /> PIC: {order.operator || "Belum ditentukan"}
                       </p>
                       {outsourceMap.get(order.id) ? (
-                        <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${outsourceStatusMeta(outsourceMap.get(order.id)!.status).color}`}>
-                          🏭 Mitra: {outsourceMap.get(order.id)!.partnerName}
+                        <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${outsourceStatusMeta(outsourceMap.get(order.id)!.status).color}`}>
+                          <Factory size={11} /> Mitra: {outsourceMap.get(order.id)!.partnerName}
                         </span>
                       ) : null}
                     </div>
@@ -168,7 +171,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                   </div>
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
                       <span className="inline-flex items-center gap-1.5">
-                        ⏰ {formatDateID(order.dueDate)} {order.dueTime}
+                        <Clock size={12} className="shrink-0" /> {formatDateID(order.dueDate)} {order.dueTime}
                         <PhotoQuickPeek
                           orderId={order.id}
                           code={order.code}
@@ -212,8 +215,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                           {order.title}
                         </Link>
                         <p className="text-[11px] font-bold text-indigo-500">{order.code}</p>
-                        <p className="text-[11px] text-slate-500">
-                          📦 {summarizeItems(order.items, 3)}
+                        <p className="flex items-center gap-1 text-[11px] text-slate-500">
+                          <Package size={12} className="shrink-0" /> {summarizeItems(order.items, 3)}
                           {order.items.length > 1 ? (
                             <span className="ml-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700">
                               {order.items.length} produk
@@ -221,12 +224,12 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                           ) : null}
                         </p>
                         <p className="text-[11px] text-slate-400">{order.machine}</p>
-                        <p className={`mt-0.5 text-[11px] font-bold ${order.operator ? "text-teal-700" : "text-amber-600"}`}>
-                          👤 PIC: {order.operator || "Belum ditentukan"}
+                        <p className={`mt-0.5 flex items-center gap-1 text-[11px] font-bold ${order.operator ? "text-teal-700" : "text-amber-600"}`}>
+                          <User size={12} className="shrink-0" /> PIC: {order.operator || "Belum ditentukan"}
                         </p>
                         {outsourceMap.get(order.id) ? (
-                          <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${outsourceStatusMeta(outsourceMap.get(order.id)!.status).color}`}>
-                            🏭 {outsourceMap.get(order.id)!.partnerName}
+                          <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${outsourceStatusMeta(outsourceMap.get(order.id)!.status).color}`}>
+                            <Factory size={11} /> {outsourceMap.get(order.id)!.partnerName}
                           </span>
                         ) : null}
                       </td>
@@ -234,10 +237,10 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         {order.customerName}
                         {(photoCountsMap.get(order.id) ?? 0) > 0 ? (
                           <span
-                            className="ml-1.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600"
+                            className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600"
                             title={`${photoCountsMap.get(order.id)} foto terlampir`}
                           >
-                            🖼️ {photoCountsMap.get(order.id)}
+                            <ImageIcon size={11} /> {photoCountsMap.get(order.id)}
                           </span>
                         ) : null}
                       </td>

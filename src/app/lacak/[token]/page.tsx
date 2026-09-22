@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { CheckCircle2, History, Image as ImageIcon, Lock, PartyPopper, StickyNote, UserRound, Wrench } from "lucide-react";
+import { STATUS_ICONS } from "@/components/ui";
 import { safeDb } from "@/lib/dbcheck";
 import { getPublicTracking } from "@/lib/queries";
 import { STATUSES, formatDateID, formatDateTimeID, formatNumber, statusMeta } from "@/lib/domain";
@@ -45,8 +47,21 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
           }`}
         >
           <p className="text-xs font-bold uppercase tracking-widest text-white/70">Pelacakan Pesanan</p>
-          <h1 className="mt-1 text-xl font-extrabold leading-snug">
-            {selesai ? "✅ Pesanan Anda sudah selesai!" : `${meta.emoji} ${meta.label}`}
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold leading-snug">
+            {selesai ? (
+              <>
+                <CheckCircle2 size={20} strokeWidth={2.3} /> Pesanan Anda sudah selesai!
+              </>
+            ) : (
+              (() => {
+                const StatusIcon = STATUS_ICONS[order.status] ?? UserRound;
+                return (
+                  <>
+                    <StatusIcon size={20} strokeWidth={2.3} /> {meta.label}
+                  </>
+                );
+              })()
+            )}
           </h1>
           <p className="mt-1 text-sm text-white/85">{order.title}</p>
           <p className="mt-0.5 text-xs font-semibold text-white/70">
@@ -112,12 +127,14 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
           ) : null}
 
           {order.notes ? (
-            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">📝 {order.notes}</p>
+            <p className="flex items-start gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              <StickyNote size={14} className="mt-0.5 shrink-0" /> {order.notes}
+            </p>
           ) : null}
 
           {selesai ? (
-            <p className="rounded-xl bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
-              🎉 Pesanan Anda sudah bisa diambil / dikirim. Terima kasih sudah memesan!
+            <p className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
+              <PartyPopper size={16} className="shrink-0" /> Pesanan Anda sudah bisa diambil / dikirim. Terima kasih sudah memesan!
             </p>
           ) : null}
         </div>
@@ -126,7 +143,9 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
       {/* FOTO */}
       {order.photos.length > 0 ? (
         <div className="card p-4">
-          <h2 className="text-sm font-bold text-slate-900">🖼️ Foto Pesanan ({order.photos.length})</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+            <ImageIcon size={16} /> Foto Pesanan ({order.photos.length})
+          </h2>
           <p className="text-xs text-slate-500">Ketuk foto untuk memperbesar.</p>
           <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {order.photos.map((p) => (
@@ -148,18 +167,23 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
 
       {/* RIWAYAT */}
       <div className="card p-4">
-        <h2 className="text-sm font-bold text-slate-900">🕘 Riwayat Pengerjaan</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <History size={16} /> Riwayat Pengerjaan
+        </h2>
         <ol className="mt-3 space-y-3 border-l-2 border-slate-100 pl-4">
-          {order.timeline.map((e) => (
-            <li key={`${e.createdAt}-${e.toStatus}`} className="relative">
-              <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
-              <p className="text-sm font-semibold text-slate-800">
-                {statusMeta(e.toStatus).emoji} {statusMeta(e.toStatus).label}
-              </p>
-              <p className="text-xs text-slate-500">{formatDateTimeID(e.createdAt)}</p>
-              {e.note ? <p className="mt-0.5 text-xs text-slate-600">“{e.note}”</p> : null}
-            </li>
-          ))}
+          {order.timeline.map((e) => {
+            const EventIcon = STATUS_ICONS[e.toStatus] ?? UserRound;
+            return (
+              <li key={`${e.createdAt}-${e.toStatus}`} className="relative">
+                <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                  <EventIcon size={13} className="shrink-0" /> {statusMeta(e.toStatus).label}
+                </p>
+                <p className="text-xs text-slate-500">{formatDateTimeID(e.createdAt)}</p>
+                {e.note ? <p className="mt-0.5 text-xs text-slate-600">“{e.note}”</p> : null}
+              </li>
+            );
+          })}
         </ol>
       </div>
 
@@ -193,7 +217,11 @@ function Gagal({ code }: { code: string }) {
   return (
     <div className="mx-auto max-w-md py-12 text-center">
       <div className="card p-8">
-        <p className="text-5xl">{code === "salah" ? "🛠️" : "🔒"}</p>
+        {code === "salah" ? (
+          <Wrench size={44} strokeWidth={1.6} className="mx-auto text-slate-300" />
+        ) : (
+          <Lock size={44} strokeWidth={1.6} className="mx-auto text-slate-300" />
+        )}
         <h1 className="mt-3 text-lg font-extrabold text-slate-900">
           {code === "salah" ? "Sistem sedang tidak bisa menampilkan data" : "Tautan tidak dikenali"}
         </h1>

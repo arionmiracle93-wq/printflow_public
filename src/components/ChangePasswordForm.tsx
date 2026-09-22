@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, Save } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -83,9 +84,19 @@ export function ChangePasswordForm() {
         />
       </div>
       {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
-      {done ? <p className="text-sm font-semibold text-emerald-600">✅ Password berhasil diganti. Perangkat lain otomatis logout.</p> : null}
-      <button type="submit" disabled={busy} className="btn-primary w-full">
-        {busy ? "Menyimpan…" : "💾 Ganti Password"}
+      {done ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
+          <CheckCircle2 size={14} /> Password berhasil diganti. Perangkat lain otomatis logout.
+        </p>
+      ) : null}
+      <button type="submit" disabled={busy} className="btn-primary inline-flex w-full items-center justify-center gap-1.5">
+        {busy ? (
+          "Menyimpan…"
+        ) : (
+          <>
+            <Save size={15} /> Ganti Password
+          </>
+        )}
       </button>
     </form>
   );

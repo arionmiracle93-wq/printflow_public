@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { Camera, ClipboardPaste, ImagePlus } from "lucide-react";
+import { Camera, ClipboardPaste, Download, Image as ImageIcon, ImagePlus, X } from "lucide-react";
 import { compressImage } from "@/lib/photo-client";
 import { MAX_PHOTOS_PER_ORDER, photoKindLabel, type PhotoItem } from "@/lib/photos";
 
@@ -146,7 +146,9 @@ export function PhotoManager({
     <div className="card p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">🖼️ Foto Pekerjaan</h3>
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+            <ImageIcon size={16} /> Foto Pekerjaan
+          </h3>
           <p className="text-xs text-slate-500">
             Supaya pekerjaan bernama mirip mudah dibedakan: lampirkan desain, hasil jadi, atau nota.
           </p>
@@ -300,11 +302,11 @@ export function PhotoManager({
             {lightbox.caption ? ` — ${lightbox.caption}` : ""}
           </p>
           <div className="flex gap-2">
-            <a href={`${lightbox.url}?download=1`} className="btn bg-white text-slate-800">
-              ⬇️ Unduh
+            <a href={`${lightbox.url}?download=1`} className="btn inline-flex items-center gap-1.5 bg-white text-slate-800">
+              <Download size={14} /> Unduh
             </a>
-            <button type="button" onClick={() => setLightbox(null)} className="btn-ghost">
-              ✕ Tutup
+            <button type="button" onClick={() => setLightbox(null)} className="btn-ghost inline-flex items-center gap-1.5">
+              <X size={14} /> Tutup
             </button>
           </div>
         </div>

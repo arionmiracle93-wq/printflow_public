@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, Square } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -35,9 +36,17 @@ export function ChecklistToggle({
       type="button"
       onClick={toggle}
       disabled={pending}
-      className={value ? "btn-ghost border-emerald-300 bg-emerald-50 text-emerald-700" : "btn-primary"}
+      className={value ? "btn-ghost inline-flex items-center gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-700" : "btn-primary inline-flex items-center gap-1.5"}
     >
-      {value ? `✅ ${labelOff}` : `☐ ${labelOn}`}
+      {value ? (
+        <>
+          <CheckCircle2 size={15} /> {labelOff}
+        </>
+      ) : (
+        <>
+          <Square size={15} /> {labelOn}
+        </>
+      )}
     </button>
   );
 }

@@ -1,3 +1,4 @@
+import { BookOpen, Download, FileText, FolderOpen, Pin, Settings } from "lucide-react";
 import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
@@ -42,7 +43,9 @@ export default function CatatanPerubahanPage() {
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-5 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-300">Dokumentasi</p>
-          <h1 className="mt-1 text-xl font-extrabold md:text-2xl">📄 Catatan Perubahan</h1>
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold md:text-2xl">
+            <FileText size={22} strokeWidth={2.3} /> Catatan Perubahan
+          </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-300">
             Setiap update penting disimpan sebagai berkas <code>.txt</code> supaya bisa dibaca{" "}
             <strong>sampai selesai tanpa terpotong</strong>. Bisa dibaca di sini, atau diunduh untuk disimpan.
@@ -57,7 +60,7 @@ export default function CatatanPerubahanPage() {
 
       {docs.length === 0 ? (
         <div className="card p-10 text-center">
-          <p className="text-4xl">📄</p>
+          <FileText size={40} strokeWidth={1.6} className="mx-auto text-slate-300" />
           <p className="mt-2 font-bold text-slate-700">Belum ada catatan perubahan</p>
           <p className="mt-1 text-sm text-slate-500">
             Folder <code>public/{FOLDER}/</code> belum berisi berkas <code>.txt</code>.
@@ -67,7 +70,9 @@ export default function CatatanPerubahanPage() {
         <>
           {/* DAFTAR & UNDUH */}
           <div className="card p-4">
-            <h2 className="text-sm font-bold text-slate-900">🗂️ Daftar berkas (klik untuk mengunduh)</h2>
+            <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+              <FolderOpen size={16} /> Daftar berkas (klik untuk mengunduh)
+            </h2>
             <ul className="mt-2 space-y-1.5">
               {docs.map((doc) => (
                 <li key={doc.name}>
@@ -76,8 +81,12 @@ export default function CatatanPerubahanPage() {
                     download
                     className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm transition hover:bg-indigo-50"
                   >
-                    <span className="truncate font-semibold text-slate-700">📄 {doc.name}</span>
-                    <span className="shrink-0 text-[11px] font-bold text-indigo-600">⬇️ {(doc.size / 1024).toFixed(1)} KB</span>
+                    <span className="flex items-center gap-1 truncate font-semibold text-slate-700">
+                      <FileText size={13} className="shrink-0" /> {doc.name}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-indigo-600">
+                      <Download size={11} /> {(doc.size / 1024).toFixed(1)} KB
+                    </span>
                   </a>
                 </li>
               ))}
@@ -108,18 +117,20 @@ export default function CatatanPerubahanPage() {
       )}
 
       <div className="card p-4">
-        <h2 className="text-sm font-bold text-slate-900">📌 Kesepakatan ke depan</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <Pin size={16} /> Kesepakatan ke depan
+        </h2>
         <p className="mt-1 text-sm text-slate-600">
           Kalau balasan saya panjang <strong>dan</strong> penting untuk dokumentasi perubahan, akan saya buatkan
           berkas <code>.txt</code> di folder ini, lalu halaman ini otomatis menampilkannya. Dokumen{" "}
           <code>00-DAFTAR-ISI.txt</code> selalu berisi peta terkini beserta ringkasan semua perubahan sejak awal.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link href="/panduan" className="btn-ghost">
-            📘 Panduan Lengkap
+          <Link href="/panduan" className="btn-ghost inline-flex items-center gap-1.5">
+            <BookOpen size={14} /> Panduan Lengkap
           </Link>
-          <Link href="/pengaturan" className="btn-ghost">
-            ⚙️ Pengaturan
+          <Link href="/pengaturan" className="btn-ghost inline-flex items-center gap-1.5">
+            <Settings size={14} /> Pengaturan
           </Link>
         </div>
       </div>

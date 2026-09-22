@@ -1,9 +1,11 @@
 "use client";
 
+import { ArrowRight, CheckCircle2, Pencil, RefreshCw, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { NEXT_STATUS, STATUSES, statusMeta, type StatusKey } from "@/lib/domain";
 import { outsourceStatusMeta } from "@/lib/outsource";
+import { STATUS_ICONS } from "@/components/ui";
 
 export function OrderStatusControls({
   orderId,
@@ -19,7 +21,7 @@ export function OrderStatusControls({
   const [note, setNote] = useState("");
   const [actor, setActor] = useState("Owner");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<ReactNode | null>(null);
 
   const next = NEXT_STATUS[currentStatus as StatusKey] ?? null;
 
@@ -50,7 +52,11 @@ export function OrderStatusControls({
       }
       setStatus(target);
       setNote("");
-      setMessage(`✅ Status diperbarui ke "${statusMeta(target).label}".`);
+      setMessage(
+        <span className="inline-flex items-center gap-1.5">
+          <CheckCircle2 size={13} className="shrink-0" /> Status diperbarui ke &quot;{statusMeta(target).label}&quot;.
+        </span>,
+      );
       router.refresh();
     } finally {
       setBusy(false);
@@ -59,7 +65,9 @@ export function OrderStatusControls({
 
   return (
     <div className="card p-4">
-      <h3 className="text-sm font-bold text-slate-900">🔄 Update Status Pekerjaan</h3>
+      <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+        <RefreshCw size={16} /> Update Status Pekerjaan
+      </h3>
       <p className="text-xs text-slate-500">
         Klik tahap yang sedang dikerjakan. Riwayat perubahan otomatis tercatat.
       </p>
@@ -69,28 +77,31 @@ export function OrderStatusControls({
           type="button"
           disabled={busy}
           onClick={() => save(next, "Lanjut ke tahap berikutnya.")}
-          className="btn-primary mt-3 w-full"
+          className="btn-primary mt-3 inline-flex w-full items-center justify-center gap-1.5"
         >
-          ▶️ Lanjut ke: {statusMeta(next).short}
+          <ArrowRight size={15} /> Lanjut ke: {statusMeta(next).short}
         </button>
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-1.5">
-        {STATUSES.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            disabled={busy || s.key === currentStatus}
-            onClick={() => save(s.key)}
-            className={`chip transition ${
-              s.key === currentStatus
-                ? `${s.badge} cursor-default`
-                : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
-            }`}
-          >
-            {s.emoji} {s.short}
-          </button>
-        ))}
+        {STATUSES.map((s) => {
+          const StatusIcon = STATUS_ICONS[s.key];
+          return (
+            <button
+              key={s.key}
+              type="button"
+              disabled={busy || s.key === currentStatus}
+              onClick={() => save(s.key)}
+              className={`chip inline-flex items-center gap-1 transition ${
+                s.key === currentStatus
+                  ? `${s.badge} cursor-default`
+                  : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
+              }`}
+            >
+              {StatusIcon ? <StatusIcon size={12} /> : null} {s.short}
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-3 space-y-2">
@@ -108,8 +119,8 @@ export function OrderStatusControls({
           <label className="label">Diupdate oleh</label>
           <input value={actor} onChange={(e) => setActor(e.target.value)} className="input" />
         </div>
-        <button type="button" disabled={busy} onClick={() => save(status)} className="btn-ghost w-full">
-          💾 Simpan catatan pada status ini
+        <button type="button" disabled={busy} onClick={() => save(status)} className="btn-ghost inline-flex w-full items-center justify-center gap-1.5">
+          <Save size={14} /> Simpan catatan pada status ini
         </button>
       </div>
 
@@ -184,7 +195,9 @@ export function OrderQuickEdit({
 
   return (
     <div className="card p-4">
-      <h3 className="text-sm font-bold text-slate-900">✏️ Ubah Data Pekerjaan</h3>
+      <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+        <Pencil size={16} /> Ubah Data Pekerjaan
+      </h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Deadline tanggal</label>
@@ -254,15 +267,23 @@ export function OrderQuickEdit({
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={save} disabled={busy} className="btn-primary">
-          {busy ? "Menyimpan…" : "💾 Simpan Perubahan"}
+        <button type="button" onClick={save} disabled={busy} className="btn-primary inline-flex items-center gap-1.5">
+          {busy ? (
+            "Menyimpan…"
+          ) : (
+            <>
+              <Save size={14} /> Simpan Perubahan
+            </>
+          )}
         </button>
-        <button type="button" onClick={remove} disabled={busy} className="btn-danger">
-          🗑️ Hapus
+        <button type="button" onClick={remove} disabled={busy} className="btn-danger inline-flex items-center gap-1.5">
+          <Trash2 size={14} /> Hapus
         </button>
       </div>
       {saved ? (
-        <p className="mt-2 text-xs font-semibold text-emerald-600">✅ Perubahan tersimpan.</p>
+        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+          <CheckCircle2 size={13} /> Perubahan tersimpan.
+        </p>
       ) : null}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bell, BellOff, Check, Copy, KeyRound, RefreshCw, Send, ShieldAlert } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Bell, BellOff, Check, CheckCircle2, Copy, KeyRound, RefreshCw, Send, ShieldAlert } from "lucide-react";
 
 function base64Key(value: string) {
   const padding = "=".repeat((4 - (value.length % 4)) % 4);
@@ -37,7 +37,7 @@ export function PushNotificationSettings() {
   const [subscribed, setSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<ReactNode | null>(null);
   const [generated, setGenerated] = useState<GeneratedKeys | null>(null);
   const [workerVersion, setWorkerVersion] = useState<string>("belum terbaca");
   const [email, setEmail] = useState("");
@@ -136,7 +136,11 @@ export function PushNotificationSettings() {
       }
       setSubscribed(true);
       await refreshStatus();
-      setMessage("✅ Perangkat aktif. Tekan Uji Notifikasi untuk memastikan panel Android bekerja.");
+      setMessage(
+        <span className="inline-flex items-center gap-1.5">
+          <CheckCircle2 size={13} className="shrink-0" /> Perangkat aktif. Tekan Uji Notifikasi untuk memastikan panel Android bekerja.
+        </span>,
+      );
     } catch {
       setMessage("Gagal mengaktifkan notifikasi. Pastikan memakai HTTPS dan Chrome/Edge terbaru.");
     } finally { setBusy(false); }
@@ -176,7 +180,11 @@ export function PushNotificationSettings() {
         requireInteraction: true,
         data: { url: "/notifikasi" },
       });
-      setMessage("✅ Uji lokal diperintahkan ke Android. Minimize APK dan lihat panel notifikasi. Jika tidak muncul, cek izin aplikasi/Chrome dan Do Not Disturb.");
+      setMessage(
+        <span className="inline-flex items-center gap-1.5">
+          <CheckCircle2 size={13} className="shrink-0" /> Uji lokal diperintahkan ke Android. Minimize APK dan lihat panel notifikasi. Jika tidak muncul, cek izin aplikasi/Chrome dan Do Not Disturb.
+        </span>,
+      );
     } catch (error) {
       setMessage(`Uji lokal gagal: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -225,7 +233,11 @@ export function PushNotificationSettings() {
         errors?: Array<{ statusCode: number | null; message: string; deviceName: string | null }>;
       };
       if (json.ok) {
-        setMessage(`✅ Push server diterima layanan push: ${json.sent}/${json.attempted} perangkat. Minimize APK lalu cek panel Android.`);
+        setMessage(
+          <span className="inline-flex items-center gap-1.5">
+            <CheckCircle2 size={13} className="shrink-0" /> Push server diterima layanan push: {json.sent}/{json.attempted} perangkat. Minimize APK lalu cek panel Android.
+          </span>,
+        );
       } else {
         const detail = json.errors?.map((item) => `[${item.statusCode ?? "?"}] ${item.message}`).join(" · ");
         setMessage(`${json.error ?? "Notifikasi uji gagal."}${detail ? ` Detail: ${detail}` : ""}${json.removed ? ` Subscription kedaluwarsa dihapus: ${json.removed}.` : ""}`);
@@ -252,7 +264,9 @@ export function PushNotificationSettings() {
             <p className="text-xs font-extrabold text-[#07384f]">Konfigurasi VAPID di Vercel</p>
           </div>
           {configured ? (
-            <p className="mt-2 text-xs font-semibold text-emerald-700">✅ VAPID server sudah aktif. Jangan mengganti key agar subscription lama tetap berlaku.</p>
+            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <CheckCircle2 size={13} className="shrink-0" /> VAPID server sudah aktif. Jangan mengganti key agar subscription lama tetap berlaku.
+            </p>
           ) : (
             <div className="mt-2 space-y-2">
               <p className="text-xs text-amber-900">Buat key, lalu salin ke Vercel → Settings → Environment Variables → Redeploy.</p>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Building2, CircleDollarSign, Clock3, ExternalLink, PackageCheck, Truck } from "lucide-react";
+import { AlertTriangle, Building2, CircleDollarSign, Clock3, ExternalLink, PackageCheck, StickyNote, Truck } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { safeDb } from "@/lib/dbcheck";
 import { deadlineOf, formatDateID, formatRupiah, humanDuration } from "@/lib/domain";
@@ -50,8 +50,8 @@ export default async function MitraPage() {
                 <div className="space-y-3 p-4">
                   <div className="grid grid-cols-2 gap-2"><Info label="Dikerjakan oleh" value={row.partnerName} /><Info label="Target kembali" value={`${formatDateID(row.expectedDate)} · ${row.expectedTime}`} /><Info label="Biaya mitra" value={formatRupiah(row.vendorCost)} /><Info label="Margin kotor" value={formatRupiah(row.orderPrice - row.vendorCost)} danger={row.orderPrice - row.vendorCost < 0} /></div>
                   {!done ? <p className={`rounded-xl px-3 py-2 text-xs font-semibold ${hours < 0 ? "bg-rose-50 text-rose-700" : hours < 24 ? "bg-amber-50 text-amber-800" : "bg-teal-50 text-teal-700"}`}><Clock3 size={13} className="mr-1 inline" />{hours < 0 ? `Target kembali terlambat ${humanDuration(hours)}` : `Sisa ${humanDuration(hours)} menuju target kembali`}</p> : null}
-                  {bufferHours < 8 && !done ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">⚠️ Buffer ke deadline pelanggan hanya {humanDuration(bufferHours)}. Idealnya sisakan ≥ 8 jam untuk QC dan revisi.</p> : null}
-                  {row.notes ? <p className="text-xs text-slate-500">📝 {row.notes}</p> : null}
+                  {bufferHours < 8 && !done ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"><AlertTriangle size={13} className="mr-1 inline" />Buffer ke deadline pelanggan hanya {humanDuration(bufferHours)}. Idealnya sisakan ≥ 8 jam untuk QC dan revisi.</p> : null}
+                  {row.notes ? <p className="text-xs text-slate-500"><StickyNote size={12} className="mr-1 inline" />{row.notes}</p> : null}
                   <Link href={`/pesanan/${row.orderId}`} className="inline-flex items-center gap-1 text-xs font-extrabold text-teal-700 hover:underline">Update status mitra <ExternalLink size={12} /></Link>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AlertTriangle, CheckCircle2, Cloud, Info, Lightbulb, Monitor, RefreshCw, Search, Settings, Stethoscope, XCircle } from "lucide-react";
 import type { DbCheck } from "@/lib/dbcheck";
 
 export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: string }) {
@@ -11,13 +12,17 @@ export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: stri
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-4 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-amber-100">Perlu disetel sekali saja</p>
-          <h1 className="mt-1 text-xl font-extrabold leading-snug md:text-2xl">⚙️ {problem.title}</h1>
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold leading-snug md:text-2xl">
+            <Settings size={20} strokeWidth={2.3} /> {problem.title}
+          </h1>
           <p className="mt-1 text-sm text-amber-50">{problem.message}</p>
         </div>
 
         <div className="space-y-4 p-5">
           {hint ? (
-            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">ℹ️ {hint}</p>
+            <p className="flex items-start gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              <Info size={15} className="mt-0.5 shrink-0" /> {hint}
+            </p>
           ) : null}
 
           <div>
@@ -40,44 +45,61 @@ export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: stri
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="btn-primary w-full"
+              className="btn-primary inline-flex w-full items-center justify-center gap-1.5"
             >
-              🔄 Saya sudah perbaiki, cek lagi
+              <RefreshCw size={15} /> Saya sudah perbaiki, cek lagi
             </button>
-            <Link href="/status" className="btn-ghost w-full">
-              🩺 Buka Halaman Diagnosis
+            <Link href="/status" className="btn-ghost inline-flex w-full items-center justify-center gap-1.5">
+              <Stethoscope size={15} /> Buka Halaman Diagnosis
             </Link>
           </div>
         </div>
       </div>
 
       <div className="card p-5">
-        <h2 className="text-sm font-bold text-slate-900">🔎 Kondisi pengaturan saat ini</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <Search size={16} /> Kondisi pengaturan saat ini
+        </h2>
         <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
-          <li>
-            {problem.env.ada ? "✅" : "❌"} Variable <code className="rounded bg-slate-100 px-1">DATABASE_URL</code>{" "}
-            {problem.env.ada ? "sudah ada" : "belum ada di server"}
+          <li className="flex items-start gap-1.5">
+            {problem.env.ada ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" /> : <XCircle size={15} className="mt-0.5 shrink-0 text-rose-600" />}
+            <span>
+              Variable <code className="rounded bg-slate-100 px-1">DATABASE_URL</code>{" "}
+              {problem.env.ada ? "sudah ada" : "belum ada di server"}
+            </span>
           </li>
-          <li>
-            {problem.env.local ? "🖥️" : "☁️"} Server database:{" "}
-            <code className="rounded bg-slate-100 px-1">{problem.env.host ?? "tidak diketahui"}</code>
+          <li className="flex items-start gap-1.5">
+            {problem.env.local ? <Monitor size={15} className="mt-0.5 shrink-0" /> : <Cloud size={15} className="mt-0.5 shrink-0" />}
+            <span>
+              Server database:{" "}
+              <code className="rounded bg-slate-100 px-1">{problem.env.host ?? "tidak diketahui"}</code>
+            </span>
           </li>
-          <li>
-            {problem.env.pakaiPooler ? "✅" : "⚠️"} Memakai koneksi{" "}
-            <strong>{problem.env.pakaiPooler ? "Pooled (benar untuk Vercel)" : "Direct / tidak terdeteksi"}</strong>
+          <li className="flex items-start gap-1.5">
+            {problem.env.pakaiPooler ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" /> : <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />}
+            <span>
+              Memakai koneksi{" "}
+              <strong>{problem.env.pakaiPooler ? "Pooled (benar untuk Vercel)" : "Direct / tidak terdeteksi"}</strong>
+            </span>
           </li>
-          <li>
-            {problem.env.pakaiSsl ? "✅" : "⚠️"} Koneksi terenkripsi (sslmode){" "}
-            {problem.env.pakaiSsl ? "sudah diaktifkan" : "belum terlihat di URL (akan diaktifkan otomatis oleh aplikasi)"}
+          <li className="flex items-start gap-1.5">
+            {problem.env.pakaiSsl ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" /> : <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />}
+            <span>
+              Koneksi terenkripsi (sslmode){" "}
+              {problem.env.pakaiSsl ? "sudah diaktifkan" : "belum terlihat di URL (akan diaktifkan otomatis oleh aplikasi)"}
+            </span>
           </li>
         </ul>
         {fatal ? (
-          <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
-            💡 Panduan lengkap dengan gambar langkah: buka halaman{" "}
-            <Link href="/panduan" className="font-bold underline">
-              /panduan
-            </Link>{" "}
-            → bagian LANGKAH B (Neon) dan LANGKAH D2 (Vercel).
+          <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
+            <Lightbulb size={14} className="mt-0.5 shrink-0" />
+            <span>
+              Panduan lengkap dengan gambar langkah: buka halaman{" "}
+              <Link href="/panduan" className="font-bold underline">
+                /panduan
+              </Link>{" "}
+              → bagian LANGKAH B (Neon) dan LANGKAH D2 (Vercel).
+            </span>
           </p>
         ) : null}
       </div>

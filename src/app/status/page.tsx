@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CheckCircle2, ClipboardList, Gauge, Plus } from "lucide-react";
 import { checkDatabase } from "@/lib/dbcheck";
 import { ProblemScreen } from "@/components/ProblemScreen";
 
@@ -15,7 +16,9 @@ export default async function StatusPage() {
         <div className="card overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-4 text-white">
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-100">Status Sistem</p>
-            <h1 className="mt-1 text-2xl font-extrabold">✅ Semua normal</h1>
+            <h1 className="mt-1 flex items-center gap-2 text-2xl font-extrabold">
+              <CheckCircle2 size={24} strokeWidth={2.3} /> Semua normal
+            </h1>
             <p className="mt-1 text-sm text-emerald-50">{check.message}</p>
           </div>
           <div className="grid gap-3 p-5 sm:grid-cols-2">
@@ -31,14 +34,14 @@ export default async function StatusPage() {
         <div className="card p-5">
           <h2 className="text-sm font-bold text-slate-900">Buka aplikasi</h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link href="/" className="btn-primary">
-              🏠 Dashboard
+            <Link href="/" className="btn-primary inline-flex items-center gap-1.5">
+              <Gauge size={15} /> Dashboard
             </Link>
-            <Link href="/pesanan" className="btn-ghost">
-              📋 Pekerjaan
+            <Link href="/pesanan" className="btn-ghost inline-flex items-center gap-1.5">
+              <ClipboardList size={15} /> Pekerjaan
             </Link>
-            <Link href="/pesanan/baru" className="btn-ghost">
-              ➕ Pekerjaan Baru
+            <Link href="/pesanan/baru" className="btn-ghost inline-flex items-center gap-1.5">
+              <Plus size={15} /> Pekerjaan Baru
             </Link>
           </div>
         </div>

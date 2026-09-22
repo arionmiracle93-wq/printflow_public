@@ -1,5 +1,7 @@
 "use client";
 
+import { RefreshCw, ServerCrash, Stethoscope } from "lucide-react";
+
 export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <html lang="id">
@@ -28,7 +30,9 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           }}
         >
           <div style={{ background: "linear-gradient(90deg,#4f46e5,#7c3aed)", color: "#fff", padding: "18px 22px" }}>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>😅 Aplikasi tidak dapat dimuat</h1>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
+              <ServerCrash size={20} strokeWidth={2.3} /> Aplikasi tidak dapat dimuat
+            </h1>
             <p style={{ margin: "6px 0 0", fontSize: 14, color: "#e0e7ff" }}>
               Biasanya karena <strong>DATABASE_URL</strong> belum diisi di Vercel.
             </p>
@@ -60,9 +64,12 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
                   fontSize: 14,
                   background: "#4f46e5",
                   color: "#fff",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
               >
-                🔄 Coba Lagi
+                <RefreshCw size={15} /> Coba Lagi
               </button>
               <a
                 href="/status"
@@ -74,9 +81,12 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
                   fontSize: 14,
                   border: "1px solid #e2e8f0",
                   color: "#334155",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
               >
-                🩺 Halaman Diagnosis
+                <Stethoscope size={15} /> Halaman Diagnosis
               </a>
             </div>
           </div>

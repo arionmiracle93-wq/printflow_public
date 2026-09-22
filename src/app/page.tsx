@@ -7,6 +7,7 @@ import {
   Clock3,
   Flame,
   FolderOpen,
+  Hand,
   Lightbulb,
   ListTodo,
   PackageCheck,
@@ -71,7 +72,7 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
-                <Greeting /> <span aria-hidden>👋</span>
+                <Greeting /> <Hand size={20} className="inline text-amber-300" aria-hidden />
               </p>
               <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[.1em] text-white/50">
                 <LocalDateTime />

@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Building2, Loader2, X } from "lucide-react";
+import { Building2, CheckCircle2, Loader2, X } from "lucide-react";
 import { STATUSES, statusMeta } from "@/lib/domain";
 import { OUTSOURCE_STATUSES, outsourceStatusMeta } from "@/lib/outsource";
 
@@ -46,7 +46,7 @@ export function QuickStatusPopup({
   const [loadingOutsource, setLoadingOutsource] = useState(false);
   const [busyStatus, setBusyStatus] = useState<string | null>(null);
   const [busyOutsource, setBusyOutsource] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<ReactNode | null>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -104,7 +104,11 @@ export function QuickStatusPopup({
         return;
       }
       setStatus(target);
-      setMessage(`✅ Status diperbarui ke "${statusMeta(target).label}".`);
+      setMessage(
+        <span className="inline-flex items-center gap-1.5">
+          <CheckCircle2 size={13} className="shrink-0" /> Status diperbarui ke &quot;{statusMeta(target).label}&quot;.
+        </span>,
+      );
       router.refresh();
     } finally {
       setBusyStatus(null);
@@ -127,7 +131,11 @@ export function QuickStatusPopup({
         return;
       }
       setOutsource({ ...outsource, status: target });
-      setMessage(`✅ Status mitra diperbarui ke "${outsourceStatusMeta(target).label}".`);
+      setMessage(
+        <span className="inline-flex items-center gap-1.5">
+          <CheckCircle2 size={13} className="shrink-0" /> Status mitra diperbarui ke &quot;{outsourceStatusMeta(target).label}&quot;.
+        </span>,
+      );
       router.refresh();
     } finally {
       setBusyOutsource(null);
