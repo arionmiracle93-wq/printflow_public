@@ -45,7 +45,9 @@ export async function proxy(request: NextRequest) {
 
   if (isPublic(pathname) || (pathname === "/api/branding/logo" && request.method === "GET")) {
     if ((pathname === "/login" || pathname === "/setup-akun") && session) return NextResponse.redirect(new URL("/", request.url));
-    return NextResponse.next();
+    const publicHeaders = new Headers(request.headers);
+    publicHeaders.set("x-print-flow-pathname", pathname);
+    return NextResponse.next({ request: { headers: publicHeaders } });
   }
 
   if (!session) {
@@ -71,6 +73,7 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-print-flow-protected", "1");
   requestHeaders.set("x-print-flow-role", String(role ?? ""));
+  requestHeaders.set("x-print-flow-pathname", pathname);
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 

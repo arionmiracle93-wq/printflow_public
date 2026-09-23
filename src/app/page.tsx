@@ -141,7 +141,7 @@ export default async function DashboardPage() {
         <KpiCard label="DP / terbayar" value={formatRupiah(insight.stats.paidAmount)} tone="text-teal-700" icon={<Banknote size={18} />} />
       </section>
 
-      <div className="relative isolate grid gap-5 lg:grid-cols-3">
+      <div className="relative isolate grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Glow ambient lembut — nerusin identitas warna dari hero (teal+amber) supaya
             area konten utama ini nggak terasa hampa setelah lewat dari hero foto. */}
         <div className="pointer-events-none absolute -left-16 top-10 -z-10 h-64 w-64 rounded-full bg-teal-400/10 blur-3xl dark:bg-teal-400/[0.07]" />
@@ -152,6 +152,9 @@ export default async function DashboardPage() {
             <h2 className="section-title flex items-center gap-2"><Flame size={20} className="text-amber-500" /> Prioritas AI: urutan kerja</h2>
             <Link href="/pesanan" className="inline-flex items-center gap-1 text-xs font-extrabold text-teal-700 hover:underline">Lihat semua <ArrowRight size={13} /></Link>
           </div>
+          {/* Mobile: scroll horizontal 1 kartu penuh per layar (snap-x + scroll-snap-stop:always
+              biar swipe cepat nggak "lompat" ngelewatin kartu berikutnya dan mentok kepotong).
+              Desktop (md+): balik ke grid 2 kolom. */}
           {insight.insights.length === 0 ? (
             <div className="panel-glass flex flex-col items-center p-10 text-center">
               <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-700"><FolderOpen size={32} /></span>
@@ -160,13 +163,16 @@ export default async function DashboardPage() {
               <Link href="/pesanan/baru" className="btn-primary mt-4"><Plus size={16} /> Buat Pekerjaan Baru</Link>
             </div>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="scroll-x -mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-1 scroll-pl-3 sm:-mx-4 sm:px-4 sm:scroll-pl-4 md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0 md:pb-0 md:snap-none">
               {(() => {
                 const cards = insight.insights.slice(0, 6);
                 return cards.map((item, idx) => {
                   const isLastOfOddCount = cards.length % 2 !== 0 && idx === cards.length - 1;
                   return (
-                    <div key={item.orderId} className={isLastOfOddCount ? "md:col-span-2" : undefined}>
+                    <div
+                      key={item.orderId}
+                      className={`w-full shrink-0 snap-start [scroll-snap-stop:always] md:w-auto md:shrink md:snap-align-none${isLastOfOddCount ? " md:col-span-2" : ""}`}
+                    >
                       <InsightCard
                         insight={item}
                         photoCount={photoMap.get(item.orderId) ?? 0}

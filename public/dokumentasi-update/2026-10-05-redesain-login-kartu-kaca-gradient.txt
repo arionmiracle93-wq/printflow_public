@@ -1,0 +1,110 @@
+================================================================
+REDESAIN HALAMAN LOGIN — KARTU KACA DI ATAS GRADIENT TEBAL
+Tanggal : 05-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Halaman /login didesain ulang total mengikuti referensi gambar
+yang dikasih pemilik: latar belakang gradient tebal teal-biru
+dengan aksen cahaya kuning (kiri) dan biru (kanan), kartu kaca
+besar membulat, panel foto/video di kiri, panel form gelap
+translucent di kanan. Video hero (login-hero.mp4) TETAP dipakai
+persis seperti sebelumnya, tidak diganti apa pun. Perubahan ini
+KHUSUS untuk halaman /login saja — header navigasi, footer, dan
+tampilan semua halaman lain (Dashboard, Pekerjaan, dst) tidak
+disentuh sama sekali.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   Ditulis ulang total. Struktur kartu tetap sama secara konsep
+   (foto/video kiri, form kanan, ditumpuk di HP) tapi sekarang:
+     - Kartu lebih lebar (maks 74rem) dan lebih membulat (rounded
+       ~2rem), memakai class baru `.login-card`.
+     - Panel form kanan (`.login-form-panel`) sekarang gelap-teal
+       translucent, bukan putih seperti kartu biasa di aplikasi.
+
+B) src/components/LoginForm.tsx
+   Ditulis ulang total (isi/fungsi form TIDAK berubah — cuma
+   soal warna). Input, label, tombol lihat-password, kotak alasan
+   sesi berakhir, kotak error, dan tombol "Buat akun Owner
+   pertama" kini pakai warna yang kebaca di atas latar gelap
+   (class baru `.login-input` / `.login-label`, dan warna
+   teal/amber/rose transparan untuk kotak info).
+
+C) src/app/globals.css
+   Ditambahkan blok baru di paling bawah file, semuanya di-scope
+   lewat class `login-shell` di <body> (lihat poin D) supaya
+   TIDAK bocor ke halaman lain:
+     - `body.login-shell`      : gradient penuh 1 layar
+     - `.login-shell .app-header`, `.mobile-bottom-nav` : disembunyikan
+     - `.login-shell .app-main`  : jadi flex-center, tanpa padding
+       bawaan mobile (yang tadinya dikira-kira buat header+bottom
+       nav yang di halaman ini memang tidak tampil)
+     - `.login-shell footer`  : warna teks/border disesuaikan biar
+       kebaca di atas gradient gelap (isinya tetap sama persis:
+       "Print Flow · Produksi lebih terpantau..." + link Panduan
+       & Catatan Perubahan)
+     - `.login-card`, `.login-form-panel`, `.login-icon-badge`,
+       `.login-label`, `.login-input` : potongan visual kartu baru
+   `.login-photo-bg` (gradasi di atas video) TIDAK diubah.
+
+D) src/proxy.ts & src/app/layout.tsx
+   proxy.ts sekarang mengirim header `x-print-flow-pathname` di
+   setiap permintaan halaman publik/terautentikasi. layout.tsx
+   membaca header itu; kalau pathname persis "/login", <body>
+   dapat tambahan class `login-shell` yang menyalakan semua CSS
+   di atas. Ini caranya satu halaman bisa punya tampilan beda
+   total tanpa bikin layout terpisah atau menyentuh route lain.
+
+
+KEPUTUSAN KECIL YANG DIAMBIL (boleh diralat kalau tidak sesuai)
+----------------------------------------------------------------
+Referensi punya 3 ikon dekoratif melayang (shield, jam, grafik)
+di atas foto. Sempat dicoba ditambahkan sebagai elemen baru, tapi
+ternyata foto/video hero yang sudah ada di aplikasi ini MEMANG
+sudah punya ikon-ikon serupa terbakar di dalam gambarnya sendiri
+— jadi ikon tambahan malah tumpang tindih/dobel. Diputuskan untuk
+TIDAK menambah ikon baru dan membiarkan foto/video asli tampil
+apa adanya, karena hasilnya sudah sangat mendekati referensi
+tanpa itu.
+
+Tema terang/gelap bawaan aplikasi (tombol matahari/bulan) memang
+belum muncul sebelum login, jadi desain baru ini warnanya SENGAJA
+ditulis tetap (tidak ikut varian .dark) — selalu tampil gradient
+gelap seperti referensi, terlepas dari tema yang tersimpan di
+perangkat.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos, tidak ada error tipe
+  npx next build      : Compiled successfully, semua 60 route
+                         (termasuk /login) ke-generate normal
+  Screenshot manual   : desktop (1600px) & mobile (390px) sudah
+                         dicek, kartu, gradient, dan footer
+                         tampil sesuai referensi di kedua ukuran
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/components/LoginForm.tsx
+  src/app/globals.css
+  src/proxy.ts
+  src/app/layout.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-05-redesain-login-kartu-kaca-gradient.txt
+
+Tidak ada file lain yang berubah — AppLogo.tsx, video/foto hero,
+dan semua halaman selain /login tidak disentuh.
+
+================================================================

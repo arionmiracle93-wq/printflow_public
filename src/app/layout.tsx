@@ -48,6 +48,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   if (requestHeaders.get("x-print-flow-protected") === "1" && !user) {
     redirect("/api/auth/logout?alasan=sesi-berakhir");
   }
+  // Halaman login punya desain sendiri (kartu kaca di atas gradient tebal,
+  // lihat globals.css bagian "login-shell") — flag ini yang bikin header
+  // bawaan disembunyikan & footer disesuaikan TANPA menyentuh halaman lain.
+  const isLoginPage = requestHeaders.get("x-print-flow-pathname") === "/login";
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
@@ -59,7 +63,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen antialiased">
+      <body className={`min-h-screen antialiased${isLoginPage ? " login-shell" : ""}`}>
         <NavigationFeedback />
         <ServiceWorkerRegister />
         <ExitOnBackConfirm />

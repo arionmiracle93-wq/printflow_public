@@ -1,0 +1,102 @@
+================================================================
+STATUS "SIAP" TIDAK LAGI DIHITUNG TERLAMBAT
+Tanggal : 06-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Sebelumnya, begitu deadline sebuah pekerjaan lewat, sistem selalu
+menandainya "Terlambat" (skor risiko tinggi, badge merah) — WALAU
+statusnya sudah "Siap Diambil/Dikirim". Ini tidak sesuai kenyataan
+di lapangan: kalau barang sudah jadi dan tinggal menunggu
+pelanggan datang, itu bukan keterlambatan produksi.
+
+Sekarang: begitu status pekerjaan mencapai "Siap Diambil/Dikirim",
+pekerjaan itu TIDAK PERNAH lagi dihitung/ditampilkan sebagai
+terlambat — baik saat deadline masih mendekat maupun sudah lewat.
+Skor risikonya otomatis "Aman", dan pesannya berubah jadi
+informasi netral seperti "📦 Siap diambil — menunggu pelanggan
+19 jam" (bukan lagi "🔴 Terlambat 19 jam").
+
+Pekerjaan yang statusnya MASIH dalam produksi (antrian, desain,
+cetak, finishing, QC) dan sudah lewat deadline TETAP dihitung
+terlambat seperti biasa — perubahan ini murni soal status "Siap"
+saja, bukan menghilangkan fitur deteksi telatnya.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/lib/domain.ts
+   Fungsi baru `canBeLate(status)`: mengembalikan false untuk
+   status "siap", "selesai", dan "batal" — satu tempat pusat yang
+   dipakai di semua bagian aplikasi yang menghitung status telat.
+
+B) src/lib/ai.ts (otak analisa risiko AI)
+   - Skor risiko (`riskScore`) untuk status "siap" sekarang selalu
+     0 (sebelumnya dihitung dari sisa waktu seperti status aktif
+     lainnya, sehingga bisa tembus 90+ / "Terlambat" kalau deadline
+     lewat).
+   - Alasan & rekomendasi AI untuk status "siap" ditulis ulang jadi
+     bahasa netral ("barang sudah jadi, tinggal menunggu
+     pelanggan"), bukan lagi "deadline terlewati namun status
+     belum selesai".
+   - Judul singkat (`headline`) untuk status "siap" jadi
+     "📦 Siap diambil — ..." bukan lagi "🔴 Terlambat ... dari
+     deadline".
+   - Hitungan agregat "X pekerjaan terlambat" di Dashboard (KPI
+     card) dan jawaban AI ("ada berapa yang terlambat?") sekarang
+     mengecualikan status "siap" lewat `canBeLate()`.
+
+C) src/app/pesanan/page.tsx (daftar pekerjaan)
+   Teks "telat X jam" (merah, tebal) di kartu HP maupun tabel
+   desktop sekarang diganti "siap · menunggu diambil X jam" (warna
+   netral) khusus untuk pekerjaan berstatus "siap".
+
+D) src/app/pesanan/[id]/page.tsx (detail pekerjaan)
+   Kotak info "Sisa waktu" untuk status "siap" sekarang menampilkan
+   "Siap · menunggu diambil X jam" (hijau/netral), bukan lagi ikon
+   segitiga peringatan + "Terlambat X jam" (merah).
+
+
+YANG SENGAJA TIDAK DIUBAH
+----------------------------------------------------------------
+Halaman Produksi Mitra (/mitra) TIDAK disentuh — "Target kembali
+terlambat" di sana soal keterlambatan VENDOR mengembalikan barang
+ke percetakan (status "diterima"), konsep yang berbeda dari status
+pekerjaan pelanggan ("siap"). Kalau ternyata perlu aturan serupa
+di sana juga, tinggal bilang.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos, tidak ada error tipe
+  npx next build      : Compiled successfully
+  Skrip uji logic     : dijalankan manual (analyzeOrder +
+                         buildDashboardInsight) dengan 3 skenario —
+                         siap+telat, siap+mendekati deadline, dan
+                         cetak+telat (kontrol, harus tetap
+                         terdeteksi terlambat). Ketiganya sesuai
+                         ekspektasi; skrip uji dihapus lagi setelah
+                         dipakai (tidak ikut ter-upload).
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/lib/domain.ts
+  src/lib/ai.ts
+  src/app/pesanan/page.tsx
+  src/app/pesanan/[id]/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-06-status-siap-tidak-dihitung-terlambat.txt
+
+Halaman Dashboard (src/app/page.tsx) ikut kebenaran otomatis
+karena datanya seluruhnya berasal dari src/lib/ai.ts — filenya
+sendiri tidak perlu diubah.
+
+================================================================

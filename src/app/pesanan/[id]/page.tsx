@@ -192,7 +192,17 @@ function DetailBody({
           <Info
             label="Sisa waktu"
             value={
-              hoursLeft < 0 && !meta.done ? (
+              order.status === "siap" ? (
+                hoursLeft < 0 ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    Siap · menunggu diambil {humanDuration(hoursLeft)}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    Siap · sisa {humanDuration(hoursLeft)}
+                  </span>
+                )
+              ) : hoursLeft < 0 && !meta.done ? (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
                 </span>
@@ -495,7 +505,17 @@ function FallbackDetailBody({
           <Info
             label="Sisa waktu"
             value={
-              hoursLeft < 0 && !meta.done ? (
+              order.status === "siap" ? (
+                hoursLeft < 0 ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    Siap · menunggu diambil {humanDuration(hoursLeft)}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    Siap · sisa {humanDuration(hoursLeft)}
+                  </span>
+                )
+              ) : hoursLeft < 0 && !meta.done ? (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
                 </span>
