@@ -18,6 +18,13 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[48] 2026-10-09-login-geser-video-zoom-out-panel.txt
+    PALING BARU. Video digeser lebih ke kiri lagi (fokus crop
+    12%). Seluruh panel/kartu login di-"zoom out" ~15% di layar
+    ≥768px pakai transform scale(0.85) — video, kurva, teks,
+    tombol semuanya ikut mengecil proporsional, tetap center.
+    Mobile tidak berubah.
+
 [47] 2026-10-08-login-geser-video-mesh-form-ramai.txt
     PALING BARU. Video digeser lebih ke kiri lagi (fokus crop
     24%). Warna gradasi PERSIS di belakang panel form diramein —

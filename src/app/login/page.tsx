@@ -72,8 +72,21 @@ export default function LoginPage() {
         </defs>
       </svg>
 
+      {/* min-h-[80vh] di wrapper ini SENGAJA tetap pakai ukuran penuh
+          (bukan ikut mengecil) — supaya area vertikal tempat kartu
+          di-center tidak berubah; yang mengecil cuma kartunya sendiri
+          lewat scale di bawah, jadi hasilnya kartu kelihatan lebih
+          "zoom out" tapi tetap center di tengah area yang sama. */}
       <div className="relative mx-auto flex min-h-[80vh] max-w-5xl items-center px-3 sm:px-4">
-        <div className="login-glass-card relative rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[440px] md:rounded-[2.5rem]">
+        {/* md:scale-[0.85] = seluruh panel (video, kurva, teks, tombol)
+            dikecilkan bareng-bareng ~15% cuma di layar ≥768px — kayak
+            browser di-zoom out ke 85%, bukan cuma dipersempit lebarnya
+            (yang beda: font & spacing ikut proporsional mengecil, bukan
+            cuma bounding box-nya). origin-center biar mengecilnya dari
+            tengah, tetap center di area flex di atas. Mobile TIDAK
+            disentuh (dibuka lewat app, bukan "browser" desktop, dan
+            ukurannya sudah pas). */}
+        <div className="login-glass-card relative origin-center rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[440px] md:scale-[0.85] md:rounded-[2.5rem]">
           {/* Panel foto/video — kotak biasa di atas saat mobile (pendek, tanpa
               kurva); jadi lapisan penuh yang di-clip kurva saat md+.
               Isi /public/images/login-hero.jpg [desktop, jadi poster video] &
@@ -84,7 +97,7 @@ export default function LoginPage() {
                 videonya wajar (gak zoom ke tengah), pas mengisi panel kiri. */}
             <div className="absolute inset-y-0 left-0 hidden w-full md:block md:w-[58.27%]">
               <video
-                className="login-hero-video h-full w-full object-cover object-[24%_center]"
+                className="login-hero-video h-full w-full object-cover object-[12%_center]"
                 src="/videos/login-hero.mp4"
                 poster="/images/login-hero.jpg"
                 autoPlay
