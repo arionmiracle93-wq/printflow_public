@@ -1,0 +1,110 @@
+================================================================
+LOGIN — HAPUS LOGO DI PANEL VIDEO, GESER VIDEO, MESH BACKGROUND
+NYAMPE KE BELAKANG PANEL FORM
+Tanggal : 07-10-2026
+Status  : selesai, lanjutan dari 2026-10-06-login-kurva-svg-background-css-glow-border.txt
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+3 revisi kecil dari hasil kemarin:
+
+1. Logo + teks "Print Flow" yang nampang DI ATAS video panel login
+   dihapus. Logo di pojok kiri atas HEADER aplikasi (di luar kartu
+   login, dari layout.tsx) TIDAK disentuh — itu tetap ada seperti
+   biasa.
+
+2. Video di panel kiri digeser dikit ke kiri (pakai object-position,
+   bukan geser posisi elemennya — videonya tetap object-cover penuh
+   di panel, cuma titik fokus crop-nya digeser).
+
+3. Background di belakang panel form (sisi kanan kartu) diterangin
+   lagi + mesh gradasinya dilebarin supaya "nyampe" ke belakang
+   kartu, bukan cuma nongol di pinggir layar jauh dari kartu —
+   sebelumnya di layar lebar (>1440px) gradasi cyan di kanan
+   nongolnya di ujung viewport, sementara kartu cuma di tengah,
+   jadi area belakang panel form kurang kerasa gradasinya. Sekarang
+   sudah dicek sampai ke layar ultrawide 2560px, tetap kerasa.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   - Import `AppLogo` dihapus (sudah tidak dipakai di file ini).
+   - Blok `<div className="relative flex items-center gap-2.5 p-5
+     ..."><AppLogo /><span>Print Flow</span></div>` di dalam panel
+     video DIHAPUS total.
+   - Video ditambah class `object-[38%_center]` (semula cuma
+     `object-cover`) — menggeser titik fokus crop video ke kiri.
+   - Wrapper background diubah dari 1 lapis (`fixed inset-0 -z-10`
+     langsung isi `.printflow-login-bg`) jadi 2 lapis:
+       `<div className="fixed inset-0 -z-10 bg-[#052c3f]">`
+         `<div className="printflow-login-bg mx-auto h-full w-full
+          max-w-[1680px]">...</div>`
+       `</div>`
+     Lapis luar tetap penuh viewport (fallback warna gelap kalau
+     layar lebih lebar dari mesh). Lapis dalam (yang pasang class
+     printflow-login-bg dari CSS kiriman boss) sekarang DIBATASI
+     lebar maksimalnya 1680px & dipusatkan — supaya persentase
+     posisi radial-gradient di CSS-nya (yang dari dulu memang pakai
+     angka persen seperti "at 96% 52%") otomatis "nempel" di sekitar
+     kartu, sama seperti yang terjadi natural di HP (di HP lebar
+     layar ≈ lebar kartu, jadi otomatis nempel tanpa perlu dibatasi).
+
+B) src/app/globals.css
+   - HANYA blok desktop `.printflow-login-bg { ... }` (bukan yang
+     di dalam @media max-width:768px — itu sengaja tidak disentuh,
+     karena versi HP sudah dibilang oke) dinaikkan:
+       - Radial kanan (dulu "45% 66% at 100% 54%") → dibesarkan &
+         digeser dikit ke "64% 86% at 96% 52%", opacity dinaikkan
+         (0.82→0.95, 0.48→0.62, 0.20→0.34).
+       - Radial tengah (dulu "72% 70% at 50% 42%", opacity
+         0.28/0.12) → dinaikkan jadi 0.4/0.2 dan pusatnya digeser
+         ke 58% 46% (lebih dekat ke panel form).
+       - Base linear-gradient (dasar navy) digeser sedikit lebih
+         terang di tiap titik warnanya.
+     Radial kiri (gold) & radial bawah (cyan) TIDAK diubah.
+
+C) src/components/LoginForm.tsx — tidak disentuh.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (warning bawaan baseUrl, tidak terkait)
+  npx next build      : Compiled successfully
+  npx next start      : dicek manual di 1600px, 1920px, 2560px
+                          (ultrawide), dan mobile 420px — gradasi
+                          tetap kerasa di belakang panel form di
+                          semua ukuran, tidak ada celah warna aneh
+                          di pinggir layar lebar
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-07-login-hapus-logo-geser-video-mesh-form.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Murni CSS + markup.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau geseran video-nya masih kurang/kelebihan ke kiri, tinggal
+  ubah angka "38%" di class `object-[38%_center]` (video, di
+  src/app/login/page.tsx) — makin kecil angkanya makin ke kiri
+  fokusnya.
+- Kalau mau mesh-nya lebih/kurang lebar lagi dari kartu, tinggal
+  ubah angka `max-w-[1680px]` di wrapper background (file yang
+  sama).
+
+================================================================

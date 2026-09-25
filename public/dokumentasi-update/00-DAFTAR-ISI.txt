@@ -18,26 +18,33 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
-[45] 2026-10-06-status-siap-tidak-dihitung-terlambat.txt
-    PALING BARU. Pekerjaan berstatus "Siap Diambil/Dikirim"
-    sekarang TIDAK PERNAH lagi dihitung/ditampilkan sebagai
-    terlambat, baik mendekati maupun sudah lewat deadline — karena
-    di lapangan barang sudah jadi, tinggal menunggu pelanggan.
-    Skor risiko otomatis "Aman", teks jadi "📦 Siap diambil —
-    menunggu pelanggan X jam" (bukan lagi "🔴 Terlambat"). Status
-    yang masih dalam produksi (antrian/desain/cetak/finishing/QC)
-    tetap dihitung terlambat seperti biasa.
+[46] 2026-10-07-login-hapus-logo-geser-video-mesh-form.txt
+    PALING BARU. Logo+teks "Print Flow" di atas panel video login
+    dihapus (logo di header luar TIDAK disentuh). Video digeser
+    dikit ke kiri (object-position). Mesh background diterangin
+    lagi & dibatasi lebarnya (max-w-[1680px], dipusatkan) supaya
+    gradasinya nempel di belakang kartu/panel form di layar lebar
+    manapun, bukan cuma nongol di ujung viewport jauh dari kartu.
 
-[44] 2026-10-05-redesain-login-kartu-kaca-gradient.txt
-    PALING BARU. Halaman /login didesain ulang total mengikuti
-    referensi: kartu kaca besar di atas gradient tebal teal-biru
-    dengan aksen kuning/biru, panel form kanan jadi gelap
-    translucent. Video hero login TETAP dipakai, tidak diganti.
-    Perubahan cuma nyala di /login lewat class `login-shell` —
-    halaman lain tidak kesentuh sama sekali.
+[45] 2026-10-06-login-kurva-svg-background-css-glow-border.txt
+    PALING BARU. Kurva pembatas panel diganti ikut persis
+    curved-divider-master.svg (bukan lagi dari PDF). Background
+    diganti pakai printflow-login-background.css yg dikirim
+    (ditempel apa adanya + 2 elemen texture/vignette). Ditambah
+    garis tepi kaca bercahaya cyan/teal ~1.4px di sepanjang kurva.
+    Sekalian dibetulin: background sekarang beneran full-viewport
+    (sebelumnya ada celah terang di pinggir layar).
+
+[44] 2026-10-05-redesign-login-kurva-kaca.txt
+    PALING BARU. Halaman /login dirombak total: latar gelap
+    navy/teal/cyan+gold penuh layar, kartu glassmorphism, panel
+    video vs panel form dipisah kurva "S" persis dari geometri
+    LOGIN_PAGE.pdf (bukan garis lurus lagi). Video 1:1 TIDAK
+    diubah — yang melengkung cuma clip-path "jendela"-nya. Di HP
+    tetap ditumpuk vertikal tanpa kurva seperti sebelumnya.
 
 [43] 2026-10-04-login-lebih-terang.txt
-    Panel foto Login dibikin lebih terang: tekstur
+    PALING BARU. Panel foto Login dibikin lebih terang: tekstur
     titik halftone dihapus (khusus login, hero Dashboard tetap
     ada), dan gradasi gelapnya diturunkan jauh karena teksnya cuma
     sedikit ("Print Flow" + ikon). Ditambah text-shadow tipis biar

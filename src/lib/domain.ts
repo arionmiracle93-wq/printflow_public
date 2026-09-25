@@ -198,19 +198,6 @@ export const NEXT_STATUS: Record<StatusKey, StatusKey | null> = {
   batal: null,
 };
 
-/**
- * Status yang barangnya SUDAH JADI secara fisik: "siap" (siap diambil/
- * dikirim, tinggal menunggu pelanggan), "selesai", dan "batal". Begitu
- * order mencapai salah satu status ini, dia TIDAK BOLEH lagi dihitung/
- * ditampilkan sebagai "terlambat" walau deadline sudah dekat atau lewat —
- * di lapangan tidak ada lagi risiko produksi, cuma soal jadwal pelanggan
- * mengambil barangnya. Dipakai di semua tempat yang menghitung status
- * telat: lib/ai.ts (skor risiko AI), daftar pekerjaan, dan detail pekerjaan.
- */
-export function canBeLate(status: string): boolean {
-  return status !== "siap" && status !== "selesai" && status !== "batal";
-}
-
 export function formatRupiah(value: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
