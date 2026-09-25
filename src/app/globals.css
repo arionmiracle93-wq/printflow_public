@@ -237,8 +237,31 @@ body {
      gradasinya nyampe ke belakang panel form bukan cuma di ujung
      viewport. Wrapper-nya sendiri sekarang dibatasi lebarnya & dipusatkan
      sejajar kartu lewat max-w di JSX (login/page.tsx), jadi persentase di
-     bawah ini otomatis lebih "nempel" ke kartu daripada sebelumnya. */
+     bawah ini otomatis lebih "nempel" ke kartu daripada sebelumnya.
+     3 radial paling atas (biru, cyan terang, teal) ditambahkan khusus di
+     area belakang panel form (kanan) supaya mesh-nya lebih "ramai"/
+     berwarna-warni — opacity-nya dijaga sedang (bukan mendekati putih)
+     supaya setelah kena blur di kartu kaca tetap cukup gelap buat
+     kontras teks (lihat juga "pengaman kontras" di .login-glass-card). */
   background:
+    radial-gradient(
+      26% 30% at 74% 24%,
+      rgba(37, 99, 235, 0.65) 0%,
+      rgba(29, 78, 216, 0.3) 42%,
+      rgba(29, 78, 216, 0) 76%
+    ),
+    radial-gradient(
+      24% 28% at 76% 74%,
+      rgba(34, 211, 238, 0.7) 0%,
+      rgba(6, 182, 212, 0.32) 42%,
+      rgba(6, 182, 212, 0) 78%
+    ),
+    radial-gradient(
+      26% 30% at 64% 56%,
+      rgba(45, 212, 191, 0.5) 0%,
+      rgba(20, 184, 166, 0.22) 46%,
+      rgba(20, 184, 166, 0) 78%
+    ),
     radial-gradient(
       58% 72% at 2% 54%,
       rgba(232, 169, 24, 0.92) 0%,
@@ -422,7 +445,13 @@ body {
 @layer components {
   .login-glass-card {
     @apply relative w-full overflow-hidden border border-white/[0.14] shadow-[0_30px_80px_-24px_rgba(2,10,16,.7),inset_0_1px_0_rgba(255,255,255,.08)];
-    background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025));
+    /* Lapisan pertama (putih tipis) = sentuhan kaca seperti semula.
+       Lapisan kedua (navy gelap tipis) = "pengaman kontras" — supaya
+       walau background di belakangnya dibikin makin rame/berwarna,
+       teks putih & abu-abu di form tetap gampang dibaca. */
+    background:
+      linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025)),
+      linear-gradient(180deg, rgba(2, 18, 27, 0.32), rgba(2, 18, 27, 0.32));
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
   }

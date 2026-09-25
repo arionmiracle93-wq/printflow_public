@@ -84,7 +84,7 @@ export default function LoginPage() {
                 videonya wajar (gak zoom ke tengah), pas mengisi panel kiri. */}
             <div className="absolute inset-y-0 left-0 hidden w-full md:block md:w-[58.27%]">
               <video
-                className="login-hero-video h-full w-full object-cover object-[38%_center]"
+                className="login-hero-video h-full w-full object-cover object-[24%_center]"
                 src="/videos/login-hero.mp4"
                 poster="/images/login-hero.jpg"
                 autoPlay

@@ -18,6 +18,14 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[47] 2026-10-08-login-geser-video-mesh-form-ramai.txt
+    PALING BARU. Video digeser lebih ke kiri lagi (fokus crop
+    24%). Warna gradasi PERSIS di belakang panel form diramein —
+    ditambah biru/cyan-terang/teal yang posisinya dikalkulasi biar
+    nyala tepat di belakang form (bukan di ujung viewport). Kartu
+    kaca ditambah 1 layer scrim navy tipis biar teks tetap
+    kontras walau background makin berwarna.
+
 [46] 2026-10-07-login-hapus-logo-geser-video-mesh-form.txt
     PALING BARU. Logo+teks "Print Flow" di atas panel video login
     dihapus (logo di header luar TIDAK disentuh). Video digeser
