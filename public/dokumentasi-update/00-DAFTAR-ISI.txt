@@ -18,6 +18,12 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[49] 2026-10-10-login-input-lebih-gelap.txt
+    PALING BARU. Kotak input Username & Password digelapin
+    (bg-white/[0.06] → bg-black/30, fokus → bg-black/35) supaya
+    teks yang diketik lebih kontras. Background mesh gradasi
+    TIDAK disentuh sama sekali.
+
 [48] 2026-10-09-login-geser-video-zoom-out-panel.txt
     PALING BARU. Video digeser lebih ke kiri lagi (fokus crop
     12%). Seluruh panel/kartu login di-"zoom out" ~15% di layar

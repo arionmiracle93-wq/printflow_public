@@ -1,0 +1,66 @@
+================================================================
+LOGIN — KOTAK INPUT USERNAME/PASSWORD DIGELAPIN BUAT KONTRAS
+Tanggal : 10-10-2026
+Status  : selesai, lanjutan dari 2026-10-09-login-geser-video-zoom-out-panel.txt
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Kotak input Username & Password digelapin dikit supaya teks yang
+diketik lebih kontras. Background mesh gradasi (yang kemarin sudah
+dibilang "udah cakep") SAMA SEKALI TIDAK disentuh — cuma warna
+kotak input-nya.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/globals.css
+   - `.login-input`: background diganti dari `bg-white/[0.06]`
+     (tint putih 6% — ikut warna apa pun yang ada di belakangnya,
+     termasuk mesh berwarna, jadi kadang kurang kontras) jadi
+     `bg-black/30` (tint hitam 30% — bikin kotaknya konsisten
+     gelap apa pun warna mesh di belakangnya).
+   - State fokus (waktu diklik/diketik) juga diganti dari
+     `focus:bg-white/[0.09]` jadi `focus:bg-black/35` — tetap gelap,
+     bedanya dikit dari kondisi normal, indikator fokus utamanya
+     tetap dari border teal + ring yang sudah ada (tidak diubah).
+
+B) src/app/login/page.tsx — tidak disentuh.
+C) src/components/LoginForm.tsx — tidak disentuh.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (warning bawaan baseUrl, tidak terkait)
+  npx next build      : Compiled successfully
+  npx next start      : dicek manual dengan isi teks contoh di
+                          kolom Username ("ownerprintflow") buat
+                          mastiin teks putihnya beneran kebaca jelas
+                          di atas kotak yang baru, di desktop &
+                          mobile
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-10-login-input-lebih-gelap.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau masih kurang/kelebihan gelap, tinggal ubah angka opacity-nya
+  di src/app/globals.css: `bg-black/30` (normal) dan
+  `focus:bg-black/35` (waktu fokus) pada class `.login-input`.
+
+================================================================

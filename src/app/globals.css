@@ -457,7 +457,7 @@ body {
   }
 
   .login-input {
-    @apply w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-400/70 focus:border-teal-300/70 focus:bg-white/[0.09] focus:ring-4 focus:ring-teal-400/20;
+    @apply w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-400/70 focus:border-teal-300/70 focus:bg-black/35 focus:ring-4 focus:ring-teal-400/20;
   }
 
   .login-label {
