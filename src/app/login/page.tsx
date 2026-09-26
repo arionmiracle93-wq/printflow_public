@@ -78,15 +78,24 @@ export default function LoginPage() {
           lewat scale di bawah, jadi hasilnya kartu kelihatan lebih
           "zoom out" tapi tetap center di tengah area yang sama. */}
       <div className="relative mx-auto flex min-h-[80vh] max-w-5xl items-center px-3 sm:px-4">
-        {/* md:scale-[0.85] = seluruh panel (video, kurva, teks, tombol)
-            dikecilkan bareng-bareng ~15% cuma di layar ≥768px — kayak
-            browser di-zoom out ke 85%, bukan cuma dipersempit lebarnya
-            (yang beda: font & spacing ikut proporsional mengecil, bukan
-            cuma bounding box-nya). origin-center biar mengecilnya dari
-            tengah, tetap center di area flex di atas. Mobile TIDAK
-            disentuh (dibuka lewat app, bukan "browser" desktop, dan
-            ukurannya sudah pas). */}
-        <div className="login-glass-card relative origin-center rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[440px] md:scale-[0.85] md:rounded-[2.5rem]">
+        {/* Pengecilan ~15% di layar ≥768px ini DULU pakai
+            transform:scale(.85) — itu penyebab teks form kelihatan blur.
+            Sebabnya: `.login-glass-card` sekaligus punya backdrop-filter
+            (kaca buram) + overflow-hidden DI ELEMEN YANG SAMA yang kena
+            scale. Begitu satu elemen punya filter/backdrop-filter, browser
+            wajib "mencetak" seluruh isinya (teks label, input, tombol,
+            semua) jadi satu bitmap dulu SEBELUM transform dijalankan —
+            jadi scale(.85) yang jalan itu resize BITMAP hasil cetakan
+            teks, bukan teksnya sendiri, makanya buram/lembek pinggirnya.
+            Fix: ganti ke CSS `zoom` — beda dari transform, zoom bikin
+            browser BENERAN merender ulang semua isinya (font, border,
+            padding) dari awal di ukuran 85% itu, jadi teks tetap tajam
+            (vector, bukan bitmap yang di-resize). md:mx-auto WAJIB
+            ditambah karena zoom (tidak seperti scale) beneran mengecilkan
+            lebar box di layout, jadi perlu di-center ulang manual biar
+            posisinya tetap sama persis kayak sebelumnya. Mobile TIDAK
+            disentuh (semua class di sini masih ber-prefix md:). */}
+        <div className="login-glass-card relative rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[440px] md:mx-auto md:[zoom:0.85] md:rounded-[2.5rem]">
           {/* Panel foto/video — kotak biasa di atas saat mobile (pendek, tanpa
               kurva); jadi lapisan penuh yang di-clip kurva saat md+.
               Isi /public/images/login-hero.jpg [desktop, jadi poster video] &
