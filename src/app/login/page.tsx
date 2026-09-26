@@ -134,14 +134,22 @@ export default function LoginPage() {
           </div>
 
           {/* Garis tepi kaca yang bercahaya halus, mengikuti kurva persis.
-              Dua lapis: satu pendar lebar+blur+opacity rendah (glow), satu
-              garis tipis 1.4px di atasnya (core) — meniru
-              `border:1px solid rgba(90,230,235,.45)` +
-              `box-shadow:0 0 8px rgba(50,220,230,.20)` dari referensi, tapi
-              lewat SVG supaya bisa persis ngikutin kurva (bukan garis lurus).
+              Kalibrasi ulang berdasarkan sampling pixel LANGSUNG dari
+              screenshot referensi (bukan cuma dikira-kira): di referensi,
+              area di kiri & kanan garis TETAP FLAT sampai 1-2px sebelum
+              garisnya — jadi TIDAK ada halo lebar yang menyebar, murni garis
+              tipis yang terang/hampir solid (puncak terang ~rgb(115,214,232)
+              persis di garisnya). Makanya dua lapis di bawah ini beda total
+              dari versi lama (yang glow-nya kelebaran 9px + blur 4.5 → jadi
+              kabur, sementara garis intinya cuma 45% opacity → jadi redup):
+              - lapis 1 (glow): SEMPIT & blur KECIL, cuma buat kasih pendar
+                tipis pas di sekitar garis, bukan halo besar.
+              - lapis 2 (core): opacity TINGGI (nyaris solid) meniru garis
+                terang di referensi, bukan garis redup transparan.
               vector-effect="non-scaling-stroke" menjaga ketebalannya tetap
-              1-2px layar berapa pun ukuran kartunya. pointer-events-none +
-              hidden di mobile (kurva memang cuma aktif dari md ke atas). */}
+              berapa pun ukuran kartunya. pointer-events-none + hidden di
+              mobile (kurva memang cuma aktif dari md ke atas — TIDAK diubah,
+              revisi ini murni styling stroke desktop). */}
           <svg
             className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
             viewBox="0 0 1318 665"
@@ -150,22 +158,22 @@ export default function LoginPage() {
           >
             <defs>
               <filter id="loginCurveGlow" x="-60%" y="-30%" width="220%" height="160%">
-                <feGaussianBlur stdDeviation="4.5" />
+                <feGaussianBlur stdDeviation="1.3" />
               </filter>
             </defs>
             <path
               d={LOGIN_CURVE_STROKE_D}
               fill="none"
-              stroke="rgba(50,220,230,0.20)"
-              strokeWidth="9"
+              stroke="rgba(120,225,238,0.32)"
+              strokeWidth="4"
               vectorEffect="non-scaling-stroke"
               filter="url(#loginCurveGlow)"
             />
             <path
               d={LOGIN_CURVE_STROKE_D}
               fill="none"
-              stroke="rgba(90,230,235,0.45)"
-              strokeWidth="1.4"
+              stroke="rgba(150,232,244,0.92)"
+              strokeWidth="2.2"
               vectorEffect="non-scaling-stroke"
             />
           </svg>
