@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CheckCircle2, History, Image as ImageIcon, Lock, PartyPopper, StickyNote, UserRound, Wrench } from "lucide-react";
+import { CheckCircle2, History, Image as ImageIcon, Lock, PackageCheck, PartyPopper, StickyNote, UserRound, Wrench } from "lucide-react";
 import { STATUS_ICONS } from "@/components/ui";
 import { safeDb } from "@/lib/dbcheck";
 import { getPublicTracking } from "@/lib/queries";
@@ -137,6 +137,50 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
               <PartyPopper size={16} className="shrink-0" /> Pesanan Anda sudah bisa diambil / dikirim. Terima kasih sudah memesan!
             </p>
           ) : null}
+        </div>
+      </div>
+
+      {/* INFO PENGAMBILAN — kartu statis (isinya sama untuk semua status),
+          sengaja ditaruh selalu tampil (bukan cuma pas status Siap
+          Diambil/Kirim) supaya pelanggan sudah tahu prosedur & jam
+          operasionalnya dari awal, sebelum pesanannya beneran siap. Kalau
+          maunya cuma muncul pas order sudah siap/selesai, tinggal bungkus
+          blok ini dengan `{deadlineIrrelevant ? (...) : null}`. */}
+      <div className="card space-y-3 p-4">
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+          <PackageCheck size={16} /> Informasi Pengambilan Pesanan
+        </h2>
+
+        <div className="flex items-start gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-bold text-emerald-800">
+          <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+          <p>
+            Pesanan dengan status SIAP DIAMBIL / KIRIM berarti sudah jadi, tinggal ambil saja.
+          </p>
+        </div>
+
+        <div className="space-y-2 text-sm text-slate-700">
+          <p>Jika akan pickup langsung, mohon konfirmasi terlebih dahulu.</p>
+          <div>
+            <p>Jika pengambilan melalui aplikasi kurir/ojek online,</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              <li>Mohon kirim bukti pesanan kurir/ojek agar tidak terjadi kesalahan.</li>
+              <li className="font-bold">Tanpa bukti pesanan kurir/ojek online tidak bisa kami serahkan ke driver.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+          📌 <span className="font-bold">Catatan penting:</span> Barang yang tidak diambil selama{" "}
+          <span className="font-bold">1 minggu</span> sejak dinyatakan selesai bukan menjadi tanggung jawab toko.
+        </div>
+
+        <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+          <p className="font-bold text-slate-800">⏰ Jam Operasional</p>
+          <ul className="mt-1 space-y-0.5">
+            <li>Senin-Jumat : 08:00-22:00 (21:30 Close order)</li>
+            <li>Sabtu-Minggu : 09:00-21:00 (20:30 Close order)</li>
+          </ul>
+          <p className="mt-1.5 text-xs text-slate-500">Pengambilan maksimal 5 menit sebelum jam tutup.</p>
         </div>
       </div>
 

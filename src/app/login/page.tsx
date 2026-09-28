@@ -72,30 +72,24 @@ export default function LoginPage() {
         </defs>
       </svg>
 
-      {/* min-h-[80vh] di wrapper ini SENGAJA tetap pakai ukuran penuh
-          (bukan ikut mengecil) — supaya area vertikal tempat kartu
-          di-center tidak berubah; yang mengecil cuma kartunya sendiri
-          lewat scale di bawah, jadi hasilnya kartu kelihatan lebih
-          "zoom out" tapi tetap center di tengah area yang sama. */}
-      <div className="relative mx-auto flex min-h-[80vh] max-w-5xl items-center px-3 sm:px-4">
-        {/* Pengecilan ~15% di layar ≥768px ini DULU pakai
-            transform:scale(.85) — itu penyebab teks form kelihatan blur.
-            Sebabnya: `.login-glass-card` sekaligus punya backdrop-filter
-            (kaca buram) + overflow-hidden DI ELEMEN YANG SAMA yang kena
-            scale. Begitu satu elemen punya filter/backdrop-filter, browser
-            wajib "mencetak" seluruh isinya (teks label, input, tombol,
-            semua) jadi satu bitmap dulu SEBELUM transform dijalankan —
-            jadi scale(.85) yang jalan itu resize BITMAP hasil cetakan
-            teks, bukan teksnya sendiri, makanya buram/lembek pinggirnya.
-            Fix: ganti ke CSS `zoom` — beda dari transform, zoom bikin
-            browser BENERAN merender ulang semua isinya (font, border,
-            padding) dari awal di ukuran 85% itu, jadi teks tetap tajam
-            (vector, bukan bitmap yang di-resize). md:mx-auto WAJIB
-            ditambah karena zoom (tidak seperti scale) beneran mengecilkan
-            lebar box di layout, jadi perlu di-center ulang manual biar
-            posisinya tetap sama persis kayak sebelumnya. Mobile TIDAK
-            disentuh (semua class di sini masih ber-prefix md:). */}
-        <div className="login-glass-card relative rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[440px] md:mx-auto md:[zoom:0.85] md:rounded-[2.5rem]">
+      {/* min-h-[80vh] tetap ukuran penuh, TIDAK ikut mengecil — biar area
+          vertikal tempat kartu di-center tidak berubah. max-w-5xl (1024px)
+          diganti max-w-[57.6rem] (921.6px = persis 1024×0.9) — inilah
+          yang bikin kartu ~10% lebih kecil sekarang, BUKAN transform/zoom
+          lagi. Kenapa ganti pendekatan: transform:scale() (bahkan yang
+          sudah dipisah dari elemen backdrop-filter) TERBUKTI masih bikin
+          teks agak blur — itu memang keterbatasan umum GPU compositing
+          kalau nge-scale konten yang ada teksnya (browser tetap sempat
+          "mencetak" lapisan itu sebagai bitmap sebelum di-scale, sekecil
+          apapun kemungkinannya). Satu-satunya cara yang 100% dijamin tajam
+          adalah TIDAK PERNAH nge-scale sama sekali — jadi kartu & semua
+          isinya (padding, gap, ukuran font, ukuran ikon) di bawah ini
+          BENERAN dibikin ~10% lebih kecil dari awal (real size, direct
+          dari CSS), bukan dirender besar lalu di-kecilin belakangan.
+          Semua pengecilan di bawah cuma lewat class ber-prefix md: —
+          mobile 100% tidak disentuh, persis kayak sebelumnya. */}
+      <div className="relative mx-auto flex min-h-[80vh] max-w-[57.6rem] items-center px-3 sm:px-4">
+        <div className="login-glass-card relative rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[396px] md:rounded-[2.5rem]">
           {/* Panel foto/video — kotak biasa di atas saat mobile (pendek, tanpa
               kurva); jadi lapisan penuh yang di-clip kurva saat md+.
               Isi /public/images/login-hero.jpg [desktop, jadi poster video] &
@@ -120,22 +114,26 @@ export default function LoginPage() {
 
           {/* Panel form — komplemen kurva di atas. Konten diberi jarak kiri
               60% (md:pl-[60%]) supaya selalu aman dari titik terlebar kurva
-              (58.27%), berapa pun tinggi kartunya. */}
+              (58.27%), berapa pun tinggi kartunya. Padding vertikal/kanan
+              (py-8→2.025rem, pr-9→2.025rem... lihat angka persis di bawah)
+              ikut dikecilkan ~10% cuma di md: biar proporsinya senada sama
+              kartu yang sekarang lebih kecil — pl-[60%] sendiri persentase,
+              otomatis ikut menyesuaikan tanpa perlu diubah. */}
           <div className="login-form-panel relative md:absolute md:inset-0 md:h-full">
-            <div className="p-6 md:flex md:h-full md:flex-col md:justify-center md:py-8 md:pl-[60%] md:pr-9">
-              <div className="mb-5 flex items-center gap-2">
-                <span className="login-icon-tile">
+            <div className="p-6 md:flex md:h-full md:flex-col md:justify-center md:py-[1.8rem] md:pl-[60%] md:pr-[2.025rem]">
+              <div className="mb-5 flex items-center gap-2 md:mb-[1.125rem] md:gap-[0.45rem]">
+                <span className="login-icon-tile md:h-[2.025rem] md:w-[2.025rem] md:rounded-[0.675rem] md:[&>svg]:h-[15.3px] md:[&>svg]:w-[15.3px]">
                   <LockKeyhole size={17} />
                 </span>
                 <div>
-                  <h2 className="text-sm font-extrabold text-white">Masuk ke akun Anda</h2>
-                  <p className="text-[11px] text-slate-300/80">Gunakan akun Owner atau Karyawan.</p>
+                  <h2 className="text-sm font-extrabold text-white md:text-[0.7875rem]">Masuk ke akun Anda</h2>
+                  <p className="text-[11px] text-slate-300/80 md:text-[9.9px]">Gunakan akun Owner atau Karyawan.</p>
                 </div>
               </div>
-              <Suspense fallback={<p className="text-sm text-slate-300">Memuat form…</p>}>
+              <Suspense fallback={<p className="text-sm text-slate-300 md:text-[0.7875rem]">Memuat form…</p>}>
                 <LoginForm />
               </Suspense>
-              <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
+              <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400 md:mt-[0.9rem] md:text-[9.9px]">
                 Lupa password? Minta Owner membuka{" "}
                 <span className="font-bold text-slate-300">Kelola Pengguna</span> untuk mereset akun Anda.
               </p>
@@ -156,9 +154,10 @@ export default function LoginPage() {
               - lapis 2 (core): opacity TINGGI (nyaris solid) meniru garis
                 terang di referensi, bukan garis redup transparan.
               vector-effect="non-scaling-stroke" menjaga ketebalannya tetap
-              berapa pun ukuran kartunya. pointer-events-none + hidden di
-              mobile (kurva memang cuma aktif dari md ke atas — TIDAK diubah,
-              revisi ini murni styling stroke desktop). */}
+              berapa pun ukuran kartunya — TIDAK diubah sama sekali dari
+              revisi sebelumnya, termasuk sekarang kartunya jadi ~10% lebih
+              kecil: non-scaling-stroke justru menjamin garisnya tetap
+              setebal ini di layar, gak ikut mengecil/menebal. */}
           <svg
             className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
             viewBox="0 0 1318 665"

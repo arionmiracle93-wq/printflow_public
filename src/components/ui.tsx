@@ -1,16 +1,9 @@
 import type { ReactNode } from "react";
 import {
-  AlertTriangle,
   ArrowUpRight,
   Building2,
-  Check,
   CheckCheck,
-  Clock,
   FileText,
-  Flame,
-  Info,
-  Lightbulb,
-  OctagonAlert,
   Package,
   Palette,
   PackageCheck,
@@ -20,7 +13,6 @@ import {
   RefreshCw,
   Scissors,
   ShieldCheck,
-  Target,
   UserRound,
   XCircle,
   type LucideIcon,
@@ -107,41 +99,37 @@ export const STATUS_ICONS: Record<string, LucideIcon> = {
   batal: XCircle,
 };
 
-// Kotak highlight headline (ikon + warna) berdasarkan level risiko AI —
-// dipisah dari warna status pekerjaan karena maknanya berbeda (risiko waktu,
-// bukan tahap produksi). Progress bar di dalamnya tetap ikut warna STATUS
-// (meta.bar), bukan warna kotak ini, supaya adaptif per tahap produksi.
-const RISK_BOX: Record<RiskLevel, { box: string; iconBg: string; Icon: LucideIcon }> = {
-  aman: { box: "border-emerald-200 bg-emerald-50", iconBg: "bg-emerald-500", Icon: Check },
-  waspada: { box: "border-amber-200 bg-amber-50", iconBg: "bg-amber-500", Icon: AlertTriangle },
-  risiko: { box: "border-orange-200 bg-orange-50", iconBg: "bg-orange-500", Icon: Flame },
-  terlambat: { box: "border-rose-200 bg-rose-50", iconBg: "bg-rose-500", Icon: OctagonAlert },
-};
+// Tahapan produksi yang ditampilkan sebagai 6 strip progres di kartu pekerjaan
+// (urutannya sama dengan alur di STATUSES: antrian → ... → siap diambil).
+const STAGE_FLOW = ["antrian", "desain", "cetak", "finishing", "qc", "siap"] as const;
 
-// Ikon + warna untuk baris "alasan" (maks. 2 baris ditampilkan) — baris
-// pertama selalu ringkasan progres/waktu, baris kedua konteks tambahan.
-const REASON_ICON_TONE: { Icon: LucideIcon; bg: string }[] = [
-  { Icon: Clock, bg: "bg-sky-500" },
-  { Icon: Info, bg: "bg-violet-500" },
-];
-
-/** Buang emoji dari headline AI (🟢/🟡/🟠/🔴/✅/⛔) — sekarang diwakili ikon di kotak highlight, bukan teks emoji. */
-function stripEmoji(text: string): string {
-  return text
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
+/**
+ * Strip progres 6 segmen di kartu pekerjaan.
+ * - tahap yang sudah dilewati → teal
+ * - tahap yang sedang berjalan → kuning/oranye
+ * - tahap yang belum dikerjakan → abu gelap
+ * Status "selesai" = semua strip teal. "ditunda"/"batal" tidak punya posisi di
+ * alur, jadi semua strip abu dan hanya teks di kanan yang menjelaskan.
+ */
+function StageStrips({ status, label }: { status: string; label: string }) {
+  const idx = STAGE_FLOW.indexOf(status as (typeof STAGE_FLOW)[number]);
+  const allDone = status === "selesai";
+  const labelTone =
+    status === "ditunda" ? "text-amber-600" : status === "batal" ? "text-rose-600" : "text-slate-600";
+  return (
+    <div className="mt-3.5 flex items-center gap-3 pl-1" role="img" aria-label={`Tahap produksi: ${label}`}>
+      <div className="flex shrink-0 items-center gap-1">
+        {STAGE_FLOW.map((key, i) => {
+          const tone = allDone || (idx !== -1 && i < idx) ? "bg-teal-500" : idx !== -1 && i === idx ? "bg-amber-400" : "bg-slate-200";
+          return <span key={key} className={`h-1.5 w-6 rounded-full transition-colors duration-300 ${tone}`} />;
+        })}
+      </div>
+      <p className={`min-w-0 truncate text-xs font-semibold ${labelTone}`}>{label}</p>
+    </div>
+  );
 }
 
-/** Pecah kalimat rekomendasi jadi baris tebal (kalimat pertama) + baris biasa (sisanya). */
-function splitRecommendation(text: string): [string, string] {
-  const idx = text.indexOf(". ");
-  if (idx === -1) return [text, ""];
-  return [text.slice(0, idx + 1), text.slice(idx + 2)];
-}
-
-// Tombol aksi kartu pekerjaan: pil dengan warna senada panel "alasan"
-// (progres & kapasitas waktu) — bg-slate-50/border-slate-200 — teks & ikon
+// Tombol aksi kartu pekerjaan: pil bg-slate-50/border-slate-200 — teks & ikon
 // di tengah (bukan avatar bundar), dipakai untuk keempat aksi (Buka detail,
 // Update status, Kirim WA, Salin teks pesan) supaya konsisten satu sama lain.
 const ACTION_BTN =
@@ -162,9 +150,6 @@ export function InsightCard({
 }) {
   const meta = statusMeta(insight.status);
   const StatusIcon = STATUS_ICONS[insight.status] ?? UserRound;
-  const riskBox = RISK_BOX[insight.riskLevel];
-  const RiskIcon = riskBox.Icon;
-  const cleanHeadline = stripEmoji(insight.headline);
   // Dipakai bersama oleh tombol "Kirim WA" dan "Salin teks pesan" agar isi pesannya identik.
   // `items` ikut dibawa supaya pesan memuat seluruh produk dalam pekerjaan ini.
   const shareOrder = {
@@ -245,55 +230,7 @@ export function InsightCard({
         />
       </div>
 
-      <div className={`mt-3.5 rounded-2xl border px-4 py-3 ${riskBox.box}`}>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${riskBox.iconBg}`}>
-              <RiskIcon size={16} />
-            </span>
-            <p className="min-w-0 text-sm font-extrabold leading-snug text-[#07384f]">{cleanHeadline}</p>
-          </div>
-          <Target size={18} className="shrink-0 text-slate-400" />
-        </div>
-        <div className="mt-2.5">
-          <ProgressBar value={insight.progress} tone={meta.bar} />
-        </div>
-      </div>
-
-      {insight.reasons.length > 0 ? (
-        <div className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50">
-          {insight.reasons.slice(0, 2).map((reason, i) => {
-            const tone = REASON_ICON_TONE[i] ?? REASON_ICON_TONE[REASON_ICON_TONE.length - 1];
-            const ReasonIcon = tone.Icon;
-            return (
-              <div key={reason} className="flex items-start gap-2.5 px-3.5 py-3">
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white ${tone.bg}`}>
-                  <ReasonIcon size={13} />
-                </span>
-                <p className="text-xs font-medium leading-relaxed text-slate-700">{reason}</p>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {insight.recommendations[0]
-        ? (() => {
-            const [lead, rest] = splitRecommendation(insight.recommendations[0]);
-            return (
-              <div className="mt-3 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3.5 py-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white">
-                  <Lightbulb size={15} />
-                </span>
-                <span className="mt-0.5 w-px self-stretch bg-amber-400/30" />
-                <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-amber-900">{lead}</p>
-                  {rest ? <p className="mt-0.5 text-xs text-amber-800">{rest}</p> : null}
-                </div>
-              </div>
-            );
-          })()
-        : null}
+      <StageStrips status={insight.status} label={meta.label} />
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <a href={`/pesanan/${insight.orderId}`} className={ACTION_BTN}>

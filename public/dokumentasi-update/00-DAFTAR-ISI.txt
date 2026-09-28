@@ -18,6 +18,12 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[50] 2026-10-12-kartu-pekerjaan-strip-progres-6-tahap.txt
+    PALING BARU. Kartu pekerjaan di dashboard: 3 kotak tengah
+    (risiko + progress bar, alasan, rekomendasi) dihapus, diganti
+    6 strip progres (Antrian-Desain-Cetak-Finishing-QC-Siap) +
+    teks tahap di kanannya. Badge risiko kanan-atas tetap ada.
+
 [49] 2026-10-10-login-input-lebih-gelap.txt
     PALING BARU. Kotak input Username & Password digelapin
     (bg-white/[0.06] → bg-black/30, fokus → bg-black/35) supaya

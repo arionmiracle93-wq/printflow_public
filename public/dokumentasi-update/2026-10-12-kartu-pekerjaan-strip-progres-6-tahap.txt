@@ -1,0 +1,56 @@
+================================================================
+KARTU PEKERJAAN DASHBOARD: KOTAK RISIKO DIGANTI 6 STRIP PROGRES
+Tanggal : 12-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Di kartu pekerjaan dashboard, 3 kotak yang sebelumnya ada di tengah
+kartu (kotak hijau "Aman - target selesai dalam X hari" + progress
+bar, kotak "Progres 45% ... sisa waktu ...", dan kotak kuning
+"Tidak ada tindakan khusus") sudah DIHAPUS. Gantinya: 6 strip
+progres kecil dengan teks tahap di sebelah kanannya.
+
+
+CARA BACA STRIP
+----------------------------------------------------------------
+6 strip = 6 tahap produksi, urut kiri ke kanan:
+  Antrian - Desain - Cetak - Finishing - QC - Siap
+
+  - Strip TEAL      = tahap yang sudah dilewati
+  - Strip KUNING    = tahap yang sedang berjalan sekarang
+  - Strip ABU GELAP = tahap yang belum dikerjakan
+
+Contoh: status "Desain" -> strip 1 teal, strip 2 kuning, sisanya
+abu gelap, teks di kanan "Desain / Proof".
+
+Kasus khusus:
+  - Selesai  : ke-6 strip teal semua.
+  - Ditunda  : semua strip abu, teks "Ditunda (Menunggu Aproval)"
+               berwarna oranye (karena tidak punya posisi di alur).
+  - Dibatalkan: semua strip abu, teks "Dibatalkan" berwarna merah.
+
+
+YANG TIDAK BERUBAH
+----------------------------------------------------------------
+- Badge status + badge risiko (Aman/Waspada/dst) di kanan atas
+  kartu MASIH ADA, jadi info risiko tidak hilang.
+- Perhitungan AI/risiko di belakang layar tidak diubah sama sekali
+  (masih dipakai di daftar pekerjaan, detail, dan AI Assistant).
+- Empat tombol aksi (Buka detail, Update status, Kirim WA, Salin
+  teks pesan) tetap sama.
+- Tidak ada perubahan database, jadi TIDAK perlu buka /api/setup.
+
+
+FILE YANG DIUBAH
+----------------------------------------------------------------
+src/components/ui.tsx
+  - Komponen baru StageStrips (6 strip) dipakai di InsightCard.
+  - Dihapus: kotak risiko + progress bar, panel alasan, kotak
+    rekomendasi, beserta helper yang tidak terpakai lagi
+    (RISK_BOX, REASON_ICON_TONE, stripEmoji, splitRecommendation)
+    dan import ikon yang jadi nganggur.
+
+public/dokumentasi-update/ (file ini + 00-DAFTAR-ISI.txt)
