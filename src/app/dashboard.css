@@ -1,0 +1,221 @@
+/* =====================================================================
+   Print Flow — Gaya khusus HALAMAN DASHBOARD (revisi UI)
+   ---------------------------------------------------------------------
+   File ini SENGAJA dipisah dari globals.css supaya revisi dashboard
+   tidak mengubah tampilan halaman lain. Diimpor langsung di
+   src/app/page.tsx (Next.js App Router mengizinkan impor CSS global
+   dari komponen mana pun di dalam folder app/).
+
+   Semua ditulis pakai CSS biasa (tanpa @apply) agar aman dipakai
+   bersama Tailwind v4 tanpa konfigurasi tambahan.
+   ===================================================================== */
+
+/* ---------- 1. Kartu kaca khusus dashboard ---------- */
+.pf-card {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 100%);
+  box-shadow:
+    0 10px 30px rgba(15, 75, 84, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.dark .pf-card {
+  border-color: rgba(255, 255, 255, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.018) 100%);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Garis aksen tipis di sisi atas kartu (identitas brand teal → amber) */
+.pf-card-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: 1.5rem 1.5rem 0 0;
+  background: linear-gradient(90deg, rgba(20, 184, 166, 0.85), rgba(56, 189, 248, 0.5), rgba(251, 191, 36, 0.85));
+  opacity: 0.5;
+  transition: opacity 0.25s ease;
+}
+
+.pf-card-accent:hover::before {
+  opacity: 1;
+}
+
+/* ---------- 2. Header seksi ---------- */
+.pf-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.dark .pf-eyebrow {
+  color: #5eead4;
+}
+
+/* ---------- 3. Animasi masuk halus (dipakai bertahap per kartu) ---------- */
+@keyframes pf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pf-rise {
+  animation: pf-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--pf-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-rise {
+    animation: none;
+  }
+}
+
+/* ---------- 4. Hero dashboard ---------- */
+/* Lapisan gelap tambahan supaya teks tetap terbaca di foto seterang apa pun,
+   tanpa mengubah file .hero-photo-bg yang sudah ada di globals.css. */
+.pf-hero-veil {
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(4, 25, 34, 0.82) 0%, rgba(4, 25, 34, 0.42) 42%, rgba(4, 25, 34, 0.12) 68%),
+    linear-gradient(180deg, rgba(3, 18, 25, 0.1) 0%, rgba(3, 18, 25, 0.66) 100%);
+}
+
+@media (min-width: 768px) {
+  .pf-hero-veil {
+    background:
+      linear-gradient(100deg, rgba(3, 18, 25, 0.88) 0%, rgba(3, 18, 25, 0.66) 34%, rgba(3, 18, 25, 0.18) 58%, rgba(3, 18, 25, 0.04) 78%),
+      linear-gradient(180deg, rgba(3, 18, 25, 0) 40%, rgba(3, 18, 25, 0.45) 100%);
+  }
+}
+
+/* Kartu statistik kaca di dalam hero */
+.pf-hero-chip {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- 5. Strip tahapan produksi di kartu pekerjaan ---------- */
+.pf-stage {
+  height: 6px;
+  flex: 1 1 0%;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+  transition: background-color 0.3s ease;
+}
+
+.dark .pf-stage {
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.pf-stage-done {
+  background: linear-gradient(90deg, #0d9488, #14b8a6);
+}
+
+.pf-stage-now {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18);
+}
+
+/* ---------- 6. Carousel kartu pekerjaan (mobile) ---------- */
+.pf-snap {
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+}
+
+.pf-snap > * {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.pf-snap::-webkit-scrollbar {
+  height: 5px;
+}
+
+.pf-snap::-webkit-scrollbar-thumb {
+  background: rgba(20, 184, 166, 0.45);
+  border-radius: 999px;
+}
+
+/* ---------- 7. Tombol aksi kartu pekerjaan ---------- */
+.pf-action {
+  display: flex;
+  min-height: 44px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(248, 250, 252, 0.9);
+  padding: 0.5rem 0.625rem;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #07384f;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.pf-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(13, 148, 136, 0.45);
+  background: #f0fdfa;
+}
+
+.pf-action:active {
+  transform: scale(0.97);
+}
+
+.dark .pf-action {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2f5f1;
+}
+
+.dark .pf-action:hover {
+  border-color: rgba(45, 212, 191, 0.4);
+  background: rgba(20, 184, 166, 0.14);
+}
+
+.pf-action-primary {
+  border-color: rgba(13, 148, 136, 0.35);
+  background: linear-gradient(180deg, #0d9488, #0f766e);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
+}
+
+.pf-action-primary:hover {
+  background: linear-gradient(180deg, #14b8a6, #0d9488);
+  border-color: rgba(13, 148, 136, 0.5);
+  color: #ffffff;
+}
+
+.dark .pf-action-primary {
+  background: linear-gradient(180deg, #0d9488, #0b5f63);
+  color: #ffffff;
+}
+
+/* ---------- 8. Donut risiko ---------- */
+.pf-donut-total {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 9. Angka KPI tetap rapi walau panjang (Rupiah) ---------- */
+.pf-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,103 @@
+=========================================================
+REVISI UI DASHBOARD — 13 Oktober 2026
+=========================================================
+
+RINGKASAN
+---------
+Perombakan tampilan halaman Dashboard (halaman "/") supaya kondisi
+percetakan terbaca lebih cepat, lebih nyaman di HP, dan rapi di mode
+gelap. TIDAK ADA perubahan fungsional: query database, perhitungan
+risiko AI, update status, kirim WhatsApp, salin pesan, foto, mitra,
+serah terima shift, dan push notification tetap sama persis.
+
+
+FILE YANG DIUBAH / DITAMBAH
+---------------------------
+[GANTI] src/app/page.tsx
+[BARU]  src/app/dashboard.css
+[BARU]  src/components/dashboard/DashboardHero.tsx
+[BARU]  src/components/dashboard/DashboardStats.tsx
+[BARU]  src/components/dashboard/JobCard.tsx
+[BARU]  src/components/dashboard/JobCarousel.tsx
+[BARU]  src/components/dashboard/DashboardPanels.tsx
+
+Tidak ada file lama yang dihapus. src/components/ui.tsx tetap dipakai
+(khusus STATUS_ICONS) sehingga halaman lain tidak terpengaruh.
+
+
+DAFTAR PERUBAHAN TAMPILAN
+-------------------------
+1.  HERO
+    - Struktur baru: sapaan + jam lokal -> judul -> ringkasan AI ->
+      tombol aksi -> sorotan AI berjalan.
+    - Lapisan gelap tambahan (.pf-hero-veil) supaya teks tetap terbaca
+      di foto seterang apa pun. File foto tetap:
+      /public/images/dashboard-hero.jpg (desktop)
+      /public/images/dashboard-hero-mobile.jpg (HP)
+    - Papan angka kaca: Aktif / Telat / Waspada / Siap.
+      Di HP 4 kolom kecil, di desktop kotak 2x2 di sisi kanan.
+    - Tombol aksi tinggi minimal 42-44 px (nyaman disentuh).
+
+2.  FOKUS & TINDAKAN HARI INI
+    - Naik posisi ke bawah hero (dulu di bawah, mudah terlewat).
+    - Tampil sebagai kartu bernomor beraksen amber, 2 kolom di layar
+      lebar, dengan hitungan jumlah tindakan di pojok kanan header.
+
+3.  KARTU KPI (6 kartu)
+    - Sekarang bisa diklik menuju daftar pekerjaan terkait.
+    - Rel warna vertikal + ikon kotak + teks petunjuk kecil,
+      contoh: "Piutang +- Rp 12.345.678" di kartu Nilai order aktif.
+    - Dukungan mode gelap (versi lama masih memakai warna terang saja).
+    - Angka memakai tabular-nums supaya rapi walau nilainya panjang.
+
+4.  KARTU PEKERJAAN (Prioritas AI)
+    - Nomor prioritas #1..#6 mengikuti urutan skor risiko.
+    - Chip meta ringkas: produk (+jumlah item), PIC, mitra produksi,
+      dan SISA WAKTU ("Sisa 5 jam" / "Telat 6 jam" / "Tidak dihitung
+      telat" untuk status siap/selesai).
+    - Strip 6 tahap kini punya label: Antri, Desain, Cetak, Finish,
+      QC, Siap (label tampil mulai layar >= 640 px).
+    - Tombol aksi: "Buka detail" jadi tombol utama warna teal,
+      "Update status", "Kirim WA", "Salin teks" netral; semuanya
+      konsisten di mode terang maupun gelap.
+
+5.  GESER KARTU DI HP
+    - Ditambah titik indikator di bawah kartu: tahu ada berapa kartu
+      dan sedang berada di kartu ke berapa; titik bisa diketuk.
+    - Desktop tetap grid 2 kolom seperti sebelumnya.
+
+6.  PANEL POSISI PEKERJAAN PER TAHAP
+    - Dari daftar 9 baris memanjang menjadi grid kartu kecil
+      (2 kolom di tablet, 3 kolom di layar lebar) + total di header.
+    - Tahap yang kosong ditampilkan lebih redup agar tidak mengganggu.
+
+7.  DONUT DISTRIBUSI RISIKO
+    - Total pekerjaan aktif ditulis di tengah lingkaran.
+    - Segmen diberi celah tipis sehingga batas antar warna jelas.
+
+8.  DEADLINE HARI INI
+    - Baris menjadi kartu: jam besar di kiri, kode + judul + nama
+      pelanggan di tengah, status di kanan. 2 kolom di layar lebar.
+
+9.  PANEL CARA KERJA MONITORING AI
+    - Langkah 1-4 menjadi timeline bergaris.
+    - Skala skor risiko menjadi baris berwarna (0-34, 35-64, 65-89,
+      90-100) yang lebih mudah dibaca.
+
+10. DETAIL LAIN
+    - Animasi masuk halus bertahap (.pf-rise), otomatis dimatikan
+      untuk pengguna dengan setelan "kurangi gerak".
+    - Semua kartu memakai gaya kaca baru (.pf-card) yang meneruskan
+      gradient mesh di latar, konsisten terang maupun gelap.
+    - Tidak ada backdrop-blur berlebihan supaya tetap ringan di
+      WebView APK.
+
+
+CATATAN TEKNIS
+--------------
+- dashboard.css sengaja dipisah dari globals.css agar revisi ini tidak
+  mempengaruhi halaman lain. Diimpor langsung di src/app/page.tsx
+  (didukung Next.js App Router).
+- Seluruh CSS ditulis polos (tanpa @apply) sehingga aman dengan
+  Tailwind v4 tanpa konfigurasi tambahan.
+- Sudah diuji: npx tsc --noEmit dan next build (Next 16.2.6) sukses.
