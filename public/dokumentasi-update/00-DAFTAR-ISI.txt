@@ -18,6 +18,11 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[51] 2026-10-12-judul-kartu-pekerjaan-tidak-kepotong-di-mobile.txt
+    PALING BARU. Judul pekerjaan di kartu dashboard versi HP tidak
+    lagi dipotong 1 baris: font dikecilin (15px di HP), boleh
+    turun sampai 2 baris. Layar besar tetap ukuran lama.
+
 [50] 2026-10-12-kartu-pekerjaan-strip-progres-6-tahap.txt
     PALING BARU. Kartu pekerjaan di dashboard: 3 kotak tengah
     (risiko + progress bar, alasan, rekomendasi) dihapus, diganti

@@ -176,7 +176,7 @@ export function InsightCard({
               <span className="text-[13px] font-extrabold tracking-wide text-teal-700">{insight.code}</span>
               <PhotoQuickPeek orderId={insight.orderId} code={insight.code} count={photoCount} />
             </p>
-            <p className="mt-1 truncate text-lg font-black leading-tight text-[#07384f]">{insight.title}</p>
+            <p className="mt-1 line-clamp-2 break-words text-[15px] font-black leading-snug text-[#07384f] sm:text-lg sm:leading-tight" title={insight.title}>{insight.title}</p>
             <p className="text-xs font-medium text-slate-500">{insight.customerName}</p>
             <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
               <Package size={13} className="shrink-0" />
