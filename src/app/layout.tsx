@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -14,6 +16,17 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { UserMenu } from "@/components/UserMenu";
 import { MoreMenu } from "@/components/MoreMenu";
 import { getCurrentUser } from "@/lib/auth";
+
+/**
+ * Tipografi.
+ * Dimuat lewat next/font supaya berkas font ikut dihosting sendiri,
+ * tidak ada permintaan ke server pihak ketiga saat halaman dibuka,
+ * dan tidak ada kedipan teks. Nama variabelnya dipakai oleh
+ * design-tokens.css. Kalau baris ini dihapus, tumpukan font sistem
+ * otomatis dipakai dan tidak ada halaman yang rusak.
+ */
+const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Print Flow — Monitoring Produksi Percetakan",
@@ -49,7 +62,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     redirect("/api/auth/logout?alasan=sesi-berakhir");
   }
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
       <head>
         <script
           // Jalan sebelum konten dicat, supaya tidak ada kedipan putih

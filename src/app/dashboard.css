@@ -1,221 +1,190 @@
 /* =====================================================================
-   Print Flow — Gaya khusus HALAMAN DASHBOARD (revisi UI)
-   ---------------------------------------------------------------------
-   File ini SENGAJA dipisah dari globals.css supaya revisi dashboard
-   tidak mengubah tampilan halaman lain. Diimpor langsung di
-   src/app/page.tsx (Next.js App Router mengizinkan impor CSS global
-   dari komponen mana pun di dalam folder app/).
-
-   Semua ditulis pakai CSS biasa (tanpa @apply) agar aman dipakai
-   bersama Tailwind v4 tanpa konfigurasi tambahan.
+   PRINT FLOW - LAYOUT DASHBOARD
+   =====================================================================
+   Khusus halaman "/" saja. Diimpor langsung dari src/app/page.tsx.
+   Bergantung pada token di design-tokens.css.
    ===================================================================== */
 
-/* ---------- 1. Kartu kaca khusus dashboard ---------- */
-.pf-card {
-  position: relative;
-  min-width: 0;
-  max-width: 100%;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 100%);
-  box-shadow:
-    0 10px 30px rgba(15, 75, 84, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+/* Ketebalan garis ikon dikunci satu nilai di seluruh dashboard,
+   supaya berat visualnya seragam. */
+.pf-dash svg {
+  stroke-width: 1.75px;
 }
 
-.dark .pf-card {
-  border-color: rgba(255, 255, 255, 0.11);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.018) 100%);
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+/* ---------------------------------------------------------------
+   1. Pita status atas
+   Foto hero dan gradasi maskingnya memakai .hero-photo-bg milik
+   globals.css, yaitu versi ASLI aplikasi. Tidak ada aturan baru
+   di sini supaya tidak ada gradasi yang menimpanya.
+
+   2. Kartu KPI
+   Memakai komponen KpiCard asli dari src/components/ui.tsx,
+   apa adanya. Tidak ada aturan baru di sini.
+   --------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------
+   3. Antrean pekerjaan
+   Desktop memakai baris data. Ponsel memakai kartu.
+   --------------------------------------------------------------- */
+.pf-row,
+.pf-row-head {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) 6.25rem 6rem 4.25rem 9rem;
+  gap: 0.625rem;
+  align-items: center;
 }
 
-/* Garis aksen tipis di sisi atas kartu (identitas brand teal → amber) */
-.pf-card-accent::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  border-radius: 1.5rem 1.5rem 0 0;
-  background: linear-gradient(90deg, rgba(20, 184, 166, 0.85), rgba(56, 189, 248, 0.5), rgba(251, 191, 36, 0.85));
-  opacity: 0.5;
-  transition: opacity 0.25s ease;
-}
-
-.pf-card-accent:hover::before {
-  opacity: 1;
-}
-
-/* ---------- 2. Header seksi ---------- */
-.pf-eyebrow {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #0f766e;
-}
-
-.dark .pf-eyebrow {
-  color: #5eead4;
-}
-
-/* ---------- 3. Animasi masuk halus (dipakai bertahap per kartu) ---------- */
-@keyframes pf-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+@media (min-width: 1280px) {
+  .pf-row,
+  .pf-row-head {
+    grid-template-columns: 1.75rem minmax(0, 1fr) 7rem 6.5rem 4.5rem 9rem;
+    gap: 0.75rem;
   }
 }
 
-.pf-rise {
-  animation: pf-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: var(--pf-delay, 0ms);
+.pf-row {
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--pf-line-soft);
+  transition: background-color var(--pf-fast) ease;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .pf-rise {
-    animation: none;
-  }
+.pf-row:last-child {
+  border-bottom: 0;
 }
 
-/* ---------- 4. Hero dashboard ---------- */
-/* Lapisan gelap tambahan supaya teks tetap terbaca di foto seterang apa pun,
-   tanpa mengubah file .hero-photo-bg yang sudah ada di globals.css. */
-.pf-hero-veil {
-  background:
-    radial-gradient(120% 120% at 0% 0%, rgba(4, 25, 34, 0.82) 0%, rgba(4, 25, 34, 0.42) 42%, rgba(4, 25, 34, 0.12) 68%),
-    linear-gradient(180deg, rgba(3, 18, 25, 0.1) 0%, rgba(3, 18, 25, 0.66) 100%);
+.pf-row:hover {
+  background: var(--pf-surface-2);
 }
 
-@media (min-width: 768px) {
-  .pf-hero-veil {
-    background:
-      linear-gradient(100deg, rgba(3, 18, 25, 0.88) 0%, rgba(3, 18, 25, 0.66) 34%, rgba(3, 18, 25, 0.18) 58%, rgba(3, 18, 25, 0.04) 78%),
-      linear-gradient(180deg, rgba(3, 18, 25, 0) 40%, rgba(3, 18, 25, 0.45) 100%);
-  }
+.pf-row-head {
+  padding: 0.4375rem 0.875rem;
+  border-bottom: 1px solid var(--pf-line);
+  background: var(--pf-surface-2);
+  font-size: 0.6875rem;
+  font-weight: 620;
+  color: var(--pf-ink-3);
 }
 
-/* Kartu statistik kaca di dalam hero */
-.pf-hero-chip {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(6px);
+/* Tombol aksi ringkas.
+   Komponen ShareWhatsAppQuick dan CopyMessageQuick milik aplikasi membawa
+   label teksnya sendiri dan tidak diubah. Di baris desktop labelnya
+   disembunyikan secara visual dengan font-size 0, sehingga hanya ikon yang
+   tampil, tetapi teksnya tetap terbaca oleh pembaca layar. */
+.pf-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  font-size: 0;
+  border-radius: var(--pf-r-control);
+  border: 1px solid var(--pf-line);
+  background: var(--pf-surface);
+  color: var(--pf-ink-2);
+  cursor: pointer;
+  transition:
+    background-color var(--pf-fast) ease,
+    border-color var(--pf-fast) ease,
+    color var(--pf-fast) ease;
 }
 
-/* ---------- 5. Strip tahapan produksi di kartu pekerjaan ---------- */
-.pf-stage {
-  height: 6px;
-  flex: 1 1 0%;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.35);
-  transition: background-color 0.3s ease;
+.pf-act:hover {
+  border-color: var(--pf-accent-line);
+  background: var(--pf-accent-soft);
+  color: var(--pf-accent-strong);
 }
 
-.dark .pf-stage {
-  background: rgba(148, 163, 184, 0.22);
-}
-
-.pf-stage-done {
-  background: linear-gradient(90deg, #0d9488, #14b8a6);
-}
-
-.pf-stage-now {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18);
-}
-
-/* ---------- 6. Carousel kartu pekerjaan (mobile) ---------- */
-.pf-snap {
-  scrollbar-width: thin;
-  scroll-snap-type: x mandatory;
-}
-
-.pf-snap > * {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-
-.pf-snap::-webkit-scrollbar {
-  height: 5px;
-}
-
-.pf-snap::-webkit-scrollbar-thumb {
-  background: rgba(20, 184, 166, 0.45);
-  border-radius: 999px;
-}
-
-/* ---------- 7. Tombol aksi kartu pekerjaan ---------- */
-.pf-action {
-  display: flex;
-  min-height: 44px;
-  width: 100%;
+/* Di kartu ponsel label tetap ditampilkan karena ruangnya ada dan
+   teks lebih cepat dipahami daripada ikon sendirian. */
+.pf-act-wide {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(248, 250, 252, 0.9);
-  padding: 0.5rem 0.625rem;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #07384f;
-  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+  min-height: 38px;
+  width: 100%;
+  padding: 0 0.5rem;
+  border-radius: var(--pf-r-control);
+  border: 1px solid var(--pf-line);
+  background: var(--pf-surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pf-ink);
+  cursor: pointer;
+  transition: background-color var(--pf-fast) ease;
 }
 
-.pf-action:hover {
-  transform: translateY(-1px);
-  border-color: rgba(13, 148, 136, 0.45);
-  background: #f0fdfa;
+.pf-act-wide:active {
+  transform: translateY(1px);
 }
 
-.pf-action:active {
-  transform: scale(0.97);
+/* Penanda tahap: enam ruas tipis, cukup untuk membaca posisi. */
+.pf-steps {
+  display: flex;
+  gap: 2px;
+  align-items: center;
 }
 
-.dark .pf-action {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2f5f1;
+.pf-step {
+  height: 4px;
+  width: 11px;
+  border-radius: 2px;
+  background: var(--pf-line-strong);
 }
 
-.dark .pf-action:hover {
-  border-color: rgba(45, 212, 191, 0.4);
-  background: rgba(20, 184, 166, 0.14);
+.pf-step-done {
+  background: var(--pf-accent);
 }
 
-.pf-action-primary {
-  border-color: rgba(13, 148, 136, 0.35);
-  background: linear-gradient(180deg, #0d9488, #0f766e);
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
+.pf-step-now {
+  background: var(--pf-warn);
+  width: 16px;
 }
 
-.pf-action-primary:hover {
-  background: linear-gradient(180deg, #14b8a6, #0d9488);
-  border-color: rgba(13, 148, 136, 0.5);
-  color: #ffffff;
+/* ---------------------------------------------------------------
+   4. Pita alur produksi
+   Lebar tiap ruas sebanding jumlah pekerjaan di tahap itu.
+   --------------------------------------------------------------- */
+.pf-flow {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: var(--pf-r-pill);
+  overflow: hidden;
+  background: var(--pf-surface-3);
 }
 
-.dark .pf-action-primary {
-  background: linear-gradient(180deg, #0d9488, #0b5f63);
-  color: #ffffff;
+.pf-flow > span {
+  transition: opacity var(--pf-fast) ease;
 }
 
-/* ---------- 8. Donut risiko ---------- */
-.pf-donut-total {
-  font-variant-numeric: tabular-nums;
+.pf-flow:hover > span {
+  opacity: 0.55;
 }
 
-/* ---------- 9. Angka KPI tetap rapi walau panjang (Rupiah) ---------- */
-.pf-num {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
+.pf-flow > span:hover {
+  opacity: 1;
 }
+
+/* ---------------------------------------------------------------
+   5. Geser kartu di ponsel
+   --------------------------------------------------------------- */
+.pf-swipe {
+  display: flex;
+  gap: 0.625rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.pf-swipe::-webkit-scrollbar {
+  display: none;
+}
+
+.pf-swipe > * {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  flex: 0 0 88%;
+}
+
+
