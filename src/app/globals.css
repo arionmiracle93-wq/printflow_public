@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Sistem token Print Flow. Aditif: semua class lama di bawah tetap berlaku. */
-@import "./design-tokens.css";
-
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
