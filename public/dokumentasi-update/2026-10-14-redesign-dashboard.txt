@@ -1,0 +1,102 @@
+=========================================================
+REDESIGN LAYOUT DASHBOARD, 14 Oktober 2026
+=========================================================
+
+DESIGN READ
+-----------
+Layar operasional harian untuk pemilik dan karyawan percetakan,
+paling sering dibuka di ponsel. Bahasa visual produk yang tenang
+dan padat, bukan bahasa halaman promosi.
+
+Mode redesign: PRESERVE.
+Warna merek, rute, label navigasi, dan nama field form tidak
+diubah. Seluruh aturan bisnis di src/lib tidak disentuh.
+
+Dial: DESIGN_VARIANCE 4, MOTION_INTENSITY 3, VISUAL_DENSITY 7.
+
+
+BERKAS
+------
+[BARU]  src/app/design-tokens.css
+[BARU]  src/app/dashboard.css
+[GANTI] src/components/dashboard/DashboardHero.tsx  (hero original)
+[HAPUS] src/components/dashboard/StatusBand.tsx
+[BARU]  src/components/dashboard/JobQueue.tsx
+[BARU]  src/components/dashboard/Panels.tsx
+[BARU]  src/components/dashboard/DashboardSkeleton.tsx
+[GANTI] src/app/page.tsx
+[GANTI] src/app/globals.css  (hanya tambah dua baris import)
+[GANTI] src/app/layout.tsx   (hanya tambah font Geist)
+
+Tidak ada berkas di src/db, src/app/api, src/proxy.ts, src/lib,
+service worker, manifest, atau assetlinks yang diubah.
+
+
+PERUBAHAN
+---------
+1.  HERO FOTO TETAP DESAIN ORIGINAL.
+    Markup disalin apa adanya dari versi asli: ukuran, gradasi
+    masking .hero-photo-bg, cahaya amber dan teal, halftone,
+    sapaan, judul, tombol, badge Insight AI, dan carousel sorotan.
+
+2.  KARTU KPI TETAP DESAIN ORIGINAL.
+    Komponen KpiCard di src/components/ui.tsx dipakai apa adanya,
+    termasuk susunan grid 2 kolom di ponsel dan 6 kolom di layar
+    lebar seperti versi asli. Tidak ada berkas KPI baru.
+
+3.  ANTREAN PRIORITAS.
+    Layar lebar memakai baris data sehingga delapan pekerjaan
+    terbaca sekali lihat. Ponsel tetap kartu geser.
+    Kolom: nomor, pekerjaan, tahap, PIC dan tenggat, skor, aksi.
+    Tombol aksi di baris desktop tampil sebagai ikon. Labelnya
+    tetap ada untuk pembaca layar, hanya disembunyikan visual.
+
+4.  PITA ALUR PRODUKSI menggantikan daftar sembilan baris.
+    Lebar tiap ruas sebanding jumlah pekerjaan di tahap itu,
+    sehingga penumpukan langsung kelihatan.
+
+5.  PITA RISIKO menggantikan grafik donat.
+    Untuk tiga kategori, pita lebih mudah dibandingkan.
+
+6.  SISTEM TOKEN.
+    Warna, radius, bayangan, dan durasi gerak dipusatkan.
+    Radius dikunci tiga nilai: kartu 14px, kontrol 10px, pil penuh.
+    Aksen dikunci satu warna, teal. Amber jadi warna semantik
+    peringatan. Bayangan berona latar, bukan hitam murni.
+
+7.  TIPOGRAFI.
+    Geist dan Geist Mono lewat next/font. Angka tabular.
+    Tebal huruf diturunkan jadi tangga 560 sampai 650.
+
+8.  KEADAAN LENGKAP.
+    Kerangka muat mengikuti bentuk layout akhir, keadaan kosong
+    menunjukkan langkah berikutnya, layar bermasalah tetap dipakai.
+
+
+KEPATUHAN PRE-FLIGHT
+--------------------
+Nol em dash di seluruh berkas baru.
+Nol label kecil huruf kapital di atas judul seksi.
+Nol titik berwarna hiasan.
+Tidak ada track bar berlatar penuh sebagai visual perbandingan.
+Satu keluarga ikon, ketebalan garis dikunci 1.75.
+Fokus keyboard terlihat, kontras teks memenuhi WCAG AA.
+Mode gelap diuji.
+min-h-[100dvh], bukan h-screen.
+Gerak dimatikan saat prefers-reduced-motion.
+
+Diuji: npx tsc --noEmit dan next build pada repo asli, sukses.
+
+
+PERBAIKAN 15 OKTOBER 2026
+-------------------------
+Masalah : di layar lebar kartu antrean versi ponsel ikut tampil
+          bertumpuk di atas tabel.
+Penyebab: kelas pf-* ditulis di luar @layer, sehingga mengalahkan
+          utility Tailwind v4 seperti lg:hidden.
+Perbaikan:
+- Semua kelas pf-* dipindah ke @layer components.
+- dashboard.css diimpor dari globals.css, bukan dari page.tsx.
+- Hero dikembalikan ke markup original lengkap dengan carousel.
+- Tombol kartu ponsel selebar kolom, tablet dua kartu sekaligus.
+- Pita alur produksi melebar penuh kalau tidak ada tenggat hari ini.

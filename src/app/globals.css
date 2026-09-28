@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Sistem token Print Flow dan tata letak dashboard.
+   Keduanya aditif (kelas berawalan pf-) dan berada di @layer components,
+   jadi semua kelas lama di bawah tetap berlaku dan utility Tailwind
+   seperti lg:hidden tidak tertimpa. */
+@import "./design-tokens.css";
+@import "./dashboard.css";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
