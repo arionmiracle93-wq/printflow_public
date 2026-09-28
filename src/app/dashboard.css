@@ -191,26 +191,94 @@
   }
 
   /* -------------------------------------------------------------
-     4. Pita alur produksi
+     4. Posisi pekerjaan per tahap (grid ubin)
+     Ubin berisi: sedikit terangkat dengan garis tepi.
+     Ubin kosong: rata dengan latar, tanpa garis tepi.
      ------------------------------------------------------------- */
-  .pf-flow {
+  .pf-stage-tile {
     display: flex;
-    width: 100%;
-    height: 10px;
-    border-radius: var(--pf-r-pill);
-    overflow: hidden;
-    background: var(--pf-surface-3);
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 58px;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--pf-r-control);
+    border: 1px solid transparent;
+    background: var(--pf-surface-2);
+    transition:
+      border-color var(--pf-fast) ease,
+      background-color var(--pf-fast) ease,
+      transform var(--pf-fast) ease;
   }
 
-  .pf-flow > span {
-    transition: opacity var(--pf-fast) ease;
+  .pf-stage-tile:hover {
+    border-color: var(--pf-accent-line);
+    transform: translateY(-1px);
   }
 
-  .pf-flow:hover > span {
-    opacity: 0.55;
+  .pf-stage-tile-on {
+    border-color: var(--pf-line-strong);
+    background: var(--pf-surface);
+    box-shadow: var(--pf-shadow-1);
   }
 
-  .pf-flow > span:hover {
-    opacity: 1;
+  .dark .pf-stage-tile {
+    background: rgb(255 255 255 / 0.025);
+  }
+
+  .dark .pf-stage-tile-on {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  /* -------------------------------------------------------------
+     5. Diagram donat sebaran risiko
+     Irisan digambar dari nol saat halaman dibuka. Saat kursor
+     berada di irisan atau baris legenda, level lain meredup.
+     ------------------------------------------------------------- */
+  @keyframes pf-donut-draw {
+    from {
+      stroke-dasharray: 0 var(--pf-c);
+    }
+  }
+
+  .pf-donut-seg {
+    animation: pf-donut-draw 700ms var(--pf-ease) both;
+    transition:
+      opacity var(--pf-fast) ease,
+      stroke-width var(--pf-fast) ease;
+    cursor: default;
+  }
+
+  .pf-donut-row {
+    transition:
+      background-color var(--pf-fast) ease,
+      opacity var(--pf-fast) ease;
+  }
+
+  .pf-donut-row:hover {
+    background: var(--pf-surface-2);
+  }
+
+  .pf-donut:has(.pf-donut-seg:hover) .pf-donut-seg:not(:hover) {
+    opacity: 0.3;
+  }
+
+  .pf-donut-seg:hover {
+    stroke-width: 16;
+  }
+
+  .pf-donut:has([data-risk="aman"]:hover) .pf-donut-seg:not([data-risk="aman"]),
+  .pf-donut:has([data-risk="waspada"]:hover) .pf-donut-seg:not([data-risk="waspada"]),
+  .pf-donut:has([data-risk="risiko"]:hover) .pf-donut-seg:not([data-risk="risiko"]),
+  .pf-donut:has([data-risk="terlambat"]:hover) .pf-donut-seg:not([data-risk="terlambat"]) {
+    opacity: 0.3;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-donut-seg {
+      animation: none;
+    }
+    .pf-stage-tile:hover {
+      transform: none;
+    }
   }
 }

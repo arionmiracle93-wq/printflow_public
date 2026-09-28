@@ -17,9 +17,10 @@ import {
   ActionList,
   DueToday,
   EmptyQueue,
-  PipelineFlow,
-  RiskSplit,
+  RiskDonut,
   SectionHeading,
+  StagePositions,
+  type RiskCounts,
 } from "@/components/dashboard/Panels";
 import { safeDb } from "@/lib/dbcheck";
 import { buildDashboardInsight } from "@/lib/ai";
@@ -41,7 +42,7 @@ export const dynamic = "force-dynamic";
  *   1. Hero foto (desain original) dengan ringkasan dan sorotan AI.
  *   2. Enam kartu KPI (desain original).
  *   3. Pekerjaan mana yang harus disentuh lebih dulu.
- *   4. Konteks: tindakan, sebaran risiko, alur produksi, tenggat, tanya AI.
+ *   4. Konteks: posisi per tahap, tenggat, tindakan, diagram risiko, tanya AI.
  *
  * Kepadatan sengaja dinaikkan dibanding versi sebelumnya karena ini
  * layar operasional, bukan halaman promosi. Kartu hanya dipakai kalau
@@ -99,7 +100,14 @@ async function DashboardContent() {
     }));
 
   const jobs = insight.insights.slice(0, 8);
-  const safeCount = Math.max(0, insight.stats.totalActive - insight.stats.risky - insight.stats.late);
+
+  // Sebaran risiko per level, dihitung dari riskLevel tiap pekerjaan aktif
+  // (hasil analyzeOrder), supaya cocok dengan badge risiko di kartu pekerjaan.
+  const riskCounts: RiskCounts = { aman: 0, waspada: 0, risiko: 0, terlambat: 0 };
+  for (const item of insight.insights) riskCounts[item.riskLevel] += 1;
+  const averageScore = insight.insights.length
+    ? insight.insights.reduce((sum, item) => sum + item.riskScore, 0) / insight.insights.length
+    : 0;
 
   return (
     <div className="pf-dash space-y-5">
@@ -165,21 +173,13 @@ async function DashboardContent() {
             )}
           </div>
 
-          {/* Kalau tidak ada tenggat hari ini, pita alur dibuat selebar kolom
-              supaya tidak menyisakan ruang kosong di sebelah kanannya. */}
-          {dueToday.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <PipelineFlow counts={counts} />
-              <DueToday orders={dueToday} />
-            </div>
-          ) : (
-            <PipelineFlow counts={counts} wide />
-          )}
+          <StagePositions counts={counts} />
+          <DueToday orders={dueToday} />
         </div>
 
         <div className="min-w-0 space-y-4 lg:col-span-4">
           <ActionList actions={insight.actions.slice(0, 5)} />
-          <RiskSplit aman={safeCount} waspada={insight.stats.risky} terlambat={insight.stats.late} />
+          <RiskDonut counts={riskCounts} averageScore={averageScore} />
           <AiAssistant />
         </div>
       </div>

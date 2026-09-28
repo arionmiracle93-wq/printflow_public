@@ -59,6 +59,8 @@
   --pf-warn-soft: rgb(181 117 0 / 0.11);
   --pf-danger: #c93a4f;
   --pf-danger-soft: rgb(201 58 79 / 0.1);
+  --pf-alert: #d96a1c;
+  --pf-alert-soft: rgb(217 106 28 / 0.11);
 
   /* Radius: hanya tiga nilai */
   --pf-r-card: 14px;
@@ -102,6 +104,8 @@
   --pf-warn-soft: rgb(229 168 60 / 0.14);
   --pf-danger: #f2778c;
   --pf-danger-soft: rgb(242 119 140 / 0.13);
+  --pf-alert: #f39a52;
+  --pf-alert-soft: rgb(243 154 82 / 0.14);
 
   --pf-shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
   --pf-shadow-2: 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 20px rgb(0 0 0 / 0.34);

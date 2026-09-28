@@ -100,3 +100,22 @@ Perbaikan:
 - Hero dikembalikan ke markup original lengkap dengan carousel.
 - Tombol kartu ponsel selebar kolom, tablet dua kartu sekaligus.
 - Pita alur produksi melebar penuh kalau tidak ada tenggat hari ini.
+
+
+PERUBAHAN 16 OKTOBER 2026
+-------------------------
+1. "Alur produksi" diganti POSISI PEKERJAAN PER TAHAP.
+   Grid 9 ubin (3 kolom di layar lebar, 1 kolom di HP). Tiap ubin:
+   ikon tahap berwarna (dari status.dot di domain.ts), nama tahap,
+   jumlah, dan bar proporsi. Ubin berisi terangkat dengan garis
+   tepi, ubin kosong redup. Ketuk untuk membuka daftar tahap itu.
+
+2. "Sebaran risiko" diganti DIAGRAM DONAT.
+   Empat irisan sesuai skala skor AI: Aman 0-34, Waspada 35-64,
+   Berisiko 65-89, Terlambat 90-100. Dihitung dari riskLevel tiap
+   pekerjaan aktif. Total di tengah, skor rata-rata di subjudul.
+   Animasi gambar irisan saat dibuka, sorot level saat kursor di
+   atas irisan atau legenda. Mati saat prefers-reduced-motion.
+
+Berkas berubah: design-tokens.css, dashboard.css, page.tsx,
+components/dashboard/Panels.tsx.
