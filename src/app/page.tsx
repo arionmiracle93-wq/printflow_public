@@ -24,6 +24,7 @@ import {
 } from "@/components/dashboard/Panels";
 import { safeDb } from "@/lib/dbcheck";
 import { buildDashboardInsight } from "@/lib/ai";
+import { buildKpiBars } from "@/lib/kpi-bars";
 import { formatRupiah, todayISO } from "@/lib/domain";
 import { listOrders, paidTotal, photoCounts, statusCounts } from "@/lib/queries";
 import { outsourceCounts } from "@/lib/outsource-queries";
@@ -91,6 +92,9 @@ async function DashboardContent() {
   // semua pekerjaan kecuali batal, seperti sebelumnya.
   insight.stats.paidAmount = result.data.paid;
 
+  // Isi garis progres tipis di tiap kartu KPI (lihat src/lib/kpi-bars.ts).
+  const bars = buildKpiBars(orders, insight.stats);
+
   const dueMap = new Map(orders.map((o) => [o.id, { dueDate: o.dueDate, dueTime: o.dueTime }]));
   // Jumlah per tahap (termasuk Selesai dan Batal) untuk panel "Posisi pekerjaan per tahap".
   const counts = result.data.stageCounts;
@@ -124,11 +128,12 @@ async function DashboardContent() {
       <DashboardHero summary={insight.summary} highlights={insight.highlights.slice(0, 5)} />
 
       {/* Enam KPI gaya strip datar (ikon besar, angka, garis progres tipis,
-          dipisah garis vertikal). Ikon dan animasi hover tetap versi original.
-          Tampilan diatur oleh KpiCard di src/components/ui.tsx dan .pf-kpi
-          di src/app/dashboard.css. Prop `bar` hanya panjang garis hiasan. */}
+          dipisah garis vertikal). Ikon tetap versi original; hover hanya naik
+          sedikit. Tampilan diatur oleh KpiCard di src/components/ui.tsx dan
+          .pf-kpi di src/app/dashboard.css. Garis progres mewakili data nyata:
+          lihat src/lib/kpi-bars.ts untuk arti tiap garis. */}
       <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={78} />
+        <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={bars.aktif.pct} barLabel={bars.aktif.label} />
         <KpiCard
           label="Terlambat"
           value={String(insight.stats.late)}
@@ -136,7 +141,8 @@ async function DashboardContent() {
           icon={<Clock3 size={18} />}
           accent={insight.stats.late > 0 ? "rose" : "teal"}
           hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"}
-          bar={62}
+          bar={bars.terlambat.pct}
+          barLabel={bars.terlambat.label}
         />
         <KpiCard
           label="Waspada / risiko"
@@ -144,14 +150,16 @@ async function DashboardContent() {
           tone="text-amber-600"
           icon={<ShieldAlert size={18} />}
           accent="yellow"
-          bar={95}
+          bar={bars.risiko.pct}
+          barLabel={bars.risiko.label}
         />
         <KpiCard
           label="Siap diambil"
           value={String(insight.stats.readyToPickup)}
           tone="text-teal-700"
           icon={<PackageCheck size={18} />}
-          bar={62}
+          bar={bars.siap.pct}
+          barLabel={bars.siap.label}
         />
         <KpiCard
           label="Nilai order aktif"
@@ -159,14 +167,16 @@ async function DashboardContent() {
           tone="text-sky-700"
           icon={<CircleDollarSign size={18} />}
           accent="blue"
-          bar={95}
+          bar={bars.nilai.pct}
+          barLabel={bars.nilai.label}
         />
         <KpiCard
           label="DP / terbayar"
           value={formatRupiah(insight.stats.paidAmount)}
           tone="text-teal-700"
           icon={<Banknote size={18} />}
-          bar={72}
+          bar={bars.dp.pct}
+          barLabel={bars.dp.label}
         />
       </section>
 

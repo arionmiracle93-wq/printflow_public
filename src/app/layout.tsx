@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -28,6 +28,9 @@ import { getCurrentUser } from "@/lib/auth";
  */
 const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+// Khusus enam kartu KPI di dashboard (kelas .pf-kpi di dashboard.css), supaya
+// hurufnya sama dengan gambar acuan. Bagian aplikasi lain tetap Geist.
+const kpiFont = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-kpi", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Print Flow - Monitoring Produksi Percetakan",
@@ -67,7 +70,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // yang dibuka pelanggan.
   const tampilTautanFooter = Boolean(user) && requestHeaders.get("x-print-flow-lacak") !== "1";
   return (
-    <html lang="id" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
+    <html lang="id" suppressHydrationWarning className={`${sans.variable} ${mono.variable} ${kpiFont.variable}`}>
       <head>
         <script
           // Jalan sebelum konten dicat, supaya tidak ada kedipan putih

@@ -1,0 +1,49 @@
+=========================================================
+KPI DASHBOARD: GARIS = DATA, FONT INTER, HOVER POLOS, 30 September 2026
+=========================================================
+
+YANG DIUBAH
+-----------
+1. Garis progres sekarang mewakili data nyata (bukan hiasan).
+   Semua dihitung dari pekerjaan AKTIF:
+   - Pekerjaan aktif    : rata-rata progres tahap produksi
+                          (Antrian 1/6 ... Siap 6/6, Ditunda tidak dihitung)
+   - Terlambat          : porsi pekerjaan aktif yang lewat tenggat
+   - Waspada / risiko   : porsi pekerjaan aktif waspada atau berisiko
+   - Siap diambil       : porsi pekerjaan aktif yang siap diambil
+   - Nilai order aktif  : porsi nilai order aktif yang BELUM terbayar
+   - DP / terbayar      : porsi nilai order aktif yang SUDAH terbayar
+   Kalau angkanya nol, garis kosong. Nilai kecil tapi bukan nol
+   diberi panjang minimal supaya tetap kelihatan.
+   Arahkan kursor ke garis untuk membaca penjelasannya, mis.
+   "1 dari 4 pekerjaan aktif terlambat (25%)".
+   Perhitungan ada di src/lib/kpi-bars.ts.
+
+2. Font kartu KPI disamakan dengan gambar acuan: Inter. Angka
+   semi-tebal, label tipis huruf besar. Hanya kartu KPI yang
+   memakai Inter, bagian aplikasi lain tetap Geist.
+
+3. Hover: garis gradasi di atas dan panel (latar + bayangan) dihapus.
+   Sisa animasi naik sedikit. Yang naik hanya isi kartu, garis
+   pemisah tetap diam.
+
+4. Garis pemisah antar-KPI dipertegas (lebih terang dan sedikit
+   kebiruan di mode gelap, lebih pekat di mode terang).
+
+CATATAN
+-------
+- Nilai terbayar per pekerjaan dibatasi paling banyak sebesar
+  harganya, supaya kelebihan bayar tidak membuat garis melewati 100%.
+- Angka besar "DP / terbayar" di kartu tetap memakai total semua
+  pekerjaan kecuali batal (tidak diubah). Hanya garisnya yang
+  membandingkan dengan nilai order aktif.
+- Tidak ada perubahan database. Tidak perlu buka /api/setup.
+
+FILE YANG BERUBAH
+-----------------
+  src/lib/kpi-bars.ts (baru)
+  src/components/ui.tsx (KpiCard)
+  src/app/page.tsx
+  src/app/layout.tsx (font Inter)
+  src/app/dashboard.css
+  src/components/dashboard/DashboardSkeleton.tsx

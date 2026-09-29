@@ -57,14 +57,17 @@ export function ProgressBar({ value, tone = "bg-teal-500" }: { value: number; to
  * KARTU KPI - gaya "strip datar" (revisi tampilan).
  * Tanpa kotak/border: ikon besar di kiri, lalu label, angka besar, dan
  * garis progres tipis di bawah angka. Antar-KPI dipisah garis vertikal
- * tipis (diatur oleh kelas .pf-kpi di dashboard.css).
+ * (digambar oleh kelas .pf-kpi di dashboard.css, tetap diam saat hover).
  *
- * Yang SENGAJA tidak berubah dari versi original:
- * - ikon (dikirim dari page.tsx, hanya ukurannya dibesarkan lewat CSS)
- * - animasi hover: naik sedikit, bayangan, dan garis gradasi di atas.
- *   Saat di-hover kartu "muncul" lagi (latar + bayangan) seperti aslinya.
+ * Hover: hanya isi kartu yang naik sedikit. Tidak ada garis atas, latar,
+ * atau bayangan. Ikon tetap ikon asli (dikirim dari page.tsx).
  *
- * `bar` (0-100) hanya hiasan visual panjang garis progres, BUKAN data.
+ * Huruf: Inter lewat variabel --font-kpi (dimuat di layout.tsx), angka
+ * semi-tebal, label tipis huruf besar. Kalau variabel tidak ada, otomatis
+ * memakai font aplikasi biasa.
+ *
+ * bar (0-100) = panjang isi garis progres; barLabel = penjelasannya
+ * (tampil saat garis di-hover). Nilainya dihitung di src/lib/kpi-bars.ts.
  */
 export function KpiCard({
   label,
@@ -73,7 +76,8 @@ export function KpiCard({
   tone = "text-[#07384f]",
   icon,
   accent = "teal",
-  bar = 75,
+  bar = 0,
+  barLabel,
 }: {
   label: string;
   value: string;
@@ -82,6 +86,7 @@ export function KpiCard({
   icon?: ReactNode;
   accent?: "teal" | "yellow" | "rose" | "blue";
   bar?: number;
+  barLabel?: string;
 }) {
   // Warna ikon memakai kelas yang sudah punya padanan mode gelap di globals.css.
   const iconTone = {
@@ -97,36 +102,41 @@ export function KpiCard({
     blue: "from-sky-500 to-sky-300",
   };
   // Angka panjang (mis. "Rp 12.500.000") dikecilkan bertahap supaya tetap
-  // muat di samping ikon besar pada layar lebar. Angka pendek memakai ukuran penuh.
+  // muat di samping ikon besar. Di layar lebar ukuran ikut lebar layar.
   const len = value.length;
   const valueSize =
     len <= 6
-      ? "text-2xl md:text-[1.9rem]"
+      ? "text-2xl md:text-[1.6rem] xl:text-[length:clamp(19px,1.6vw,26px)]"
       : len <= 10
-        ? "text-xl md:text-[1.5rem] xl:text-[1.2rem]"
+        ? "text-xl md:text-[1.4rem] xl:text-[length:clamp(17px,1.35vw,22px)]"
         : len <= 13
-          ? "text-lg md:text-[1.35rem] xl:text-[.95rem]"
-          : "text-base md:text-xl xl:text-[.85rem]";
+          ? "text-lg md:text-[1.25rem] xl:text-[length:clamp(14px,1.05vw,17px)]"
+          : "text-base md:text-lg xl:text-[length:clamp(12px,.95vw,15px)]";
   return (
-    <div className="pf-kpi group relative flex items-center gap-3 overflow-hidden rounded-2xl py-3 pl-4 pr-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--pf-surface)] hover:shadow-[0_12px_30px_rgba(15,75,84,.11)] md:gap-3.5 md:pl-6 xl:pl-5">
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-teal-400 to-amber-300 opacity-0 transition group-hover:opacity-100" />
-      <div
-        className={`shrink-0 ${iconTone[accent]} [&>svg]:h-8 [&>svg]:w-8 [&>svg]:[stroke-width:1.6] md:[&>svg]:h-9 md:[&>svg]:w-9`}
-        aria-hidden
-      >
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="whitespace-nowrap text-[10px] font-medium uppercase leading-tight tracking-[.05em] text-slate-500 md:text-[11px] xl:text-[10.5px]">{label}</p>
-        <div className="mt-1 flex items-baseline gap-2">
-          <p className={`whitespace-nowrap font-black leading-none tracking-tight ${valueSize} ${tone}`}>{value}</p>
-          {hint ? <p className="min-w-0 truncate text-[11px] font-medium text-slate-400">{hint}</p> : null}
+    <div className="pf-kpi group relative py-3 pl-4 pr-2 md:pl-6 xl:pl-5">
+      <div className="flex items-center gap-3 transition-transform duration-200 group-hover:-translate-y-0.5 md:gap-3.5">
+        <div
+          className={`shrink-0 ${iconTone[accent]} [&>svg]:h-8 [&>svg]:w-8 [&>svg]:[stroke-width:1.6] md:[&>svg]:h-9 md:[&>svg]:w-9`}
+          aria-hidden
+        >
+          {icon}
         </div>
-        <div className="mt-2 h-[3px] w-24 overflow-hidden rounded-full bg-slate-200 md:w-[6.5rem]" aria-hidden>
-          <div
-            className={`h-full rounded-full bg-gradient-to-r ${barTone[accent]}`}
-            style={{ width: `${Math.min(100, Math.max(0, bar))}%` }}
-          />
+        <div className="min-w-0">
+          <p className="pf-kpi-label whitespace-nowrap text-[10px] font-normal uppercase leading-tight tracking-[.02em] md:text-[11px] xl:text-[length:clamp(10px,.8vw,12px)]">
+            {label}
+          </p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <p className={`whitespace-nowrap font-semibold leading-none tracking-tight ${valueSize} ${tone}`}>{value}</p>
+            {hint ? <p className="min-w-0 truncate text-[11px] font-normal text-slate-400">{hint}</p> : null}
+          </div>
+          <div className="mt-1 w-24 py-1 md:w-[6.5rem]" title={barLabel} role={barLabel ? "img" : undefined} aria-label={barLabel} aria-hidden={barLabel ? undefined : true}>
+            <div className="h-[3px] w-full overflow-hidden rounded-full bg-slate-200">
+              <div
+                className={`h-full rounded-full bg-gradient-to-r ${barTone[accent]} transition-[width] duration-500`}
+                style={{ width: `${Math.min(100, Math.max(0, bar))}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

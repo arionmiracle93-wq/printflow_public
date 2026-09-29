@@ -18,6 +18,10 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[54] 2026-09-30-kpi-garis-data-font-inter-hover-polos.txt
+    Garis progres KPI mewakili data (porsi terlambat, dll),
+    font Inter, hover hanya naik sedikit, separator dipertegas.
+
 [53] 2026-09-30-revisi-tampilan-kartu-kpi-dashboard.txt
     Enam kartu KPI dashboard jadi strip datar (ikon besar,
     angka, garis progres tipis, dipisah garis vertikal).
