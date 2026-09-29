@@ -40,15 +40,15 @@ export function ShareWhatsApp({ order, initialToken }: { order: ShareOrder; init
   }
 
   async function share() {
-    // Selalu siapkan (atau ambil kembali) tab WhatsApp yang sama, DULU — selagi
+    // Selalu siapkan (atau ambil kembali) tab WhatsApp yang sama, DULU - selagi
     // masih dalam konteks klik pengguna, sebelum ada `await` sama sekali.
     const popup = window.open("", WHATSAPP_SHARE_WINDOW);
     const t = await prepare();
-    if (!t) return; // jangan tutup popup — bisa jadi itu tab WA yang sudah lama dipakai user
+    if (!t) return; // jangan tutup popup - bisa jadi itu tab WA yang sudah lama dipakai user
     const url = `${window.location.origin}/lacak/${t}`;
     const outcome = await openWhatsAppShare(order, url, popup);
     if (outcome === "copied") {
-      setError("Pop-up diblokir browser. Pesannya sudah disalin — buka WhatsApp lalu tempel (paste) manual.");
+      setError("Pop-up diblokir browser. Pesannya sudah disalin - buka WhatsApp lalu tempel (paste) manual.");
     } else if (outcome === "failed") {
       setError("Tidak bisa membuka WhatsApp otomatis. Coba izinkan pop-up untuk situs ini di pengaturan browser.");
     }

@@ -9,14 +9,17 @@ export function DashboardSkeleton() {
     <div className="pf-dash space-y-5" aria-busy="true" aria-label="Memuat dashboard">
       <div className="pf-skel h-[270px] w-full rounded-[1.5rem] md:h-[260px]" />
 
-      {/* Bentuknya mengikuti kartu KPI asli: enam kartu, dua kolom di
-          ponsel, enam kolom di layar lebar. */}
-      <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
+      {/* Bentuknya mengikuti strip KPI: ikon besar di kiri, label, angka,
+          dan garis tipis; enam kolom di layar lebar. */}
+      <div className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="card p-2.5 md:p-4">
-            <div className="pf-skel h-7 w-7 rounded-lg md:h-9 md:w-9" />
-            <div className="pf-skel mt-2 h-2.5 w-16 md:mt-3" />
-            <div className="pf-skel mt-2 h-5 w-14" />
+          <div key={i} className="pf-kpi relative flex items-center gap-3 py-3 pl-4 pr-2 md:gap-3.5 md:pl-6">
+            <div className="pf-skel h-8 w-8 shrink-0 rounded-lg md:h-9 md:w-9" />
+            <div>
+              <div className="pf-skel h-2.5 w-16" />
+              <div className="pf-skel mt-2 h-6 w-12" />
+              <div className="pf-skel mt-2 h-[3px] w-24" />
+            </div>
           </div>
         ))}
       </div>

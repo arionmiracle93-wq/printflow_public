@@ -5,6 +5,7 @@ import { ProblemScreen } from "@/components/ProblemScreen";
 import { safeDb } from "@/lib/dbcheck";
 import { formatDateID, formatRupiah } from "@/lib/domain";
 import { listCustomers, listOrders } from "@/lib/queries";
+import { EmptyState } from "@/components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function CustomersPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl">
+          <h1 className="page-title flex items-center gap-2">
             <Users size={22} strokeWidth={2.3} /> Pelanggan
           </h1>
           <p className="text-sm text-slate-500">{customers.length} pelanggan terdaftar</p>
@@ -28,16 +29,12 @@ export default async function CustomersPage() {
       </div>
 
       {customers.length === 0 ? (
-        <div className="card p-10 text-center">
-          <User size={40} strokeWidth={1.6} className="mx-auto text-slate-300" />
-          <p className="mt-2 font-bold text-slate-700">Belum ada data pelanggan</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Anda juga bisa langsung membuat pekerjaan baru dan mengetik nama pelanggan di sana.
-          </p>
-          <Link href="/pesanan/baru" className="btn-primary mt-4 inline-flex items-center gap-1.5">
-            <Plus size={15} strokeWidth={2.5} /> Buat Pekerjaan
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Users size={26} />}
+          title="Belum ada pelanggan"
+          description="Pelanggan otomatis tercatat saat Anda membuat pekerjaan dan mengetik namanya. Bisa juga ditambahkan lewat formulir di halaman ini."
+          action={{ href: "/pesanan/baru", label: "Buat pekerjaan", icon: <Plus size={15} /> }}
+        />
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {customers.map((customer) => {
@@ -52,7 +49,7 @@ export default async function CustomersPage() {
                     <p className="text-xs text-slate-500">{customer.phone ?? "-"}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="chip border-indigo-200 bg-indigo-50 text-indigo-700">{active} aktif</span>
+                    <span className="chip border-teal-200 bg-teal-50 text-teal-700">{active} aktif</span>
                   </div>
                 </div>
                 {customer.address ? (
@@ -73,10 +70,10 @@ export default async function CustomersPage() {
                   <ul className="mt-2 space-y-1 border-t border-slate-100 pt-2 text-[11px] text-slate-500">
                     {list.slice(0, 3).map((o) => (
                       <li key={o.id}>
-                        <Link href={`/pesanan/${o.id}`} className="font-semibold text-indigo-600 hover:underline">
+                        <Link href={`/pesanan/${o.id}`} className="font-semibold text-teal-700 hover:underline">
                           {o.code}
                         </Link>{" "}
-                        — {o.title} · {formatDateID(o.dueDate)}
+                        - {o.title} · {formatDateID(o.dueDate)}
                       </li>
                     ))}
                   </ul>

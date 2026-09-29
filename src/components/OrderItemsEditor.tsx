@@ -14,7 +14,7 @@ import { MAX_ITEMS_PER_ORDER, type OrderItemInput } from "@/lib/order-items";
  * `position: absolute` di dalam kartu/tabel. Masalahnya: kartu & tabel
  * di halaman ini ada yang punya `overflow-hidden` (biar sudut rounded-nya
  * rapi), jadi dropdown yang nongol di bawah input ikut KEPOTONG oleh
- * kontainer itu — makanya kelihatan "ngumpet" begitu diklik. Beberapa
+ * kontainer itu - makanya kelihatan "ngumpet" begitu diklik. Beberapa
  * elemen lain (header, tab bar) juga pakai efek blur yang bisa bikin
  * browser (terutama Chrome Android) salah hitung posisi elemen fixed.
  *
@@ -140,7 +140,7 @@ function QuickPick({
 /**
  * TABEL ITEM PEKERJAAN (bisa diedit)
  * ----------------------------------------------------------------
- * Satu pekerjaan = satu kartu, satu status, satu deadline — tapi isinya
+ * Satu pekerjaan = satu kartu, satu status, satu deadline - tapi isinya
  * boleh beberapa produk sekaligus. Komponen ini yang mengatur baris-barisnya.
  *
  * Dipakai di dua tempat dengan tampilan yang sama persis:
@@ -172,7 +172,7 @@ export function OrderItemsEditor({
 
   function addRow() {
     if (!bisaTambah) return;
-    // Baris baru meniru satuan baris terakhir — kebanyakan order berisi
+    // Baris baru meniru satuan baris terakhir - kebanyakan order berisi
     // produk dengan satuan yang mirip, jadi ini menghemat satu klik.
     const last = items[items.length - 1];
     onChange([...items, { productType: PRODUCT_TYPES[0], quantity: 1, unit: last?.unit ?? UNITS[0] }]);
@@ -184,7 +184,7 @@ export function OrderItemsEditor({
 
   return (
     <div className="space-y-3">
-      {/* ——— MOBILE: kartu bertumpuk ——— */}
+      {/* --- MOBILE: kartu bertumpuk --- */}
       <div className="space-y-2.5 md:hidden">
         {items.map((item, index) => (
           <div
@@ -192,7 +192,7 @@ export function OrderItemsEditor({
             className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-white/10 dark:bg-white/[0.04]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wide text-teal-700 dark:text-teal-300">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
                 Produk {index + 1}
               </span>
               <button
@@ -245,7 +245,7 @@ export function OrderItemsEditor({
         ))}
       </div>
 
-      {/* ——— DESKTOP: tabel ——— */}
+      {/* --- DESKTOP: tabel --- */}
       <div className="hidden overflow-hidden rounded-xl border border-slate-200 md:block dark:border-white/10">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500 dark:bg-white/[0.04]">

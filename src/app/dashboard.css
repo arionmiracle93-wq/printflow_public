@@ -18,6 +18,54 @@
 
 @layer components {
   /* -------------------------------------------------------------
+     0. Kartu KPI gaya strip datar (komponen KpiCard di ui.tsx)
+     Garis pemisah vertikal antar-KPI digambar dengan ::before di sisi
+     kiri tiap kartu. Kartu pertama di setiap baris tidak punya garis.
+     Jumlah kolom mengikuti grid di page.tsx: 2 (ponsel), 3 (md), 6 (xl).
+     Garis menghilang saat kartu di-hover karena saat itu kartu tampil
+     sebagai panel penuh (latar + bayangan).
+     ------------------------------------------------------------- */
+  .pf-kpi::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.375rem;
+    bottom: 0.375rem;
+    width: 1px;
+    background: var(--pf-line);
+    pointer-events: none;
+    transition: opacity var(--pf-fast) ease;
+  }
+
+  .pf-kpi:hover::before {
+    opacity: 0;
+  }
+
+  .pf-kpi:nth-child(2n + 1)::before {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .pf-kpi:nth-child(2n + 1)::before {
+      display: block;
+    }
+
+    .pf-kpi:nth-child(3n + 1)::before {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .pf-kpi:nth-child(3n + 1)::before {
+      display: block;
+    }
+
+    .pf-kpi:first-child::before {
+      display: none;
+    }
+  }
+
+  /* -------------------------------------------------------------
      1. Antrean pekerjaan, baris data (layar lebar)
      ------------------------------------------------------------- */
   .pf-row,
@@ -46,9 +94,6 @@
     border-bottom: 0;
   }
 
-  .pf-row:hover {
-    background: var(--pf-surface-2);
-  }
 
   .pf-row-head {
     padding: 0.5rem 1rem;
@@ -82,20 +127,27 @@
       color var(--pf-fast) ease;
   }
 
-  .pf-act:hover {
-    border-color: var(--pf-accent-line);
-    background: var(--pf-accent-soft);
-    color: var(--pf-accent-strong);
-  }
 
   /* -------------------------------------------------------------
      2. Antrean pekerjaan, kartu (ponsel dan tablet)
      ------------------------------------------------------------- */
+  /* Satu kartu = satu layar penuh di HP.
+     Rumusnya: wadah geser ditarik keluar selebar padding halaman
+     (-mx-3 / sm:-mx-4), lalu diberi padding yang sama (px-3 / sm:px-4).
+     Kartu diberi lebar 100% dari area isi wadah, jadi pas selebar
+     konten halaman. Jarak antar kartu (gap) disamakan dengan padding
+     tadi, sehingga saat satu kartu berhenti di tempatnya, kartu
+     berikutnya tepat berada di luar tepi kanan layar dan tidak ada
+     yang terlihat separuh.
+     scroll-padding-inline memastikan kartu berhenti sejajar dengan
+     tepi konten, bukan menempel ke tepi layar. */
   .pf-swipe {
     display: flex;
     gap: 0.75rem;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0.75rem;
     scrollbar-width: none;
     padding-bottom: 0.25rem;
   }
@@ -107,14 +159,66 @@
   .pf-swipe > * {
     scroll-snap-align: start;
     scroll-snap-stop: always;
-    flex: 0 0 88%;
+    flex: 0 0 100%;
     min-width: 0;
   }
 
-  /* Tablet: dua kartu terlihat sekaligus. */
   @media (min-width: 640px) {
+    .pf-swipe {
+      gap: 1rem;
+      scroll-padding-inline: 1rem;
+    }
+  }
+
+  /* Tablet (768px sampai sebelum 1024px): dua kartu penuh sekaligus,
+     tetap tanpa kartu yang terpotong. Di 1024px ke atas antrean
+     berganti jadi baris data. */
+  @media (min-width: 768px) {
     .pf-swipe > * {
-      flex-basis: calc(50% - 0.375rem);
+      flex-basis: calc(50% - 0.5rem);
+    }
+  }
+
+  /* Titik penunjuk posisi. Karena kartu berikutnya tidak lagi
+     mengintip dari tepi layar, titik ini yang memberi tahu bahwa
+     masih ada kartu lain dan sedang di kartu ke berapa. */
+  .pf-swipe-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.625rem;
+  }
+
+  .pf-swipe-dot {
+    height: 6px;
+    width: 6px;
+    border-radius: var(--pf-r-pill);
+    background: var(--pf-line-strong);
+    transition:
+      width var(--pf-base) var(--pf-ease),
+      background-color var(--pf-base) ease;
+  }
+
+  .pf-swipe-dot[aria-current="true"] {
+    width: 20px;
+    background: var(--pf-accent);
+  }
+
+  /* Area sentuh titik dibuat 24px supaya mudah diketuk jari,
+     walau titiknya sendiri kecil. */
+  .pf-swipe-hit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    min-width: 16px;
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-swipe-dot {
+      transition: none;
     }
   }
 
@@ -156,13 +260,38 @@
       border-color var(--pf-fast) ease;
   }
 
-  .pf-act-wide:hover {
-    border-color: var(--pf-accent-line);
-    background: var(--pf-accent-soft);
-  }
 
   .pf-act-wide:active {
     transform: translateY(1px);
+  }
+
+  /* Label tidak boleh pecah jadi dua baris. Kalau layar sangat
+     sempit (di bawah 340px), teks mengecil sedikit dulu; kalau
+     tetap tidak muat, dipotong dengan elipsis, bukan turun baris. */
+  .pf-act-wide {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 339px) {
+    .pf-act-wide {
+      gap: 0.25rem;
+      padding: 0 0.375rem;
+      font-size: 0.6875rem;
+    }
+  }
+
+  /* "Lihat detail" jadi tombol utama di kartu: aksen teal penuh,
+     sama dengan tombol utama lain di sistem token. */
+  .pf-act-wide-primary {
+    border-color: transparent;
+    background: var(--pf-accent);
+    color: #ffffff;
+  }
+
+
+  .dark .pf-act-wide-primary {
+    color: #05242c;
   }
 
   /* -------------------------------------------------------------
@@ -210,10 +339,6 @@
       transform var(--pf-fast) ease;
   }
 
-  .pf-stage-tile:hover {
-    border-color: var(--pf-accent-line);
-    transform: translateY(-1px);
-  }
 
   .pf-stage-tile-on {
     border-color: var(--pf-line-strong);
@@ -254,31 +379,155 @@
       opacity var(--pf-fast) ease;
   }
 
-  .pf-donut-row:hover {
-    background: var(--pf-surface-2);
-  }
 
-  .pf-donut:has(.pf-donut-seg:hover) .pf-donut-seg:not(:hover) {
-    opacity: 0.3;
-  }
 
-  .pf-donut-seg:hover {
-    stroke-width: 16;
-  }
 
-  .pf-donut:has([data-risk="aman"]:hover) .pf-donut-seg:not([data-risk="aman"]),
-  .pf-donut:has([data-risk="waspada"]:hover) .pf-donut-seg:not([data-risk="waspada"]),
-  .pf-donut:has([data-risk="risiko"]:hover) .pf-donut-seg:not([data-risk="risiko"]),
-  .pf-donut:has([data-risk="terlambat"]:hover) .pf-donut-seg:not([data-risk="terlambat"]) {
-    opacity: 0.3;
-  }
 
   @media (prefers-reduced-motion: reduce) {
     .pf-donut-seg {
       animation: none;
     }
+    .pf-stage-tile {
+      transition: none;
+    }
+  }
+
+  /* -------------------------------------------------------------
+     6. Hero foto: optimasi scroll, tampilan tidak berubah
+     ------------------------------------------------------------- */
+
+  /* Hero dijadikan lapisan GPU tersendiri. Saat halaman digulir, hero
+     cukup digeser sebagai satu gambar jadi, tidak digambar ulang.
+     Jam live dan teks sorotan yang berganti hanya menggambar ulang
+     area kecilnya sendiri di dalam lapisan ini. */
+  .pf-hero {
+    transform: translateZ(0);
+    contain: paint;
+  }
+
+  /* Pengganti bulatan blur-3xl. Ukuran = bulatan asli + 64px (radius
+     blur) di tiap sisi, posisinya digeser sama besar, jadi pusat dan
+     sebaran cahayanya sama dengan versi lama. */
+  .pf-hero-glow {
+    position: absolute;
+    z-index: -10;
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+
+  .pf-hero-glow-amber {
+    right: -104px;
+    bottom: -160px;
+    height: 352px;
+    width: 352px;
+    background: radial-gradient(
+      closest-side,
+      rgb(252 211 77 / 0.25) 0%,
+      rgb(252 211 77 / 0.2) 30%,
+      rgb(252 211 77 / 0.1) 60%,
+      rgb(252 211 77 / 0) 100%
+    );
+  }
+
+  .pf-hero-glow-teal {
+    left: -104px;
+    top: -128px;
+    height: 320px;
+    width: 320px;
+    background: radial-gradient(
+      closest-side,
+      rgb(45 212 191 / 0.2) 0%,
+      rgb(45 212 191 / 0.16) 30%,
+      rgb(45 212 191 / 0.08) 60%,
+      rgb(45 212 191 / 0) 100%
+    );
+  }
+
+  /* Teks sorotan AI yang bertumpuk di satu sel grid. Hanya opacity
+     dan transform yang dianimasikan, keduanya dikerjakan GPU tanpa
+     menghitung ulang tata letak. Gerakannya sama dengan .hero-fade lama
+     (muncul pelan dari 3px di bawah dalam 0,4 detik). */
+  .pf-hl-item {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(3px);
+    transition:
+      opacity 0.4s ease-out,
+      transform 0.4s ease-out,
+      visibility 0s linear 0.4s;
+  }
+
+  .pf-hl-item[data-active] {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-hl-item {
+      transition: none;
+    }
+  }
+
+  /* -------------------------------------------------------------
+     7. Efek hover hanya untuk perangkat yang punya kursor
+     Di HP tidak ada kursor. Setiap kali jari menyentuh layar untuk
+     mulai menggulir, browser menganggap elemen di bawah jari sedang
+     di-hover: ubin terangkat, warna berubah, dan aturan :has() pada
+     diagram donat memaksa browser memeriksa ulang gaya seluruh diagram.
+     Pekerjaan itu terjadi tepat saat gulir dimulai, jadi terasa
+     tersendat. Dengan media query ini, efek hover tetap ada di laptop
+     dan desktop, tetapi tidak ikut bekerja di layar sentuh.
+     ------------------------------------------------------------- */
+  @media (hover: hover) and (pointer: fine) {
+    .pf-row:hover {
+      background: var(--pf-surface-2);
+    }
+
+    .pf-act:hover {
+      border-color: var(--pf-accent-line);
+      background: var(--pf-accent-soft);
+      color: var(--pf-accent-strong);
+    }
+
+    .pf-act-wide:hover {
+      border-color: var(--pf-accent-line);
+      background: var(--pf-accent-soft);
+    }
+
     .pf-stage-tile:hover {
-      transform: none;
+      border-color: var(--pf-accent-line);
+      transform: translateY(-1px);
+    }
+
+    .pf-donut-row:hover {
+      background: var(--pf-surface-2);
+    }
+
+    .pf-donut:has(.pf-donut-seg:hover) .pf-donut-seg:not(:hover) {
+      opacity: 0.3;
+    }
+
+    .pf-donut-seg:hover {
+      stroke-width: 16;
+    }
+
+    .pf-donut:has([data-risk="aman"]:hover) .pf-donut-seg:not([data-risk="aman"]),
+    .pf-donut:has([data-risk="waspada"]:hover) .pf-donut-seg:not([data-risk="waspada"]),
+    .pf-donut:has([data-risk="risiko"]:hover) .pf-donut-seg:not([data-risk="risiko"]),
+    .pf-donut:has([data-risk="terlambat"]:hover) .pf-donut-seg:not([data-risk="terlambat"]) {
+      opacity: 0.3;
+    }
+
+    .pf-act-wide-primary:hover {
+      border-color: transparent;
+      background: var(--pf-accent-strong);
+      color: #ffffff;
+    }
+
+    .dark .pf-act-wide-primary:hover {
+      color: #05242c;
     }
   }
 }

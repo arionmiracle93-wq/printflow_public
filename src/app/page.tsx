@@ -25,7 +25,7 @@ import {
 import { safeDb } from "@/lib/dbcheck";
 import { buildDashboardInsight } from "@/lib/ai";
 import { formatRupiah, todayISO } from "@/lib/domain";
-import { listOrders, photoCounts } from "@/lib/queries";
+import { listOrders, paidTotal, photoCounts, statusCounts } from "@/lib/queries";
 import { outsourceCounts } from "@/lib/outsource-queries";
 
 export const dynamic = "force-dynamic";
@@ -58,11 +58,16 @@ export default function DashboardPage() {
 }
 
 async function DashboardContent() {
+  // Hanya pekerjaan AKTIF yang dimuat (antrian sampai siap, plus ditunda).
+  // Dulu semua pekerjaan dimuat, termasuk yang sudah selesai berbulan-bulan
+  // lalu, sehingga beranda makin lambat seiring data bertambah. Angka yang
+  // butuh semua data (jumlah per tahap, total uang masuk) dihitung langsung
+  // oleh database, hasilnya sama persis dengan sebelumnya.
   const result = await safeDb(async () => {
-    const rows = await listOrders({ scope: "semua" });
+    const [rows, stageCounts, paid] = await Promise.all([listOrders({ scope: "aktif" }), statusCounts(), paidTotal()]);
     const ids = rows.map((r) => r.id);
     const [counts, outsourced] = await Promise.all([photoCounts(ids), outsourceCounts(ids)]);
-    return { rows, counts, outsourced };
+    return { rows, counts, outsourced, stageCounts, paid };
   });
 
   if (!result.ok) {
@@ -81,10 +86,14 @@ async function DashboardContent() {
   // Ringkasan dihitung lokal supaya halaman tidak menunggu API model bahasa.
   // Model bahasa tetap dipakai sesuai permintaan lewat panel Tanya AI.
   const insight = buildDashboardInsight(orders);
+  // buildDashboardInsight menjumlah uang masuk dari pekerjaan yang diberikan
+  // (sekarang hanya yang aktif). KPI "DP / terbayar" tetap memakai total
+  // semua pekerjaan kecuali batal, seperti sebelumnya.
+  insight.stats.paidAmount = result.data.paid;
 
   const dueMap = new Map(orders.map((o) => [o.id, { dueDate: o.dueDate, dueTime: o.dueTime }]));
-  const counts = new Map<string, number>();
-  for (const order of orders) counts.set(order.status, (counts.get(order.status) ?? 0) + 1);
+  // Jumlah per tahap (termasuk Selesai dan Batal) untuk panel "Posisi pekerjaan per tahap".
+  const counts = result.data.stageCounts;
 
   const today = todayISO();
   const dueToday = orders
@@ -114,10 +123,12 @@ async function DashboardContent() {
       {/* Hero foto desain original, lengkap dengan carousel Insight AI. */}
       <DashboardHero summary={insight.summary} highlights={insight.highlights.slice(0, 5)} />
 
-      {/* Kartu KPI asli. Komponen KpiCard di src/components/ui.tsx dipakai
-          apa adanya, susunan gridnya juga sama seperti versi original. */}
-      <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3 xl:grid-cols-6">
-        <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} />
+      {/* Enam KPI gaya strip datar (ikon besar, angka, garis progres tipis,
+          dipisah garis vertikal). Ikon dan animasi hover tetap versi original.
+          Tampilan diatur oleh KpiCard di src/components/ui.tsx dan .pf-kpi
+          di src/app/dashboard.css. Prop `bar` hanya panjang garis hiasan. */}
+      <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
+        <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={78} />
         <KpiCard
           label="Terlambat"
           value={String(insight.stats.late)}
@@ -125,6 +136,7 @@ async function DashboardContent() {
           icon={<Clock3 size={18} />}
           accent={insight.stats.late > 0 ? "rose" : "teal"}
           hint={insight.stats.late > 0 ? "Perlu tindakan" : "Semua aman"}
+          bar={62}
         />
         <KpiCard
           label="Waspada / risiko"
@@ -132,12 +144,14 @@ async function DashboardContent() {
           tone="text-amber-600"
           icon={<ShieldAlert size={18} />}
           accent="yellow"
+          bar={95}
         />
         <KpiCard
           label="Siap diambil"
           value={String(insight.stats.readyToPickup)}
           tone="text-teal-700"
           icon={<PackageCheck size={18} />}
+          bar={62}
         />
         <KpiCard
           label="Nilai order aktif"
@@ -145,12 +159,14 @@ async function DashboardContent() {
           tone="text-sky-700"
           icon={<CircleDollarSign size={18} />}
           accent="blue"
+          bar={95}
         />
         <KpiCard
           label="DP / terbayar"
           value={formatRupiah(insight.stats.paidAmount)}
           tone="text-teal-700"
           icon={<Banknote size={18} />}
+          bar={72}
         />
       </section>
 

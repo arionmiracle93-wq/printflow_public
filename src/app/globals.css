@@ -9,6 +9,32 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Daftar pilihan bawaan (<select>) mengikuti tema.
+   Isi daftar yang terbuka digambar oleh browser/sistem operasi, bukan
+   oleh halaman. Tanpa aturan ini, di mode gelap daftar bisa tampil putih
+   dengan teks terang (tidak terbaca), terutama di Chrome Windows.
+   color-scheme membuat browser memakai kontrol dan scrollbar gelap;
+   warna option ditetapkan eksplisit supaya kontrasnya selalu cukup. */
+@layer base {
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: var(--pf-surface-solid);
+    color: var(--pf-ink);
+  }
+
+  select option:disabled {
+    color: var(--pf-ink-3);
+  }
+}
+
 :root {
   color-scheme: light;
   --brand-navy: #07384f;
@@ -76,65 +102,244 @@ body {
 }
 
 @layer components {
-  /* Mode terang: solid seperti semula. Mode gelap: dibuat senada dengan
-     .panel-glass (tint transparan + border terang tipis + inset highlight)
-     supaya gradient mesh di body konsisten tembus di SEMUA kartu di SEMUA
-     halaman, bukan cuma di panel-panel besar Dashboard. Tanpa backdrop-blur
-     (sama seperti .panel-glass) supaya tetap ringan di GPU/WebView APK. */
-  .card {
-    @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.12] dark:bg-white/[0.028] dark:shadow-[0_7px_24px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.06)];
-  }
+  /* =================================================================
+     KOMPONEN DASAR, SATU BAHASA VISUAL UNTUK SEMUA HALAMAN
+     -----------------------------------------------------------------
+     Semua nilai diambil dari design-tokens.css (--pf-*), jadi panel
+     dashboard, daftar pekerjaan, detail, form, pelanggan, mitra, dan
+     pengaturan memakai permukaan, garis, radius, dan tombol yang sama.
 
-  /* Kesan "kaca" TANPA backdrop-blur — mahal buat GPU/WebView APK kalau
-     dipasang di banyak elemen sekaligus. Efek kaca di sini cuma dari tint
-     transparan + border terang tipis (highlight ala tepian kaca) + shadow
-     berlapis, supaya mesh gradient di body tetap samar keliatan nembus. */
+     Nama kelas TIDAK berubah (.card, .btn-primary, .input, dst.),
+     jadi tidak ada halaman yang perlu diubah struktur HTML-nya.
+     ================================================================= */
+
+  /* Kartu dan panel. .panel-glass kini identik dengan .card: dulu
+     keduanya beda tipis (putih solid vs putih 70%), sehingga dua
+     kartu bersebelahan bisa terlihat seperti dari aplikasi berbeda. */
+  .card,
   .panel-glass {
-    @apply relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-white/70 bg-white/70 shadow-[0_8px_28px_rgba(15,75,84,.08),inset_0_1px_0_rgba(255,255,255,.6)] dark:border-white/[0.12] dark:bg-white/[0.028] dark:shadow-[0_8px_28px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.06)];
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+    border-radius: var(--pf-r-card);
+    border: 1px solid var(--pf-line);
+    background: var(--pf-surface);
+    box-shadow: var(--pf-shadow-1);
   }
 
-  .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  .panel-glass {
+    overflow: hidden;
+  }
+
+  /* ---------- Tombol ----------
+     Tinggi minimal 40px (nyaman disentuh), radius 12px, berat 600.
+     Peran warna:
+       .btn-primary   amber  satu aksi utama per layar (buat / simpan)
+       .btn-secondary teal   aksi berwarna kedua
+       .btn-ghost     netral aksi biasa
+       .btn-danger    merah  hapus / batalkan */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--pf-r-control);
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition:
+      background-color var(--pf-fast) ease,
+      border-color var(--pf-fast) ease,
+      color var(--pf-fast) ease,
+      box-shadow var(--pf-fast) ease,
+      transform var(--pf-fast) ease;
+  }
+
+  .btn:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-ghost:active,
+  .btn-danger:active {
+    transform: translateY(1px);
+  }
+
+  .btn:disabled,
+  .btn-primary:disabled,
+  .btn-secondary:disabled,
+  .btn-ghost:disabled,
+  .btn-danger:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
   }
 
   .btn-primary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-bold text-slate-900 shadow-[0_6px_16px_rgba(251,191,36,.24)] transition-all hover:bg-amber-300 hover:shadow-[0_8px_22px_rgba(251,191,36,.32)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--pf-cta);
+    color: var(--pf-cta-ink);
+    box-shadow: var(--pf-cta-shadow);
   }
 
   .btn-secondary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(13,148,136,.2)] transition-all hover:bg-teal-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--pf-accent);
+    color: #ffffff;
+  }
+
+  .dark .btn-secondary {
+    color: #05242c;
   }
 
   .btn-ghost {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-teal-200 bg-white px-4 py-2.5 text-sm font-bold text-teal-800 transition-all hover:border-teal-300 hover:bg-teal-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-800/50 dark:bg-[#101e29] dark:text-teal-300 dark:hover:border-teal-700 dark:hover:bg-teal-950/40;
+    border-color: var(--pf-line);
+    background: var(--pf-surface-2);
+    color: var(--pf-ink);
   }
 
   .btn-danger {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 transition-all hover:bg-rose-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50;
+    border-color: transparent;
+    background: var(--pf-danger-soft);
+    color: var(--pf-danger);
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover:not(:disabled) {
+      background: var(--pf-cta-hover);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--pf-accent-strong);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      border-color: var(--pf-accent-line);
+      background: var(--pf-accent-soft);
+      color: var(--pf-accent-strong);
+    }
+    .btn-danger:hover:not(:disabled) {
+      border-color: currentColor;
+    }
+  }
+
+  /* ---------- Form ----------
+     Label di atas, huruf biasa (bukan kapital kecil berjarak lebar),
+     sama dengan label di dashboard. Fokus memakai cincin teal. */
   .input {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:border-white/10 dark:bg-[#0c1c27] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-teal-400 dark:focus:ring-0 dark:focus:shadow-[0_0_0_3px_rgba(45,212,191,.22),0_0_18px_rgba(45,212,191,.35)];
+    width: 100%;
+    min-height: 42px;
+    padding: 0.5625rem 0.75rem;
+    border-radius: var(--pf-r-control);
+    border: 1px solid var(--pf-line-strong);
+    background: var(--pf-surface-solid);
+    color: var(--pf-ink);
+    font-size: 0.875rem;
+    outline: none;
+    transition:
+      border-color var(--pf-fast) ease,
+      box-shadow var(--pf-fast) ease;
+  }
+
+  .dark .input {
+    background: #0c1c27;
+  }
+
+  .input::placeholder {
+    color: var(--pf-ink-3);
+  }
+
+  .input:focus {
+    border-color: var(--pf-accent);
+    box-shadow: 0 0 0 3px var(--pf-accent-soft);
+  }
+
+  .input:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
   }
 
   .label {
-    @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[.08em] text-slate-500 dark:text-slate-400;
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pf-ink-2);
   }
 
+  /* ---------- Label kecil / badge status ----------
+     Warna isi tetap dari domain.ts (status.badge), di sini hanya
+     bentuk dan ukurannya yang diseragamkan. */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1875rem 0.625rem;
+    border-radius: var(--pf-r-pill);
+    border: 1px solid transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
   }
 
+  /* ---------- Progres ---------- */
   .progress-track {
-    @apply h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10;
+    height: 0.5rem;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--pf-r-pill);
+    background: var(--pf-surface-3);
   }
 
+  /* ---------- Judul seksi ----------
+     Sama dengan judul seksi dashboard: 15px (17px di layar lebar),
+     berat 600. */
   .section-title {
-    @apply text-base font-extrabold tracking-tight text-[#07384f] md:text-lg dark:text-slate-100;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--pf-ink);
   }
 
+  @media (min-width: 768px) {
+    .section-title {
+      font-size: 1.0625rem;
+    }
+  }
+
+  /* ---------- Judul halaman ----------
+     Satu pola untuk semua halaman (Pekerjaan, Detail, Order Baru,
+     Pelanggan, Mitra, Shift, Pengaturan, Notifikasi). Dulu ada dua pola:
+     sebagian text-xl semibold, sebagian text-2xl bold dengan label
+     kapital kecil di atasnya. */
+  .page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--pf-ink);
+  }
+
+  @media (min-width: 768px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* ---------- Kotak ikon ---------- */
   .icon-tile {
-    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300;
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--pf-r-control);
+    background: var(--pf-accent-soft);
+    color: var(--pf-accent-strong);
   }
 
   .scroll-x {
@@ -591,7 +796,9 @@ button, a, [role="button"] {
   }
 }
 
-/* Brand override: komponen lama otomatis mengikuti teal tanpa merusak warna status. */
+/* Brand override: kelas indigo lama otomatis mengikuti teal.
+   Sebagian besar sudah diganti langsung ke teal di komponen; aturan ini
+   tetap ada sebagai jaring pengaman untuk kelas indigo yang tersisa. */
 .text-indigo-600, .text-indigo-700, .text-indigo-800 { color: #0f766e !important; }
 .bg-indigo-600 { background-color: #0d9488 !important; }
 .bg-indigo-700 { background-color: #0f766e !important; }
@@ -611,10 +818,6 @@ button, a, [role="button"] {
 .dark .border-indigo-300 { border-color: rgba(20,184,166,.4) !important; }
 .dark .focus\:border-indigo-500:focus { border-color: #2dd4bf !important; }
 .dark .focus\:ring-indigo-100:focus { --tw-ring-color: rgba(20,184,166,.2) !important; }
-
-@media (max-width: 640px) {
-  .card { border-radius: 1rem; }
-}
 
 @media print {
   .no-print { display: none !important; }

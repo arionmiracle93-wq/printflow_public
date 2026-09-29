@@ -15,11 +15,11 @@ export default async function AuditPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl">
+        <h1 className="page-title flex items-center gap-2">
           <History size={22} strokeWidth={2.3} /> Audit Aktivitas
         </h1>
         <p className="text-sm text-slate-500">
-          Riwayat login, perubahan status, mutasi kerjaan, dan upload foto — digabung per akun.
+          Riwayat login, perubahan status, mutasi kerjaan, dan upload foto - digabung per akun.
         </p>
       </div>
       <AuditTimeline entries={result.data} />

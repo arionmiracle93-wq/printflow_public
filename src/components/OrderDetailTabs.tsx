@@ -9,7 +9,7 @@ type TabKey = "ringkasan" | "mitra" | "komunikasi" | "foto" | "lainnya";
  * Foto khusus per tab untuk kolom ke-3 di layar desktop.
  * Taruh file fotonya di folder `public/images/`, lalu isi path-nya di sini.
  * Tab yang belum diisi (dibiarkan kosong) otomatis tampil placeholder
- * putus-putus seperti biasa — jadi aman diisi belakangan satu-satu.
+ * putus-putus seperti biasa - jadi aman diisi belakangan satu-satu.
  */
 const TAB_PHOTOS: Partial<Record<TabKey, string>> = {
   ringkasan: "/images/pesanan-detail-ringkasan.jpg",
@@ -29,7 +29,7 @@ export function OrderDetailTabs({
   mitraActive,
   komunikasiPending,
 }: {
-  /** Link "Kembali" + kartu header order — tampil di atas konten tab, di kedua layout. */
+  /** Link "Kembali" + kartu header order - tampil di atas konten tab, di kedua layout. */
   header: ReactNode;
   ringkasan: ReactNode;
   mitra: ReactNode;
@@ -58,7 +58,7 @@ export function OrderDetailTabs({
       label: "Komunikasi",
       icon: <MessageCircle size={17} />,
       indicator: komunikasiPending ? (
-        <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white" aria-label="Ada serah terima menunggu">
+        <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white" aria-label="Ada serah terima menunggu">
           !
         </span>
       ) : undefined,
@@ -73,14 +73,14 @@ export function OrderDetailTabs({
   return (
     <div className="xl:grid xl:grid-cols-[232px_minmax(0,1fr)_380px] xl:gap-5">
       {/* ============================================================
-          Kolom tengah — header (baris 1) & konten tab aktif (baris 2).
+          Kolom tengah - header (baris 1) & konten tab aktif (baris 2).
           Sama persis di HP/tablet maupun desktop, cuma posisinya yang
           dipindah lewat grid di layar xl (>=1280px).
           ============================================================ */}
       <div className="space-y-4 mb-4 xl:col-start-2 xl:row-start-1 xl:mb-0">{header}</div>
 
       {/* ============================================================
-          Tab bar horizontal — HP & tablet (<xl). Tidak ada perubahan
+          Tab bar horizontal - HP & tablet (<xl). Tidak ada perubahan
           sama sekali dari versi sebelumnya.
           ============================================================ */}
       <div className="xl:hidden">
@@ -109,7 +109,7 @@ export function OrderDetailTabs({
       </div>
 
       {/* ============================================================
-          Sidebar menu tab vertikal — CUMA desktop (xl, >=1280px).
+          Sidebar menu tab vertikal - CUMA desktop (xl, >=1280px).
           Tombol yang sama, cuma tampilannya beda (vertikal, bukan
           pil horizontal) supaya jadi kolom pertama.
           ============================================================ */}
@@ -138,7 +138,7 @@ export function OrderDetailTabs({
       </div>
 
       {/* ============================================================
-          Konten tab aktif — SATU render dipakai bareng HP/tablet
+          Konten tab aktif - SATU render dipakai bareng HP/tablet
           maupun desktop (cuma dipindah posisinya via grid di xl),
           supaya komponen di dalamnya (form, manager foto, dll) tidak
           ke-mount dua kali.
@@ -148,7 +148,7 @@ export function OrderDetailTabs({
       </div>
 
       {/* ============================================================
-          Placeholder foto — CUMA desktop (xl), tampil di semua tab.
+          Placeholder foto - CUMA desktop (xl), tampil di semua tab.
           Tinggal diganti manual dengan foto asli kapan pun siap.
           ============================================================ */}
       <div className="hidden xl:col-start-3 xl:row-start-1 xl:row-span-2 xl:block xl:self-start xl:sticky xl:top-20">
@@ -177,7 +177,7 @@ function OrderPhotoPlaceholder({ src }: { src?: string }) {
         <ImagePlus size={24} />
       </span>
       <div>
-        <p className="text-sm font-extrabold text-slate-600 dark:text-slate-200">Placeholder foto</p>
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-200">Placeholder foto</p>
         <p className="mx-auto mt-1 max-w-[220px] text-xs leading-relaxed text-slate-400 dark:text-slate-400">
           Ganti area ini dengan foto pekerjaan / percetakan Anda sendiri.
         </p>

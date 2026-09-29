@@ -22,15 +22,15 @@ export function UserMenu({ name, role }: { name: string; role: UserRole }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-label={`Akun ${name}`}
-        className={`flex h-10 max-w-[calc(100vw-4.5rem)] items-center gap-2 rounded-xl border px-2.5 text-white transition md:h-9 md:max-w-none ${
+        className={`flex h-10 min-w-0 max-w-[calc(100vw-11rem)] items-center gap-2 rounded-xl border px-2.5 text-white transition md:h-9 md:max-w-none ${
           open ? "border-teal-300/50 bg-white/20" : "border-white/15 bg-white/10 hover:bg-white/15"
         }`}
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-[10px] font-black text-[#07384f]">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-[10px] font-bold text-[color:var(--pf-ink)]">
           {name.slice(0, 1).toUpperCase()}
         </span>
-        <span className="block whitespace-nowrap text-left md:hidden xl:block">
-          <span className="block text-[11px] font-bold leading-none">{name}</span>
+        <span className="block min-w-0 overflow-hidden whitespace-nowrap text-left md:hidden xl:block">
+          <span className="block truncate text-[11px] font-bold leading-none" title={name}>{name}</span>
           <span className="mt-0.5 block text-[9px] text-cyan-100/60">{roleLabel(role)}</span>
         </span>
         <ChevronDown
@@ -49,7 +49,7 @@ export function UserMenu({ name, role }: { name: string; role: UserRole }) {
           />
           <div className="absolute left-0 top-12 z-50 w-[min(16rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_55px_rgba(7,56,79,.2)] md:left-auto md:right-0 md:top-11">
             <div className="border-b border-slate-100 px-2.5 py-2">
-              <p className="break-words text-xs font-extrabold text-[#07384f]">{name}</p>
+              <p className="break-words text-xs font-semibold text-[color:var(--pf-ink)]">{name}</p>
               <p className="mt-0.5 text-[10px] text-slate-400">{roleLabel(role)}</p>
             </div>
             {role === "owner" ? (

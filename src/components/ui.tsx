@@ -53,6 +53,19 @@ export function ProgressBar({ value, tone = "bg-teal-500" }: { value: number; to
   );
 }
 
+/**
+ * KARTU KPI - gaya "strip datar" (revisi tampilan).
+ * Tanpa kotak/border: ikon besar di kiri, lalu label, angka besar, dan
+ * garis progres tipis di bawah angka. Antar-KPI dipisah garis vertikal
+ * tipis (diatur oleh kelas .pf-kpi di dashboard.css).
+ *
+ * Yang SENGAJA tidak berubah dari versi original:
+ * - ikon (dikirim dari page.tsx, hanya ukurannya dibesarkan lewat CSS)
+ * - animasi hover: naik sedikit, bayangan, dan garis gradasi di atas.
+ *   Saat di-hover kartu "muncul" lagi (latar + bayangan) seperti aslinya.
+ *
+ * `bar` (0-100) hanya hiasan visual panjang garis progres, BUKAN data.
+ */
 export function KpiCard({
   label,
   value,
@@ -60,6 +73,7 @@ export function KpiCard({
   tone = "text-[#07384f]",
   icon,
   accent = "teal",
+  bar = 75,
 }: {
   label: string;
   value: string;
@@ -67,25 +81,59 @@ export function KpiCard({
   tone?: string;
   icon?: ReactNode;
   accent?: "teal" | "yellow" | "rose" | "blue";
+  bar?: number;
 }) {
-  const tiles = {
-    teal: "bg-teal-50 text-teal-700",
-    yellow: "bg-amber-50 text-amber-600",
-    rose: "bg-rose-50 text-rose-600",
-    blue: "bg-sky-50 text-sky-600",
+  // Warna ikon memakai kelas yang sudah punya padanan mode gelap di globals.css.
+  const iconTone = {
+    teal: "text-teal-600",
+    yellow: "text-amber-500",
+    rose: "text-rose-600",
+    blue: "text-sky-600",
   };
+  const barTone = {
+    teal: "from-teal-500 to-teal-300",
+    yellow: "from-amber-500 to-amber-300",
+    rose: "from-rose-500 to-rose-300",
+    blue: "from-sky-500 to-sky-300",
+  };
+  // Angka panjang (mis. "Rp 12.500.000") dikecilkan bertahap supaya tetap
+  // muat di samping ikon besar pada layar lebar. Angka pendek memakai ukuran penuh.
+  const len = value.length;
+  const valueSize =
+    len <= 6
+      ? "text-2xl md:text-[1.9rem]"
+      : len <= 10
+        ? "text-xl md:text-[1.5rem] xl:text-[1.2rem]"
+        : len <= 13
+          ? "text-lg md:text-[1.35rem] xl:text-[.95rem]"
+          : "text-base md:text-xl xl:text-[.85rem]";
   return (
-    <div className="card group relative overflow-hidden p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,75,84,.11)] md:p-4">
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-teal-400 to-amber-300 opacity-30 transition group-hover:opacity-100" />
-      <div className={`flex h-7 w-7 items-center justify-center rounded-lg md:h-9 md:w-9 md:rounded-xl ${tiles[accent]}`}>{icon}</div>
-      <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[.09em] text-slate-500 md:mt-3">{label}</p>
-      <p className={`mt-1 text-lg font-black tracking-tight md:text-2xl ${tone}`}>{value}</p>
-      {hint ? <p className="mt-1 text-[11px] font-medium text-slate-400">{hint}</p> : null}
+    <div className="pf-kpi group relative flex items-center gap-3 overflow-hidden rounded-2xl py-3 pl-4 pr-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--pf-surface)] hover:shadow-[0_12px_30px_rgba(15,75,84,.11)] md:gap-3.5 md:pl-6 xl:pl-5">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-teal-400 to-amber-300 opacity-0 transition group-hover:opacity-100" />
+      <div
+        className={`shrink-0 ${iconTone[accent]} [&>svg]:h-8 [&>svg]:w-8 [&>svg]:[stroke-width:1.6] md:[&>svg]:h-9 md:[&>svg]:w-9`}
+        aria-hidden
+      >
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="whitespace-nowrap text-[10px] font-medium uppercase leading-tight tracking-[.05em] text-slate-500 md:text-[11px] xl:text-[10.5px]">{label}</p>
+        <div className="mt-1 flex items-baseline gap-2">
+          <p className={`whitespace-nowrap font-black leading-none tracking-tight ${valueSize} ${tone}`}>{value}</p>
+          {hint ? <p className="min-w-0 truncate text-[11px] font-medium text-slate-400">{hint}</p> : null}
+        </div>
+        <div className="mt-2 h-[3px] w-24 overflow-hidden rounded-full bg-slate-200 md:w-[6.5rem]" aria-hidden>
+          <div
+            className={`h-full rounded-full bg-gradient-to-r ${barTone[accent]}`}
+            style={{ width: `${Math.min(100, Math.max(0, bar))}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
-// Ikon pengganti emoji status (dulu cuma `.emoji` teks) — dipakai di pill status
+// Ikon pengganti emoji status (dulu cuma `.emoji` teks) - dipakai di pill status
 // kanan-atas kartu pekerjaan supaya terasa seperti ikon garis, bukan emoji.
 export const STATUS_ICONS: Record<string, LucideIcon> = {
   antrian: UserRound,
@@ -129,11 +177,11 @@ function StageStrips({ status, label }: { status: string; label: string }) {
   );
 }
 
-// Tombol aksi kartu pekerjaan: pil bg-slate-50/border-slate-200 — teks & ikon
+// Tombol aksi kartu pekerjaan: pil bg-slate-50/border-slate-200 - teks & ikon
 // di tengah (bukan avatar bundar), dipakai untuk keempat aksi (Buka detail,
 // Update status, Kirim WA, Salin teks pesan) supaya konsisten satu sama lain.
 const ACTION_BTN =
-  "flex min-h-[46px] w-full items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center text-[13px] font-extrabold text-[#07384f] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 active:translate-y-0 active:scale-[0.96]";
+  "flex min-h-[46px] w-full items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center text-[13px] font-semibold text-[color:var(--pf-ink)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 active:translate-y-0 active:scale-[0.96]";
 
 export function InsightCard({
   insight,
@@ -173,16 +221,16 @@ export function InsightCard({
           </span>
           <div className="min-w-0 flex-1">
             <p className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[13px] font-extrabold tracking-wide text-teal-700">{insight.code}</span>
+              <span className="text-[13px] font-semibold tracking-wide text-teal-700">{insight.code}</span>
               <PhotoQuickPeek orderId={insight.orderId} code={insight.code} count={photoCount} />
             </p>
-            <p className="mt-1 line-clamp-2 break-words text-[15px] font-black leading-snug text-[#07384f] sm:text-lg sm:leading-tight" title={insight.title}>{insight.title}</p>
+            <p className="mt-1 line-clamp-2 break-words text-[15px] font-bold leading-snug text-[color:var(--pf-ink)] sm:text-lg sm:leading-tight" title={insight.title}>{insight.title}</p>
             <p className="text-xs font-medium text-slate-500">{insight.customerName}</p>
             <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
               <Package size={13} className="shrink-0" />
               <span className="truncate">{insight.itemsSummary}</span>
               {insight.items.length > 1 ? (
-                <span className="shrink-0 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-extrabold text-teal-700">
+                <span className="shrink-0 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-semibold text-teal-700">
                   {insight.items.length}
                 </span>
               ) : null}
@@ -192,7 +240,7 @@ export function InsightCard({
                 <UserRound size={12} />
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
                   insight.operator ? "border-sky-200 bg-sky-50 text-sky-700" : "border-amber-200 bg-amber-50 text-amber-700"
                 }`}
               >
@@ -200,7 +248,7 @@ export function InsightCard({
               </span>
             </div>
             {outsource ? (
-              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700">
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                 <Building2 size={10} /> Mitra: {outsource.partnerName}
               </span>
             ) : null}
@@ -215,11 +263,11 @@ export function InsightCard({
           hasOutsource={Boolean(outsource)}
           trigger={
             <span className="flex flex-col items-end gap-1.5">
-              <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-extrabold ${meta.badge}`}>
+              <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${meta.badge}`}>
                 <StatusIcon size={13} /> {meta.short}
               </span>
               <span
-                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-extrabold ${RISK_META[insight.riskLevel].badge}`}
+                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${RISK_META[insight.riskLevel].badge}`}
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
                 {RISK_META[insight.riskLevel].label}
@@ -260,7 +308,7 @@ export function SafeIcon() {
 }
 
 // Donut chart ringan (SVG polos, tanpa library chart) yang menampilkan proporsi
-// pekerjaan aktif menurut level risiko — dipasang di kolom kanan Dashboard,
+// pekerjaan aktif menurut level risiko - dipasang di kolom kanan Dashboard,
 // di atas panel Tanya AI, biar layout 2 kolom terasa seimbang.
 export function KpiRiskDonut({
   aman,
@@ -289,7 +337,7 @@ export function KpiRiskDonut({
           <PieChart size={18} />
         </span>
         <div>
-          <h3 className="text-sm font-extrabold text-[#07384f] dark:text-slate-100">Distribusi risiko pekerjaan</h3>
+          <h3 className="text-sm font-semibold text-[color:var(--pf-ink)] dark:text-slate-100">Distribusi risiko pekerjaan</h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             {total > 0 ? `Dari ${total} pekerjaan aktif` : "Belum ada pekerjaan aktif"}
           </p>
@@ -329,7 +377,7 @@ export function KpiRiskDonut({
                 <span className="flex items-center gap-1.5 font-bold text-slate-600 dark:text-slate-300">
                   <span className={`h-2 w-2 shrink-0 rounded-full ${seg.dot}`} /> {seg.label}
                 </span>
-                <span className={`font-extrabold ${seg.text}`}>
+                <span className={`font-semibold ${seg.text}`}>
                   {seg.value} <span className="font-medium text-slate-400 dark:text-slate-500">· {Math.round((seg.value / total) * 100)}%</span>
                 </span>
               </li>

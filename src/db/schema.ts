@@ -86,6 +86,13 @@ export const orderItems = pgTable("order_items", {
   unit: text("unit").notNull().default("pcs"),
   /** Urutan tampil baris item di dalam satu pekerjaan. */
   position: integer("position").notNull().default(0),
+  /**
+   * Status produk ini sendiri. null = ikut status pekerjaan (bawaan).
+   * Lihat src/lib/item-status.ts untuk aturan penghitungannya.
+   */
+  status: text("status"),
+  /** Mitra yang mengerjakan produk ini. null = dikerjakan sendiri. */
+  outsourceJobId: integer("outsource_job_id").references(() => outsourceJobs.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -145,7 +152,13 @@ export const orderPhotos = pgTable("order_photos", {
   sizeBytes: integer("size_bytes").notNull().default(0),
   caption: text("caption"),
   uploadedBy: text("uploaded_by"),
-  data: bytea("data").notNull(),
+  /**
+   * Isi foto. Terisi untuk foto lama / saat Vercel Blob belum dipasang.
+   * null kalau fotonya sudah disimpan di Vercel Blob (lihat blobUrl).
+   */
+  data: bytea("data"),
+  /** Alamat file di Vercel Blob (private). null = foto masih di database. */
+  blobUrl: text("blob_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -170,9 +183,10 @@ export const productionPartners = pgTable("production_partners", {
  */
 export const outsourceJobs = pgTable("outsource_jobs", {
   id: serial("id").primaryKey(),
+  // Tidak lagi unique: satu pekerjaan boleh dilempar ke beberapa mitra,
+  // masing-masing mengerjakan produk yang berbeda (order_items.outsource_job_id).
   orderId: integer("order_id")
     .notNull()
-    .unique()
     .references(() => orders.id, { onDelete: "cascade" }),
   partnerId: integer("partner_id").references(() => productionPartners.id, { onDelete: "set null" }),
   partnerName: text("partner_name").notNull(),

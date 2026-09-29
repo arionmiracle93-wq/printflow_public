@@ -6,7 +6,7 @@ export default function NotFound() {
     <div className="mx-auto max-w-xl py-12 text-center">
       <div className="card p-8">
         <Compass size={48} strokeWidth={1.6} className="mx-auto text-slate-300" />
-        <h1 className="mt-3 text-xl font-extrabold text-slate-900">Halaman tidak ditemukan (404)</h1>
+        <h1 className="mt-3 text-xl font-semibold text-slate-900">Halaman tidak ditemukan (404)</h1>
         <p className="mt-1 text-sm text-slate-600">
           Alamat yang Anda buka salah ketik, atau pekerjaannya sudah dihapus.
         </p>

@@ -10,22 +10,43 @@
        @import "./dashboard.css";
 
    ---------------------------------------------------------------------
-   KEPUTUSAN DESAIN (dicatat supaya konsisten ke depan)
+   KEPUTUSAN DESAIN (berlaku untuk SELURUH aplikasi, bukan hanya dashboard)
 
    Mode redesign : PRESERVE. Warna merek (navy 07384f, teal, amber)
-                   dipertahankan. Rute, label navigasi, dan nama field
-                   form tidak diubah.
-   Aksen         : SATU, yaitu teal. Amber turun pangkat jadi warna
-                   semantik (peringatan / tenggat), bukan aksen bebas.
-   Netral        : satu keluarga abu dingin (slate). Tidak dicampur
-                   dengan abu hangat.
-   Radius        : kartu 14px, kontrol 10px, pil penuh. Tidak ada
-                   radius lain di luar tiga nilai ini.
-   Bayangan      : diberi rona biru kehijauan mengikuti latar, tidak
-                   pernah hitam murni di mode terang.
-   Gerak         : ringan. Hanya transisi keadaan dan satu reveal
-                   masuk. Dimatikan penuh saat prefers-reduced-motion.
-   Angka         : selalu tabular-nums supaya kolom angka tidak goyang.
+                   dipertahankan. Rute, label navigasi, nama field form,
+                   dan tata letak 3 kolom halaman detail tidak diubah.
+
+   Peran warna   : setiap warna punya SATU tugas, dipakai sama di semua
+                   halaman.
+                   - Teal  (--pf-accent) : interaksi. Tautan, menu aktif,
+                     fokus, pilihan, tombol sekunder, progres.
+                   - Amber (--pf-cta)    : SATU aksi utama per layar
+                     (buat / simpan), plus tanda merek (logo, tombol Baru).
+                   - Hijau / kuning tua / oranye / merah : status semantik
+                     (aman, waspada, berisiko, terlambat). Tidak dipakai
+                     untuk hiasan.
+                   Mau tombol utama jadi teal? Ganti satu baris --pf-cta.
+
+   Netral        : satu keluarga abu dingin (slate).
+
+   Radius        : mengikuti yang sudah paling banyak dipakai aplikasi.
+                   kartu dan panel 16px (rounded-2xl), kontrol 12px
+                   (rounded-xl: tombol, input, ubin, kotak ikon), label
+                   dan badge berbentuk pil. Pengecualian tunggal: hero
+                   foto dashboard 24px (desain original).
+
+   Permukaan     : terang = putih solid bergaris tipis. Gelap = kaca
+                   tembus tipis tanpa blur, sama dengan gaya gelap yang
+                   sudah dipakai aplikasi sejak awal.
+
+   Tipografi     : Geist. Tangga berat: 400 isi, 500 label, 600 judul
+                   dan tombol, 700 angka besar. font-black (900) dan
+                   font-extrabold (800) tidak dipakai lagi kecuali di
+                   hero dan kartu KPI (desain original).
+
+   Bayangan      : berona latar, tidak pernah hitam murni di mode terang.
+   Gerak         : ringan, mati penuh saat prefers-reduced-motion.
+   Angka         : tabular-nums pada permukaan data.
    ===================================================================== */
 
 :root {
@@ -34,6 +55,7 @@
   --pf-surface: #ffffff;
   --pf-surface-2: #f7fafa;
   --pf-surface-3: #eef3f4;
+  --pf-surface-solid: #ffffff;
 
   /* Garis */
   --pf-line: rgb(15 61 74 / 0.12);
@@ -52,6 +74,12 @@
   --pf-accent-soft: rgb(13 125 117 / 0.1);
   --pf-accent-line: rgb(13 125 117 / 0.26);
 
+  /* Aksi utama (satu per layar) */
+  --pf-cta: #fbbf24;
+  --pf-cta-hover: #fcd34d;
+  --pf-cta-ink: #0f2937;
+  --pf-cta-shadow: 0 6px 16px rgb(251 191 36 / 0.24);
+
   /* Semantik */
   --pf-ok: #0f8a5f;
   --pf-ok-soft: rgb(15 138 95 / 0.1);
@@ -62,13 +90,13 @@
   --pf-alert: #d96a1c;
   --pf-alert-soft: rgb(217 106 28 / 0.11);
 
-  /* Radius: hanya tiga nilai */
-  --pf-r-card: 14px;
-  --pf-r-control: 10px;
+  /* Radius: hanya tiga nilai (lihat keputusan di atas) */
+  --pf-r-card: 16px;
+  --pf-r-control: 12px;
   --pf-r-pill: 999px;
 
   /* Bayangan berona latar */
-  --pf-shadow-1: 0 1px 2px rgb(10 47 64 / 0.05), 0 1px 1px rgb(10 47 64 / 0.04);
+  --pf-shadow-1: 0 1px 2px rgb(10 47 64 / 0.04), 0 6px 20px rgb(10 47 64 / 0.055);
   --pf-shadow-2: 0 2px 4px rgb(10 47 64 / 0.05), 0 8px 20px rgb(10 47 64 / 0.07);
   --pf-shadow-3: 0 10px 34px rgb(10 47 64 / 0.12);
 
@@ -80,9 +108,12 @@
 
 .dark {
   --pf-page: #071620;
-  --pf-surface: #0e222e;
-  --pf-surface-2: #122a37;
-  --pf-surface-3: #173340;
+  /* Kaca tembus tipis tanpa blur, sama dengan gaya gelap .card lama,
+     supaya gradasi latar tetap terlihat samar di balik semua panel. */
+  --pf-surface: rgb(255 255 255 / 0.03);
+  --pf-surface-2: rgb(255 255 255 / 0.05);
+  --pf-surface-3: rgb(255 255 255 / 0.085);
+  --pf-surface-solid: #101e29;
 
   --pf-line: rgb(255 255 255 / 0.1);
   --pf-line-soft: rgb(255 255 255 / 0.06);
@@ -98,6 +129,8 @@
   --pf-accent-soft: rgb(62 203 189 / 0.13);
   --pf-accent-line: rgb(62 203 189 / 0.3);
 
+  --pf-cta-shadow: 0 6px 18px rgb(251 191 36 / 0.18);
+
   --pf-ok: #45c98e;
   --pf-ok-soft: rgb(69 201 142 / 0.13);
   --pf-warn: #e5a83c;
@@ -107,7 +140,7 @@
   --pf-alert: #f39a52;
   --pf-alert-soft: rgb(243 154 82 / 0.14);
 
-  --pf-shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --pf-shadow-1: 0 7px 24px rgb(0 0 0 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.06);
   --pf-shadow-2: 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 20px rgb(0 0 0 / 0.34);
   --pf-shadow-3: 0 10px 34px rgb(0 0 0 / 0.44);
 }
@@ -221,17 +254,28 @@ html body {
     transform: translateY(1px);
   }
 
+  /* Aksi utama: amber, sama dengan .btn-primary lama dan tombol Baru. */
   .pf-btn-primary {
-    background: var(--pf-accent);
-    color: #ffffff;
-    box-shadow: var(--pf-shadow-1);
+    background: var(--pf-cta);
+    color: var(--pf-cta-ink);
+    box-shadow: var(--pf-cta-shadow);
   }
 
   .pf-btn-primary:hover {
+    background: var(--pf-cta-hover);
+  }
+
+  /* Tombol sekunder berwarna: teal. */
+  .pf-btn-accent {
+    background: var(--pf-accent);
+    color: #ffffff;
+  }
+
+  .pf-btn-accent:hover {
     background: var(--pf-accent-strong);
   }
 
-  .dark .pf-btn-primary {
+  .dark .pf-btn-accent {
     color: #05242c;
   }
 

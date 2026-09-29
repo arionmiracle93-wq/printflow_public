@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ChevronRight, RefreshCw, Users } from "lucide-react";
+import { ArrowUpRight, ChevronRight, RefreshCw, Users } from "lucide-react";
 import { RISK_META, type OrderInsight } from "@/lib/ai";
 import { humanDuration, statusMeta } from "@/lib/domain";
 import { CopyMessageQuick } from "@/components/CopyMessageQuick";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
 import { QuickStatusPopup } from "@/components/QuickStatusPopup";
 import { ShareWhatsAppQuick } from "@/components/ShareWhatsAppQuick";
+import { SwipeTrack } from "@/components/dashboard/SwipeTrack";
 
 const FLOW = ["antrian", "desain", "cetak", "finishing", "qc", "siap"] as const;
 
@@ -134,7 +135,7 @@ function JobRow({
       </div>
 
       <div
-        className={`pf-num rounded-[10px] px-1.5 py-1 text-center text-[13px] font-semibold ${riskTone(insight.riskLevel)}`}
+        className={`pf-num rounded-xl px-1.5 py-1 text-center text-[13px] font-semibold ${riskTone(insight.riskLevel)}`}
         title={`Risiko ${risk.label}`}
       >
         {Math.round(insight.riskScore)}
@@ -193,7 +194,7 @@ function JobCardMobile({
           <PhotoQuickPeek orderId={insight.orderId} code={insight.code} count={photoCount} />
         </p>
         <span
-          className={`pf-num shrink-0 rounded-[10px] px-2 py-1 text-xs font-semibold ${riskTone(insight.riskLevel)}`}
+          className={`pf-num shrink-0 rounded-xl px-2 py-1 text-xs font-semibold ${riskTone(insight.riskLevel)}`}
         >
           {Math.round(insight.riskScore)}
         </span>
@@ -236,9 +237,12 @@ function JobCardMobile({
           }
         />
         <ShareWhatsAppQuick order={order} className="pf-act-wide" />
-        <span className="col-span-2">
-          <CopyMessageQuick order={order} className="pf-act-wide" />
-        </span>
+        {/* Baris kedua: Salin pesan berdampingan dengan Lihat detail.
+            Label disingkat "Salin pesan" supaya muat satu baris di HP. */}
+        <CopyMessageQuick order={order} className="pf-act-wide" label="Salin pesan" />
+        <Link href={`/pesanan/${insight.orderId}`} className="pf-act-wide pf-act-wide-primary">
+          Lihat detail <ArrowUpRight size={13} />
+        </Link>
       </div>
     </article>
   );
@@ -260,8 +264,9 @@ export function JobQueue({
 }) {
   return (
     <>
-      {/* Ponsel: geser samping, satu kartu hampir penuh layar. */}
-      <div className="pf-swipe -mx-3 px-3 sm:-mx-4 sm:px-4 lg:hidden">
+      {/* HP: geser samping, satu kartu penuh per layar.
+          Tablet: dua kartu penuh per layar. Tidak ada kartu terpotong. */}
+      <SwipeTrack className="lg:hidden">
         {jobs.map((job, i) => (
           <JobCardMobile
             key={job.orderId}
@@ -273,7 +278,7 @@ export function JobQueue({
             dueTime={due.get(job.orderId)?.dueTime ?? ""}
           />
         ))}
-      </div>
+      </SwipeTrack>
 
       {/* Layar lebar: baris data. */}
       <div className="pf-surface hidden overflow-hidden lg:block">

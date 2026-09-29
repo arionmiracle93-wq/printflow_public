@@ -4,11 +4,12 @@ import { STATUS_ICONS } from "@/components/ui";
 import { safeDb } from "@/lib/dbcheck";
 import { getPublicTracking } from "@/lib/queries";
 import { STATUSES, formatDateID, formatDateTimeID, formatNumber, statusMeta } from "@/lib/domain";
+import { effectiveItemStatus, isSplit } from "@/lib/item-status";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Lacak Pesanan — Print Flow",
+  title: "Lacak Pesanan - Print Flow",
   robots: { index: false, follow: false },
 };
 
@@ -28,7 +29,7 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
   const selesai = order.status === "selesai";
   const batal = order.status === "batal";
   // "Siap Diambil/Dikirim" progress-nya 95% (belum "selesai" 100%), tapi buat
-  // pelanggan awam dua-duanya kedengeran sama saja "sudah kelar" — jadi teks
+  // pelanggan awam dua-duanya kedengeran sama saja "sudah kelar" - jadi teks
   // deadline/perkiraan selesai disembunyikan mulai status ini, bukan cuma pas
   // sudah benar-benar Selesai.
   const deadlineIrrelevant = selesai || order.status === "siap";
@@ -43,11 +44,11 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
               ? "bg-gradient-to-r from-emerald-500 to-teal-600"
               : batal
                 ? "bg-gradient-to-r from-rose-500 to-rose-600"
-                : "bg-gradient-to-r from-indigo-600 to-violet-600"
+                : "bg-gradient-to-r from-[#07384f] to-teal-600"
           }`}
         >
           <p className="text-xs font-bold uppercase tracking-widest text-white/70">Pelacakan Pesanan</p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold leading-snug">
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold leading-snug">
             {selesai ? (
               <>
                 <CheckCircle2 size={20} strokeWidth={2.3} /> Pesanan Anda sudah selesai!
@@ -84,7 +85,7 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
                 <span
                   key={s.key}
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    s.progress <= meta.progress ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-400"
+                    s.progress <= meta.progress ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-400"
                   }`}
                 >
                   {s.short}
@@ -95,9 +96,9 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
 
           {/* INFO */}
           {/* "Perkiraan selesai" disembunyikan mulai status Siap Diambil/Dikirim
-              (bukan cuma pas Selesai) — lihat catatan deadlineIrrelevant di atas. */}
+              (bukan cuma pas Selesai) - lihat catatan deadlineIrrelevant di atas. */}
           {/* Rincian pesanan diambil dari daftar item yang diinput operator,
-              jadi pelanggan bisa mencocokkan SEMUA barang yang dipesannya —
+              jadi pelanggan bisa mencocokkan SEMUA barang yang dipesannya -
               bukan cuma satu jenis produk seperti versi sebelumnya. */}
           <div className="rounded-xl bg-slate-50 px-3 py-2.5">
             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
@@ -113,8 +114,18 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
                       <span className="mr-1.5 text-[11px] font-bold text-slate-400">{index + 1}.</span>
                       {item.productType}
                     </span>
-                    <span className="shrink-0 font-bold text-slate-700">
-                      {formatNumber(item.quantity)} {item.unit}
+                    <span className="flex shrink-0 items-center gap-2">
+                      {/* Tahap per produk hanya tampil kalau produknya memang
+                          dipisah statusnya, supaya pelanggan tahu mana yang
+                          sudah jadi dan mana yang masih dikerjakan. */}
+                      {isSplit(order.items) ? (
+                        <span className={`chip ${statusMeta(effectiveItemStatus(item.status, order.status)).badge}`}>
+                          {statusMeta(effectiveItemStatus(item.status, order.status)).short}
+                        </span>
+                      ) : null}
+                      <span className="font-bold text-slate-700">
+                        {formatNumber(item.quantity)} {item.unit}
+                      </span>
                     </span>
                   </li>
                 ))}
@@ -140,7 +151,7 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
         </div>
       </div>
 
-      {/* INFO PENGAMBILAN — kartu statis (isinya sama untuk semua status),
+      {/* INFO PENGAMBILAN - kartu statis (isinya sama untuk semua status),
           sengaja ditaruh selalu tampil (bukan cuma pas status Siap
           Diambil/Kirim) supaya pelanggan sudah tahu prosedur & jam
           operasionalnya dari awal, sebelum pesanannya beneran siap. Kalau
@@ -219,7 +230,7 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
             const EventIcon = STATUS_ICONS[e.toStatus] ?? UserRound;
             return (
               <li key={`${e.createdAt}-${e.toStatus}`} className="relative">
-                <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
+                <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-teal-500" />
                 <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
                   <EventIcon size={13} className="shrink-0" /> {statusMeta(e.toStatus).label}
                 </p>
@@ -266,7 +277,7 @@ function Gagal({ code }: { code: string }) {
         ) : (
           <Lock size={44} strokeWidth={1.6} className="mx-auto text-slate-300" />
         )}
-        <h1 className="mt-3 text-lg font-extrabold text-slate-900">
+        <h1 className="mt-3 text-lg font-semibold text-slate-900">
           {code === "salah" ? "Sistem sedang tidak bisa menampilkan data" : "Tautan tidak dikenali"}
         </h1>
         <p className="mt-1.5 text-sm text-slate-600">

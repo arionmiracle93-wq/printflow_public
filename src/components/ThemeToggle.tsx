@@ -13,7 +13,7 @@ function applyTheme(dark: boolean) {
 /**
  * Tombol pindah tema terang/gelap. Pilihan disimpan di localStorage supaya
  * konsisten setiap kali aplikasi dibuka lagi. Skrip anti-flash di layout
- * yang menentukan tema awal saat load — komponen ini cuma menyinkronkan
+ * yang menentukan tema awal saat load - komponen ini cuma menyinkronkan
  * state tombolnya lalu menangani klik.
  */
 export function ThemeToggle() {
@@ -30,7 +30,7 @@ export function ThemeToggle() {
     try {
       window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
     } catch {
-      // Mode privat / storage penuh — tema tetap berlaku untuk sesi ini saja.
+      // Mode privat / storage penuh - tema tetap berlaku untuk sesi ini saja.
     }
   };
 

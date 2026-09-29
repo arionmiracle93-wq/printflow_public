@@ -45,6 +45,13 @@ export async function proxy(request: NextRequest) {
 
   if (isPublic(pathname) || (pathname === "/api/branding/logo" && request.method === "GET")) {
     if ((pathname === "/login" || pathname === "/setup-akun") && session) return NextResponse.redirect(new URL("/", request.url));
+    // Halaman tautan lacak (dibuka pelanggan): beri tanda supaya layout tidak
+    // menampilkan tautan internal (Panduan / Catatan Perubahan) di bagian bawah.
+    if (pathname.startsWith("/lacak/")) {
+      const publicHeaders = new Headers(request.headers);
+      publicHeaders.set("x-print-flow-lacak", "1");
+      return NextResponse.next({ request: { headers: publicHeaders } });
+    }
     return NextResponse.next();
   }
 

@@ -20,15 +20,26 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *
  * Foto: /public/images/dashboard-hero.jpg (desktop) dan
  * dashboard-hero-mobile.jpg (HP).
+ *
+ * Optimasi scroll (Oktober 2026), tampilan tetap sama:
+ *   - blur-3xl diganti gradasi radial (.pf-hero-glow)
+ *   - backdrop-blur tombol "Semua Pekerjaan" hanya aktif di md ke atas;
+ *     di HP latar tombol sudah gelap sehingga efek kacanya nyaris tak
+ *     terlihat, tapi biayanya besar saat header ikut ber-backdrop-blur
+ *   - hero dijadikan lapisan GPU tersendiri (.pf-hero) supaya saat
+ *     digulir cukup digeser, tidak digambar ulang
  */
 export function DashboardHero({ summary, highlights }: { summary: string; highlights: string[] }) {
   return (
-    <section className="relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white shadow-[0_20px_46px_rgba(3,16,23,.35)] dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
+    <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white shadow-[0_20px_46px_rgba(3,16,23,.35)] dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
       {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop, lihat .hero-photo-bg di globals.css */}
       <div className="hero-photo-bg absolute inset-0 -z-20" />
-      {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto */}
-      <div className="absolute -bottom-24 -right-10 -z-10 h-56 w-56 rounded-full bg-amber-300/25 blur-3xl" />
-      <div className="absolute -top-16 -left-10 -z-10 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />
+      {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto.
+          Dulu dibuat dengan filter blur-3xl (blur 64px), salah satu efek
+          paling berat untuk GPU HP. Sekarang memakai gradasi radial dengan
+          posisi dan warna yang sama, hasil visualnya setara tanpa filter. */}
+      <div className="pf-hero-glow pf-hero-glow-amber" aria-hidden />
+      <div className="pf-hero-glow pf-hero-glow-teal" aria-hidden />
       <div className="print-halftone absolute inset-0 -z-10 hidden md:block" />
 
       <div className="relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:p-7">
@@ -60,7 +71,7 @@ export function DashboardHero({ summary, highlights }: { summary: string; highli
           </Link>
           <Link
             href="/pesanan"
-            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[11px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20 sm:text-xs"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[11px] font-bold text-white transition-colors md:backdrop-blur-sm hover:bg-white/20 sm:text-xs"
           >
             <ListTodo size={14} className="shrink-0" /> Semua Pekerjaan
           </Link>

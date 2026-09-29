@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, Cloud, Info, Lightbulb, Monitor, RefreshCw, Search, Settings, Stethoscope, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Cloud, DatabaseZap, Info, Lightbulb, Monitor, RefreshCw, Search, Settings, Stethoscope, XCircle } from "lucide-react";
 import type { DbCheck } from "@/lib/dbcheck";
 
 export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: string }) {
@@ -12,7 +12,7 @@ export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: stri
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-4 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-amber-100">Perlu disetel sekali saja</p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold leading-snug md:text-2xl">
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold leading-snug md:text-2xl">
             <Settings size={20} strokeWidth={2.3} /> {problem.title}
           </h1>
           <p className="mt-1 text-sm text-amber-50">{problem.message}</p>
@@ -32,7 +32,7 @@ export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: stri
             <ol className="mt-2 space-y-2">
               {problem.steps.map((step, i) => (
                 <li key={step} className="flex gap-2.5 text-sm text-slate-700">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
                     {i + 1}
                   </span>
                   <span className="pt-0.5">{step}</span>
@@ -40,6 +40,19 @@ export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: stri
               ))}
             </ol>
           </div>
+
+          {/* Masalah yang cukup diselesaikan dengan membuka /api/setup:
+              beri tombol langsung, supaya tidak perlu mengetik alamat. */}
+          {problem.code === "tabel_belum_ada" ? (
+            <a
+              href="/api/setup"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary inline-flex w-full items-center justify-center gap-1.5"
+            >
+              <DatabaseZap size={15} /> Perbarui database sekarang
+            </a>
+          ) : null}
 
           <div className="grid gap-2 sm:grid-cols-2">
             <button
@@ -91,7 +104,7 @@ export function ProblemScreen({ problem, hint }: { problem: DbCheck; hint?: stri
           </li>
         </ul>
         {fatal ? (
-          <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
+          <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-teal-50 px-3 py-2 text-xs text-teal-800">
             <Lightbulb size={14} className="mt-0.5 shrink-0" />
             <span>
               Panduan lengkap dengan gambar langkah: buka halaman{" "}

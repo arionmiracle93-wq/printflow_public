@@ -23,7 +23,7 @@ function buildHandoverMessage(h: HandoverShareData, url: string): string {
   const lines = [
     `Halo ${h.toOperator} 👋`,
     "",
-    `Ada serah terima pekerjaan dari *${h.fromOperator}* buat kamu. Ini kirim manual lewat WhatsApp — jaring pengaman aja kalau-kalau notifikasi di HP kamu belum masuk:`,
+    `Ada serah terima pekerjaan dari *${h.fromOperator}* buat kamu. Ini kirim manual lewat WhatsApp - jaring pengaman aja kalau-kalau notifikasi di HP kamu belum masuk:`,
     "",
     `• No. pesanan : ${h.orderCode}`,
     `• Pekerjaan   : ${h.orderTitle}`,
@@ -72,7 +72,7 @@ export function ShareHandoverWhatsApp({ handover }: { handover: HandoverShareDat
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      /* diamkan — tombol WhatsApp di atas tetap jadi jalur utama */
+      /* diamkan - tombol WhatsApp di atas tetap jadi jalur utama */
     }
   }
 

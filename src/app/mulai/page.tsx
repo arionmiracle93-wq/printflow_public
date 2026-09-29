@@ -6,7 +6,7 @@ import { buildChecklist } from "@/lib/checklist";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Langkah Selanjutnya — Print Flow" };
+export const metadata = { title: "Langkah Selanjutnya - Print Flow" };
 
 export default async function MulaiPage() {
   const state = await buildChecklist();
@@ -22,9 +22,9 @@ export default async function MulaiPage() {
     <div className="space-y-4">
       {/* PROGRESS */}
       <div className="card overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-5 text-white">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-200">Checklist pascapemasangan</p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold md:text-2xl">
+        <div className="bg-gradient-to-r from-[#07384f] to-teal-600 px-5 py-5 text-white">
+          <p className="text-xs font-bold uppercase tracking-widest text-teal-200">Checklist pascapemasangan</p>
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold md:text-2xl">
             {progress.percent === 100 ? (
               <>
                 <PartyPopper size={22} strokeWidth={2.2} /> Semua langkah wajib selesai!
@@ -35,7 +35,7 @@ export default async function MulaiPage() {
               </>
             )}
           </h1>
-          <p className="mt-1 text-sm text-indigo-100">
+          <p className="mt-1 text-sm text-teal-100">
             {progress.percent === 100
               ? "Aplikasi sudah siap dipakai penuh. Langkah opsional boleh dikerjakan kapan saja."
               : `Sudah ${progress.done} dari ${progress.total} langkah wajib. ${
@@ -45,7 +45,7 @@ export default async function MulaiPage() {
           <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-white/25">
             <div className="h-full rounded-full bg-white transition-all" style={{ width: `${progress.percent}%` }} />
           </div>
-          <p className="mt-1.5 text-xs font-semibold text-indigo-100">{progress.percent}% selesai</p>
+          <p className="mt-1.5 text-xs font-semibold text-teal-100">{progress.percent}% selesai</p>
         </div>
 
         <div className="grid grid-cols-2 divide-x divide-slate-100 md:grid-cols-4">
@@ -58,11 +58,11 @@ export default async function MulaiPage() {
 
       {/* LANGKAH BERIKUTNYA */}
       {nextItem ? (
-        <div className="card border-indigo-200 bg-indigo-50/70 p-4">
-          <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-indigo-600">
+        <div className="card border-teal-200 bg-teal-50/70 p-4">
+          <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-teal-700">
             <ArrowRight size={13} /> Kerjakan ini dulu (langkah {nextItem.step})
           </p>
-          <p className="mt-1 text-base font-extrabold text-slate-900">{nextItem.title}</p>
+          <p className="mt-1 text-base font-semibold text-slate-900">{nextItem.title}</p>
           <p className="mt-1 text-sm text-slate-700">{nextItem.why}</p>
           {nextItem.href ? (
             <Link href={nextItem.href} className="btn-primary mt-3">
@@ -79,7 +79,7 @@ export default async function MulaiPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex gap-3">
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
                     item.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
                   }`}
                 >
@@ -104,10 +104,10 @@ export default async function MulaiPage() {
             </div>
 
             <details className="mt-3 group">
-              <summary className="cursor-pointer list-none text-xs font-bold text-indigo-600 hover:underline">
+              <summary className="cursor-pointer list-none text-xs font-bold text-teal-700 hover:underline">
                 ▸ Lihat cara melakukannya
               </summary>
-              <ol className="mt-2 space-y-1.5 border-l-2 border-indigo-100 pl-3">
+              <ol className="mt-2 space-y-1.5 border-l-2 border-teal-100 pl-3">
                 {item.how.map((h, i) => (
                   <li key={h} className="text-xs text-slate-600">
                     <strong className="text-slate-800">{i + 1}.</strong> {h}
@@ -159,7 +159,7 @@ function Stat({ label, value, tone = "text-slate-900" }: { label: string; value:
   return (
     <div className="px-4 py-3">
       <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`text-lg font-extrabold ${tone}`}>{value}</p>
+      <p className={`text-lg font-semibold ${tone}`}>{value}</p>
     </div>
   );
 }

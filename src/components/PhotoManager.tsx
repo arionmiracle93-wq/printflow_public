@@ -224,13 +224,13 @@ export function PhotoManager({
             }`}
           >
             <ClipboardPaste size={20} className="mx-auto text-teal-600" />
-            <p className="mt-1.5 text-xs font-extrabold text-[#07384f]">Klik kotak ini, lalu tekan Ctrl + V</p>
+            <p className="mt-1.5 text-xs font-semibold text-[color:var(--pf-ink)]">Klik kotak ini, lalu tekan Ctrl + V</p>
             <p className="mt-0.5 text-[11px] text-slate-500">Screenshot dari Windows clipboard akan langsung dikompres dan diunggah.</p>
           </div>
           <p className="text-[10px] text-slate-400">Foto otomatis diperkecil agar hemat kuota. Paste didukung di Chrome, Edge, dan browser modern.</p>
 
           {busy ? (
-            <p className="text-xs font-semibold text-indigo-600">{progress ?? "Memproses…"}</p>
+            <p className="text-xs font-semibold text-teal-700">{progress ?? "Memproses…"}</p>
           ) : null}
           {error ? (
             <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p>
@@ -261,7 +261,7 @@ export function PhotoManager({
                 />
               </button>
               <div className="p-2">
-                <span className="chip border-indigo-200 bg-indigo-50 text-[10px] text-indigo-700">
+                <span className="chip border-teal-200 bg-teal-50 text-[10px] text-teal-700">
                   {photoKindLabel(photo.kind)}
                 </span>
                 {photo.caption ? (
@@ -299,7 +299,7 @@ export function PhotoManager({
           />
           <p className="max-w-md text-center text-xs font-semibold text-white">
             {photoKindLabel(lightbox.kind)}
-            {lightbox.caption ? ` — ${lightbox.caption}` : ""}
+            {lightbox.caption ? ` - ${lightbox.caption}` : ""}
           </p>
           <div className="flex gap-2">
             <a href={`${lightbox.url}?download=1`} className="btn inline-flex items-center gap-1.5 bg-white text-slate-800">

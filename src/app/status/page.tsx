@@ -5,7 +5,7 @@ import { ProblemScreen } from "@/components/ProblemScreen";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Status Sistem — Print Flow" };
+export const metadata = { title: "Status Sistem - Print Flow" };
 
 export default async function StatusPage() {
   const check = await checkDatabase();
@@ -16,7 +16,7 @@ export default async function StatusPage() {
         <div className="card overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-4 text-white">
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-100">Status Sistem</p>
-            <h1 className="mt-1 flex items-center gap-2 text-2xl font-extrabold">
+            <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold">
               <CheckCircle2 size={24} strokeWidth={2.3} /> Semua normal
             </h1>
             <p className="mt-1 text-sm text-emerald-50">{check.message}</p>

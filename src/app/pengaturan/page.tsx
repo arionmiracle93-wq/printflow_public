@@ -8,11 +8,13 @@ import { safeDb } from "@/lib/dbcheck";
 import { SEED_ORDER_TITLES } from "@/lib/seed";
 import { listCustomers, listOrders, photoStorageUsage } from "@/lib/queries";
 import { formatBytes } from "@/lib/photos";
+import { blobConfigured } from "@/lib/photo-storage";
+import { PhotoStorageCard } from "@/components/PhotoStorageCard";
 import { databaseHost, db } from "@/db";
 import { businessBranding } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Pengaturan — Print Flow" };
+export const metadata = { title: "Pengaturan - Print Flow" };
 
 export default async function PengaturanPage() {
   const loaded = await safeDb(async () => {
@@ -37,8 +39,7 @@ export default async function PengaturanPage() {
   return (
     <div className="settings-page min-w-0 max-w-full space-y-4 overflow-x-clip">
       <div>
-        <p className="text-[11px] font-extrabold uppercase tracking-[.12em] text-teal-600">Pengelolaan aplikasi</p>
-        <h1 className="mt-1 text-2xl font-black tracking-tight text-[#07384f]">Pengaturan &amp; Perawatan</h1>
+        <h1 className="page-title">Pengaturan &amp; Perawatan</h1>
         <p className="mt-1 text-sm text-slate-500">Kelola identitas usaha, data, cadangan, dan kondisi sistem.</p>
       </div>
 
@@ -53,7 +54,7 @@ export default async function PengaturanPage() {
           <div className="card min-w-0 overflow-hidden p-4">
             <div className="flex items-center gap-3">
               <span className="icon-tile"><Activity size={18} /></span>
-              <div><h3 className="text-sm font-extrabold text-[#07384f]">Kondisi sistem</h3><p className="text-[11px] text-slate-400">Ringkasan kesehatan Print Flow</p></div>
+              <div><h3 className="text-sm font-semibold text-[color:var(--pf-ink)]">Kondisi sistem</h3><p className="text-[11px] text-slate-400">Ringkasan kesehatan Print Flow</p></div>
             </div>
             <ul className="mt-4 divide-y divide-slate-100 text-sm text-slate-700">
               <Row label="Database" value="Terhubung" good />
@@ -61,7 +62,7 @@ export default async function PengaturanPage() {
               <Row label="Tipe koneksi" value={(databaseHost() ?? "").includes("pooler") ? "Pooled" : "Lokal / Direct"} />
               <Row label="Jumlah pekerjaan" value={String(orders.length)} />
               <Row label="Jumlah pelanggan" value={String(customers.length)} />
-              <Row label="Penyimpanan foto" value={`${storage.files} foto · ${formatBytes(storage.bytes)}`} />
+              <Row label="Penyimpanan foto" value={`${storage.files} foto, ${formatBytes(storage.bytes)} (${blobConfigured() ? "Vercel Blob" : "database"})`} good={blobConfigured() && storage.dbFiles === 0} />
               <Row label="Logo usaha" value={hasLogo ? "Aktif" : "Ikon bawaan"} good={hasLogo} />
               <Row label="AI bahasa" value={aiConfigured ? `${aiName} aktif` : "Mesin internal (gratis)"} good={aiConfigured} />
             </ul>
@@ -75,10 +76,12 @@ export default async function PengaturanPage() {
             </div>
           </div>
 
+          <PhotoStorageCard blob={blobConfigured()} initialUsage={storage} />
+
           <div className="card min-w-0 overflow-hidden p-4">
             <div className="flex min-w-0 items-center gap-3">
               <span className="icon-tile"><Smartphone size={18} /></span>
-              <div><h3 className="text-sm font-extrabold text-[#07384f]">Pasang di HP &amp; buat APK</h3><p className="text-[11px] text-slate-400">Akses cepat untuk owner dan karyawan</p></div>
+              <div><h3 className="text-sm font-semibold text-[color:var(--pf-ink)]">Pasang di HP &amp; buat APK</h3><p className="text-[11px] text-slate-400">Akses cepat untuk owner dan karyawan</p></div>
             </div>
             <ol className="mt-4 space-y-2 text-xs leading-relaxed text-slate-600">
               <li><strong className="text-slate-800">Cara cepat:</strong> buka alamat aplikasi di Chrome HP → menu ⋮ → “Tambahkan ke layar utama”.</li>

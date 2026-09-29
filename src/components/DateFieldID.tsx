@@ -14,7 +14,7 @@ import { CalendarDays } from "lucide-react";
  * - Boleh diketik manual (angka otomatis diberi "/").
  * - Ada tombol kalender kecil yang memicu date-picker bawaan perangkat;
  *   hasil pilihannya otomatis ditulis ulang jadi dd/mm/yyyy.
- * - Value yang dikirim ke parent (onChange) tetap ISO "yyyy-mm-dd" —
+ * - Value yang dikirim ke parent (onChange) tetap ISO "yyyy-mm-dd" -
  *   supaya kompatibel dengan state & body API yang sudah ada.
  */
 export function DateFieldID({
@@ -32,7 +32,7 @@ export function DateFieldID({
 }) {
   const [text, setText] = useState(() => isoToDisplay(value));
   // Dipakai untuk mendeteksi perubahan value dari LUAR (mis. auto-isi target
-  // tanggal oleh form induk) tanpa useEffect — setState saat render seperti
+  // tanggal oleh form induk) tanpa useEffect - setState saat render seperti
   // ini aman & memang pola yang disarankan React untuk "menyesuaikan state
   // ketika prop berubah" (lihat react.dev/learn/you-might-not-need-an-effect).
   const [syncedValue, setSyncedValue] = useState(value);
@@ -72,7 +72,7 @@ export function DateFieldID({
         el.showPicker();
         return;
       } catch {
-        // Sebagian browser menolak showPicker() di kondisi tertentu — lanjut fallback di bawah.
+        // Sebagian browser menolak showPicker() di kondisi tertentu - lanjut fallback di bawah.
       }
     }
     el.focus();
@@ -102,7 +102,7 @@ export function DateFieldID({
       >
         <CalendarDays size={16} />
       </button>
-      {/* Native date input disembunyikan visual — cuma dipakai untuk memicu
+      {/* Native date input disembunyikan visual - cuma dipakai untuk memicu
           kalender bawaan perangkat. Ukuran 1px (bukan 0) supaya showPicker()
           tetap diizinkan oleh browser. */}
       <input

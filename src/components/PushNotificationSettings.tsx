@@ -74,7 +74,7 @@ export function PushNotificationSettings() {
         return;
       }
       setGenerated({ publicKey: json.publicKey, privateKey: json.privateKey });
-      setMessage("Kunci berhasil dibuat. Salin ketiga variable ke Vercel sekarang—private key tidak disimpan.");
+      setMessage("Kunci berhasil dibuat. Salin ketiga variable ke Vercel sekarang-private key tidak disimpan.");
     } catch {
       setMessage("Tidak dapat membuat VAPID key.");
     } finally { setBusy(false); }
@@ -252,7 +252,7 @@ export function PushNotificationSettings() {
       <div className="flex items-start gap-3">
         <span className="icon-tile"><Bell size={18} /></span>
         <div className="min-w-0">
-          <h3 className="break-words text-sm font-extrabold text-[#07384f]">Push Notification Android / PWA</h3>
+          <h3 className="break-words text-sm font-semibold text-[color:var(--pf-ink)]">Push Notification Android / PWA</h3>
           <p className="mt-0.5 text-xs text-slate-500">Selesaikan tiga tahap di bawah satu kali per perangkat.</p>
         </div>
       </div>
@@ -260,8 +260,8 @@ export function PushNotificationSettings() {
       <div className="mt-4 space-y-3">
         <section className={`rounded-xl border p-3 ${configured ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60"}`}>
           <div className="flex items-center gap-2">
-            <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black ${configured ? "bg-emerald-500 text-white" : "bg-amber-400 text-[#07384f]"}`}>{configured ? <Check size={14} /> : "1"}</span>
-            <p className="text-xs font-extrabold text-[#07384f]">Konfigurasi VAPID di Vercel</p>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold ${configured ? "bg-emerald-500 text-white" : "bg-amber-400 text-[color:var(--pf-ink)]"}`}>{configured ? <Check size={14} /> : "1"}</span>
+            <p className="text-xs font-semibold text-[color:var(--pf-ink)]">Konfigurasi VAPID di Vercel</p>
           </div>
           {configured ? (
             <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
@@ -286,7 +286,7 @@ export function PushNotificationSettings() {
         </section>
 
         <section className={`rounded-xl border p-3 ${subscribed ? "border-emerald-200 bg-emerald-50/60" : "border-slate-200 bg-slate-50"}`}>
-          <div className="flex items-center gap-2"><span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black ${subscribed ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"}`}>{subscribed ? <Check size={14} /> : "2"}</span><p className="text-xs font-extrabold text-[#07384f]">Aktifkan pada perangkat ini</p></div>
+          <div className="flex items-center gap-2"><span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold ${subscribed ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"}`}>{subscribed ? <Check size={14} /> : "2"}</span><p className="text-xs font-semibold text-[color:var(--pf-ink)]">Aktifkan pada perangkat ini</p></div>
           <p className="mt-2 text-xs leading-relaxed text-slate-600">Status izin: <strong>{permission}</strong> · perangkat akun ini: <strong>{status?.mySubscriptions ?? 0}</strong> · semua perangkat: <strong>{status?.subscriptions ?? 0}</strong> · service worker: <strong>{workerVersion}</strong></p>
           <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap">
             {!subscribed ? <button type="button" onClick={enable} disabled={busy || !supported || !configured} className="btn-primary w-full sm:w-auto"><Bell size={15} /> Aktifkan Notifikasi</button> : <button type="button" onClick={disable} disabled={busy} className="btn-ghost w-full sm:w-auto"><BellOff size={15} /> Nonaktifkan</button>}
@@ -296,7 +296,7 @@ export function PushNotificationSettings() {
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-200 text-xs font-black text-slate-600">3</span><p className="text-xs font-extrabold text-[#07384f]">Diagnosis dua tahap</p></div>
+          <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-200 text-xs font-bold text-slate-600">3</span><p className="text-xs font-semibold text-[color:var(--pf-ink)]">Diagnosis dua tahap</p></div>
           <p className="mt-2 text-xs text-slate-600"><strong>Uji Lokal</strong> memeriksa izin Android + service worker. <strong>Uji Push Server</strong> memeriksa jalur Vercel + VAPID + Neon + layanan push.</p>
           <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap">
             <button type="button" onClick={testLocal} disabled={busy || permission !== "granted"} className="btn-ghost w-full sm:w-auto"><Bell size={15} /> Uji Lokal</button>
@@ -315,7 +315,7 @@ export function PushNotificationSettings() {
 function KeyRow({ name, value, copied, onCopy, secret = false }: { name: string; value: string; copied: string | null; onCopy: (name: string, value: string) => Promise<void>; secret?: boolean }) {
   return (
     <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 p-2">
-      <p className="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">{name}</p>
+      <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{name}</p>
       <div className="mt-1 flex min-w-0 items-center gap-2"><code className="min-w-0 flex-1 truncate text-[10px] text-slate-600">{secret ? `${value.slice(0, 6)}••••••${value.slice(-4)}` : value}</code><button type="button" onClick={() => void onCopy(name, value)} className="shrink-0 rounded-lg bg-white p-2 text-teal-700 shadow-sm" aria-label={`Salin ${name}`}>{copied === name ? <Check size={14} /> : <Copy size={14} />}</button></div>
     </div>
   );

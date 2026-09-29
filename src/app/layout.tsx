@@ -14,6 +14,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavigationFeedback } from "@/components/NavigationFeedback";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { UserMenu } from "@/components/UserMenu";
+import { QuickSearch } from "@/components/QuickSearch";
 import { MoreMenu } from "@/components/MoreMenu";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -29,7 +30,7 @@ const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Print Flow — Monitoring Produksi Percetakan",
+  title: "Print Flow - Monitoring Produksi Percetakan",
   description:
     "Aplikasi monitoring pekerjaan percetakan bertenaga AI: pantau status tiap order, risiko telat, dan rekomendasi tindakan.",
   manifest: "/api/pwa/manifest",
@@ -55,12 +56,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   //
   // PENTING: jangan redirect langsung ke "/login". JWT di cookie masih valid
   // secara tanda tangan (berlaku 12 jam), jadi middleware akan menganggap
-  // pengguna masih login dan melempar balik ke "/" — berputar tanpa henti.
+  // pengguna masih login dan melempar balik ke "/" - berputar tanpa henti.
   // Lewat /api/auth/logout, cookie basinya dihapus dulu, baru ke halaman login
   // lengkap dengan penjelasan kenapa sesinya berakhir.
   if (requestHeaders.get("x-print-flow-protected") === "1" && !user) {
     redirect("/api/auth/logout?alasan=sesi-berakhir");
   }
+  // Tautan "Panduan" & "Catatan Perubahan" di footer hanya untuk pengguna
+  // internal yang sudah login, dan tidak ditampilkan di halaman tautan lacak
+  // yang dibuka pelanggan.
+  const tampilTautanFooter = Boolean(user) && requestHeaders.get("x-print-flow-lacak") !== "1";
   return (
     <html lang="id" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
       <head>
@@ -81,7 +86,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Link href="/" className="group hidden shrink-0 items-center gap-2.5 md:flex">
               <AppLogo />
               <span className="leading-tight">
-                <span className="block text-sm font-extrabold tracking-tight text-white md:text-base">Print Flow</span>
+                <span className="block text-sm font-semibold tracking-tight text-white md:text-base">Print Flow</span>
                 <span className="hidden text-[10px] font-medium text-cyan-100/70 sm:block">Monitoring Produksi Percetakan</span>
               </span>
             </Link>
@@ -89,6 +94,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">
                 <MainNav role={user.role} />
                 <UserMenu name={user.name} role={user.role} />
+                <QuickSearch />
                 <ThemeToggle />
                 <MoreMenu role={user.role} />
               </div>
@@ -101,12 +107,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <footer className="mx-auto max-w-[1440px] px-4 pb-24 pt-3 text-xs text-slate-400 md:pb-8 no-print">
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-teal-100 pt-5">
             <p>Print Flow · Produksi lebih terpantau, pelanggan lebih tenang.</p>
-            <div className="flex items-center gap-3">
-              <Link href="/panduan" className="font-bold text-teal-700 hover:underline">Panduan</Link>
-              <Link href="/catatan-perubahan" className="inline-flex items-center gap-1 font-bold text-teal-700 hover:underline">
-                <FileClock size={13} /> Catatan Perubahan
-              </Link>
-            </div>
+            {tampilTautanFooter ? (
+              <div className="flex items-center gap-3">
+                <Link href="/panduan" className="font-bold text-teal-700 hover:underline">Panduan</Link>
+                <Link href="/catatan-perubahan" className="inline-flex items-center gap-1 font-bold text-teal-700 hover:underline">
+                  <FileClock size={13} /> Catatan Perubahan
+                </Link>
+              </div>
+            ) : null}
           </div>
         </footer>
       </body>

@@ -230,7 +230,7 @@ export function AdminActions({ hasDemoData }: { hasDemoData: boolean }) {
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
           File &ldquo;Pekerjaan&rdquo; berisi satu baris per pekerjaan (isi produknya digabung dalam satu kolom),
-          sedangkan &ldquo;Rincian Item&rdquo; memecah tiap produk jadi barisnya sendiri — cocok untuk menghitung
+          sedangkan &ldquo;Rincian Item&rdquo; memecah tiap produk jadi barisnya sendiri - cocok untuk menghitung
           total per jenis produk.
         </p>
       </div>

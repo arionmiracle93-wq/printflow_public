@@ -18,6 +18,38 @@ export const REQUIRED_TABLES = [
   "business_branding",
 ] as const;
 
+/**
+ * Kolom yang ditambahkan oleh pembaruan aplikasi (lewat /api/setup).
+ * Kalau salah satunya belum ada, berarti kode sudah versi baru tetapi
+ * /api/setup belum dibuka setelah deploy. Tambahkan di sini setiap kali
+ * ada kolom baru, supaya /api/health dan layar error langsung memberi tahu.
+ */
+export const REQUIRED_COLUMNS: { table: string; column: string }[] = [
+  { table: "order_items", column: "status" },
+  { table: "order_items", column: "outsource_job_id" },
+  { table: "order_photos", column: "blob_url" },
+];
+
+/**
+ * Gabungkan pesan error beserta penyebab di dalamnya. Drizzle membungkus
+ * error asli PostgreSQL (misalnya: column "blob_url" does not exist) di
+ * dalam error "Failed query: ...". Kalau hanya pesan luarnya yang dibaca,
+ * error kolom yang belum ada salah dikira masalah koneksi.
+ */
+function errorText(error: unknown): { text: string; pgCode: string | null } {
+  const parts: string[] = [];
+  let pgCode: string | null = null;
+  let current: unknown = error;
+  for (let depth = 0; current && depth < 5; depth += 1) {
+    if (current instanceof Error) parts.push(current.message);
+    else parts.push(String(current));
+    const code = (current as { code?: unknown }).code;
+    if (!pgCode && typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)) pgCode = code;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return { text: parts.join(" | "), pgCode };
+}
+
 export type DbCheck = {
   ok: boolean;
   code:
@@ -39,8 +71,9 @@ export type DbCheck = {
 
 /** Terjemahkan error teknis PostgreSQL menjadi bahasa awam + langkah perbaikan. */
 export function explainDbError(error: unknown): DbCheck {
+  const { text: fullText, pgCode } = errorText(error);
   const raw = error instanceof Error ? error.message : String(error);
-  const lowered = raw.toLowerCase();
+  const lowered = fullText.toLowerCase();
   const env = {
     ada: Boolean(databaseUrl()),
     host: databaseHost(),
@@ -103,6 +136,27 @@ export function explainDbError(error: unknown): DbCheck {
         "Buka Neon → Dashboard → Roles → Reset password (jika ragu).",
         "Copy ulang connection string Pooled yang baru.",
         "Perbarui nilai DATABASE_URL di Vercel → Save → Redeploy.",
+      ],
+      tables: [],
+    };
+  }
+
+  // Kolom belum ada (kode PostgreSQL 42703): aplikasi sudah versi baru,
+  // tetapi /api/setup belum dibuka setelah deploy.
+  if (pgCode === "42703" || (lowered.includes("column") && lowered.includes("does not exist"))) {
+    const column = fullText.match(/column "?([\w.]+)"? does not exist/i)?.[1];
+    return {
+      ...base,
+      ok: false,
+      code: "tabel_belum_ada",
+      title: "Database perlu diperbarui",
+      message: `Koneksi database BERHASIL. Aplikasi sudah versi baru, tetapi database belum diperbarui${
+        column ? ` (kolom "${column}" belum ada)` : ""
+      }. Ini terjadi kalau /api/setup belum dibuka setelah deploy. Data Anda aman dan tidak ada yang hilang.`,
+      steps: [
+        "Tekan tombol \"Perbarui database sekarang\" di bawah (membuka /api/setup).",
+        "Tunggu sampai muncul tulisan \"ok\": true.",
+        "Kembali ke halaman ini, lalu tekan \"Saya sudah perbaiki, cek lagi\".",
       ],
       tables: [],
     };
@@ -208,6 +262,33 @@ export async function checkDatabase(): Promise<DbCheck> {
     const existing = new Set((result.rows as { table_name: string }[]).map((r) => r.table_name));
     const tables = REQUIRED_TABLES.map((name) => ({ name, ada: existing.has(name) }));
     const missing = tables.some((t) => !t.ada);
+
+    // Tabel lengkap, tetapi kolom dari pembaruan terbaru belum ada?
+    if (!missing) {
+      const cols = await db.execute<{ table_name: string; column_name: string }>(sql`
+        select table_name, column_name from information_schema.columns
+        where table_schema = 'public'
+      `);
+      const have = new Set((cols.rows as { table_name: string; column_name: string }[]).map((r) => `${r.table_name}.${r.column_name}`));
+      const absent = REQUIRED_COLUMNS.filter((c) => !have.has(`${c.table}.${c.column}`));
+      if (absent.length) {
+        return {
+          ok: false,
+          code: "tabel_belum_ada",
+          title: "Database perlu diperbarui",
+          message: `Koneksi BERHASIL, tetapi ${absent.length} kolom dari pembaruan terbaru belum ada (${absent
+            .map((c) => `${c.table}.${c.column}`)
+            .join(", ")}). Buka /api/setup sekali. Data tidak berubah.`,
+          steps: [
+            "Buka /api/setup di browser.",
+            "Tunggu sampai muncul { \"ok\": true, ... }.",
+            "Kembali ke aplikasi lalu Refresh.",
+          ],
+          env,
+          tables,
+        };
+      }
+    }
 
     let counts: { orders: number; customers: number } | undefined;
     if (!missing) {

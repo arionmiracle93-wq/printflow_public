@@ -75,7 +75,7 @@ export function StagePositions({ counts }: { counts: Map<string, number> }) {
   return (
     <section className="pf-surface overflow-hidden">
       <header className="flex items-center gap-3 border-b border-[color:var(--pf-line-soft)] px-4 py-3.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[color:var(--pf-accent-soft)] text-[color:var(--pf-accent-strong)]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--pf-accent-soft)] text-[color:var(--pf-accent-strong)]">
           <Workflow size={18} />
         </span>
         <div className="min-w-0">
@@ -98,7 +98,7 @@ export function StagePositions({ counts }: { counts: Map<string, number> }) {
             <li key={status.key} className="min-w-0">
               <Link href={`/pesanan?status=${status.key}`} className={`pf-stage-tile ${filled ? "pf-stage-tile-on" : ""}`}>
                 <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-white ${status.dot} ${
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white ${status.dot} ${
                     filled ? "" : "opacity-75"
                   }`}
                 >
@@ -210,7 +210,7 @@ export function RiskDonut({ counts, averageScore }: { counts: RiskCounts; averag
                 <li
                   key={s.key}
                   data-risk={s.key}
-                  className={`pf-donut-row flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 ${value === 0 ? "opacity-45" : ""}`}
+                  className={`pf-donut-row flex items-center gap-2.5 rounded-xl px-2 py-1.5 ${value === 0 ? "opacity-45" : ""}`}
                 >
                   <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: s.color }} />
                   <span className="min-w-0 flex-1">
@@ -290,7 +290,7 @@ export function DueToday({
 export function EmptyQueue() {
   return (
     <div className="pf-surface flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-[color:var(--pf-accent-soft)] text-[color:var(--pf-accent-strong)]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color:var(--pf-accent-soft)] text-[color:var(--pf-accent-strong)]">
         <FolderPlus size={20} />
       </span>
       <div className="min-w-0 flex-1">

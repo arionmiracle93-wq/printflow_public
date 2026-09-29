@@ -7,7 +7,7 @@ import { ensureTrackingUrl, openWhatsAppShare, WHATSAPP_SHARE_WINDOW, type Share
 
 /**
  * Tombol pintas "Kirim WA" untuk kartu pekerjaan di dashboard.
- * Membuat/ambil tautan lacak lalu langsung membuka WhatsApp — tanpa
+ * Membuat/ambil tautan lacak lalu langsung membuka WhatsApp - tanpa
  * pindah halaman. Versi ringkas dari kartu penuh `ShareWhatsApp`.
  */
 export function ShareWhatsAppQuick({ order, className = "" }: { order: ShareOrder; className?: string }) {
@@ -20,13 +20,13 @@ export function ShareWhatsAppQuick({ order, className = "" }: { order: ShareOrde
     e.stopPropagation();
     if (busy) return;
     setBusy(true);
-    // Selalu siapkan (atau ambil kembali) tab WhatsApp yang sama, DULU — selagi
+    // Selalu siapkan (atau ambil kembali) tab WhatsApp yang sama, DULU - selagi
     // masih dalam konteks klik pengguna, sebelum ada `await` sama sekali.
     const popup = window.open("", WHATSAPP_SHARE_WINDOW);
     try {
       const result = await ensureTrackingUrl(order.id, token);
       if (!result) {
-        // Jangan tutup popup di sini — kalau ini tab WA yang sudah lama dipakai
+        // Jangan tutup popup di sini - kalau ini tab WA yang sudah lama dipakai
         // user, jangan sampai ikut ketutup gara-gara request gagal.
         window.alert("Gagal membuat tautan lacak. Coba lagi.");
         return;
@@ -37,7 +37,7 @@ export function ShareWhatsAppQuick({ order, className = "" }: { order: ShareOrde
       }
       const outcome = await openWhatsAppShare(order, result.url, popup);
       if (outcome === "copied") {
-        window.alert("Pop-up diblokir browser. Pesannya sudah disalin — buka WhatsApp lalu tempel (paste) manual.");
+        window.alert("Pop-up diblokir browser. Pesannya sudah disalin - buka WhatsApp lalu tempel (paste) manual.");
       } else if (outcome === "failed") {
         window.alert("Tidak bisa membuka WhatsApp otomatis. Coba izinkan pop-up untuk situs ini di pengaturan browser, lalu klik lagi.");
       }

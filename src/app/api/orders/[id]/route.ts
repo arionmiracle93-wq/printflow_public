@@ -3,10 +3,11 @@ import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { isStatusKey } from "@/lib/domain";
 import { problemResponse } from "@/lib/dbcheck";
-import { getOrderById, getOrderEvents, replaceOrderItems, saveAiNote, updateOrderStatus } from "@/lib/queries";
+import { applyOrderStatusToItems, getOrderById, photoBlobUrls, getOrderEvents, replaceOrderItems, saveAiNote, updateOrderStatus } from "@/lib/queries";
 import { sanitizeItems } from "@/lib/order-items";
 import { analyzeOrder } from "@/lib/ai";
 import { notifyInBackground } from "@/lib/push";
+import { deletePhotoBlobs } from "@/lib/photo-storage";
 import { statusMeta } from "@/lib/domain";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -56,6 +57,9 @@ export async function PATCH(request: Request, { params }: Params) {
         sessionUser.name,
       );
       if (!result) return Response.json({ ok: false, error: "Pekerjaan tidak ditemukan" }, { status: 404 });
+      // Kalau produk-produknya memakai status terpisah, teruskan ke produk
+      // (produk yang sudah lebih maju tidak dimundurkan).
+      await applyOrderStatusToItems(orderId, status);
       const updated = await getOrderById(orderId);
       if (updated) {
         const insight = analyzeOrder(updated);
@@ -128,7 +132,11 @@ export async function DELETE(_request: Request, { params }: Params) {
     return Response.json({ ok: false, error: "ID tidak valid" }, { status: 400 });
   }
   try {
+    // Catat alamat foto di Blob dulu: setelah pekerjaan dihapus, baris
+    // fotonya ikut terhapus dan alamatnya tidak bisa dicari lagi.
+    const blobUrls = await photoBlobUrls([orderId]);
     await db.delete(orders).where(eq(orders.id, orderId));
+    await deletePhotoBlobs(blobUrls);
     return Response.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/orders/[id]", error);

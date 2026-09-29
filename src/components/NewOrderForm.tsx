@@ -19,13 +19,15 @@ const inputCls = "input";
 /**
  * Form pekerjaan baru.
  *
- * Desktop (lg ke atas): dua kolom bersebelahan — KIRI data pekerjaan,
- * KANAN produksi mitra (lempar keluar) — dipisah garis vertikal tegas
+ * Desktop (lg ke atas): dua kolom bersebelahan - KIRI data pekerjaan,
+ * KANAN produksi mitra (lempar keluar) - dipisah garis vertikal tegas
  * supaya tidak tertukar. Mobile: satu kolom scroll biasa, dipisah
  * pembatas horizontal berlabel.
  *
- * Data mitra baru dikirim SETELAH order berhasil dibuat (butuh orderId),
- * lewat endpoint yang sama dengan yang dipakai halaman detail.
+ * Mitra (boleh lebih dari satu) dikirim SETELAH order berhasil dibuat,
+ * karena butuh orderId dan id produk. Server menyimpan produk sesuai urutan
+ * baris yang terisi, jadi baris ke-n di form = produk ke-n di respons.
+ * Endpoint-nya sama dengan yang dipakai tab Mitra di halaman detail.
  */
 export function NewOrderForm({
   customers,
@@ -53,7 +55,7 @@ export function NewOrderForm({
   const [dueDate, setDueDate] = useState(defaultDate(2));
   const [dueTime, setDueTime] = useState("17:00");
   const [notes, setNotes] = useState("");
-  // Foto yang dipilih di form ini — belum terunggah, baru dikirim ke server
+  // Foto yang dipilih di form ini - belum terunggah, baru dikirim ke server
   // setelah pekerjaannya berhasil disimpan dan dapat orderId. Lihat submit().
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [saving, setSaving] = useState(false);
@@ -62,18 +64,13 @@ export function NewOrderForm({
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<number | null>(null);
 
-  // ——— Kolom kanan: produksi mitra ———
+  // --- Kolom kanan: produksi mitra ---
   const [useOutsource, setUseOutsource] = useState(false);
   const [partners, setPartners] = useState<PartnerOption[]>(initialPartners);
-  const [partnerId, setPartnerId] = useState("");
-  const [partnerName, setPartnerName] = useState("");
-  const [outStatus, setOutStatus] = useState("belum_dikirim");
-  const [vendorCost, setVendorCost] = useState("0");
-  const [expectedDate, setExpectedDate] = useState(dayBefore(defaultDate(2)));
-  const [expectedTime, setExpectedTime] = useState("12:00");
-  const [outNotes, setOutNotes] = useState("");
-  const [expectedTouched, setExpectedTouched] = useState(false);
-  const [addPartner, setAddPartner] = useState(false);
+  // Bisa lebih dari satu mitra. Tiap mitra memegang produk tertentu
+  // (disimpan sebagai posisi baris di tabel Item Pekerjaan).
+  const [mitraList, setMitraList] = useState<MitraDraft[]>(() => [newMitraDraft(defaultDate(2), [0])]);
+  const [addPartnerFor, setAddPartnerFor] = useState<number | null>(null);
   const [newPartner, setNewPartner] = useState({ name: "", kind: "vendor", phone: "", address: "" });
   const [partnerBusy, setPartnerBusy] = useState(false);
 
@@ -83,25 +80,84 @@ export function NewOrderForm({
   const estimate = useMemo(() => estimateHoursForItems(itemsTerisi), [itemsTerisi]);
 
   const orderPrice = Math.max(0, Number(price) || 0);
-  const cost = Math.max(0, Number(vendorCost) || 0);
-  const margin = orderPrice - cost;
+  const totalCost = mitraList.reduce((sum, m) => sum + Math.max(0, Number(m.vendorCost) || 0), 0);
+  const margin = orderPrice - totalCost;
   const marginPercent = orderPrice > 0 ? Math.round((margin / orderPrice) * 100) : 0;
-  const selectedPartner = partners.find((p) => String(p.id) === partnerId);
-  const lateRisk = Boolean(useOutsource && expectedDate && dueDate && expectedDate >= dueDate);
+  // Posisi baris produk yang sudah terisi (baris kosong diabaikan saat simpan).
+  const filledRows = useMemo(
+    () => items.map((item, index) => (item.productType.trim() ? index : -1)).filter((index) => index >= 0),
+    [items],
+  );
+  const multiItem = filledRows.length > 1;
+  const lateRisk = Boolean(useOutsource && dueDate && mitraList.some((m) => m.expectedDate && m.expectedDate >= dueDate));
 
-  /** Deadline pelanggan berubah → target barang kembali ikut mundur, selama belum diubah manual. */
+  function patchMitra(key: number, patch: Partial<MitraDraft>) {
+    setMitraList((list) => list.map((m) => (m.key === key ? { ...m, ...patch } : m)));
+  }
+
+  /** Satu produk hanya bisa di satu mitra: mencentang di mitra ini melepasnya dari mitra lain. */
+  function toggleMitraItem(key: number, row: number) {
+    setMitraList((list) => {
+      const target = list.find((m) => m.key === key);
+      const on = !target?.rows.includes(row);
+      return list.map((m) =>
+        m.key === key
+          ? { ...m, rows: on ? [...m.rows, row].sort((a, b) => a - b) : m.rows.filter((r) => r !== row) }
+          : on
+            ? { ...m, rows: m.rows.filter((r) => r !== row) }
+            : m,
+      );
+    });
+  }
+
+  function addMitra() {
+    const taken = new Set(mitraList.flatMap((m) => m.rows));
+    const free = filledRows.filter((row) => !taken.has(row));
+    setMitraList((list) => [...list, newMitraDraft(dueDate, free)]);
+  }
+
+  function removeMitra(key: number) {
+    setMitraList((list) => (list.length > 1 ? list.filter((m) => m.key !== key) : list));
+  }
+
+  /**
+   * Tabel produk berubah. Kalau ada baris yang DIHAPUS, posisi baris di
+   * bawahnya bergeser naik, jadi pilihan produk tiap mitra ikut digeser
+   * supaya tetap menunjuk produk yang sama. Baris yang tidak disentuh
+   * tetap objek yang sama, sehingga baris yang hilang bisa dikenali.
+   */
+  function changeItems(next: OrderItemInput[]) {
+    if (next.length < items.length) {
+      let removed = items.findIndex((item, index) => next[index] !== item);
+      if (removed === -1) removed = items.length - 1;
+      setMitraList((list) =>
+        list.map((m) => ({
+          ...m,
+          rows: m.rows.filter((r) => r !== removed).map((r) => (r > removed ? r - 1 : r)),
+        })),
+      );
+    }
+    // Baris baru ditambahkan saat hanya ada SATU mitra yang memegang semua
+    // produk: produk baru ikut ke mitra itu (pekerjaan dilempar utuh).
+    if (next.length > items.length && mitraList.length === 1 && filledRows.every((row) => mitraList[0].rows.includes(row))) {
+      const added = next.map((_, index) => index).filter((index) => index >= items.length);
+      setMitraList((list) => [{ ...list[0], rows: [...list[0].rows, ...added] }]);
+    }
+    setItems(next);
+  }
+
+  /** Deadline pelanggan berubah: target barang kembali ikut mundur, selama belum diubah manual. */
   function changeDueDate(value: string) {
     setDueDate(value);
-    if (!expectedTouched && value) setExpectedDate(dayBefore(value));
+    if (value) setMitraList((list) => list.map((m) => (m.expectedTouched ? m : { ...m, expectedDate: dayBefore(value) })));
   }
 
-  function selectPartner(value: string) {
-    setPartnerId(value);
+  function selectPartner(key: number, value: string) {
     const partner = partners.find((p) => String(p.id) === value);
-    if (partner) setPartnerName(partner.name);
+    patchMitra(key, partner ? { partnerId: value, partnerName: partner.name } : { partnerId: value });
   }
 
-  async function createNewPartner() {
+  async function createNewPartner(key: number) {
     if (!newPartner.name.trim()) return;
     setPartnerBusy(true);
     try {
@@ -112,10 +168,10 @@ export function NewOrderForm({
       });
       const json = (await res.json()) as { ok: boolean; data?: PartnerOption; error?: string };
       if (json.ok && json.data) {
-        setPartners((p) => [...p, json.data!]);
-        setPartnerId(String(json.data.id));
-        setPartnerName(json.data.name);
-        setAddPartner(false);
+        const created = json.data;
+        setPartners((p) => [...p, created]);
+        patchMitra(key, { partnerId: String(created.id), partnerName: created.name });
+        setAddPartnerFor(null);
         setNewPartner({ name: "", kind: "vendor", phone: "", address: "" });
       } else {
         setError(json.error ?? "Gagal menambah mitra.");
@@ -138,9 +194,19 @@ export function NewOrderForm({
       return;
     }
     // Validasi kolom kanan DULU supaya tidak terlanjur membuat order lalu gagal di tengah jalan.
-    if (useOutsource && (!partnerName.trim() || !expectedDate)) {
-      setError("Kolom mitra aktif: nama mitra dan target barang kembali wajib diisi (atau matikan panel mitra).");
-      return;
+    if (useOutsource) {
+      const incomplete = mitraList.findIndex((m) => !m.partnerName.trim() || !m.expectedDate);
+      if (incomplete !== -1) {
+        setError(`Mitra ${incomplete + 1}: nama mitra dan target barang kembali wajib diisi (atau hapus / matikan panel mitra).`);
+        return;
+      }
+      if (multiItem) {
+        const empty = mitraList.findIndex((m) => !m.rows.some((row) => filledRows.includes(row)));
+        if (empty !== -1) {
+          setError(`Mitra ${empty + 1} (${mitraList[empty].partnerName || "tanpa nama"}): centang minimal satu produk yang dikerjakan.`);
+          return;
+        }
+      }
     }
     setSaving(true);
     try {
@@ -162,12 +228,13 @@ export function NewOrderForm({
           notes,
         }),
       });
-      const json = (await res.json()) as { ok: boolean; data?: { id: number }; error?: string };
+      const json = (await res.json()) as { ok: boolean; data?: { id: number; items?: { id: number }[] }; error?: string };
       if (!json.ok || !json.data) {
         setError(json.error ?? "Gagal menyimpan.");
         return;
       }
       const orderId = json.data.id;
+      const createdItems = json.data.items ?? [];
 
       // Foto yang sudah dipilih di kartu "4. Foto pekerjaan" diunggah SEKARANG,
       // baru bisa terjadi setelah orderId ada. Dilakukan SEBELUM langkah mitra
@@ -194,7 +261,7 @@ export function NewOrderForm({
         }
         setStage(null);
         if (gagal > 0) {
-          // Pekerjaannya sendiri sudah AMAN tersimpan — jangan sampai owner
+          // Pekerjaannya sendiri sudah AMAN tersimpan - jangan sampai owner
           // mengira semuanya gagal. Yang gagal tinggal diunggah ulang dari
           // halaman detail (kartu Foto Pekerjaan di sana sama persis).
           alert(
@@ -204,26 +271,41 @@ export function NewOrderForm({
       }
 
       if (useOutsource) {
-        const res2 = await fetch(`/api/orders/${orderId}/outsource`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            partnerId: Number(partnerId) || null,
-            partnerName: partnerName.trim(),
-            status: outStatus,
-            vendorCost: cost,
-            expectedDate,
-            expectedTime,
-            notes: outNotes,
-          }),
-        });
-        const json2 = (await res2.json()) as { ok: boolean; error?: string };
-        if (!json2.ok) {
-          // Order-nya sudah aman tersimpan — jangan sampai hilang. Kasih jalan lanjut.
+        // Produk baru punya id setelah pekerjaan tersimpan. Server menyimpan
+        // produk sesuai urutan baris terisi, jadi posisi baris ke-n = produk ke-n.
+        const idByRow = new Map(filledRows.map((row, n) => [row, createdItems[n]?.id]));
+        const failed: string[] = [];
+        for (const [n, m] of mitraList.entries()) {
+          setStage(`Menyimpan mitra ${n + 1}/${mitraList.length}…`);
+          const itemIds = multiItem
+            ? m.rows.map((row) => idByRow.get(row)).filter((id): id is number => typeof id === "number")
+            : [];
+          try {
+            const res2 = await fetch(`/api/orders/${orderId}/outsource`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                partnerId: Number(m.partnerId) || null,
+                partnerName: m.partnerName.trim(),
+                status: m.status,
+                vendorCost: Math.max(0, Number(m.vendorCost) || 0),
+                expectedDate: m.expectedDate,
+                expectedTime: m.expectedTime,
+                notes: m.notes,
+                itemIds,
+              }),
+            });
+            const json2 = (await res2.json()) as { ok: boolean; error?: string };
+            if (!json2.ok) failed.push(`${m.partnerName} (${json2.error ?? "kesalahan server"})`);
+          } catch {
+            failed.push(`${m.partnerName} (koneksi terputus)`);
+          }
+        }
+        setStage(null);
+        if (failed.length) {
+          // Pekerjaannya sudah aman tersimpan, jangan sampai hilang. Kasih jalan lanjut.
           setSavedId(orderId);
-          setError(
-            `Pekerjaan berhasil disimpan, tapi data mitra gagal disimpan (${json2.error ?? "kesalahan server"}). Buka detail pekerjaan untuk melengkapinya.`,
-          );
+          setError(`Pekerjaan berhasil disimpan, tapi mitra berikut gagal disimpan: ${failed.join(", ")}. Buka detail pekerjaan untuk melengkapinya.`);
           return;
         }
       }
@@ -248,7 +330,7 @@ export function NewOrderForm({
             tone="teal"
             step="Kolom 1"
             title="Data Pekerjaan"
-            subtitle="Wajib diisi — ini yang dicatat sebagai order pelanggan."
+            subtitle="Wajib diisi - ini yang dicatat sebagai order pelanggan."
           />
 
           <section className="card p-4 md:p-5">
@@ -282,7 +364,7 @@ export function NewOrderForm({
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Contoh: Order Pak Budi — paket promosi toko"
+                  placeholder="Contoh: Order Pak Budi - paket promosi toko"
                   className={inputCls}
                 />
                 <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -292,7 +374,7 @@ export function NewOrderForm({
             </div>
           </section>
 
-          {/* ITEM PEKERJAAN — satu pekerjaan boleh berisi banyak produk.
+          {/* ITEM PEKERJAAN - satu pekerjaan boleh berisi banyak produk.
               Status, mesin, operator, dan deadline tetap satu untuk
               keseluruhan pekerjaan (diatur di kartu ini juga, di bawah). */}
           <section className="card p-4 md:p-5">
@@ -301,13 +383,13 @@ export function NewOrderForm({
                 <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">2. Item pekerjaan</h2>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   Boleh lebih dari satu produk dalam satu pekerjaan. Contoh: Spanduk 2 pcs + Stiker 500 lembar + Kartu
-                  nama 1 box — semuanya jalan bareng, satu status, satu kali kirim WA.
+                  nama 1 box - semuanya jalan bareng, satu status, satu kali kirim WA.
                 </p>
               </div>
             </div>
 
             <div className="mt-3">
-              <OrderItemsEditor items={items} onChange={setItems} disabled={saving} />
+              <OrderItemsEditor items={items} onChange={changeItems} disabled={saving} />
             </div>
 
             <div className="mt-4 border-t border-slate-100 pt-4 dark:border-white/10">
@@ -412,7 +494,7 @@ export function NewOrderForm({
         />
         <div className="flex items-center gap-3 lg:hidden" aria-hidden="true">
           <span className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.1em] text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300">
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[.1em] text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300">
             Bagian 2 · Opsional
           </span>
           <span className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
@@ -434,189 +516,213 @@ export function NewOrderForm({
               <input
                 type="checkbox"
                 checked={useOutsource}
-                onChange={(e) => setUseOutsource(e.target.checked)}
+                onChange={(e) => {
+                  const on = e.target.checked;
+                  setUseOutsource(on);
+                  // Kasus paling umum: satu pekerjaan dilempar utuh ke satu mitra.
+                  // Mitra pertama yang masih kosong otomatis memegang semua produk.
+                  if (on) {
+                    setMitraList((list) =>
+                      list.length === 1 && !list[0].partnerName.trim() ? [{ ...list[0], rows: filledRows }] : list,
+                    );
+                  }
+                }}
                 className="mt-0.5 h-4 w-4 shrink-0 accent-amber-500"
               />
               <span className="min-w-0">
-                <span className="block text-sm font-extrabold text-[#07384f] dark:text-slate-100">
+                <span className="block text-sm font-semibold text-[color:var(--pf-ink)] dark:text-slate-100">
                   Lempar pekerjaan ini ke mitra
                 </span>
                 <span className="mt-0.5 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Centang untuk langsung mencatat vendor, biaya, dan target barang kembali — tanpa perlu buka halaman
-                  detail dulu.
+                  Catat mitra, biaya, dan target barang kembali sekarang juga. Bisa lebih dari satu mitra, masing-masing
+                  untuk produk yang berbeda.
                 </span>
               </span>
             </label>
 
             {!useOutsource ? (
               <p className="mt-3 rounded-xl border border-dashed border-amber-300/70 px-3 py-4 text-center text-xs font-medium text-amber-800/70 dark:border-amber-500/30 dark:text-amber-200/70">
-                Dikerjakan sendiri di dalam? Biarkan saja kosong — panel ini akan diabaikan saat menyimpan.
+                Dikerjakan sendiri di dalam? Biarkan saja kosong. Panel ini diabaikan saat menyimpan.
               </p>
             ) : (
               <div className="mt-3 space-y-3">
-                <div>
-                  <label className="label">Mitra / percetakan pusat</label>
-                  <div className="flex gap-2">
-                    <select value={partnerId} onChange={(e) => selectPartner(e.target.value)} className="input">
-                      <option value="">Ketik nama manual / pilih mitra…</option>
-                      {partners
-                        .filter((p) => p.active)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} · {partnerKindLabel(p.kind)}
-                          </option>
-                        ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setAddPartner(!addPartner)}
-                      className="btn-ghost shrink-0 px-3"
-                      title="Tambah mitra baru"
+                {mitraList.map((m, n) => {
+                  const selected = partners.find((p) => String(p.id) === m.partnerId);
+                  const k = m.key;
+                  return (
+                    <fieldset
+                      key={k}
+                      aria-label={mitraList.length > 1 ? `Mitra ${n + 1}` : "Mitra"}
+                      className="rounded-xl border border-[color:var(--pf-line)] bg-[color:var(--pf-surface-solid)] p-3"
                     >
-                      {addPartner ? <X size={16} /> : <Plus size={16} />}
-                    </button>
-                  </div>
-                </div>
+                      <div className="mb-2.5 flex items-center justify-between gap-2">
+                        <p className="text-[13px] font-semibold text-[color:var(--pf-ink)]">
+                          {mitraList.length > 1 ? `Mitra ${n + 1}` : "Mitra"}
+                          {m.partnerName ? <span className="font-normal text-[color:var(--pf-ink-3)]">: {m.partnerName}</span> : null}
+                        </p>
+                        {mitraList.length > 1 ? (
+                          <button type="button" onClick={() => removeMitra(k)} className="pf-icon-btn h-8 w-8" aria-label={`Hapus mitra ${n + 1}`}>
+                            <X size={14} />
+                          </button>
+                        ) : null}
+                      </div>
 
-                {addPartner ? (
-                  <div className="rounded-xl border border-teal-200 bg-teal-50/70 p-3 dark:border-teal-800/50 dark:bg-teal-500/10">
-                    <p className="flex items-center gap-1.5 text-xs font-extrabold text-teal-800 dark:text-teal-300">
-                      <Building2 size={14} /> Tambah mitra baru
-                    </p>
-                    <div className="mt-2 grid gap-2">
-                      <input
-                        value={newPartner.name}
-                        onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })}
-                        placeholder="Nama percetakan / pusat"
-                        className="input"
-                      />
-                      <select
-                        value={newPartner.kind}
-                        onChange={(e) => setNewPartner({ ...newPartner, kind: e.target.value })}
-                        className="input"
-                      >
-                        {PARTNER_KINDS.map((k) => (
-                          <option key={k.key} value={k.key}>
-                            {k.label}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        value={newPartner.phone}
-                        onChange={(e) => setNewPartner({ ...newPartner, phone: e.target.value })}
-                        placeholder="No. WhatsApp"
-                        className="input"
-                      />
-                      <input
-                        value={newPartner.address}
-                        onChange={(e) => setNewPartner({ ...newPartner, address: e.target.value })}
-                        placeholder="Alamat (opsional)"
-                        className="input"
-                      />
-                    </div>
-                    <button type="button" onClick={createNewPartner} disabled={partnerBusy} className="btn-secondary mt-2 w-full">
-                      <Plus size={14} /> {partnerBusy ? "Menyimpan…" : "Simpan Mitra"}
-                    </button>
-                  </div>
-                ) : null}
+                      <div className="space-y-3">
+                        <div>
+                          <label className="label" htmlFor={`nm-pilih-${k}`}>Mitra / percetakan pusat</label>
+                          <div className="flex gap-2">
+                            <select id={`nm-pilih-${k}`} value={m.partnerId} onChange={(e) => selectPartner(k, e.target.value)} className="input">
+                              <option value="">Pilih mitra atau ketik manual</option>
+                              {partners
+                                .filter((p) => p.active)
+                                .map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name} · {partnerKindLabel(p.kind)}
+                                  </option>
+                                ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => setAddPartnerFor(addPartnerFor === k ? null : k)}
+                              className="btn-ghost shrink-0 px-3"
+                              aria-label="Tambah mitra baru ke daftar"
+                            >
+                              {addPartnerFor === k ? <X size={16} /> : <Plus size={16} />}
+                            </button>
+                          </div>
+                        </div>
 
-                <div>
-                  <label className="label">Nama yang dicatat</label>
-                  <input
-                    value={partnerName}
-                    onChange={(e) => setPartnerName(e.target.value)}
-                    placeholder="Contoh: Percetakan Sinar Abadi"
-                    className="input"
-                  />
-                </div>
+                        {addPartnerFor === k ? (
+                          <div className="rounded-xl border border-[color:var(--pf-accent-line)] bg-[color:var(--pf-accent-soft)] p-3">
+                            <p className="flex items-center gap-1.5 text-xs font-semibold text-[color:var(--pf-accent-strong)]">
+                              <Building2 size={14} /> Tambah mitra baru ke daftar
+                            </p>
+                            <div className="mt-2 grid gap-2">
+                              <input value={newPartner.name} onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })} placeholder="Nama percetakan / pusat" className="input" aria-label="Nama mitra baru" />
+                              <select value={newPartner.kind} onChange={(e) => setNewPartner({ ...newPartner, kind: e.target.value })} className="input" aria-label="Jenis mitra">
+                                {PARTNER_KINDS.map((kind) => (
+                                  <option key={kind.key} value={kind.key}>
+                                    {kind.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <input value={newPartner.phone} onChange={(e) => setNewPartner({ ...newPartner, phone: e.target.value })} placeholder="No. WhatsApp" className="input" aria-label="Nomor WhatsApp mitra" />
+                              <input value={newPartner.address} onChange={(e) => setNewPartner({ ...newPartner, address: e.target.value })} placeholder="Alamat (opsional)" className="input" aria-label="Alamat mitra" />
+                            </div>
+                            <button type="button" onClick={() => createNewPartner(k)} disabled={partnerBusy} className="btn-secondary mt-2 w-full">
+                              <Plus size={14} /> {partnerBusy ? "Menyimpan…" : "Simpan mitra"}
+                            </button>
+                          </div>
+                        ) : null}
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="label">Status di mitra</label>
-                    <select value={outStatus} onChange={(e) => setOutStatus(e.target.value)} className="input">
-                      {OUTSOURCE_STATUSES.map((s) => (
-                        <option key={s.key} value={s.key}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label">Biaya vendor (Rp)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      value={vendorCost}
-                      onChange={(e) => setVendorCost(e.target.value)}
-                      className="input"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Target barang kembali</label>
-                    <DateFieldID
-                      value={expectedDate}
-                      onChange={(iso) => {
-                        setExpectedTouched(true);
-                        setExpectedDate(iso);
-                      }}
-                      className="input"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Jam kembali</label>
-                    <input
-                      type="time"
-                      value={expectedTime}
-                      onChange={(e) => setExpectedTime(e.target.value)}
-                      className="input"
-                    />
-                  </div>
-                </div>
+                        <div>
+                          <label className="label" htmlFor={`nm-nama-${k}`}>Nama yang dicatat</label>
+                          <input id={`nm-nama-${k}`} value={m.partnerName} onChange={(e) => patchMitra(k, { partnerName: e.target.value })} placeholder="Contoh: Percetakan Sinar Abadi" className="input" />
+                        </div>
 
-                <div>
-                  <label className="label">Catatan untuk mitra / spesifikasi penting</label>
-                  <textarea
-                    rows={2}
-                    value={outNotes}
-                    onChange={(e) => setOutNotes(e.target.value)}
-                    placeholder="Bahan, ukuran, warna, finishing, file yang dikirim…"
-                    className="input"
-                  />
-                </div>
+                        {/* Pilihan produk hanya muncul kalau pekerjaan berisi lebih dari satu produk. */}
+                        {multiItem ? (
+                          <div>
+                            <p className="label">Produk yang dikerjakan mitra ini</p>
+                            <p className="-mt-1 mb-1.5 text-[11px] text-[color:var(--pf-ink-3)]">
+                              Produk yang tidak dicentang di mitra mana pun dikerjakan sendiri.
+                            </p>
+                            <div className="grid gap-1.5">
+                              {filledRows.map((row) => {
+                                const item = items[row];
+                                const checked = m.rows.includes(row);
+                                const other = mitraList.find((o) => o.key !== k && o.rows.includes(row));
+                                return (
+                                  <label
+                                    key={row}
+                                    className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2 text-[13px] transition-colors ${
+                                      checked
+                                        ? "border-[color:var(--pf-accent)] bg-[color:var(--pf-accent-soft)]"
+                                        : "border-[color:var(--pf-line)] bg-[color:var(--pf-surface-2)]"
+                                    }`}
+                                  >
+                                    <input type="checkbox" checked={checked} onChange={() => toggleMitraItem(k, row)} className="mt-0.5 h-4 w-4 shrink-0 accent-teal-600" />
+                                    <span className="min-w-0">
+                                      <span className="block font-medium text-[color:var(--pf-ink)]">{item.productType}</span>
+                                      <span className="block text-[11px] text-[color:var(--pf-ink-3)]">
+                                        {item.quantity} {item.unit}
+                                        {other ? ` · sekarang di ${other.partnerName || `mitra ${mitraList.indexOf(other) + 1}`}` : ""}
+                                      </span>
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="label" htmlFor={`nm-status-${k}`}>Status di mitra</label>
+                            <select id={`nm-status-${k}`} value={m.status} onChange={(e) => patchMitra(k, { status: e.target.value })} className="input">
+                              {OUTSOURCE_STATUSES.map((st) => (
+                                <option key={st.key} value={st.key}>
+                                  {st.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="label" htmlFor={`nm-biaya-${k}`}>Biaya mitra (Rp)</label>
+                            <input id={`nm-biaya-${k}`} type="number" inputMode="numeric" min={0} step={1000} value={m.vendorCost} onChange={(e) => patchMitra(k, { vendorCost: e.target.value })} className="input" />
+                          </div>
+                          <div>
+                            <label className="label">Target barang kembali</label>
+                            <DateFieldID value={m.expectedDate} onChange={(iso) => patchMitra(k, { expectedDate: iso, expectedTouched: true })} className="input" />
+                          </div>
+                          <div>
+                            <label className="label" htmlFor={`nm-jam-${k}`}>Jam kembali</label>
+                            <input id={`nm-jam-${k}`} type="time" value={m.expectedTime} onChange={(e) => patchMitra(k, { expectedTime: e.target.value })} className="input" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="label" htmlFor={`nm-catatan-${k}`}>Catatan untuk mitra / spesifikasi penting</label>
+                          <textarea id={`nm-catatan-${k}`} rows={2} value={m.notes} onChange={(e) => patchMitra(k, { notes: e.target.value })} placeholder="Bahan, ukuran, warna, finishing, file yang dikirim" className="input" />
+                        </div>
+
+                        {selected?.phone ? (
+                          <a
+                            href={`https://wa.me/${selected.phone.replace(/\D/g, "").replace(/^0/, "62")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[color:var(--pf-accent-strong)] hover:underline"
+                          >
+                            <Phone size={13} /> Hubungi {selected.name} via WhatsApp
+                          </a>
+                        ) : null}
+                      </div>
+                    </fieldset>
+                  );
+                })}
+
+                <button type="button" onClick={addMitra} className="btn-ghost w-full">
+                  <Plus size={15} /> Tambah mitra lain
+                </button>
 
                 {/* Hitungan margin langsung nyambung ke harga di kolom kiri. */}
                 <div className="grid grid-cols-3 gap-2">
                   <Metric label="Harga pelanggan" value={formatRupiah(orderPrice)} />
-                  <Metric label="Biaya mitra" value={formatRupiah(cost)} />
+                  <Metric label={mitraList.length > 1 ? "Total biaya mitra" : "Biaya mitra"} value={formatRupiah(totalCost)} />
                   <Metric label="Margin kotor" value={`${formatRupiah(margin)} · ${marginPercent}%`} danger={margin < 0} />
                 </div>
 
                 {lateRisk ? (
-                  <p className="flex items-start gap-1.5 rounded-xl border border-amber-300 bg-amber-100/70 px-3 py-2 text-xs font-semibold text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200">
+                  <p className="flex items-start gap-1.5 rounded-xl bg-[color:var(--pf-warn-soft)] px-3 py-2 text-xs font-medium text-[color:var(--pf-warn)]">
                     <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                    <span>
-                      Target barang kembali sama/melewati deadline pelanggan ({dueDate}). Sisakan waktu untuk QC dan
-                      revisi.
-                    </span>
+                    <span>Ada target barang kembali yang sama atau melewati deadline pelanggan. Sisakan waktu untuk QC dan revisi.</span>
                   </p>
-                ) : null}
-
-                {selectedPartner?.phone ? (
-                  <a
-                    href={`https://wa.me/${selectedPartner.phone.replace(/\D/g, "").replace(/^0/, "62")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 hover:underline dark:text-teal-300"
-                  >
-                    <Phone size={13} /> Hubungi {selectedPartner.name} via WhatsApp
-                  </a>
                 ) : null}
               </div>
             )}
           </div>
 
-          {/* FOTO — kartu kedua di kolom ini, sama-sama opsional seperti
+          {/* FOTO - kartu kedua di kolom ini, sama-sama opsional seperti
               Produksi Mitra di atasnya. Disimpan di memori browser dulu
               (belum ada orderId), baru benar-benar diunggah begitu tombol
               Simpan di bawah ditekan dan pekerjaannya berhasil dibuat. */}
@@ -641,7 +747,7 @@ export function NewOrderForm({
           {savedId ? (
             <>
               {" "}
-              <a href={`/pesanan/${savedId}`} className="font-extrabold underline">
+              <a href={`/pesanan/${savedId}`} className="font-semibold underline">
                 Buka detail pekerjaan →
               </a>
             </>
@@ -655,7 +761,7 @@ export function NewOrderForm({
             stage ?? "Menyimpan…"
           ) : (
             <>
-              <Save size={15} /> {useOutsource ? "Simpan Pekerjaan + Mitra" : "Simpan & Mulai Pantau"}
+              <Save size={15} /> {useOutsource ? (mitraList.length > 1 ? `Simpan Pekerjaan + ${mitraList.length} Mitra` : "Simpan Pekerjaan + Mitra") : "Simpan & Mulai Pantau"}
             </>
           )}
         </button>
@@ -699,8 +805,8 @@ function ColumnHeader({
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.11em] opacity-75">{step}</p>
-        <p className="text-sm font-extrabold text-[#07384f] dark:text-slate-100">{title}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[.11em] opacity-75">{step}</p>
+        <p className="text-sm font-semibold text-[color:var(--pf-ink)] dark:text-slate-100">{title}</p>
         <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
     </div>
@@ -710,8 +816,8 @@ function ColumnHeader({
 function Metric({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
   return (
     <div className="rounded-xl bg-white/80 px-2.5 py-2 dark:bg-white/[0.06]">
-      <p className="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`mt-0.5 text-[11px] font-extrabold ${danger ? "text-rose-600" : "text-[#07384f] dark:text-slate-100"}`}>
+      <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className={`mt-0.5 text-[11px] font-semibold ${danger ? "text-rose-600" : "text-[color:var(--pf-ink)] dark:text-slate-100"}`}>
         {value}
       </p>
     </div>
@@ -724,7 +830,7 @@ function defaultDate(days: number): string {
   return toIsoDate(d);
 }
 
-/** Sehari sebelum tanggal ISO yang diberikan — dipakai sebagai default target barang kembali dari mitra. */
+/** Sehari sebelum tanggal ISO yang diberikan - dipakai sebagai default target barang kembali dari mitra. */
 function dayBefore(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   if (!y || !m || !d) return iso;
@@ -736,4 +842,38 @@ function dayBefore(iso: string): string {
 function toIsoDate(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Satu mitra yang sedang diisi di form (belum tersimpan). */
+type MitraDraft = {
+  key: number;
+  partnerId: string;
+  partnerName: string;
+  status: string;
+  vendorCost: string;
+  expectedDate: string;
+  expectedTime: string;
+  notes: string;
+  /** Target kembali sudah diubah manual, jadi tidak ikut bergeser saat deadline pelanggan diganti. */
+  expectedTouched: boolean;
+  /** Posisi baris di tabel Item Pekerjaan yang dikerjakan mitra ini. */
+  rows: number[];
+};
+
+let mitraSeq = 0;
+
+function newMitraDraft(customerDue: string, rows: number[]): MitraDraft {
+  mitraSeq += 1;
+  return {
+    key: mitraSeq,
+    partnerId: "",
+    partnerName: "",
+    status: "belum_dikirim",
+    vendorCost: "0",
+    expectedDate: customerDue ? dayBefore(customerDue) : "",
+    expectedTime: "12:00",
+    notes: "",
+    expectedTouched: false,
+    rows,
+  };
 }

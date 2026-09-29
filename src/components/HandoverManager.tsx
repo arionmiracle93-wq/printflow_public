@@ -101,7 +101,7 @@ export function HandoverManager({
         <div className="flex min-w-0 items-start gap-3">
           <span className="icon-tile"><Handshake size={18} /></span>
           <div className="min-w-0">
-            <h3 className="text-sm font-extrabold text-[#07384f]">Serah Terima Shift</h3>
+            <h3 className="text-sm font-semibold text-[color:var(--pf-ink)]">Serah Terima Shift</h3>
             <p className="text-[11px] text-slate-500">Tujuan dipilih dari akun Karyawan aktif agar identitas dan push selalu tepat.</p>
           </div>
         </div>
@@ -114,7 +114,7 @@ export function HandoverManager({
 
       {pending ? (
         <div className="space-y-3 bg-amber-50/50 p-4">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-extrabold text-[#07384f]">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[color:var(--pf-ink)]">
             <span>{pending.fromOperator}</span><ArrowRight size={15} className="text-amber-500" /><span>{pending.toOperator}</span>
             {pending.shiftLabel ? <span className="chip border-slate-200 bg-white text-slate-500">{pending.shiftLabel}</span> : null}
           </div>
@@ -215,5 +215,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function Info({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
-  return <div className={`rounded-xl p-3 ${danger ? "border border-rose-200 bg-rose-50" : "bg-white"}`}><p className="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">{label}</p><p className={`mt-1 text-xs font-semibold ${danger ? "text-rose-700" : "text-slate-700"}`}>{value}</p></div>;
+  return <div className={`rounded-xl p-3 ${danger ? "border border-rose-200 bg-rose-50" : "bg-white"}`}><p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</p><p className={`mt-1 text-xs font-semibold ${danger ? "text-rose-700" : "text-slate-700"}`}>{value}</p></div>;
 }

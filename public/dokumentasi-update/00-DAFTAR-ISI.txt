@@ -18,6 +18,16 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[53] 2026-09-30-revisi-tampilan-kartu-kpi-dashboard.txt
+    Enam kartu KPI dashboard jadi strip datar (ikon besar,
+    angka, garis progres tipis, dipisah garis vertikal).
+    Ikon dan animasi hover tetap seperti aslinya.
+
+[52] 2026-09-30-hapus-tautan-internal-di-halaman-lacak.txt
+    Tulisan "Panduan" dan "Catatan Perubahan" di bagian bawah
+    halaman tautan lacak (yang dibuka pelanggan) dihapus.
+    Tautan itu sekarang hanya tampil untuk pengguna login.
+
 [51] 2026-10-12-judul-kartu-pekerjaan-tidak-kepotong-di-mobile.txt
     PALING BARU. Judul pekerjaan di kartu dashboard versi HP tidak
     lagi dipotong 1 baris: font dikecilin (15px di HP), boleh
