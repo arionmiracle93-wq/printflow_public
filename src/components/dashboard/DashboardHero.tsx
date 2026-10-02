@@ -18,6 +18,15 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *   - judul, ringkasan AI, dua tombol
  *   - badge Insight AI dan carousel sorotan (HeroHighlightsCarousel)
  *
+ * Revisi desktop (layar >= 1024px) saja, HP dan tablet tidak berubah:
+ *   - hero dibentangkan penuh sampai tepi kiri-kanan layar dan menempel
+ *     di bawah header (kelas .pf-hero-bleed di dashboard.css), sudut
+ *     membulat dan garis tepi dihilangkan
+ *   - isi (sapaan, judul, tombol, Insight AI) tetap sejajar dengan isi
+ *     halaman lain: dibatasi lebar 1440px dan di tengah (.pf-hero-inner)
+ *   - padding bawah ekstra (lg:pb-28) menyediakan ruang untuk kartu KPI
+ *     yang menumpuk di atas bagian bawah foto
+ *
  * Foto: /public/images/dashboard-hero.jpg (desktop) dan
  * dashboard-hero-mobile.jpg (HP).
  *
@@ -37,24 +46,10 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *     tombol "Pekerjaan Baru" disembunyikan di bawah 390px, dan di bawah
  *     350px jarak/ukuran huruf dirapatkan supaya tidak kepotong. Di layar
  *     >= 640px tombol kembali selebar isinya, rata kiri seperti semula.
- *
- * Revisi Oktober 2026 (khusus desktop, md ke atas; HP tidak berubah):
- *   - foto hero dibuat full-bleed sampai tepi kiri-kanan layar dan
- *     menempel di bawah header (tanpa sudut membulat, tanpa border).
- *     Caranya: w-screen + margin kiri calc(50% - 50vw) untuk keluar dari
- *     container max-w-[1440px] milik <main>, dan -mt-5 untuk menutup
- *     padding atas <main>. html dan body sudah overflow-x: clip, jadi
- *     tidak muncul scroll samping.
- *   - isi hero (sapaan, judul, tombol, Insight AI) tetap dibatasi
- *     max-w-[1440px] dengan padding yang sama seperti <main>, jadi
- *     sejajar dengan konten di bawahnya.
- *   - padding bawah diperbesar (md:pb-28) untuk ruang strip KPI yang
- *     menimpa bagian bawah foto (lihat .pf-kpi-overlap di dashboard.css
- *     dan page.tsx).
  */
 export function DashboardHero({ summary, highlights }: { summary: string; highlights: string[] }) {
   return (
-    <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)] md:-mt-5 md:mb-0 md:ml-[calc(50%-50vw)] md:w-screen md:rounded-none md:border-0 md:shadow-none">
+    <section className="pf-hero pf-hero-bleed relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)] lg:rounded-none lg:border-0 lg:dark:shadow-none">
       {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop, lihat .hero-photo-bg di globals.css */}
       <div className="hero-photo-bg absolute inset-0 -z-20" />
       {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto.
@@ -65,7 +60,7 @@ export function DashboardHero({ summary, highlights }: { summary: string; highli
       <div className="pf-hero-glow pf-hero-glow-teal" aria-hidden />
       <div className="print-halftone absolute inset-0 -z-10 hidden md:block" />
 
-      <div className="relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:mx-auto md:max-w-[1440px] md:px-4 md:pb-28 md:pt-9 lg:px-6">
+      <div className="pf-hero-inner relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:p-7 lg:mx-auto lg:max-w-[1440px] lg:px-6 lg:pb-28 lg:pt-9">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">

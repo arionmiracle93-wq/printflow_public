@@ -1,0 +1,82 @@
+=========================================================
+HERO DASHBOARD FULL SAMPAI TEPI + KPI MENUMPUK, DESKTOP
+2 November 2026
+=========================================================
+
+PERMINTAAN
+----------
+1. Foto hero di Dashboard dibentangkan penuh sampai tepi kiri dan
+   kanan layar (tidak lagi berupa kartu bersudut bulat di tengah).
+2. Enam kartu KPI dibuat menumpuk (overlap) di atas bagian bawah
+   foto hero.
+3. Hanya untuk versi web desktop. Versi HP / APK TIDAK diubah.
+
+
+CARA KERJA
+----------
+Semua perubahan hanya aktif di layar lebar 1024px ke atas (laptop
+dan desktop). Di bawah 1024px (HP, APK, dan tablet) tampilannya
+sama persis seperti sebelumnya, karena seluruh aturan baru berada
+di dalam @media (min-width: 1024px).
+
+Di layar desktop:
+- Hero menempel langsung di bawah header (tidak ada jarak atas),
+  melebar 100% lebar layar, tanpa sudut membulat dan tanpa garis
+  tepi.
+- Isi hero (sapaan, judul, tombol, Insight AI, logo) tetap
+  sejajar dengan isi halaman lain: dibatasi lebar 1440px dan di
+  tengah.
+- Gradasi gelap di sisi kiri foto dilebarkan sedikit supaya teks
+  tetap jelas terbaca di layar sangat lebar. Foto di sisi kanan
+  tetap terang.
+- Enam KPI berada dalam satu kartu putih (mode gelap: mengikuti
+  warna kartu gelap) yang naik 4,5rem (72px) menutupi bagian bawah
+  foto, dengan bayangan lembut.
+- Kerangka muat (skeleton) ikut disesuaikan supaya tidak ada
+  lompatan tata letak saat data datang.
+
+
+BERKAS BERUBAH (4)
+------------------
+[GANTI] src/app/dashboard.css
+        (tambahan di akhir berkas; aturan lama tidak diubah)
+[GANTI] src/app/page.tsx
+        (hanya menambah kelas pf-kpi-overlap di pembungkus KPI
+         dan komentar; data dan logika tidak diubah)
+[GANTI] src/components/dashboard/DashboardHero.tsx
+        (menambah kelas lg: pada pembungkus hero dan isinya)
+[GANTI] src/components/dashboard/DashboardSkeleton.tsx
+        (kerangka muat mengikuti bentuk baru di desktop)
+[BARU]  public/dokumentasi-update/2026-11-02-hero-full-tepi-kpi-menumpuk-desktop.txt
+
+Tidak ada perubahan pada: database, API, src/lib, src/components/ui.tsx
+(KpiCard), globals.css, layout.tsx, package.json, PWA/manifest, service
+worker. Tidak perlu membuka /api/setup dan tidak ada paket baru.
+
+
+MENGATUR SENDIRI (OPSIONAL)
+---------------------------
+Di akhir src/app/dashboard.css:
+- --pf-kpi-overlap (bawaan 4.5rem) : seberapa jauh kartu KPI naik
+  ke atas foto. Makin besar, makin menumpuk.
+- Di DashboardHero.tsx kelas lg:pb-28 : ruang kosong di bawah isi
+  hero. Aturannya: lg:pb-28 (7rem) harus >= nilai overlap + 2.5rem.
+  Kalau overlap dibesarkan, besarkan juga lg:pb-xx.
+- Mau overlap juga di tablet? Ganti angka 1024px menjadi 768px di
+  dashboard.css (dan prefiks lg: menjadi md: di DashboardHero.tsx
+  dan DashboardSkeleton.tsx).
+
+
+CARA MEMBATALKAN
+----------------
+Kembalikan keempat berkas ke versi commit sebelumnya di GitHub
+(Menu History pada berkas, lalu Revert), atau hapus saja blok
+"REVISI DESKTOP" di akhir dashboard.css dan kelas lg: / pf-hero-bleed
+/ pf-kpi-overlap yang ditambahkan.
+
+
+DIUJI
+-----
+npx tsc --noEmit dan npm run build pada salinan repo asli: sukses.
+Catatan: pengujian tampilan di browser perlu Anda cek langsung
+setelah deploy (lihat langkah di berkas CARA-PAKAI).
