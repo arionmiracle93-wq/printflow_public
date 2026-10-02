@@ -18,6 +18,10 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[63] 2026-10-18-hero-desktop-tinggi-diperkecil.txt
+    Dashboard desktop: tinggi hero foto dikurangi sekitar 23% (28,5rem
+    jadi 22rem) lewat variabel --pf-hero-h. Versi HP tidak diubah.
+
 [62] 2026-10-17-hero-foto-penuh-kpi-kartu-standar.txt
     Dashboard desktop: foto hero tampil penuh dan tidak gepeng, pita
     gradasi hitam di atas foto dihapus, kartu KPI tema terang jadi

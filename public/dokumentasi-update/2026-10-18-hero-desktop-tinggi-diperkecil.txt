@@ -1,0 +1,79 @@
+=========================================================
+REVISI HERO DASHBOARD DESKTOP, 18 Oktober 2026
+Tinggi hero foto dikurangi supaya layar tidak penuh foto
+=========================================================
+
+JAWABAN SINGKAT
+----------------
+Di desktop, tinggi area hero foto dikurangi dari 28,5rem jadi 22rem
+(sekitar 23% lebih pendek). Foto tetap proporsional, tidak gepeng,
+hanya bagian bawah dan atasnya terpotong sedikit. Versi HP tidak diubah.
+
+
+ALASAN
+------
+Pemilik merasa layar laptop terlalu didominasi hero, sehingga antrean
+pekerjaan terdorong jauh ke bawah.
+
+
+APA YANG BERUBAH
+----------------
+- Tinggi hero: 28,5rem jadi 22rem, diatur lewat satu variabel
+  --pf-hero-h (di .pf-hero-bleed, dashboard.css).
+- Jarak atas teks hero 2,15rem jadi 1,5rem, jarak antar-baris teks
+  1rem jadi 0,75rem, ruang kosong di bawah teks 8,75rem jadi 5,25rem.
+  Ruang bawah masih cukup supaya teks tidak tertimpa kartu KPI.
+- Posisi foto digeser ke "center 12%" supaya yang terpotong adalah
+  bagian meja di bawah, bukan kepala orang di foto.
+- Rangka loading (skeleton) hero ikut memakai tinggi yang sama.
+- Posisi kartu KPI (pusat pas di tepi bawah foto) tidak diubah.
+
+HP / APK dan tablet (lebar di bawah 1024px)
+- Tidak ada perubahan.
+
+
+PENGATURAN CEPAT (src/app/dashboard.css, bagian desktop)
+- --pf-hero-h : tinggi hero. 22rem default. 20rem lebih pendek lagi,
+  24rem lebih lega. Jangan di bawah sekitar 19rem, nanti teks hero
+  bisa menabrak kartu KPI.
+- background-position pada ".pf-hero-bleed .hero-photo-bg" :
+  "center 12%" bisa diubah, makin besar angkanya makin banyak bagian
+  bawah foto yang tampil.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+-------------------------------------
+Tidak ada. Tidak perlu buka /api/setup. Tidak ada tabel, kolom, atau
+environment variable baru.
+
+Setelah file di-upload ke GitHub, tunggu Vercel selesai deploy, buka
+dashboard di laptop lalu tekan Ctrl+F5.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+------------------------------------------
+[GANTI] src/app/dashboard.css
+[BARU]  public/dokumentasi-update/2026-10-18-hero-desktop-tinggi-diperkecil.txt
+[GANTI] public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+---------------
+- Kurung kurawal CSS sudah dicek seimbang.
+- Belum diuji tampil di browser dan belum dijalankan next build.
+  Mohon cek visual di laptop setelah deploy.
+
+
+DAMPAK KE KUOTA / BIAYA
+-----------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+------------------------
+Cek di laptop: 1) teks hero (sapaan, judul, tombol, Insight AI) tidak
+tertimpa kartu KPI, 2) kepala orang di foto tidak terpotong, 3) HP
+tampil sama seperti sebelumnya. Kalau teks terasa sesak, naikkan
+--pf-hero-h ke 23rem atau 24rem.
+
+=========================================================

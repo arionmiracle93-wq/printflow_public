@@ -585,16 +585,19 @@
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    min-height: 28rem;
+    /* TINGGI HERO DESKTOP: atur di sini. Dulu 28.5rem, sekarang 22rem
+       (sekitar 23% lebih pendek). Mau lebih pendek lagi: 20rem. */
+    --pf-hero-h: 22rem;
+    min-height: var(--pf-hero-h);
   }
 
   .pf-hero.pf-hero-bleed {
-    min-height: 28.5rem;
+    min-height: var(--pf-hero-h);
   }
 
   .pf-skel.pf-hero-bleed {
-    height: 28.5rem;
-    min-height: 28.5rem;
+    height: var(--pf-hero-h);
+    min-height: var(--pf-hero-h);
     border-radius: 0;
   }
 
@@ -603,9 +606,10 @@
     position: relative;
     z-index: 2;
     box-sizing: border-box;
-    min-height: 28.5rem;
-    padding-top: 2.15rem;
-    padding-bottom: 8.75rem;
+    min-height: var(--pf-hero-h);
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    padding-bottom: 5.25rem;
     padding-left: var(--pf-gutter);
     padding-right: var(--pf-gutter);
   }
@@ -632,16 +636,15 @@
        - foto tidak memenuhi hero.
      Sekarang foto kembali jadi latar biasa yang memenuhi seluruh hero
      (cover), tanpa mask dan tanpa pengecilan, dengan rasio asli terjaga.
-     background-position 30% dari atas: kalau monitor sangat lebar dan
-     foto harus terpotong sedikit, yang terpotong lebih banyak bagian
-     bawah (meja), bukan wajah.
+     background-position 12% dari atas: karena hero lebih pendek dari
+     foto, bagian yang terpotong terutama bawah (meja), bukan kepala.
      Gradasi gelap sisi kiri (untuk keterbacaan teks) nilainya sama
      persis dengan sebelumnya, di ::after. Hanya >= 1024px. */
   .pf-hero-bleed .hero-photo-bg {
     background-color: #07141d;
     background-image: url("/images/dashboard-hero.jpg");
     background-size: cover;
-    background-position: center 30%;
+    background-position: center 12%;
     background-repeat: no-repeat;
   }
 
