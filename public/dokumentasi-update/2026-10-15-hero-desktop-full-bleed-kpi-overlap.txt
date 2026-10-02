@@ -1,0 +1,90 @@
+=========================================================
+REVISI HERO DASHBOARD DESKTOP, 15 Oktober 2026
+=========================================================
+
+JAWABAN SINGKAT
+----------------
+Di layar web desktop, foto hero dashboard sekarang melebar sampai
+tepi kiri dan kanan halaman (nempel di bawah header), dan enam kartu
+KPI duduk menumpuk di atas bagian bawah foto. Versi HP tidak diubah.
+
+
+ALASAN
+------
+Foto hero sebelumnya berupa kartu bersudut membulat di dalam jarak
+pinggir halaman, lalu KPI berada di bawah kartu. Pemilik ingin tampilan
+desktop seperti contoh situs pelayaran: foto penuh sampai tepi (kotak
+hijau), dan ringkasan angka menumpuk di atas foto (kotak merah).
+
+
+APA YANG BERUBAH
+----------------
+SEBELUM (desktop)
+- Foto hero adalah kartu dengan sudut membulat, ada jarak ke tepi
+  layar dan jarak ke header.
+- Enam KPI berada di bawah foto, tanpa kartu pembungkus.
+
+SESUDAH (desktop, lebar layar 1024px ke atas)
+- Foto hero penuh sampai tepi kiri-kanan layar, nempel di bawah header.
+  Sudut membulat dan garis tepi kartu dihilangkan di desktop saja.
+- Enam KPI menjadi satu kartu putih (di mode gelap: kartu gelap) dengan
+  sudut membulat dan bayangan, menumpuk di atas kaki foto.
+- Teks sapaan, judul, dan tombol tetap di kiri foto, sejajar dengan
+  logo di header. Tidak tertutup kartu KPI.
+- Isi KPI (angka, ikon, garis progres, arti data) tidak diubah.
+
+HP / APK (lebar di bawah 1024px)
+- Tidak ada perubahan. Hero tetap kartu membulat. KPI tetap di bawah
+  foto, 2 kolom. Menu bawah, header, dan jarak halaman tidak disentuh.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+-------------------------------------
+Tidak ada. Tidak perlu buka /api/setup. Tidak ada tabel atau kolom baru.
+Tidak ada environment variable baru yang wajib diisi di Vercel.
+
+Setelah file di-upload ke GitHub, tunggu Vercel selesai deploy, lalu
+buka dashboard di laptop/komputer dan tekan Ctrl+F5 (refresh paksa).
+Di HP, tampilan harus sama seperti sebelum revisi ini.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+------------------------------------------
+[GANTI] src/app/page.tsx
+[GANTI] src/app/dashboard.css
+[GANTI] src/components/dashboard/DashboardHero.tsx
+[GANTI] src/components/dashboard/DashboardSkeleton.tsx
+[GANTI] src/proxy.ts
+[BARU]  src/app/api/auth/preview-login/route.ts
+[BARU]  public/dokumentasi-update/2026-10-15-hero-desktop-full-bleed-kpi-overlap.txt
+[GANTI] public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Catatan file proxy.ts dan preview-login:
+Dua file itu hanya menambah pintu pratinjau lokal. Pintu itu MATI
+kecuali variabel PRINTFLOW_PREVIEW_OPEN=1 dan database-nya localhost.
+Di Vercel jangan tambah variabel itu. Kalau tidak ditambah, perilaku
+login produksi sama persis seperti sebelumnya. Aman di-upload.
+
+
+HASIL PENGUJIAN
+---------------
+- npx next typegen
+- npx tsc --noEmit
+- npm run build
+Semua harus lulus sebelum file ini dipakai.
+
+
+DAMPAK KE KUOTA / BIAYA
+-----------------------
+Tidak ada. Tidak ada panggilan API baru, tidak ada foto baru,
+tidak ada penyimpanan tambahan.
+
+
+SARAN LANGKAH BERIKUTNYA
+------------------------
+Buka dashboard di laptop, lebar jendela minimal 1280px.
+Cek: foto sampai tepi kiri-kanan, KPI menumpuk di atas foto,
+lalu kecilkan jendela ke ukuran HP (atau buka di ponsel) dan
+pastikan hero masih kartu membulat seperti semula.
+
+=========================================================

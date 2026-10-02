@@ -369,20 +369,17 @@ body {
 
 @media (min-width: 768px) {
   .hero-photo-bg {
-    /* Hero kini full-bleed (selebar layar), teks mulai dari tepi container
-       1440px sehingga di layar lebar posisinya agak ke tengah; zona gelap
-       digeser sedikit lebih lebar supaya teks tetap terbaca.
-       Gradasi dipersempit: gelap pekat cuma di zona teks (kiri), lalu cepat
+    /* Gradasi dipersempit: gelap pekat cuma di zona teks (kiri), lalu cepat
        memudar ke transparan sebelum area foto (dua cowok baju hitam) —
        supaya foto tetap terang di sana, bukan ikut ketutup gelap sampai ujung kanan. */
     background-image:
       linear-gradient(
         100deg,
         rgba(5, 15, 21, 0.88) 0%,
-        rgba(6, 20, 27, 0.8) 20%,
-        rgba(6, 20, 27, 0.5) 32%,
-        rgba(6, 20, 27, 0.18) 43%,
-        rgba(6, 20, 27, 0) 54%
+        rgba(6, 20, 27, 0.78) 14%,
+        rgba(6, 20, 27, 0.4) 26%,
+        rgba(6, 20, 27, 0.1) 36%,
+        rgba(6, 20, 27, 0) 46%
       ),
       url("/images/dashboard-hero.jpg");
   }

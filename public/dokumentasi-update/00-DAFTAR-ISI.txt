@@ -18,6 +18,10 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[60] 2026-10-15-hero-desktop-full-bleed-kpi-overlap.txt
+    Dashboard desktop: foto hero penuh sampai tepi halaman, kartu
+    KPI menumpuk di atas foto. Versi HP tidak diubah.
+
 [59] 2026-10-01-status-siap-tidak-dihitung-telat.txt
     Pesanan berstatus Siap tidak lagi dihitung terlambat/berisiko
     (skor risiko, KPI dashboard, daftar & detail pekerjaan, AI).

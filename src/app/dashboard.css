@@ -75,23 +75,6 @@
     }
   }
 
-  /* Strip KPI menimpa bagian bawah foto hero (desktop saja).
-     Margin atas negatif sengaja TIDAK ditulis di sini tetapi lewat
-     utility md:-mt-14 di page.tsx, karena aturan space-y-5 milik
-     .pf-dash ada di @layer utilities dan akan mengalahkan margin yang
-     ditulis di @layer components. */
-  @media (min-width: 768px) {
-    .pf-kpi-overlap {
-      position: relative;
-      z-index: 10;
-      padding: 0.375rem 0.5rem;
-      border: 1px solid var(--pf-line);
-      border-radius: var(--pf-r-card, 16px);
-      background: var(--pf-surface-solid);
-      box-shadow: var(--pf-shadow-3);
-    }
-  }
-
   /* -------------------------------------------------------------
      1. Antrean pekerjaan, baris data (layar lebar)
      ------------------------------------------------------------- */
@@ -556,5 +539,165 @@
     .dark .pf-act-wide-primary:hover {
       color: #05242c;
     }
+  }
+}
+
+/* =====================================================================
+   HERO FULL-BLEED + KPI OVERLAP — DESKTOP SAJA
+   =====================================================================
+   Hanya layar lebar (web desktop, min-width 1024px).
+   HP dan tablet sempit (< 1024px) tidak kena aturan ini sama sekali:
+   hero tetap kartu sudut membulat, KPI tetap di bawah hero.
+
+   Acuan: banner foto sampai tepi kiri-kanan halaman (di bawah header),
+   lalu kartu ringkasan menumpuk di atas bagian bawah foto — seperti
+   kotak pencarian yang "duduk" di atas gambar kapal.
+
+   Ditulis DI LUAR @layer supaya menang atas utility Tailwind yang sudah
+   menempel di markup (rounded, border, padding, space-y, grid-cols).
+   Tidak menyentuh display/visibility, jadi lg:hidden tetap aman.
+   ===================================================================== */
+@media (min-width: 1024px) {
+  .pf-hero-stage {
+    display: grid;
+    margin-top: calc(-1.25rem - 1px);
+    /* Ruang di bawah foto untuk bagian kartu KPI yang menggantung,
+       plus bayangan, supaya tidak menimpa judul antrean. */
+    margin-bottom: 3rem;
+  }
+
+  .pf-hero-stage > .pf-hero-bleed,
+  .pf-hero-stage > .pf-kpi-dock {
+    grid-area: 1 / 1;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .pf-hero-bleed {
+    --pf-gutter: max(1.5rem, calc((100vw - 1440px) / 2 + 1.5rem));
+    position: relative;
+    width: calc(100% + (var(--pf-gutter) * 2));
+    max-width: none;
+    margin-left: calc(var(--pf-gutter) * -1);
+    margin-right: calc(var(--pf-gutter) * -1);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 28rem;
+  }
+
+  .pf-hero.pf-hero-bleed {
+    min-height: 28.5rem;
+  }
+
+  .pf-skel.pf-hero-bleed {
+    height: 28.5rem;
+    min-height: 28.5rem;
+    border-radius: 0;
+  }
+
+  /* Teks hero sejajar dengan logo di header dan isi halaman di bawah. */
+  .pf-hero-bleed .pf-hero-copy {
+    position: relative;
+    z-index: 2;
+    box-sizing: border-box;
+    min-height: 28.5rem;
+    padding-top: 2.15rem;
+    padding-bottom: 8.75rem;
+    padding-left: var(--pf-gutter);
+    padding-right: var(--pf-gutter);
+  }
+
+  /* Sedikit gelap di kaki foto supaya kartu KPI putih lebih "mengambang".
+     Tidak menutup teks: teks berakhir di atas zona ini (padding-bottom). */
+  .pf-hero.pf-hero-bleed::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6.25rem;
+    pointer-events: none;
+    background: linear-gradient(to top, rgb(5 16 24 / 0.28), rgb(5 16 24 / 0.05) 62%, transparent);
+  }
+
+  .pf-kpi-dock {
+    position: relative;
+    z-index: 6;
+    align-self: end;
+    justify-self: center;
+    width: min(calc(100% - 1.25rem), 1180px);
+    transform: translateY(1.45rem);
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: center;
+    gap: 0;
+    padding: 0.7rem 0.45rem 0.8rem;
+    border-radius: 1.35rem;
+    border: 1px solid rgb(255 255 255 / 0.86);
+    background: #ffffff;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.95) inset,
+      0 0 0 1px rgb(7 40 58 / 0.05),
+      0 18px 42px rgb(7 28 44 / 0.18),
+      0 4px 12px rgb(7 28 44 / 0.08);
+  }
+
+  :where(.dark) .pf-kpi-dock {
+    border-color: rgb(255 255 255 / 0.1);
+    background: #122636;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.06) inset,
+      0 20px 48px rgb(0 0 0 / 0.5);
+  }
+
+  /* Satu baris enam KPI, seperti pita pencarian di acuan.
+     Pemisah kiri kartu pertama disembunyikan; sisanya tampil. */
+  .pf-kpi-dock .pf-kpi {
+    min-width: 0;
+  }
+
+  .pf-kpi-dock .pf-kpi p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pf-kpi-dock .pf-kpi::before {
+    display: block;
+    top: 0.35rem;
+    bottom: 0.35rem;
+  }
+
+  .pf-kpi-dock .pf-kpi:first-child::before {
+    display: none;
+  }
+}
+
+/* Layar desktop yang belum cukup lebar untuk angka rupiah besar:
+   rapatkan ikon dan huruf supaya enam KPI tetap satu baris. */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .pf-kpi-dock .pf-kpi {
+    padding-left: 0.6rem;
+    padding-right: 0.25rem;
+  }
+
+  .pf-kpi-dock .pf-kpi svg {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .pf-kpi-dock .pf-kpi-label {
+    font-size: 9px;
+    letter-spacing: 0.01em;
+  }
+
+  .pf-kpi-dock .pf-kpi .font-semibold {
+    font-size: 0.84rem;
+    letter-spacing: -0.02em;
+  }
+
+  .pf-kpi-dock .pf-kpi .w-24 {
+    width: 4.5rem;
   }
 }

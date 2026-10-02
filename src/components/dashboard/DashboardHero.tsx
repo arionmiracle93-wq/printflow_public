@@ -29,6 +29,13 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *   - hero dijadikan lapisan GPU tersendiri (.pf-hero) supaya saat
  *     digulir cukup digeser, tidak digambar ulang
  *
+ * Revisi desktop (web lebar, min-width 1024px) — mobile TIDAK berubah:
+ *   Kelas pf-hero-bleed dan pf-hero-copy hanya dipakai CSS di
+ *   dashboard.css di dalam @media (min-width: 1024px). Di HP markup
+ *   ini tetap kartu sudut membulat di dalam padding halaman.
+ *   Di desktop foto hero melebar sampai tepi kiri-kanan layar (nempel
+ *   di bawah header), dan kartu KPI menumpuk di atas bagian bawah foto.
+ *
  * Revisi 30 September 2026:
  *   - bayangan (drop shadow) kartu hero dihapus di tema terang; di tema
  *     gelap tetap ada (dark:shadow-...)
@@ -37,24 +44,10 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *     tombol "Pekerjaan Baru" disembunyikan di bawah 390px, dan di bawah
  *     350px jarak/ukuran huruf dirapatkan supaya tidak kepotong. Di layar
  *     >= 640px tombol kembali selebar isinya, rata kiri seperti semula.
- *
- * Revisi Oktober 2026 (khusus desktop, md ke atas; HP tidak berubah):
- *   - foto hero dibuat full-bleed sampai tepi kiri-kanan layar dan
- *     menempel di bawah header (tanpa sudut membulat, tanpa border).
- *     Caranya: w-screen + margin kiri calc(50% - 50vw) untuk keluar dari
- *     container max-w-[1440px] milik <main>, dan -mt-5 untuk menutup
- *     padding atas <main>. html dan body sudah overflow-x: clip, jadi
- *     tidak muncul scroll samping.
- *   - isi hero (sapaan, judul, tombol, Insight AI) tetap dibatasi
- *     max-w-[1440px] dengan padding yang sama seperti <main>, jadi
- *     sejajar dengan konten di bawahnya.
- *   - padding bawah diperbesar (md:pb-28) untuk ruang strip KPI yang
- *     menimpa bagian bawah foto (lihat .pf-kpi-overlap di dashboard.css
- *     dan page.tsx).
  */
 export function DashboardHero({ summary, highlights }: { summary: string; highlights: string[] }) {
   return (
-    <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)] md:-mt-5 md:mb-0 md:ml-[calc(50%-50vw)] md:w-screen md:rounded-none md:border-0 md:shadow-none">
+    <section className="pf-hero pf-hero-bleed relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
       {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop, lihat .hero-photo-bg di globals.css */}
       <div className="hero-photo-bg absolute inset-0 -z-20" />
       {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto.
@@ -65,7 +58,7 @@ export function DashboardHero({ summary, highlights }: { summary: string; highli
       <div className="pf-hero-glow pf-hero-glow-teal" aria-hidden />
       <div className="print-halftone absolute inset-0 -z-10 hidden md:block" />
 
-      <div className="relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:mx-auto md:max-w-[1440px] md:px-4 md:pb-28 md:pt-9 lg:px-6">
+      <div className="pf-hero-copy relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:p-7">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
