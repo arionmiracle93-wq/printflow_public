@@ -1,0 +1,78 @@
+=========================================================
+REVISI HERO DASHBOARD DESKTOP, 19 Oktober 2026
+Foto digeser naik supaya tangan orang di foto terlihat
+=========================================================
+
+JAWABAN SINGKAT
+----------------
+Di desktop, foto hero digeser ke atas sehingga bagian tangan orang di
+foto (yang memegang brosur) sekarang tampil di atas kartu KPI, tidak
+lagi tertutup. Ukuran hero tidak berubah. Versi HP tidak diubah.
+
+
+ALASAN
+------
+Setelah tinggi hero dikurangi, bagian bawah foto (tangan dan meja)
+tertutup kartu KPI. Posisi foto sebelumnya memakai persen (12%), yang
+di layar lebar membuat tangan makin turun dan makin tertutup.
+
+
+APA YANG BERUBAH
+----------------
+- Posisi vertikal foto sekarang dihitung dengan rumus dari lebar layar,
+  bukan persen, supaya tangan selalu berada tepat di atas kartu KPI di
+  laptop maupun monitor lebar.
+- Ada pengaman supaya foto tidak pernah meninggalkan celah kosong di
+  atas atau di bawah hero.
+- Konsekuensi: karena hero pendek, bagian atas foto terpotong sedikit
+  (ujung rambut). Wajah tetap terlihat.
+- Tinggi hero, kartu KPI, dan teks hero tidak diubah.
+
+HP / APK dan tablet (lebar di bawah 1024px)
+- Tidak ada perubahan.
+
+
+PENGATURAN CEPAT (src/app/dashboard.css, bagian desktop)
+- Pada ".pf-hero-bleed .hero-photo-bg", angka "17rem":
+  makin kecil = foto naik, tangan makin atas (kepala makin terpotong);
+  makin besar = foto turun, kepala lebih utuh (tangan makin tertutup).
+  Contoh: 16rem atau 18rem.
+- Mau kepala utuh DAN tangan terlihat sekaligus: naikkan --pf-hero-h
+  (tinggi hero) ke sekitar 25rem.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+-------------------------------------
+Tidak ada. Tidak perlu buka /api/setup. Tidak ada tabel, kolom, atau
+environment variable baru.
+
+Setelah file di-upload ke GitHub, tunggu Vercel selesai deploy, buka
+dashboard di laptop lalu tekan Ctrl+F5.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+------------------------------------------
+[GANTI] src/app/dashboard.css
+[BARU]  public/dokumentasi-update/2026-10-19-hero-foto-geser-atas-tangan-terlihat.txt
+[GANTI] public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+---------------
+- Kurung kurawal CSS sudah dicek seimbang.
+- Belum diuji tampil di browser dan belum dijalankan next build.
+  Posisi tangan dihitung dari ukuran foto asli (2732x958), jadi
+  mohon cek visual di laptop setelah deploy.
+
+
+DAMPAK KE KUOTA / BIAYA
+-----------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+------------------------
+Cek di laptop: 1) tangan dan brosur terlihat di atas kartu KPI,
+2) wajah masih utuh, 3) tidak ada celah gelap di atas atau bawah foto.
+
+=========================================================

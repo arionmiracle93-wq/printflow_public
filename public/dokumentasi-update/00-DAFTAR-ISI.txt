@@ -18,6 +18,10 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[64] 2026-10-19-hero-foto-geser-atas-tangan-terlihat.txt
+    Dashboard desktop: foto hero digeser naik supaya tangan orang di
+    foto terlihat di atas kartu KPI. Versi HP tidak diubah.
+
 [63] 2026-10-18-hero-desktop-tinggi-diperkecil.txt
     Dashboard desktop: tinggi hero foto dikurangi sekitar 23% (28,5rem
     jadi 22rem) lewat variabel --pf-hero-h. Versi HP tidak diubah.

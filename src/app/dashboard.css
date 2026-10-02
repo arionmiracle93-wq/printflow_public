@@ -636,15 +636,25 @@
        - foto tidak memenuhi hero.
      Sekarang foto kembali jadi latar biasa yang memenuhi seluruh hero
      (cover), tanpa mask dan tanpa pengecilan, dengan rasio asli terjaga.
-     background-position 12% dari atas: karena hero lebih pendek dari
-     foto, bagian yang terpotong terutama bawah (meja), bukan kepala.
+     POSISI VERTIKAL FOTO diatur dengan rumus supaya TANGAN orang di foto
+     selalu tampil tepat di atas kartu KPI, di lebar layar berapa pun
+     (kalau pakai persen, di layar lebar tangan ikut turun dan tertutup
+     kartu KPI). Tangan ada di sekitar 25,6% lebar layar dari atas foto
+     (700px dari 2732px). 17rem = tinggi dari atas hero ke tangan.
+     - Mau tangan lebih ke atas: kecilkan 17rem (misal 16rem).
+     - Mau kepala lebih utuh, tangan lebih ke bawah: besarkan (18rem).
+     min(0px, ...) dan max(..., tinggi hero - tinggi foto) menjaga foto
+     tidak pernah meninggalkan celah kosong di atas atau di bawah.
      Gradasi gelap sisi kiri (untuk keterbacaan teks) nilainya sama
      persis dengan sebelumnya, di ::after. Hanya >= 1024px. */
   .pf-hero-bleed .hero-photo-bg {
     background-color: #07141d;
     background-image: url("/images/dashboard-hero.jpg");
     background-size: cover;
-    background-position: center 12%;
+    background-position: center min(
+      0px,
+      max(calc(17rem - 25.62vw), calc(var(--pf-hero-h) - 35.06vw))
+    );
     background-repeat: no-repeat;
   }
 
