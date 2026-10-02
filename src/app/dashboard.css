@@ -75,6 +75,23 @@
     }
   }
 
+  /* Strip KPI menimpa bagian bawah foto hero (desktop saja).
+     Margin atas negatif sengaja TIDAK ditulis di sini tetapi lewat
+     utility md:-mt-14 di page.tsx, karena aturan space-y-5 milik
+     .pf-dash ada di @layer utilities dan akan mengalahkan margin yang
+     ditulis di @layer components. */
+  @media (min-width: 768px) {
+    .pf-kpi-overlap {
+      position: relative;
+      z-index: 10;
+      padding: 0.375rem 0.5rem;
+      border: 1px solid var(--pf-line);
+      border-radius: var(--pf-r-card, 16px);
+      background: var(--pf-surface-solid);
+      box-shadow: var(--pf-shadow-3);
+    }
+  }
+
   /* -------------------------------------------------------------
      1. Antrean pekerjaan, baris data (layar lebar)
      ------------------------------------------------------------- */
@@ -539,91 +556,5 @@
     .dark .pf-act-wide-primary:hover {
       color: #05242c;
     }
-  }
-}
-
-/* =====================================================================
-   REVISI DESKTOP: HERO FULL SAMPAI TEPI + KARTU KPI MENUMPUK DI ATAS HERO
-   =====================================================================
-   HANYA aktif di layar 1024px ke atas (laptop / desktop). HP dan tablet
-   TIDAK tersentuh sama sekali: semua aturan di bawah ada di dalam
-   @media (min-width: 1024px).
-
-   Aturan ini sengaja ditulis DI LUAR @layer, karena aturan lama yang mau
-   dikalahkan (.hero-photo-bg di globals.css, margin dari space-y-5, dan
-   padding .app-main) juga berada di luar layer atau di layer utilities.
-
-   Kelas yang dipakai:
-     .pf-hero-bleed   : dipasang di hero (DashboardHero.tsx) dan kerangka
-                        muat hero (DashboardSkeleton.tsx)
-     .pf-hero-inner   : isi hero, dibatasi 1440px (diatur lewat kelas
-                        Tailwind lg: di DashboardHero.tsx)
-     .pf-kpi-overlap  : pembungkus enam KPI (page.tsx dan skeleton)
-
-   Mau tinggi kartu KPI yang menumpuk lebih banyak / sedikit? Ubah dua
-   angka ini SAJA, dan jaga agar hero tidak menutupi teks:
-     --pf-kpi-overlap : seberapa jauh kartu KPI naik ke atas foto
-     lg:pb-28 (di DashboardHero.tsx) : ruang kosong bawah isi hero.
-     Aturan praktis: lg:pb-28 (7rem) harus >= --pf-kpi-overlap + 2.5rem.
-   ===================================================================== */
-@media (min-width: 1024px) {
-  :root {
-    --pf-kpi-overlap: 4.5rem;
-  }
-
-  /* Hero melebar 100% lebar layar dan keluar dari kotak 1440px halaman.
-     100vw ikut menghitung lebar scrollbar, jadi sisa beberapa piksel
-     dipotong dengan overflow-x: clip. Hanya berlaku di halaman yang
-     punya hero ini (Dashboard). Halaman lain tidak terpengaruh. */
-  body:has(.pf-hero-bleed) {
-    overflow-x: clip;
-  }
-
-  /* Hero menempel langsung di bawah header (tanpa jarak atas). */
-  .app-main:has(.pf-hero-bleed) {
-    padding-top: 0;
-  }
-
-  .pf-hero-bleed {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-bottom: 0;
-  }
-
-  /* Gradasi gelap di kiri: pada desktop teks bergeser ke dalam karena
-     isi dibatasi 1440px, jadi zona gelap dilebarkan sedikit supaya teks
-     tetap terbaca di layar sangat lebar. Foto di sisi kanan tetap terang. */
-  .pf-hero-bleed .hero-photo-bg {
-    background-image:
-      linear-gradient(
-        100deg,
-        rgba(5, 15, 21, 0.88) 0%,
-        rgba(6, 20, 27, 0.8) 22%,
-        rgba(6, 20, 27, 0.5) 34%,
-        rgba(6, 20, 27, 0.16) 44%,
-        rgba(6, 20, 27, 0) 54%
-      ),
-      url("/images/dashboard-hero.jpg");
-  }
-
-  /* Kartu putih berisi enam KPI, naik menumpuk di atas bagian bawah hero.
-     z-index 10 supaya di atas hero (hero sendiri lapisan GPU tersendiri). */
-  .pf-kpi-overlap {
-    position: relative;
-    z-index: 10;
-    margin-top: calc(var(--pf-kpi-overlap) * -1);
-    padding: 0.5rem 0.75rem;
-    background: var(--pf-surface-solid);
-    border: 1px solid var(--pf-line);
-    border-radius: 1rem;
-    box-shadow:
-      0 22px 44px -16px rgb(7 56 79 / 0.32),
-      0 3px 8px rgb(7 56 79 / 0.07);
-  }
-
-  .dark .pf-kpi-overlap {
-    box-shadow:
-      0 22px 44px -16px rgb(0 0 0 / 0.65),
-      0 3px 8px rgb(0 0 0 / 0.3);
   }
 }
