@@ -8,7 +8,7 @@ const PUBLIC_PREFIXES = ["/lacak/", "/dokumentasi-update/"];
 // tidak sah lagi (password di-reset owner, akun dinonaktifkan, cookie basi).
 // Kalau ikut dijaga, permintaan logout-nya sendiri akan ditolak 401 dan cookie
 // basi tidak pernah terhapus — pengguna terjebak tidak bisa kembali ke login.
-const PUBLIC_API = ["/api/auth/login", "/api/auth/logout", "/api/auth/bootstrap", "/api/auth/status", "/api/auth/preview-login", "/api/health", "/api/setup"];
+const PUBLIC_API = ["/api/auth/login", "/api/auth/logout", "/api/auth/bootstrap", "/api/auth/status", "/api/health", "/api/setup"];
 const PUBLIC_API_PREFIXES = ["/api/photos/"];
 const OWNER_PAGE_PREFIXES = ["/pengaturan", "/catatan-perubahan", "/panduan", "/status", "/pengguna", "/audit", "/sesi"];
 const OWNER_API_PREFIXES = ["/api/admin/", "/api/export", "/api/diagnose", "/api/performance", "/api/users", "/api/sessions"];
@@ -17,17 +17,6 @@ function secret() {
   return new TextEncoder().encode(
     process.env.AUTH_SECRET?.trim() || process.env.DATABASE_URL?.trim() || "print-flow-local-development-only",
   );
-}
-
-/**
- * Pratinjau lokal saja. Aktif hanya jika PRINTFLOW_PREVIEW_OPEN=1 DAN
- * database-nya localhost. Di Vercel/Neon syarat kedua tidak pernah terpenuhi,
- * jadi login produksi tidak berubah. Jangan isi variabel ini di Vercel.
- */
-function localPreviewOpen() {
-  if (process.env.PRINTFLOW_PREVIEW_OPEN !== "1") return false;
-  const url = process.env.DATABASE_URL ?? "";
-  return /localhost|127\.0\.0\.1|\[::1\]/.test(url);
 }
 
 function isPublic(pathname: string) {
@@ -64,12 +53,6 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next({ request: { headers: publicHeaders } });
     }
     return NextResponse.next();
-  }
-
-  if (!session && localPreviewOpen() && !pathname.startsWith("/api/")) {
-    const preview = new URL("/api/auth/preview-login", request.url);
-    preview.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
-    return NextResponse.redirect(preview);
   }
 
   if (!session) {

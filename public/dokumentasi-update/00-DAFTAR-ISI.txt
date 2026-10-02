@@ -18,28 +18,6 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
-[64] 2026-10-19-hero-foto-geser-atas-tangan-terlihat.txt
-    Dashboard desktop: foto hero digeser naik supaya tangan orang di
-    foto terlihat di atas kartu KPI. Versi HP tidak diubah.
-
-[63] 2026-10-18-hero-desktop-tinggi-diperkecil.txt
-    Dashboard desktop: tinggi hero foto dikurangi sekitar 23% (28,5rem
-    jadi 22rem) lewat variabel --pf-hero-h. Versi HP tidak diubah.
-
-[62] 2026-10-17-hero-foto-penuh-kpi-kartu-standar.txt
-    Dashboard desktop: foto hero tampil penuh dan tidak gepeng, pita
-    gradasi hitam di atas foto dihapus, kartu KPI tema terang jadi
-    kartu standar (bukan kaca). Versi HP tidak diubah.
-
-[61] 2026-10-16-hero-foto-diperkecil-kpi-kaca.txt
-    Dashboard desktop: foto hero diperkecil 15% supaya orang di foto
-    tidak nempel tepi kanan, kartu KPI turun dan bergaya kaca
-    transparan. Versi HP tidak diubah.
-
-[60] 2026-10-15-hero-desktop-full-bleed-kpi-overlap.txt
-    Dashboard desktop: foto hero penuh sampai tepi halaman, kartu
-    KPI menumpuk di atas foto. Versi HP tidak diubah.
-
 [59] 2026-10-01-status-siap-tidak-dihitung-telat.txt
     Pesanan berstatus Siap tidak lagi dihitung terlambat/berisiko
     (skor risiko, KPI dashboard, daftar & detail pekerjaan, AI).

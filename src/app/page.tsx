@@ -124,10 +124,6 @@ async function DashboardContent() {
 
   return (
     <div className="pf-dash space-y-5">
-      {/* Desktop (lebar >= 1024px): foto hero full-bleed sampai tepi layar,
-          kartu KPI menumpuk di atas foto. HP: urutan dan jarak asli
-          (space-y-5), tidak ada kelas visual tambahan. */}
-      <div className="pf-hero-stage space-y-5 lg:space-y-0">
       {/* Hero foto desain original, lengkap dengan carousel Insight AI. */}
       <DashboardHero summary={insight.summary} highlights={insight.highlights.slice(0, 5)} />
 
@@ -135,10 +131,8 @@ async function DashboardContent() {
           dipisah garis vertikal). Ikon tetap versi original; hover hanya naik
           sedikit. Tampilan diatur oleh KpiCard di src/components/ui.tsx dan
           .pf-kpi di src/app/dashboard.css. Garis progres mewakili data nyata:
-          lihat src/lib/kpi-bars.ts untuk arti tiap garis.
-          Di desktop, .pf-kpi-dock membuat strip ini jadi kartu putih yang
-          menumpuk di atas foto hero (hanya layar lebar). */}
-      <section className="pf-kpi-dock grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
+          lihat src/lib/kpi-bars.ts untuk arti tiap garis. */}
+      <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
         <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={bars.aktif.pct} barLabel={bars.aktif.label} />
         <KpiCard
           label="Terlambat"
@@ -185,7 +179,6 @@ async function DashboardContent() {
           barLabel={bars.dp.label}
         />
       </section>
-      </div>
 
       <div className="grid gap-5 lg:grid-cols-12">
         <div className="min-w-0 space-y-4 lg:col-span-8">

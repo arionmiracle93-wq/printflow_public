@@ -29,13 +29,6 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *   - hero dijadikan lapisan GPU tersendiri (.pf-hero) supaya saat
  *     digulir cukup digeser, tidak digambar ulang
  *
- * Revisi desktop (web lebar, min-width 1024px) — mobile TIDAK berubah:
- *   Kelas pf-hero-bleed dan pf-hero-copy hanya dipakai CSS di
- *   dashboard.css di dalam @media (min-width: 1024px). Di HP markup
- *   ini tetap kartu sudut membulat di dalam padding halaman.
- *   Di desktop foto hero melebar sampai tepi kiri-kanan layar (nempel
- *   di bawah header), dan kartu KPI menumpuk di atas bagian bawah foto.
- *
  * Revisi 30 September 2026:
  *   - bayangan (drop shadow) kartu hero dihapus di tema terang; di tema
  *     gelap tetap ada (dark:shadow-...)
@@ -47,7 +40,7 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  */
 export function DashboardHero({ summary, highlights }: { summary: string; highlights: string[] }) {
   return (
-    <section className="pf-hero pf-hero-bleed relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
+    <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
       {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop, lihat .hero-photo-bg di globals.css */}
       <div className="hero-photo-bg absolute inset-0 -z-20" />
       {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto.
@@ -58,7 +51,7 @@ export function DashboardHero({ summary, highlights }: { summary: string; highli
       <div className="pf-hero-glow pf-hero-glow-teal" aria-hidden />
       <div className="print-halftone absolute inset-0 -z-10 hidden md:block" />
 
-      <div className="pf-hero-copy relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:p-7">
+      <div className="relative flex flex-col gap-4 p-5 [text-shadow:0_1px_10px_rgba(0,0,0,.55)] md:p-7">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
