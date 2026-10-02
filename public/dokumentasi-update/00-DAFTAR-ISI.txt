@@ -18,6 +18,11 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[61] 2026-10-16-hero-foto-diperkecil-kpi-kaca.txt
+    Dashboard desktop: foto hero diperkecil 15% supaya orang di foto
+    tidak nempel tepi kanan, kartu KPI turun dan bergaya kaca
+    transparan. Versi HP tidak diubah.
+
 [60] 2026-10-15-hero-desktop-full-bleed-kpi-overlap.txt
     Dashboard desktop: foto hero penuh sampai tepi halaman, kartu
     KPI menumpuk di atas foto. Versi HP tidak diubah.

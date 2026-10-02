@@ -1,0 +1,84 @@
+=========================================================
+REVISI HERO DASHBOARD DESKTOP, 16 Oktober 2026
+Foto diperkecil 15%, kartu KPI turun dan bergaya kaca
+=========================================================
+
+JAWABAN SINGKAT
+----------------
+Di desktop, foto hero dashboard sekarang 15% lebih kecil sehingga
+orang di foto tidak lagi nempel ke tepi kanan layar. Kartu KPI turun
+sampai titik tengahnya pas di tepi bawah foto, dan tampil bergaya kaca
+semi transparan (glass). Versi HP tidak diubah.
+
+
+ALASAN
+------
+Foto sebelumnya dipotong penuh selebar layar, jadi cewek di sisi kanan
+foto kepotong dan menempel ke tepi layar. Kartu KPI juga cuma menumpuk
+sedikit di kaki foto dan berwarna putih pekat.
+
+
+APA YANG BERUBAH
+----------------
+SEBELUM (desktop, lebar 1024px ke atas)
+- Foto memenuhi lebar hero, objek manusia di kanan menempel tepi layar.
+- Kartu KPI putih pekat, hanya turun sedikit dari kaki foto.
+
+SESUDAH
+- Foto 85% dari ukuran lama, rata tengah dan menempel ke dasar hero.
+  Sisa ruang di kiri, kanan, dan atas diisi warna latar hero, tepi foto
+  dihaluskan (fade) supaya menyatu, tidak terpotong tegas.
+- Gradasi gelap di kiri (supaya teks tetap terbaca) nilainya sama persis.
+- Kartu KPI turun setengah tingginya, pusat kartu pas di tepi bawah foto.
+  Jarak ke judul "Antrean prioritas" disesuaikan (3rem jadi 5.25rem).
+- Kartu KPI bergaya kaca: latar putih semi transparan + blur latar.
+  Mode gelap memakai kaca gelap. Isi KPI (ikon, angka, garis progres)
+  tidak diubah.
+
+HP / APK dan tablet (lebar di bawah 1024px)
+- Tidak ada perubahan.
+
+PENGATURAN CEPAT (di src/app/dashboard.css, bagian desktop)
+- --pf-photo-scale : ukuran foto, 0.85 = 85%. Contoh 0.8 lebih kecil.
+- --pf-dock-alpha  : transparansi kartu KPI, 0.72 default (tema terang).
+  Makin kecil makin bening, tapi di bawah sekitar 0.6 teks mulai
+  kurang jelas di atas bagian foto yang gelap.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+-------------------------------------
+Tidak ada. Tidak perlu buka /api/setup. Tidak ada tabel, kolom, atau
+environment variable baru. Foto tidak diganti, file yang sama dipakai.
+
+Setelah file di-upload ke GitHub, tunggu Vercel selesai deploy, buka
+dashboard di laptop/komputer lalu tekan Ctrl+F5.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+------------------------------------------
+[GANTI] src/app/dashboard.css
+[BARU]  public/dokumentasi-update/2026-10-16-hero-foto-diperkecil-kpi-kaca.txt
+[GANTI] public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+---------------
+- Sintaks CSS sudah divalidasi (parse tanpa error).
+- Belum diuji tampil di browser dan belum dijalankan next build.
+  Mohon cek visual di laptop setelah deploy (lihat saran di bawah).
+
+
+DAMPAK KE KUOTA / BIAYA
+-----------------------
+Tidak ada. Tidak ada panggilan API baru, tidak ada foto baru.
+
+
+SARAN LANGKAH BERIKUTNYA
+------------------------
+Buka dashboard di laptop (lebar jendela 1280px ke atas) dan cek:
+1) cewek di kanan foto tidak menempel tepi layar,
+2) tepi atas dan kanan foto menyatu halus dengan latar gelap,
+3) kartu KPI pas di tengah garis bawah foto dan teksnya jelas,
+4) di HP tampilan sama seperti sebelumnya.
+
+=========================================================

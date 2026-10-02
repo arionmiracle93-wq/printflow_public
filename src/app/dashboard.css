@@ -562,8 +562,10 @@
     display: grid;
     margin-top: calc(-1.25rem - 1px);
     /* Ruang di bawah foto untuk bagian kartu KPI yang menggantung,
-       plus bayangan, supaya tidak menimpa judul antrean. */
-    margin-bottom: 3rem;
+       plus bayangan, supaya tidak menimpa judul antrean.
+       Kartu KPI kini turun setengah tingginya (pusat kartu = tepi bawah
+       foto), jadi bagian yang menggantung lebih besar dari dulu (3rem). */
+    margin-bottom: 5.25rem;
   }
 
   .pf-hero-stage > .pf-hero-bleed,
@@ -622,34 +624,98 @@
     background: linear-gradient(to top, rgb(5 16 24 / 0.28), rgb(5 16 24 / 0.05) 62%, transparent);
   }
 
+  /* FOTO HERO DESKTOP DIPERKECIL +-15%
+     Dulu foto di-"cover" penuh selebar layar, jadi objek manusia di kanan
+     (cewek berambut panjang) nempel ke tepi kanan layar. Sekarang foto
+     digambar di pseudo-element ::before dengan ukuran 85% dari ukuran
+     "cover" lama, rata tengah dan menempel ke dasar hero. Sisa ruang di
+     kanan/kiri/atas diisi warna latar hero (#07141d) dan tepi foto
+     dihaluskan pakai mask supaya menyatu, bukan terpotong tegas.
+     - Mau lebih kecil/besar: ubah --pf-photo-scale (0.85 = 85%).
+     - 102.6rem = tinggi hero 28.5rem x rasio foto 3.6 (1800x500), yaitu
+       lebar minimal supaya foto "cover" setinggi hero di layar sempit.
+     - Gradasi gelap sisi kiri (untuk keterbacaan teks) dipindah ke
+       ::after supaya tetap berada DI ATAS foto, nilainya sama persis.
+     Hanya >= 1024px. HP/tablet tidak berubah. */
+  .pf-hero-bleed {
+    --pf-photo-scale: 0.85;
+  }
+
+  .pf-hero-bleed .hero-photo-bg {
+    background-image: none;
+    background-color: #07141d;
+  }
+
+  .pf-hero-bleed .hero-photo-bg::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: calc(max(100%, 102.6rem) * var(--pf-photo-scale));
+    aspect-ratio: 1800 / 500;
+    transform: translateX(-50%);
+    background: url("/images/dashboard-hero.jpg") center / 100% 100% no-repeat;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0, #000 7%, #000 92%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 9%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0, #000 7%, #000 92%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 9%);
+    mask-composite: intersect;
+  }
+
+  .pf-hero-bleed .hero-photo-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      rgba(5, 15, 21, 0.88) 0%,
+      rgba(6, 20, 27, 0.78) 14%,
+      rgba(6, 20, 27, 0.4) 26%,
+      rgba(6, 20, 27, 0.1) 36%,
+      rgba(6, 20, 27, 0) 46%
+    );
+  }
+
+  /* KARTU KPI: gaya kaca (glass) semi transparan, turun setengah tinggi
+     kartu sehingga titik tengahnya pas di tepi bawah foto hero.
+     Transparansi diatur lewat --pf-dock-alpha (makin kecil = makin
+     bening; di bawah ~0.6 teks mulai kurang jelas di atas bagian foto
+     yang gelap). */
   .pf-kpi-dock {
+    --pf-dock-alpha: 0.72;
     position: relative;
     z-index: 6;
     align-self: end;
     justify-self: center;
     width: min(calc(100% - 1.25rem), 1180px);
-    transform: translateY(1.45rem);
+    transform: translateY(50%);
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     align-items: center;
     gap: 0;
     padding: 0.7rem 0.45rem 0.8rem;
     border-radius: 1.35rem;
-    border: 1px solid rgb(255 255 255 / 0.86);
-    background: #ffffff;
+    border: 1px solid rgb(255 255 255 / 0.6);
+    background: rgb(255 255 255 / var(--pf-dock-alpha));
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    backdrop-filter: blur(16px) saturate(1.6);
     box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.95) inset,
-      0 0 0 1px rgb(7 40 58 / 0.05),
-      0 18px 42px rgb(7 28 44 / 0.18),
-      0 4px 12px rgb(7 28 44 / 0.08);
+      0 1px 0 rgb(255 255 255 / 0.8) inset,
+      0 0 0 1px rgb(7 40 58 / 0.04),
+      0 18px 42px rgb(7 28 44 / 0.16),
+      0 4px 12px rgb(7 28 44 / 0.07);
   }
 
   :where(.dark) .pf-kpi-dock {
-    border-color: rgb(255 255 255 / 0.1);
-    background: #122636;
+    --pf-dock-alpha: 0.6;
+    border-color: rgb(255 255 255 / 0.12);
+    background: rgb(18 38 54 / var(--pf-dock-alpha));
     box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.06) inset,
-      0 20px 48px rgb(0 0 0 / 0.5);
+      0 1px 0 rgb(255 255 255 / 0.08) inset,
+      0 20px 48px rgb(0 0 0 / 0.45);
   }
 
   /* Satu baris enam KPI, seperti pita pencarian di acuan.
