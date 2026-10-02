@@ -1,0 +1,92 @@
+=========================================================
+REVISI HERO DASHBOARD DESKTOP, 17 Oktober 2026
+Foto tampil penuh dan tidak gepeng, KPI tema terang jadi kartu standar
+=========================================================
+
+JAWABAN SINGKAT
+----------------
+Di desktop, foto hero dashboard sekarang memenuhi seluruh area hero,
+tidak lagi gepeng, dan pita gradasi hitam di bagian atas foto sudah
+hilang. Kartu KPI di tema terang kini kartu standar (putih solid),
+tidak lagi bergaya kaca. Versi HP tidak diubah.
+
+
+ALASAN
+------
+Revisi 16 Oktober memperkecil foto jadi 85% dan menggambarnya dengan
+rasio 1800:500, padahal file foto aslinya 2732x958 (rasio 2,85:1).
+Akibatnya:
+- foto ketarik melebar sehingga terlihat gepeng,
+- foto lebih kecil dari area hero, sisanya diisi warna gelap, dan tepi
+  foto dihaluskan dengan mask, sehingga tampak seperti gradasi hitam di
+  atas foto,
+- foto tidak tampil penuh.
+
+
+APA YANG BERUBAH
+----------------
+SEBELUM (desktop, lebar 1024px ke atas)
+- Foto 85% dari ukuran hero, rasio salah (gepeng), ada pita gelap di
+  atas dan di kiri-kanan foto.
+- Kartu KPI tema terang: putih semi transparan + blur (kaca).
+
+SESUDAH
+- Foto memenuhi seluruh hero (cover) dengan rasio asli, tanpa mask dan
+  tanpa pengecilan. Posisi diatur 30% dari atas, jadi kalau monitor
+  sangat lebar dan foto harus terpotong sedikit, yang terpotong lebih
+  banyak bagian bawah (meja), bukan wajah.
+- Gradasi gelap di sisi kiri (supaya teks terbaca) nilainya sama persis.
+- Kartu KPI tema terang: kartu standar, sama dengan kartu lain
+  (putih solid, garis tepi dan bayangan dari token desain), tanpa blur.
+- Kartu KPI tema gelap: tidak diubah (tetap kaca gelap).
+- Posisi kartu KPI (turun setengah tingginya di tepi bawah foto) tidak
+  diubah.
+
+HP / APK dan tablet (lebar di bawah 1024px)
+- Tidak ada perubahan.
+
+
+PENGATURAN CEPAT (di src/app/dashboard.css, bagian desktop)
+- background-position pada ".pf-hero-bleed .hero-photo-bg" :
+  "center 30%" bisa diganti, misal "center 20%" untuk menampilkan
+  lebih banyak bagian atas foto, atau "center 45%" untuk bagian bawah.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+-------------------------------------
+Tidak ada. Tidak perlu buka /api/setup. Tidak ada tabel, kolom, atau
+environment variable baru. Foto tidak diganti, file yang sama dipakai.
+
+Setelah file di-upload ke GitHub, tunggu Vercel selesai deploy, buka
+dashboard di laptop/komputer lalu tekan Ctrl+F5.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+------------------------------------------
+[GANTI] src/app/dashboard.css
+[BARU]  public/dokumentasi-update/2026-10-17-hero-foto-penuh-kpi-kartu-standar.txt
+[GANTI] public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+---------------
+- Kurung kurawal CSS sudah dicek seimbang.
+- Belum diuji tampil di browser dan belum dijalankan next build.
+  Mohon cek visual di laptop setelah deploy.
+
+
+DAMPAK KE KUOTA / BIAYA
+-----------------------
+Tidak ada. Tidak ada panggilan API baru, tidak ada foto baru.
+
+
+SARAN LANGKAH BERIKUTNYA
+------------------------
+Buka dashboard di laptop (lebar jendela 1280px ke atas), tema terang
+lalu tema gelap, dan cek:
+1) foto memenuhi hero dan proporsi wajah normal (tidak melebar),
+2) tidak ada pita gelap di atas foto,
+3) kartu KPI tema terang putih polos, bukan transparan,
+4) di HP tampilan sama seperti sebelumnya.
+
+=========================================================

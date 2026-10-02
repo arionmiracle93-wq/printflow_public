@@ -18,6 +18,11 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[62] 2026-10-17-hero-foto-penuh-kpi-kartu-standar.txt
+    Dashboard desktop: foto hero tampil penuh dan tidak gepeng, pita
+    gradasi hitam di atas foto dihapus, kartu KPI tema terang jadi
+    kartu standar (bukan kaca). Versi HP tidak diubah.
+
 [61] 2026-10-16-hero-foto-diperkecil-kpi-kaca.txt
     Dashboard desktop: foto hero diperkecil 15% supaya orang di foto
     tidak nempel tepi kanan, kartu KPI turun dan bergaya kaca

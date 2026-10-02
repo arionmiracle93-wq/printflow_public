@@ -624,45 +624,25 @@
     background: linear-gradient(to top, rgb(5 16 24 / 0.28), rgb(5 16 24 / 0.05) 62%, transparent);
   }
 
-  /* FOTO HERO DESKTOP DIPERKECIL +-15%
-     Dulu foto di-"cover" penuh selebar layar, jadi objek manusia di kanan
-     (cewek berambut panjang) nempel ke tepi kanan layar. Sekarang foto
-     digambar di pseudo-element ::before dengan ukuran 85% dari ukuran
-     "cover" lama, rata tengah dan menempel ke dasar hero. Sisa ruang di
-     kanan/kiri/atas diisi warna latar hero (#07141d) dan tepi foto
-     dihaluskan pakai mask supaya menyatu, bukan terpotong tegas.
-     - Mau lebih kecil/besar: ubah --pf-photo-scale (0.85 = 85%).
-     - 102.6rem = tinggi hero 28.5rem x rasio foto 3.6 (1800x500), yaitu
-       lebar minimal supaya foto "cover" setinggi hero di layar sempit.
-     - Gradasi gelap sisi kiri (untuk keterbacaan teks) dipindah ke
-       ::after supaya tetap berada DI ATAS foto, nilainya sama persis.
-     Hanya >= 1024px. HP/tablet tidak berubah. */
-  .pf-hero-bleed {
-    --pf-photo-scale: 0.85;
-  }
-
+  /* FOTO HERO DESKTOP, TAMPIL PENUH (revisi 17 Oktober 2026)
+     Sebelumnya foto digambar di ::before dengan ukuran 85% dan rasio
+     keliru (1800/500, padahal file aslinya 2732x958), akibatnya:
+       - foto terlihat gepeng (ketarik melebar),
+       - ada pita gelap di atas dan di kiri-kanan foto (hasil mask),
+       - foto tidak memenuhi hero.
+     Sekarang foto kembali jadi latar biasa yang memenuhi seluruh hero
+     (cover), tanpa mask dan tanpa pengecilan, dengan rasio asli terjaga.
+     background-position 30% dari atas: kalau monitor sangat lebar dan
+     foto harus terpotong sedikit, yang terpotong lebih banyak bagian
+     bawah (meja), bukan wajah.
+     Gradasi gelap sisi kiri (untuk keterbacaan teks) nilainya sama
+     persis dengan sebelumnya, di ::after. Hanya >= 1024px. */
   .pf-hero-bleed .hero-photo-bg {
-    background-image: none;
     background-color: #07141d;
-  }
-
-  .pf-hero-bleed .hero-photo-bg::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: calc(max(100%, 102.6rem) * var(--pf-photo-scale));
-    aspect-ratio: 1800 / 500;
-    transform: translateX(-50%);
-    background: url("/images/dashboard-hero.jpg") center / 100% 100% no-repeat;
-    -webkit-mask-image:
-      linear-gradient(to right, transparent 0, #000 7%, #000 92%, transparent 100%),
-      linear-gradient(to bottom, transparent 0, #000 9%);
-    -webkit-mask-composite: source-in;
-    mask-image:
-      linear-gradient(to right, transparent 0, #000 7%, #000 92%, transparent 100%),
-      linear-gradient(to bottom, transparent 0, #000 9%);
-    mask-composite: intersect;
+    background-image: url("/images/dashboard-hero.jpg");
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
   }
 
   .pf-hero-bleed .hero-photo-bg::after {
@@ -679,13 +659,13 @@
     );
   }
 
-  /* KARTU KPI: gaya kaca (glass) semi transparan, turun setengah tinggi
-     kartu sehingga titik tengahnya pas di tepi bawah foto hero.
-     Transparansi diatur lewat --pf-dock-alpha (makin kecil = makin
-     bening; di bawah ~0.6 teks mulai kurang jelas di atas bagian foto
-     yang gelap). */
+  /* KARTU KPI di atas foto hero.
+     Tema TERANG: kartu standar (sama dengan .card di globals.css:
+     putih solid, garis tepi token, bayangan token), TANPA efek kaca
+     dan tanpa blur. Tema GELAP: tetap kaca gelap seperti sebelumnya.
+     Kartu turun setengah tingginya, titik tengahnya pas di tepi bawah
+     foto hero. */
   .pf-kpi-dock {
-    --pf-dock-alpha: 0.72;
     position: relative;
     z-index: 6;
     align-self: end;
@@ -697,22 +677,18 @@
     align-items: center;
     gap: 0;
     padding: 0.7rem 0.45rem 0.8rem;
-    border-radius: 1.35rem;
-    border: 1px solid rgb(255 255 255 / 0.6);
-    background: rgb(255 255 255 / var(--pf-dock-alpha));
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
-    backdrop-filter: blur(16px) saturate(1.6);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.8) inset,
-      0 0 0 1px rgb(7 40 58 / 0.04),
-      0 18px 42px rgb(7 28 44 / 0.16),
-      0 4px 12px rgb(7 28 44 / 0.07);
+    border-radius: var(--pf-r-card);
+    border: 1px solid var(--pf-line);
+    background: var(--pf-surface);
+    box-shadow: var(--pf-shadow-1);
   }
 
   :where(.dark) .pf-kpi-dock {
     --pf-dock-alpha: 0.6;
     border-color: rgb(255 255 255 / 0.12);
     background: rgb(18 38 54 / var(--pf-dock-alpha));
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    backdrop-filter: blur(16px) saturate(1.6);
     box-shadow:
       0 1px 0 rgb(255 255 255 / 0.08) inset,
       0 20px 48px rgb(0 0 0 / 0.45);
