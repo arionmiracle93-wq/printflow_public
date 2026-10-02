@@ -7,11 +7,11 @@
 export function DashboardSkeleton() {
   return (
     <div className="pf-dash space-y-5" aria-busy="true" aria-label="Memuat dashboard">
-      <div className="pf-skel h-[270px] w-full rounded-[1.5rem] md:h-[260px]" />
+      <div className="pf-skel h-[270px] w-full rounded-[1.5rem] md:-mt-5 md:mb-0 md:ml-[calc(50%-50vw)] md:h-[400px] md:w-screen md:rounded-none" />
 
       {/* Bentuknya mengikuti strip KPI: ikon besar di kiri, label, angka,
           dan garis tipis; enam kolom di layar lebar. */}
-      <div className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="pf-kpi-overlap grid grid-cols-2 gap-y-3 md:-mt-14 md:grid-cols-3 xl:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="pf-kpi relative py-3 pl-4 pr-2 md:pl-6 xl:pl-5">
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 md:gap-x-3.5">

@@ -131,8 +131,11 @@ async function DashboardContent() {
           dipisah garis vertikal). Ikon tetap versi original; hover hanya naik
           sedikit. Tampilan diatur oleh KpiCard di src/components/ui.tsx dan
           .pf-kpi di src/app/dashboard.css. Garis progres mewakili data nyata:
-          lihat src/lib/kpi-bars.ts untuk arti tiap garis. */}
-      <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
+          lihat src/lib/kpi-bars.ts untuk arti tiap garis.
+          Di desktop (md ke atas) strip ini dibungkus kartu putih dan
+          menimpa bagian bawah foto hero (.pf-kpi-overlap + md:-mt-14).
+          Di HP tidak ada perubahan. */}
+      <section className="pf-kpi-overlap grid grid-cols-2 gap-y-3 md:-mt-14 md:grid-cols-3 xl:grid-cols-6">
         <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={bars.aktif.pct} barLabel={bars.aktif.label} />
         <KpiCard
           label="Terlambat"
