@@ -57,7 +57,7 @@ export function LogoSettings({ hasLogo }: { hasLogo: boolean }) {
       <div className="flex items-start gap-3">
         <span className="icon-tile"><ImagePlus size={18} /></span>
         <div className="min-w-0">
-          <h3 className="break-words text-sm font-extrabold text-[#07384f]">Logo Usaha</h3>
+          <h3 className="break-words text-sm font-semibold text-[color:var(--pf-ink)]">Logo Usaha</h3>
           <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
             Logo tampil di pojok kiri atas, menggantikan ikon robot. Gunakan logo persegi/transparan agar hasilnya rapi.
           </p>
@@ -74,7 +74,7 @@ export function LogoSettings({ hasLogo }: { hasLogo: boolean }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-slate-700">{exists ? "Logo usaha sedang aktif" : "Belum ada logo — ikon robot dipakai"}</p>
+          <p className="text-xs font-bold text-slate-700">{exists ? "Logo usaha sedang aktif" : "Belum ada logo - ikon robot dipakai"}</p>
           <p className="mt-1 text-[11px] text-slate-500">PNG, JPG, atau WEBP · maksimal 2 MB · saran ukuran 512×512 px.</p>
         </div>
       </div>

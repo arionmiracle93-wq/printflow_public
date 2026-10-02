@@ -27,7 +27,7 @@ export function OrderStatusControls({
 
   async function save(target: string, quickNote?: string) {
     // Jaring pengaman: job dengan produksi mitra yang belum "Diterima &
-    // Perlu QC" tapi mau ditandai Selesai — kemungkinan besar cuma lupa
+    // Perlu QC" tapi mau ditandai Selesai - kemungkinan besar cuma lupa
     // update status mitra-nya, bukan disengaja. Tanya dulu, jangan blokir
     // paksa (bisa saja memang situasinya beda dari biasanya).
     if (target === "selesai" && outsourceStatus && outsourceStatus !== "diterima") {
@@ -95,7 +95,7 @@ export function OrderStatusControls({
               className={`chip inline-flex items-center gap-1 transition ${
                 s.key === currentStatus
                   ? `${s.badge} cursor-default`
-                  : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-800"
               }`}
             >
               {StatusIcon ? <StatusIcon size={12} /> : null} {s.short}

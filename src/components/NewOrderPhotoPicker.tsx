@@ -7,7 +7,7 @@ import { formatBytes, MAX_PHOTOS_PER_ORDER, PHOTO_KINDS, photoKindLabel } from "
 
 /**
  * Satu foto yang SUDAH dipilih & dikompres di form, tapi BELUM diunggah ke
- * server — sebab pekerjaannya sendiri belum tersimpan, jadi belum ada
+ * server - sebab pekerjaannya sendiri belum tersimpan, jadi belum ada
  * orderId untuk ditempeli foto (order_items butuh order_id).
  *
  * `blob` disimpan di memori (bukan base64 di React state) supaya ringan;
@@ -202,12 +202,12 @@ export function NewOrderPhotoPicker({
             }`}
           >
             <ClipboardPaste size={16} className="mx-auto text-teal-600" />
-            <p className="mt-1 text-[11px] font-extrabold text-[#07384f] dark:text-slate-200">
+            <p className="mt-1 text-[11px] font-semibold text-[color:var(--pf-ink)] dark:text-slate-200">
               Klik kotak ini, lalu tekan Ctrl + V untuk tempel screenshot
             </p>
           </div>
 
-          {busy ? <p className="text-xs font-semibold text-indigo-600">Memproses gambar…</p> : null}
+          {busy ? <p className="text-xs font-semibold text-teal-700">Memproses gambar…</p> : null}
           {error ? (
             <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p>
           ) : null}
@@ -246,7 +246,7 @@ export function NewOrderPhotoPicker({
 
       <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
         {photos.length}/{max} foto siap dilampirkan
-        {photos.length > 0 ? ` (${formatBytes(photos.reduce((s, p) => s + p.sizeBytes, 0))})` : ""} — benar-benar
+        {photos.length > 0 ? ` (${formatBytes(photos.reduce((s, p) => s + p.sizeBytes, 0))})` : ""} - benar-benar
         terunggah begitu tombol Simpan di bawah ditekan.
       </p>
     </div>

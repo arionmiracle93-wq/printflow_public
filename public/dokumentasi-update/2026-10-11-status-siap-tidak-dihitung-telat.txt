@@ -1,0 +1,161 @@
+================================================================
+STATUS "SIAP DIAMBIL/DIKIRIM" TIDAK LAGI DIHITUNG TELAT/WASPADA
+Tanggal : 11-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Sudah diperbaiki. Sebelumnya, kalau status pekerjaan sudah "Siap
+Diambil / Dikirim" tapi deadline-nya sudah dekat atau lewat, sistem
+tetap menandainya TERLAMBAT/WASPADA di semua tempat (dashboard,
+daftar pekerjaan, detail pekerjaan, AI Assistant) — padahal
+produksinya sudah kelar, tinggal menunggu pelanggan datang ambil
+atau dijadwalkan kirim. Sekarang status "Siap Diambil/Dikirim"
+SENGAJA dikecualikan dari perhitungan telat/waspada, disamakan
+perlakuannya dengan status "Selesai" dan "Dibatalkan" (yang memang
+dari awal juga tidak dihitung telat).
+
+Bukti sudah dites (bukan cuma dugaan): dibikin skenario order
+berstatus "siap" dengan deadline yang sudah lewat 5 hari, dan
+hasilnya sekarang levelnya "Aman" (skor risiko 0), bukan lagi
+"Terlambat". Order lain dengan status yang PRODUKSINYA MEMANG BELUM
+SELESAI (misalnya status "Proses Cetak") tetap terhitung telat
+seperti biasa kalau lewat deadline — jadi perbaikan ini SPESIFIK
+buat status siap saja, bukan mematikan seluruh sistem peringatan
+telat.
+
+
+KENAPA ADA 6 TEMPAT YANG DIUBAH
+----------------------------------------------------------------
+Logic "telat" ternyata dihitung di 6 tempat yang agak terpisah
+(bukan cuma 1 fungsi pusat), jadi semuanya harus disinkronkan biar
+konsisten — kalau cuma dibetulkan sebagian, nanti dashboard bilang
+"aman" tapi daftar pekerjaan masih bilang "telat" buat order yang
+sama, membingungkan.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/lib/ai.ts — fungsi analyzeOrder (otak penilaian risiko AI)
+   - Skor risiko (riskScore): status "siap" ditambahkan sebagai
+     kondisi ke-3 yang otomatis dapat skor 0 ("Aman"), sejajar
+     dengan status "selesai" & "batal" yang sudah lebih dulu begitu.
+     Sebelumnya "siap" ikut masuk ke perhitungan umum berbasis
+     hoursLeft, jadi kalau lewat deadline bisa dapat skor sampai 100
+     ("Terlambat").
+   - Alasan (reasons) & saran (recommendations): ditambah kalimat
+     khusus untuk status "siap" — menjelaskan bahwa ini soal
+     penjemputan/pengiriman, bukan keterlambatan produksi. Kalau
+     sudah lama menunggu (lewat jadwal), sekarang ada saran
+     tambahan: "follow-up pelanggan untuk memastikan jadwal
+     pengambilan/pengiriman" — jadi tetap ada sinyal berguna buat
+     pemilik toko tanpa memakai bahasa "telat".
+   - Ringkasan (headline): sebelumnya kalau hoursLeft lewat 0, HEADLINE
+     APAPUN STATUSNYA bilang "Terlambat X dari deadline 🔴" —
+     termasuk untuk status "siap". Sekarang status "siap" dapat
+     headline sendiri: "Siap diambil/dikirim, tinggal menunggu
+     pelanggan 📦".
+
+B) src/lib/ai.ts — fungsi buildDashboardInsight (KPI "Terlambat" di
+   dashboard, dan ringkasan yang dibaca AI)
+   - Penghitung `late` (dipakai KPI card "Terlambat" di dashboard,
+     dan kalimat ringkasan/highlight) sebelumnya cuma mengecualikan
+     status selesai/batal (lewat variabel `active`), TIDAK
+     mengecualikan "siap". Sekarang ditambah `&& i.status !== "siap"`.
+
+C) src/lib/ai.ts — jawaban AI Assistant waktu ditanya soal
+   telat/terlambat/lewat deadline
+   - Filter yang sama ditambahkan di sini juga, supaya kalau pemilik
+     tanya ke AI Assistant "ada yang telat?", order yang statusnya
+     "siap" tidak ikut disebut sebagai telat.
+
+D) src/lib/checklist.ts — query SQL untuk kartu "onboarding
+   checklist" (lateCount)
+   - Query SQL langsung ke database ini terpisah dari analyzeOrder
+     (dihitung pakai SQL, bukan lewat kode JS di atas), jadi harus
+     diperbaiki sendiri: ditambah `and status <> 'siap'` di kondisi
+     WHERE-nya.
+
+E) src/app/pesanan/[id]/page.tsx — halaman detail pekerjaan
+   (ada di 2 tempat: tampilan utama & tampilan cadangan/fallback
+   waktu ada masalah muat data — dua-duanya dibetulkan)
+   - Kolom "Sisa waktu": sebelumnya kalau lewat deadline & status
+     belum "selesai/dibatalkan" (termasuk "siap"), muncul badge
+     merah "⚠ Terlambat X". Sekarang status "siap" dapat tampilan
+     sendiri: badge hijau "📦 Siap diambil/dikirim", tidak
+     bergantung ke hoursLeft sama sekali.
+
+F) src/app/pesanan/page.tsx — halaman daftar pekerjaan (kartu versi
+   HP & tabel versi desktop, dua-duanya dibetulkan)
+   - Sebelumnya menampilkan teks "telat X jam/hari" berwarna merah
+     tebal kalau lewat deadline, tanpa peduli status. Sekarang kalau
+     status "siap", teksnya diganti "siap diambil" dengan warna
+     netral (bukan merah), berapa pun sisa/lewat waktunya.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (exit code 0, bersih — tidak ada
+                          warning apa pun kali ini)
+  npx next build      : Compiled successfully, semua rute termasuk
+                          /pesanan dan /pesanan/[id] ke-generate
+                          normal
+  Skenario logic (dites langsung pakai tsx, bukan cuma baca kode):
+    1. Order status "siap", deadline LEWAT 5 hari
+       → riskScore 0, riskLevel "aman", headline "Siap diambil/
+         dikirim, tinggal menunggu pelanggan 📦 (±4.7 hari sejak
+         jadwal)" — BUKAN "Terlambat" lagi. ✅
+    2. (kontrol) Order status "Proses Cetak", deadline LEWAT 5 hari
+       → riskScore 100, riskLevel "terlambat", headline "Terlambat
+         4.7 hari dari deadline 🔴" — TETAP telat seperti biasa,
+         membuktikan perbaikan ini tidak mematikan sistem peringatan
+         untuk status lain. ✅
+    3. Order status "siap", deadline masih jauh
+       → riskScore 0, "aman", headline "Siap diambil/dikirim..."
+         (tanpa keterangan lewat jadwal). ✅
+    4. buildDashboardInsight dengan 3 order campuran (1 siap-telat,
+       1 cetak-telat, 1 siap-belum-jatuh-tempo)
+       → stats.late = 1 (cuma yang status "Proses Cetak"), TIDAK
+         menghitung 2 order "siap" meski salah satunya lewat
+         deadline 5 hari. ✅
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/lib/ai.ts
+  src/lib/checklist.ts
+  src/app/pesanan/page.tsx
+  src/app/pesanan/[id]/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-11-status-siap-tidak-dihitung-telat.txt
+
+TIDAK DIUBAH (murni buat penegasan, tidak disentuh di revisi ini):
+  Semua file terkait halaman /login
+  src/app/mitra/page.tsx (ini status MITRA/vendor eksternal, beda
+  domain dengan status pekerjaan "siap" di atas — sengaja tidak
+  ikut diubah)
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Murni logic TypeScript + 1 kondisi tambahan di query SQL
+yang sudah ada (bukan query baru).
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau nanti mau menandai order "siap" yang sudah KELAMAAN
+  menunggu diambil (misal lebih dari 3 hari) sebagai jenis
+  peringatan TERSENDIRI (bukan "telat produksi", tapi "gudang
+  penuh"/"follow-up pelanggan"), itu bisa jadi fitur terpisah —
+  saat ini reasons/recommendations sudah menyinggung soal
+  follow-up, tapi belum ada badge/warna visual khusus untuk
+  "sudah lama nunggu diambil". Tinggal bilang kalau mau ditambah.
+
+================================================================

@@ -18,11 +18,11 @@ export default async function NewOrderPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl dark:text-slate-100">
+        <h1 className="page-title flex items-center gap-2">
           <Plus size={22} strokeWidth={2.3} /> Pekerjaan Baru
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Isi data pekerjaan di kolom kiri. Kalau dikerjakan mitra, langsung isi kolom kanan — tidak perlu mampir ke
+          Isi data pekerjaan di kolom kiri. Kalau dikerjakan mitra, langsung isi kolom kanan - tidak perlu mampir ke
           halaman detail lagi.
         </p>
       </div>

@@ -1,0 +1,62 @@
+=========================================================
+NOTIFIKASI ONESIGNAL UNTUK APK WEB TO APK (WEBVIEW), 1 Oktober 2026
+=========================================================
+
+MASALAH
+-------
+APK hasil freewebtoapk.com berjalan di WebView. WebView tidak
+mendukung Web Push (service worker + VAPID), jadi notifikasi hanya
+muncul di browser Chrome, bukan di panel notifikasi HP.
+
+YANG DITAMBAHKAN
+----------------
+1. Jalur kirim baru lewat OneSignal (src/lib/onesignal.ts). Setiap
+   notifikasi operasional sekarang dikirim ke DUA jalur sekaligus:
+   Web Push (Chrome, PWA, APK TWA) dan OneSignal (APK WebView).
+   Salah satu gagal tidak membatalkan yang lain. Web Push lama
+   tidak berubah.
+2. Mode target ONESIGNAL_TARGETING:
+   - all (bawaan): semua perangkat berlangganan menerima semuanya.
+   - external_id: hanya owner + pengguna yang dituju. Butuh APK
+     yang memanggil OneSignal.login(<id pengguna>).
+3. Kartu Push di Pengaturan sekarang punya bagian 4 "OneSignal untuk
+   APK WebView": status server, mode target, dan tombol "Uji OneSignal".
+   Bagian ini tetap tampil di dalam APK WebView walau Web Push tidak
+   ada. Pesan "tidak mendukung Web Push" diganti penjelasan yang jelas.
+4. Panduan langkah demi langkah: public/panduan-onesignal-apk.md
+   (Firebase, OneSignal, builder freewebtoapk, Vercel, pengujian).
+
+YANG HARUS ANDA LAKUKAN
+-----------------------
+Ikuti panduan: buat Firebase + OneSignal, bangun ulang APK dengan
+OneSignal App ID, isi ONESIGNAL_APP_ID dan ONESIGNAL_REST_API_KEY di
+Vercel, lalu Redeploy. Tanpa kedua variabel itu, aplikasi berjalan
+persis seperti sebelumnya.
+
+CATATAN PENTING
+---------------
+- ONESIGNAL_REST_API_KEY itu rahasia: hanya di Vercel, jangan di APK.
+- Alamat halaman tujuan dikirim sebagai data, bukan sebagai url
+  (di Android, url membuka browser HP). Mengetuk notifikasi membuka
+  aplikasi.
+- Tombol "Uji Push Server" yang lama tetap hanya menguji Web Push.
+
+PEMBARUAN PANDUAN (setelah melihat layar builder)
+-------------------------------------------------
+- Builder meminta file google-services.json juga saat memilih OneSignal.
+  Panduan sekarang menjelaskan cara membuatnya: daftarkan aplikasi
+  Android di proyek Firebase YANG SAMA dengan service account OneSignal,
+  dengan package name persis sama dengan di builder.
+- Di kartu Push Notifications builder tidak terlihat opsi untuk menautkan
+  akun pengguna, jadi pakai mode target "all" (bawaan).
+
+FILE YANG BERUBAH
+-----------------
+  src/lib/onesignal.ts (baru)
+  src/lib/push.ts
+  src/app/api/push/route.ts
+  src/components/PushNotificationSettings.tsx
+  public/panduan-onesignal-apk.md (baru)
+  .env.example, README.md
+
+Tidak ada perubahan database. Tidak perlu buka /api/setup.

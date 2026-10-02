@@ -113,6 +113,11 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS orders_due_date_idx ON orders (due_date)`,
   `CREATE INDEX IF NOT EXISTS order_events_order_idx ON order_events (order_id)`,
   `CREATE INDEX IF NOT EXISTS order_photos_order_idx ON order_photos (order_id)`,
+  // --- Foto di Vercel Blob (Oktober 2026) ---
+  // Aditif dan aman diulang. Foto lama tetap di kolom data sampai
+  // dipindahkan lewat tombol di Pengaturan.
+  `ALTER TABLE order_photos ADD COLUMN IF NOT EXISTS blob_url text`,
+  `ALTER TABLE order_photos ALTER COLUMN data DROP NOT NULL`,
   `CREATE TABLE IF NOT EXISTS production_partners (
       id serial PRIMARY KEY,
       name text NOT NULL,
@@ -141,6 +146,18 @@ const DDL = [
    )`,
   `CREATE INDEX IF NOT EXISTS outsource_jobs_status_idx ON outsource_jobs (status)`,
   `CREATE INDEX IF NOT EXISTS outsource_jobs_partner_idx ON outsource_jobs (partner_id)`,
+  // --- Status per produk & multi mitra (Oktober 2026) ---
+  // Semuanya aditif dan aman dijalankan berulang. Data lama tidak diubah:
+  // status produk null = ikut status pekerjaan, dan mitra lama tanpa
+  // produk terhubung = mengerjakan seluruh pekerjaan, persis seperti dulu.
+  `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS status text`,
+  `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS outsource_job_id integer REFERENCES outsource_jobs(id) ON DELETE SET NULL`,
+  `CREATE INDEX IF NOT EXISTS order_items_outsource_idx ON order_items (outsource_job_id)`,
+  // Lepas batas "1 mitra per pekerjaan". Nama constraint berbeda tergantung
+  // tabel dibuat lewat /api/setup (…_key) atau drizzle-kit push (…_unique).
+  `ALTER TABLE outsource_jobs DROP CONSTRAINT IF EXISTS outsource_jobs_order_id_key`,
+  `ALTER TABLE outsource_jobs DROP CONSTRAINT IF EXISTS outsource_jobs_order_id_unique`,
+  `CREATE INDEX IF NOT EXISTS outsource_jobs_order_idx ON outsource_jobs (order_id)`,
   `CREATE TABLE IF NOT EXISTS users (
       id serial PRIMARY KEY,
       name text NOT NULL,

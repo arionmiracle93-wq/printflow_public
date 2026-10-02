@@ -19,10 +19,17 @@ export type OrderItem = {
   productType: string;
   quantity: number;
   unit: string;
+  /** Status produk sendiri. null / kosong = ikut status pekerjaan. */
+  status?: string | null;
+  /** Mitra yang mengerjakan produk ini. null = dikerjakan sendiri. */
+  outsourceJobId?: number | null;
 };
 
 /** Bentuk item saat masih diketik di form (belum punya id dari database). */
 export type OrderItemInput = {
+  /** Ada kalau baris ini sudah tersimpan. Dipakai supaya status produk
+      dan mitranya tidak hilang saat daftar produk diedit. */
+  id?: number;
   productType: string;
   quantity: number;
   unit: string;
@@ -49,7 +56,9 @@ export function sanitizeItems(raw: unknown): OrderItemInput[] {
         ? row.quantity
         : Number.parseInt(String(row.quantity ?? ""), 10);
     const unit = typeof row.unit === "string" && row.unit.trim() ? row.unit.trim() : "pcs";
+    const parsedId = typeof row.id === "number" ? row.id : Number.parseInt(String(row.id ?? ""), 10);
     out.push({
+      ...(Number.isInteger(parsedId) && parsedId > 0 ? { id: parsedId } : {}),
       productType,
       quantity: Math.max(1, Number.isFinite(parsedQty) ? parsedQty : 1),
       unit,

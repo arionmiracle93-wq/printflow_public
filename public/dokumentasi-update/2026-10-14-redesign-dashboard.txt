@@ -1,0 +1,362 @@
+=========================================================
+REDESIGN LAYOUT DASHBOARD, 14 Oktober 2026
+=========================================================
+
+DESIGN READ
+-----------
+Layar operasional harian untuk pemilik dan karyawan percetakan,
+paling sering dibuka di ponsel. Bahasa visual produk yang tenang
+dan padat, bukan bahasa halaman promosi.
+
+Mode redesign: PRESERVE.
+Warna merek, rute, label navigasi, dan nama field form tidak
+diubah. Seluruh aturan bisnis di src/lib tidak disentuh.
+
+Dial: DESIGN_VARIANCE 4, MOTION_INTENSITY 3, VISUAL_DENSITY 7.
+
+
+BERKAS
+------
+[BARU]  src/app/design-tokens.css
+[BARU]  src/app/dashboard.css
+[GANTI] src/components/dashboard/DashboardHero.tsx  (hero original)
+[HAPUS] src/components/dashboard/StatusBand.tsx
+[BARU]  src/components/dashboard/JobQueue.tsx
+[BARU]  src/components/dashboard/Panels.tsx
+[BARU]  src/components/dashboard/DashboardSkeleton.tsx
+[GANTI] src/app/page.tsx
+[GANTI] src/app/globals.css  (hanya tambah dua baris import)
+[GANTI] src/app/layout.tsx   (hanya tambah font Geist)
+
+Tidak ada berkas di src/db, src/app/api, src/proxy.ts, src/lib,
+service worker, manifest, atau assetlinks yang diubah.
+
+
+PERUBAHAN
+---------
+1.  HERO FOTO TETAP DESAIN ORIGINAL.
+    Markup disalin apa adanya dari versi asli: ukuran, gradasi
+    masking .hero-photo-bg, cahaya amber dan teal, halftone,
+    sapaan, judul, tombol, badge Insight AI, dan carousel sorotan.
+
+2.  KARTU KPI TETAP DESAIN ORIGINAL.
+    Komponen KpiCard di src/components/ui.tsx dipakai apa adanya,
+    termasuk susunan grid 2 kolom di ponsel dan 6 kolom di layar
+    lebar seperti versi asli. Tidak ada berkas KPI baru.
+
+3.  ANTREAN PRIORITAS.
+    Layar lebar memakai baris data sehingga delapan pekerjaan
+    terbaca sekali lihat. Ponsel tetap kartu geser.
+    Kolom: nomor, pekerjaan, tahap, PIC dan tenggat, skor, aksi.
+    Tombol aksi di baris desktop tampil sebagai ikon. Labelnya
+    tetap ada untuk pembaca layar, hanya disembunyikan visual.
+
+4.  PITA ALUR PRODUKSI menggantikan daftar sembilan baris.
+    Lebar tiap ruas sebanding jumlah pekerjaan di tahap itu,
+    sehingga penumpukan langsung kelihatan.
+
+5.  PITA RISIKO menggantikan grafik donat.
+    Untuk tiga kategori, pita lebih mudah dibandingkan.
+
+6.  SISTEM TOKEN.
+    Warna, radius, bayangan, dan durasi gerak dipusatkan.
+    Radius dikunci tiga nilai: kartu 14px, kontrol 10px, pil penuh.
+    Aksen dikunci satu warna, teal. Amber jadi warna semantik
+    peringatan. Bayangan berona latar, bukan hitam murni.
+
+7.  TIPOGRAFI.
+    Geist dan Geist Mono lewat next/font. Angka tabular.
+    Tebal huruf diturunkan jadi tangga 560 sampai 650.
+
+8.  KEADAAN LENGKAP.
+    Kerangka muat mengikuti bentuk layout akhir, keadaan kosong
+    menunjukkan langkah berikutnya, layar bermasalah tetap dipakai.
+
+
+KEPATUHAN PRE-FLIGHT
+--------------------
+Nol em dash di seluruh berkas baru.
+Nol label kecil huruf kapital di atas judul seksi.
+Nol titik berwarna hiasan.
+Tidak ada track bar berlatar penuh sebagai visual perbandingan.
+Satu keluarga ikon, ketebalan garis dikunci 1.75.
+Fokus keyboard terlihat, kontras teks memenuhi WCAG AA.
+Mode gelap diuji.
+min-h-[100dvh], bukan h-screen.
+Gerak dimatikan saat prefers-reduced-motion.
+
+Diuji: npx tsc --noEmit dan next build pada repo asli, sukses.
+
+
+PERBAIKAN 15 OKTOBER 2026
+-------------------------
+Masalah : di layar lebar kartu antrean versi ponsel ikut tampil
+          bertumpuk di atas tabel.
+Penyebab: kelas pf-* ditulis di luar @layer, sehingga mengalahkan
+          utility Tailwind v4 seperti lg:hidden.
+Perbaikan:
+- Semua kelas pf-* dipindah ke @layer components.
+- dashboard.css diimpor dari globals.css, bukan dari page.tsx.
+- Hero dikembalikan ke markup original lengkap dengan carousel.
+- Tombol kartu ponsel selebar kolom, tablet dua kartu sekaligus.
+- Pita alur produksi melebar penuh kalau tidak ada tenggat hari ini.
+
+
+PERUBAHAN 16 OKTOBER 2026
+-------------------------
+1. "Alur produksi" diganti POSISI PEKERJAAN PER TAHAP.
+   Grid 9 ubin (3 kolom di layar lebar, 1 kolom di HP). Tiap ubin:
+   ikon tahap berwarna (dari status.dot di domain.ts), nama tahap,
+   jumlah, dan bar proporsi. Ubin berisi terangkat dengan garis
+   tepi, ubin kosong redup. Ketuk untuk membuka daftar tahap itu.
+
+2. "Sebaran risiko" diganti DIAGRAM DONAT.
+   Empat irisan sesuai skala skor AI: Aman 0-34, Waspada 35-64,
+   Berisiko 65-89, Terlambat 90-100. Dihitung dari riskLevel tiap
+   pekerjaan aktif. Total di tengah, skor rata-rata di subjudul.
+   Animasi gambar irisan saat dibuka, sorot level saat kursor di
+   atas irisan atau legenda. Mati saat prefers-reduced-motion.
+
+Berkas berubah: design-tokens.css, dashboard.css, page.tsx,
+components/dashboard/Panels.tsx.
+
+
+PERUBAHAN 17 OKTOBER 2026
+-------------------------
+Antrean prioritas di HP: satu kartu penuh per layar.
+- Lebar kartu 100% area konten (sebelumnya 88%, kartu berikutnya
+  terlihat separuh). Jarak antar kartu = padding halaman, jadi saat
+  berhenti tidak ada kartu terpotong. Geser selalu tepat 1 kartu.
+- Tablet 768px ke atas: dua kartu penuh. 1024px ke atas: baris data.
+- Titik penunjuk posisi di bawah kartu, bisa diketuk.
+  Dibaca dengan IntersectionObserver, ringan di APK.
+Berkas: dashboard.css, JobQueue.tsx, SwipeTrack.tsx (baru).
+
+
+PERUBAHAN 18 OKTOBER 2026
+-------------------------
+Kartu antrean prioritas (HP dan tablet), tombol bawah jadi 2 x 2:
+  Ubah status  | Kirim WA
+  Salin pesan  | Lihat detail
+- "Lihat detail" tombol utama teal, membuka /pesanan/[id].
+- "Salin teks pesan" disingkat "Salin pesan" agar satu baris.
+- Label tombol dikunci satu baris; di bawah 340px teks mengecil,
+  kalau tetap tidak muat dipotong elipsis.
+- CopyMessageQuick diberi properti opsional "label" (bawaan tetap
+  "Salin teks pesan"). Logika salin dan tautan lacak tidak berubah.
+Berkas: dashboard.css, JobQueue.tsx, CopyMessageQuick.tsx.
+
+
+PERUBAHAN 19 OKTOBER 2026
+-------------------------
+Halaman Daftar Pekerjaan (/pesanan): chip "N produk" tidak lagi
+pecah jadi dua baris.
+- Penyebab: chip satu baris flex dengan teks ringkasan produk tanpa
+  shrink-0 / whitespace-nowrap, jadi ikut terjepit.
+- Chip dikunci satu baris; hanya teks ringkasan yang boleh turun.
+- Ikon dan chip rata atas dengan baris pertama teks.
+- Berlaku di kartu HP dan tabel desktop.
+Berkas: src/app/pesanan/page.tsx.
+
+
+PERBAIKAN 20 OKTOBER 2026: SCROLL DASHBOARD DI HP TIDAK MULUS
+-------------------------------------------------------------
+Kenapa hanya dashboard: hanya dashboard yang punya hero foto, dan
+di sana berkumpul efek berat untuk GPU HP.
+
+Penyebab:
+1. Dua bulatan cahaya blur-3xl (blur 64px) di hero, ditumpuk di
+   bawah header yang memakai backdrop-blur-xl. Beban berlipat.
+2. Tombol "Semua Pekerjaan" memakai backdrop-blur-sm.
+3. Jam live menggambar ulang hero setiap detik, terus berdetak
+   walau hero sudah di luar layar.
+4. Carousel sorotan AI mengubah tinggi hero setiap 4,5 detik,
+   seluruh halaman di bawahnya ikut bergeser.
+5. Efek hover (termasuk :has() di donat) ikut bekerja saat jari
+   menyentuh layar untuk mulai menggulir.
+
+Perbaikan (tampilan tidak berubah):
+- blur-3xl diganti gradasi radial, posisi dan warna sama.
+- backdrop-blur tombol hanya di layar md ke atas.
+- Hero jadi lapisan GPU tersendiri, cukup digeser saat digulir.
+- Jam berhenti saat tidak terlihat atau tab tidak aktif.
+- Semua sorotan ditumpuk di satu sel grid, tinggi hero stabil.
+- Efek hover hanya untuk perangkat berkursor.
+
+Berkas: dashboard.css, DashboardHero.tsx, LocalDateTime.tsx,
+HeroHighlightsCarousel.tsx.
+
+
+PERUBAHAN 21 OKTOBER 2026: SATU BAHASA VISUAL UNTUK SELURUH APLIKASI
+--------------------------------------------------------------------
+Audit sebelum: 114 font-extrabold, 25 font-black, 51 warna navy
+langsung, 43 kelas indigo, 13 macam radius, 25 bayangan unik,
+2 pola judul halaman, 2 sistem gaya (dashboard vs halaman lain).
+
+Dikerjakan:
+1. Komponen dasar (.card, .btn-*, .input, .label, .chip, .progress-
+   track, .section-title, .icon-tile) memakai token --pf-*. Nama
+   kelas tetap, berlaku di semua halaman sekaligus.
+2. Peran warna: teal = interaksi, amber = satu aksi utama + merek,
+   hijau/kuning/oranye/merah = status.
+3. Radius: kartu 16px, kontrol 12px, badge pil.
+4. Permukaan gelap: kaca tembus tipis tanpa blur, sama di semua panel.
+5. Tipografi: extrabold -> semibold, black -> bold, navy -> --pf-ink,
+   label form huruf biasa. 55 berkas.
+6. Judul halaman satu pola (.page-title) di 12 halaman.
+7. Sisa indigo -> teal, em dash -> tanda hubung.
+8. Panel Tanya AI diselaraskan dengan panel dashboard.
+
+Tidak diubah: tata letak 3 kolom halaman detail, hero dan KPI
+dashboard, halaman login, spanduk berwarna, halaman lacak publik,
+tampilan cetak, seluruh zona B dan C.
+
+Diuji: tsc, next build, dan 14 halaman dirender dengan database
+dan login Owner, semua status 200 tanpa error.
+
+
+FITUR 22 OKTOBER 2026: STATUS PER PRODUK DAN LEBIH DARI 1 MITRA
+---------------------------------------------------------------
+WAJIB: setelah deploy, buka /api/setup sekali (menambah 2 kolom,
+aman diulang, data lama tidak berubah).
+
+1. Status per produk
+   - Bawaan: semua produk ikut status pekerjaan (order lama dan
+     order 1 produk bekerja persis seperti dulu).
+   - Popup status: tiap produk punya tombol "ke tahap berikutnya"
+     (1 ketukan) + pilihan tahap lain. Di bawahnya tombol "Semua
+     produk sekaligus".
+   - Status pekerjaan otomatis = produk paling lambat. Dashboard,
+     skor AI, lacak, WhatsApp, notifikasi tetap membaca status ini.
+   - Mengedit daftar produk tidak lagi menghapus statusnya.
+   - Halaman lacak menampilkan tahap tiap produk bila dipisah.
+
+2. Lebih dari 1 mitra
+   - Tab Mitra: ringkasan per mitra, "Ubah", "Tambah mitra lain".
+   - Centang produk yang dikerjakan tiap mitra. Satu produk hanya
+     di satu mitra.
+   - Kartu dashboard/daftar: "Mitra: Sansina & Minang".
+   - Halaman Mitra: kolom Produk, margin dihitung per pekerjaan
+     (harga dikurangi total biaya semua mitra), tidak dobel lagi.
+
+Detail: FITUR-STATUS-PRODUK-DAN-MULTI-MITRA.md
+
+
+PERUBAHAN 23 OKTOBER 2026: MITRA LANGSUNG DARI FORM ORDER BARU
+--------------------------------------------------------------
+Tidak perlu lagi bolak-balik ke tab Mitra setelah order dibuat.
+- Form Order Baru: bisa lebih dari satu mitra ("Tambah mitra lain").
+- Mitra 1 otomatis memegang semua produk (kasus dilempar utuh).
+- Centang produk per mitra; satu produk hanya di satu mitra.
+  Produk yang tidak dicentang dikerjakan sendiri.
+- Hapus baris produk di tengah tidak menggeser pilihan mitra.
+- Validasi sebelum simpan menyebut mitra mana yang kurang.
+- Tombol: "Simpan Pekerjaan + 2 Mitra".
+Diuji di browser (Chromium): 3 skenario, 13/13 lulus.
+Berkas: src/components/NewOrderForm.tsx
+
+
+PERBAIKAN 24 OKTOBER 2026: PEMILIH TAHAP DI KARTU ITEM PEKERJAAN
+----------------------------------------------------------------
+Masalah : di HP, kolom Tahap terjepit (tabel 5 kolom) sampai nama
+          tahapnya hilang, yang tersisa hanya kotak kecil + panah.
+Perbaikan:
+- HP (di bawah 640px): tabel diganti daftar bertumpuk. Tiap produk
+  menampilkan nama, jumlah, mitra (kalau ada), lalu pemilih tahap
+  di baris sendiri selebar kartu (248px di layar 360px, sebelumnya
+  sekitar 60px). Tinggi 40px, mudah diketuk.
+- Layar lebar: tetap tabel, kolom Tahap diperlebar.
+- Pemilih tahap berbentuk badge berwarna sesuai status (warna sama
+  dengan badge status di seluruh aplikasi) + nama tahap + panah.
+  Di baliknya tetap pilihan bawaan Android, jadi daftar pilihannya
+  besar dan mudah dipilih.
+- Produk yang masih ikut status pekerjaan: garis putus-putus +
+  keterangan "ikut pekerjaan". Setelah diatur sendiri: garis penuh.
+Diuji di browser (lebar 360px, mode gelap): 10/10 lulus.
+Berkas: src/components/OrderItemsManager.tsx
+
+
+PERBAIKAN 25 OKTOBER 2026: DAFTAR PILIHAN PUTIH DI MODE GELAP
+-------------------------------------------------------------
+Masalah : desktop mode gelap, daftar pilihan tahap di kartu Item
+          Pekerjaan tampil putih dengan teks teal muda, sulit dibaca.
+Penyebab: pemilih tahap disembunyikan di balik badge dengan latar
+          transparan. Chrome Windows lalu menggambar daftarnya
+          dengan latar putih, sementara teksnya mewarisi warna badge.
+          Kontras terukur 1,48:1 (minimum 4,5:1).
+Perbaikan:
+- Pemilih tahap diberi latar dan teks dari token tema.
+- Aturan global: semua daftar pilihan (<select>) di aplikasi
+  mengikuti tema (color-scheme + warna option), sebagai jaring
+  pengaman supaya kasus ini tidak terulang di tempat lain.
+Hasil ukur (desktop 1360px):
+  mode gelap  : 14,98:1   mode terang : 14,06:1
+Berkas: src/app/globals.css, src/components/OrderItemsManager.tsx
+
+
+PERBAIKAN 26 OKTOBER 2026: JARAK DALAM PANEL PILIHAN TAHAP (DESKTOP)
+--------------------------------------------------------------------
+Masalah : teks pilihan tahap menempel ke tepi panel.
+Penyebab: daftar pilihan bawaan browser di desktop tidak bisa diberi
+          jarak dalam (Chrome Windows mengabaikan padding <option>).
+Perbaikan:
+- Desktop (mouse/touchpad): panel pilihan buatan sendiri.
+  Jarak dalam 12px kiri-kanan, 8px atas-bawah; teks 37px dari tepi
+  panel; huruf 12px; titik warna tiap tahap; tanda centang pada
+  tahap aktif. Warna dari token tema (terang dan gelap).
+  Panel dirender di atas halaman sehingga tidak terpotong kartu,
+  dan otomatis membuka ke atas bila ruang di bawah sempit.
+- Keyboard: panah atas/bawah, Home/End, Enter/Spasi, Escape/Tab.
+  Fokus kembali ke tombol setelah ditutup.
+- HP dan tablet (layar sentuh): tetap daftar bawaan Android.
+Diuji di browser: 25/25 lulus (desktop gelap, desktop terang, HP).
+Kontras teks: gelap 9,14:1, terang 7,44:1.
+Berkas: src/components/OrderItemsManager.tsx
+
+
+PERUBAHAN 28 OKTOBER 2026: FOTO KE VERCEL BLOB + DASHBOARD RINGAN
+-----------------------------------------------------------------
+1. Foto baru disimpan di Vercel Blob (private). Database hanya
+   mencatat alamatnya. Belum dipasang / sedang gangguan: foto
+   otomatis tersimpan di database (tidak pernah hilang).
+2. Pengaturan > "Penyimpanan foto": uji koneksi, pindahkan foto
+   lama (bertahap, bisa dihentikan), kembalikan ruang database.
+3. Keamanan: foto tidak lagi bisa dibuka tanpa login. Pelanggan
+   tetap bisa melihat foto lewat halaman lacak (token).
+4. Alamat foto unik selamanya (setelah "kosongkan semua data"
+   browser tidak lagi menampilkan foto lama).
+5. Hapus foto / pekerjaan ikut menghapus file di Blob.
+6. Dashboard hanya memuat pekerjaan aktif; jumlah per tahap dan
+   total DP/terbayar dihitung database (hasil sama).
+WAJIB: unggah juga package.json dan package-lock.json, buka
+/api/setup, lalu pasang Blob (lihat CATATAN-PRINTFLOW.txt [3]).
+
+
+PERBAIKAN 30 OKTOBER 2026: PESAN ERROR "KOLOM BELUM ADA"
+--------------------------------------------------------
+Masalah : setelah deploy tanpa membuka /api/setup, Pengaturan
+          menampilkan "Gagal menghubungi database", padahal
+          koneksi baik; /api/health tetap bilang "siap".
+Penyebab: error asli PostgreSQL (kolom belum ada) terbungkus di
+          dalam error Drizzle dan tidak terbaca; health hanya
+          memeriksa tabel, tidak memeriksa kolom.
+Perbaikan:
+- Layar error: "Database perlu diperbarui" + nama kolom + tombol
+  "Perbarui database sekarang" (membuka /api/setup).
+- /api/health memeriksa kolom dari pembaruan terbaru
+  (REQUIRED_COLUMNS di src/lib/dbcheck.ts).
+Berkas: src/lib/dbcheck.ts, src/components/ProblemScreen.tsx
+
+
+PERUBAHAN 1 NOVEMBER 2026: ANALISA AI, PENCARIAN CEPAT, LOADING
+---------------------------------------------------------------
+1. Kartu Analisa AI tanpa gradasi ungu (gaya panel dashboard,
+   badge risiko, skala skor, riwayat dilipat). Gradasi ungu di
+   halaman lacak dan Mulai ikut diganti navy ke teal.
+2. Pencarian cepat di header (semua halaman): kode PJ, nama
+   pekerjaan, nama pelanggan, nomor HP format apa pun.
+   Ctrl+K / "/" di desktop. Hasil: pekerjaan + pelanggan.
+3. Kerangka loading per halaman (Daftar, Detail 3 kolom,
+   Pelanggan, Mitra, Serah Terima, Pengaturan, umum).
+4. Tampilan kosong satu gaya (EmptyState) dengan langkah lanjut.
+Tidak ada perubahan database, tidak ada pustaka baru.

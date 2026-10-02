@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { AlertTriangle, Bot, Factory, History, Image as ImageIcon, StickyNote, UserRound } from "lucide-react";
+import { AlertTriangle, Bot, Factory, History, Image as ImageIcon, Package, PackageCheck, StickyNote, UserRound } from "lucide-react";
 import { OrderQuickEdit, OrderStatusControls } from "@/components/OrderControls";
 import { OrderDetailTabs } from "@/components/OrderDetailTabs";
 import { OrderItemsManager } from "@/components/OrderItemsManager";
@@ -12,7 +12,8 @@ import { OutsourceManager } from "@/components/OutsourceManager";
 import { HandoverManager } from "@/components/HandoverManager";
 import { listHandovers, type HandoverRecord } from "@/lib/handover-queries";
 import { ProblemScreen } from "@/components/ProblemScreen";
-import { getOutsource, listPartners } from "@/lib/outsource-queries";
+import { AiInsightCard } from "@/components/AiInsightCard";
+import { listOutsource, listPartners } from "@/lib/outsource-queries";
 import { outsourceStatusMeta } from "@/lib/outsource";
 import { getCurrentUser } from "@/lib/auth";
 import { listActiveEmployees } from "@/lib/user-queries";
@@ -47,7 +48,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       getOrderEvents(orderId),
       getAiNotes(orderId),
       listPhotos(orderId),
-      getOutsource(orderId),
+      listOutsource(orderId),
       listPartners(),
       listHandovers(orderId),
       listActiveEmployees(sessionUser?.role === "karyawan" ? sessionUser.id : undefined),
@@ -102,7 +103,7 @@ function UpgradeNotice() {
   return (
     <div className="card border-amber-200 bg-amber-50 p-4">
       <p className="flex items-center gap-1.5 text-sm font-bold text-amber-900">
-        <ImageIcon size={15} /> Fitur foto siap dipakai — satu langkah lagi
+        <ImageIcon size={15} /> Fitur foto siap dipakai - satu langkah lagi
       </p>
       <p className="mt-1 text-xs text-amber-800">
         Tabel penyimpan foto belum ada di database Anda. Buka alamat ini sekali di browser, lalu kembali ke halaman ini:
@@ -111,13 +112,13 @@ function UpgradeNotice() {
         https://alamat-aplikasi-anda.vercel.app/api/setup
       </p>
       <p className="mt-1 text-[11px] text-amber-700">
-        Aman dijalankan berulang — tidak menghapus data apa pun.
+        Aman dijalankan berulang - tidak menghapus data apa pun.
       </p>
     </div>
   );
 }
 
-/** Header ringkas — tetap terlihat di atas, sebelum tab apa pun dibuka. */
+/** Header ringkas - tetap terlihat di atas, sebelum tab apa pun dibuka. */
 function OrderHeader({
   order,
   insight,
@@ -130,7 +131,7 @@ function OrderHeader({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold tracking-wide text-teal-700 dark:text-teal-300">{order.code}</p>
-          <h1 className="truncate text-lg font-extrabold text-slate-900 md:text-2xl">{order.title}</h1>
+          <h1 className="page-title truncate">{order.title}</h1>
           <p className="text-xs text-slate-600 md:text-sm">
             {order.customerName} · dibuat {formatDateTimeID(order.createdAt)}
           </p>
@@ -164,7 +165,8 @@ function DetailBody({
   photos: Awaited<ReturnType<typeof listPhotos>>;
   insight: ReturnType<typeof analyzeOrder>;
   meta: ReturnType<typeof statusMeta>;
-  outsource: Awaited<ReturnType<typeof getOutsource>>;
+  /** Semua mitra pekerjaan ini (bisa lebih dari satu). */
+  outsource: Awaited<ReturnType<typeof listOutsource>>;
   partners: Awaited<ReturnType<typeof listPartners>>;
   handovers: HandoverRecord[];
   sessionUser: Awaited<ReturnType<typeof getCurrentUser>>;
@@ -173,10 +175,12 @@ function DetailBody({
   const deadline = deadlineOf(order.dueDate, order.dueTime);
   const hoursLeft = (deadline.getTime() - Date.now()) / 3_600_000;
   const outstanding = Math.max(0, order.price - order.paidAmount);
-  const outsourceStatus = outsource?.status ?? null;
+  // Untuk jaring pengaman "tandai Selesai": ambil mitra yang belum
+  // diterima (kalau ada), supaya peringatannya tetap muncul.
+  const outsourceStatus = outsource.find((j) => j.status !== "diterima")?.status ?? outsource[0]?.status ?? null;
 
-  // Indikator tab — murni dari data yang sudah dimuat, tidak ada logic/query baru.
-  const mitraActive = Boolean(outsource && outsource.status !== "diterima");
+  // Indikator tab - murni dari data yang sudah dimuat, tidak ada logic/query baru.
+  const mitraActive = outsource.some((j) => j.status !== "diterima");
   const komunikasiPending = handovers.some((h) => !h.acceptedAt);
 
   const ringkasanContent = (
@@ -193,15 +197,10 @@ function DetailBody({
             label="Sisa waktu"
             value={
               order.status === "siap" ? (
-                hoursLeft < 0 ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-600">
-                    Siap · menunggu diambil {humanDuration(hoursLeft)}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-emerald-600">
-                    Siap · sisa {humanDuration(hoursLeft)}
-                  </span>
-                )
+                // Siap = tinggal menunggu pelanggan, tidak dihitung terlambat.
+                <span className="inline-flex items-center gap-1 text-emerald-700">
+                  <PackageCheck size={13} /> Siap diambil/dikirim
+                </span>
               ) : hoursLeft < 0 && !meta.done ? (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
@@ -230,7 +229,7 @@ function DetailBody({
               <span
                 key={s.key}
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  s.progress <= meta.progress ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-400"
+                  s.progress <= meta.progress ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-400"
                 }`}
               >
                 {s.short}
@@ -246,69 +245,15 @@ function DetailBody({
         ) : null}
       </div>
 
-      {/* Rincian produk di dalam pekerjaan ini — bisa langsung diubah di sini. */}
-      <OrderItemsManager orderId={order.id} initialItems={order.items} />
+      {/* Rincian produk di dalam pekerjaan ini - bisa langsung diubah di sini. */}
+      <OrderItemsManager
+        orderId={order.id}
+        initialItems={order.items}
+        orderStatus={order.status}
+        jobs={outsource.map((j) => ({ id: j.id, partnerName: j.partnerName }))}
+      />
 
-      <div className="card overflow-hidden">
-        <div className="border-b border-slate-200 bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-white">
-          <p className="flex items-center gap-1.5 text-sm font-bold">
-            <Bot size={15} /> Analisa AI untuk pekerjaan ini
-          </p>
-          <p className="text-[11px] text-indigo-100">Dihitung dari sisa pekerjaan vs sisa waktu &amp; prioritas</p>
-        </div>
-        <div className="space-y-3 p-4">
-          <p className="text-sm font-semibold text-slate-800">{insight.headline}</p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Skor risiko</span>
-            <div className="flex-1">
-              <ProgressBar
-                value={insight.riskScore}
-                tone={
-                  insight.riskLevel === "terlambat"
-                    ? "bg-rose-500"
-                    : insight.riskLevel === "risiko"
-                      ? "bg-orange-500"
-                      : insight.riskLevel === "waspada"
-                        ? "bg-amber-500"
-                        : "bg-emerald-500"
-                }
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-700">{insight.riskScore}/100</span>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Kenapa begitu?</p>
-            <ul className="mt-1 space-y-1 text-xs text-slate-600">
-              {insight.reasons.map((r) => (
-                <li key={r}>• {r}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-teal-700">Saran tindakan</p>
-            <ul className="mt-1 space-y-1 text-xs text-slate-700">
-              {insight.recommendations.map((r) => (
-                <li key={r} className="flex gap-1.5">
-                  <span className="text-teal-500">→</span>
-                  <span>{r}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {notes.length ? (
-            <div className="rounded-xl bg-slate-50 p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Riwayat catatan AI</p>
-              <ul className="mt-1.5 space-y-1 text-[11px] text-slate-600">
-                {notes.slice(0, 5).map((n) => (
-                  <li key={n.id}>
-                    {formatDateTimeID(n.createdAt)} — {n.message}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      </div>
+      <AiInsightCard insight={insight} notes={notes} />
 
       <OrderStatusControls orderId={order.id} currentStatus={order.status} outsourceStatus={outsourceStatus} />
     </>
@@ -320,7 +265,8 @@ function DetailBody({
         orderId={order.id}
         orderPrice={order.price}
         customerDueDate={order.dueDate}
-        current={outsource}
+        jobs={outsource}
+        items={order.items}
         initialPartners={partners.map((p) => ({
           id: p.id,
           name: p.name,
@@ -406,16 +352,16 @@ function DetailBody({
         <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
           <History size={16} /> Riwayat / Jejak Produksi
         </h3>
-        <p className="text-xs text-slate-500">Siapa mengubah apa dan kapan — berguna saat ada keluhan pelanggan.</p>
+        <p className="text-xs text-slate-500">Siapa mengubah apa dan kapan - berguna saat ada keluhan pelanggan.</p>
         <ol className="mt-3 space-y-3 border-l-2 border-slate-100 pl-4">
           {events.length === 0 ? (
             <li className="text-sm text-slate-500">Belum ada riwayat.</li>
           ) : (
             events.map((event) => {
-              const EventIcon = event.toStatus.startsWith("mitra:") ? Factory : STATUS_ICONS[event.toStatus] ?? UserRound;
+              const EventIcon = event.toStatus.startsWith("mitra:") ? Factory : event.toStatus.startsWith("produk:") ? Package : STATUS_ICONS[event.toStatus] ?? UserRound;
               return (
                 <li key={event.id} className="relative">
-                  <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
+                  <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-teal-500" />
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
                     {event.fromStatus ? `${eventStatusLabel(event.fromStatus)} → ` : ""}
                     <EventIcon size={13} className="shrink-0" />
@@ -455,7 +401,7 @@ function DetailBody({
   );
 }
 
-/** Tampilan lama (satu kolom) — dipakai hanya saat tabel foto belum ada di database (deploy lama). */
+/** Tampilan lama (satu kolom) - dipakai hanya saat tabel foto belum ada di database (deploy lama). */
 function FallbackDetailBody({
   order,
   events,
@@ -483,7 +429,7 @@ function FallbackDetailBody({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold tracking-wide text-teal-700 dark:text-teal-300">{order.code}</p>
-            <h1 className="text-xl font-extrabold text-slate-900 md:text-2xl">{order.title}</h1>
+            <h1 className="text-xl font-semibold text-slate-900 md:text-2xl">{order.title}</h1>
             <p className="text-sm text-slate-600">
               {order.customerName} · dibuat {formatDateTimeID(order.createdAt)}
             </p>
@@ -506,15 +452,10 @@ function FallbackDetailBody({
             label="Sisa waktu"
             value={
               order.status === "siap" ? (
-                hoursLeft < 0 ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-600">
-                    Siap · menunggu diambil {humanDuration(hoursLeft)}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-emerald-600">
-                    Siap · sisa {humanDuration(hoursLeft)}
-                  </span>
-                )
+                // Siap = tinggal menunggu pelanggan, tidak dihitung terlambat.
+                <span className="inline-flex items-center gap-1 text-emerald-700">
+                  <PackageCheck size={13} /> Siap diambil/dikirim
+                </span>
               ) : hoursLeft < 0 && !meta.done ? (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
@@ -549,7 +490,7 @@ function FallbackDetailBody({
           ) : (
             events.map((event) => (
               <li key={event.id} className="relative">
-                <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500" />
+                <span className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-teal-500" />
                 <p className="text-sm font-semibold text-slate-800">
                   {event.fromStatus ? `${eventStatusLabel(event.fromStatus)} → ` : ""}
                   {eventStatusLabel(event.toStatus)}
@@ -568,7 +509,7 @@ function FallbackDetailBody({
           <ul className="mt-1.5 space-y-1 text-[11px] text-slate-600">
             {notes.slice(0, 5).map((n) => (
               <li key={n.id}>
-                {formatDateTimeID(n.createdAt)} — {n.message}
+                {formatDateTimeID(n.createdAt)} - {n.message}
               </li>
             ))}
           </ul>
@@ -579,9 +520,10 @@ function FallbackDetailBody({
 }
 
 function eventStatusLabel(value: string): string {
-  if (value.startsWith("mitra:")) return `Mitra — ${outsourceStatusMeta(value.slice(6)).label}`;
-  if (value === "shift:menunggu") return "Serah Terima — Menunggu Diterima";
-  if (value === "shift:diterima") return "Serah Terima — Sudah Diterima";
+  if (value.startsWith("mitra:")) return `Mitra - ${outsourceStatusMeta(value.slice(6)).label}`;
+  if (value.startsWith("produk:")) return `Produk - ${statusMeta(value.slice(7)).label}`;
+  if (value === "shift:menunggu") return "Serah Terima - Menunggu Diterima";
+  if (value === "shift:diterima") return "Serah Terima - Sudah Diterima";
   if (value === "shift:aktif") return "Operator Aktif";
   return statusMeta(value).label;
 }

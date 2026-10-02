@@ -1,0 +1,30 @@
+=========================================================
+HERO: SHADOW TEMA TERANG DIHAPUS + TOMBOL SEJAJAR, 30 September 2026
+=========================================================
+
+YANG DIUBAH
+-----------
+1. Drop shadow di sekeliling foto hero dihapus HANYA di tema terang.
+   Di tema gelap bayangannya tetap seperti semula.
+
+2. Tombol "Pekerjaan Baru" dan "Semua Pekerjaan" sekarang selalu
+   sejajar kiri-kanan. Sebelumnya di HP dengan lebar di bawah sekitar
+   390px kedua tombol numpuk atas-bawah.
+   - HP: kedua tombol berbagi lebar sama rata dan isinya di tengah.
+   - Di bawah 390px: ikon panah kecil di "Pekerjaan Baru" disembunyikan
+     supaya muat.
+   - Di bawah 350px: jarak dan ukuran huruf tombol dirapatkan sedikit.
+   - Layar >= 640px: tombol selebar isinya, rata kiri seperti semula.
+   Sudah dicek dari lebar 320 sampai 1440px: selalu sejajar, tidak
+   keluar dari kartu, tidak ada teks kepotong.
+
+YANG TIDAK BERUBAH
+------------------
+Bayangan teks di atas foto (biar tetap terbaca), bayangan tombol putih
+"Pekerjaan Baru", foto, gradasi, dan semua isi teks hero.
+
+FILE YANG BERUBAH
+-----------------
+  src/components/dashboard/DashboardHero.tsx
+
+Tidak ada perubahan database. Tidak perlu buka /api/setup.

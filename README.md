@@ -124,6 +124,9 @@ Panduan super detail (bahasa awam, lengkap dengan troubleshooting) tersedia di:
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | ⬜ | Public key Web Push (`npx web-push generate-vapid-keys --json`) |
 | `VAPID_PRIVATE_KEY` | ⬜ | Private key Web Push — rahasia |
 | `VAPID_SUBJECT` | ⬜ | Kontak VAPID, contoh `mailto:owner@example.com` |
+| `ONESIGNAL_APP_ID` | ⬜ | App ID OneSignal, untuk notifikasi APK hasil web to apk (WebView) |
+| `ONESIGNAL_REST_API_KEY` | ⬜ | App API Key OneSignal — rahasia |
+| `ONESIGNAL_TARGETING` | ⬜ | `all` (bawaan) atau `external_id` |
 
 ## Skor risiko AI
 

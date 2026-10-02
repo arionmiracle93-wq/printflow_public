@@ -83,7 +83,7 @@ export function UserManagement() {
     const username = prompt(`Username baru untuk ${user.name}:`, user.username)?.trim().toLowerCase();
     if (!username || username === user.username) return;
     if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
-      setError("Username harus 3–30 karakter: huruf kecil, angka, titik, underscore, atau minus.");
+      setError("Username harus 3-30 karakter: huruf kecil, angka, titik, underscore, atau minus.");
       return;
     }
     if (!confirm(`Ubah username @${user.username} menjadi @${username}? User harus login ulang.`)) return;
@@ -95,7 +95,7 @@ export function UserManagement() {
     if (!password) return;
     if (password.length < 8) { setError("Password minimal 8 karakter."); return; }
     // Beri tahu dampaknya SEBELUM dieksekusi. Reset password mencabut seluruh
-    // sesi pengguna tersebut — kalau dia sedang mengerjakan order, dia akan
+    // sesi pengguna tersebut - kalau dia sedang mengerjakan order, dia akan
     // langsung terlempar ke halaman login.
     const peringatan = user.id
       ? `Reset password ${user.name}?\n\nSemua perangkat yang sedang login sebagai @${user.username} akan langsung keluar dan harus login ulang memakai password baru. Pastikan password barunya sudah Anda catat dan sampaikan ke yang bersangkutan.`
@@ -108,7 +108,7 @@ export function UserManagement() {
     <div className="min-w-0 space-y-4 overflow-x-clip">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="break-words text-xl font-black text-[#07384f] sm:text-2xl">Pengguna &amp; Hak Akses</h1>
+          <h1 className="break-words text-xl font-bold text-[color:var(--pf-ink)] sm:text-2xl">Pengguna &amp; Hak Akses</h1>
           <p className="text-sm text-slate-500">Kelola akun Owner dan Karyawan.</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary w-full sm:w-auto"><Plus size={15} /> Tambah Pengguna</button>
@@ -131,7 +131,7 @@ export function UserManagement() {
         {users.map((user) => (
           <div key={user.id} className={`card min-w-0 p-4 ${!user.active ? "opacity-60" : ""}`}>
             <div className="flex min-w-0 items-start justify-between gap-2">
-              <div className="min-w-0"><p className="break-words text-sm font-extrabold text-[#07384f]">{user.name}</p><p className="break-all text-xs text-slate-500">@{user.username}</p></div>
+              <div className="min-w-0"><p className="break-words text-sm font-semibold text-[color:var(--pf-ink)]">{user.name}</p><p className="break-all text-xs text-slate-500">@{user.username}</p></div>
               <span className={`chip shrink-0 ${user.active ? "border-teal-200 bg-teal-50 text-teal-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}><Shield size={11} /> {roleLabel(user.role)}</span>
             </div>
             <p className="mt-3 break-words text-[11px] text-slate-400">Login terakhir: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString("id-ID") : "Belum pernah"}</p>

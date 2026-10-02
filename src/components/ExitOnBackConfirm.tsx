@@ -7,19 +7,19 @@ const EXIT_WINDOW_MS = 2000;
 const MARK = "printFlowExitGuard";
 
 /**
- * "Tekan/swipe back 2x untuk keluar" — hanya aktif di halaman utama ("/").
+ * "Tekan/swipe back 2x untuk keluar" - hanya aktif di halaman utama ("/").
  *
  * Kenapa cuma di halaman utama: ini pola standar yang dipakai hampir semua
- * aplikasi Android (WhatsApp, Gojek, Shopee, dll) — di halaman lain, tombol
+ * aplikasi Android (WhatsApp, Gojek, Shopee, dll) - di halaman lain, tombol
  * back tetap jalan normal (kembali ke layar sebelumnya). Di halaman utama,
  * back pertama menampilkan "tekan lagi untuk keluar"; back kedua dalam 2
  * detik benar-benar menutup aplikasi.
  *
  * Cara kerja: kita selipkan satu entri "penyangga" di riwayat browser saat
- * berada di halaman utama. Tekan back pertama menghabiskan penyangga itu —
+ * berada di halaman utama. Tekan back pertama menghabiskan penyangga itu -
  * kita cegat, tampilkan toast, lalu pasang penyangga baru (posisi terasa
  * tidak berubah). Tekan back kedua (dalam 2 detik) tidak kita cegat lagi,
- * dan kita coba window.close() — berhasil di banyak kasus karena saat itu
+ * dan kita coba window.close() - berhasil di banyak kasus karena saat itu
  * kita sudah berada persis di entri riwayat paling akhir. Kalau perangkat
  * tertentu tidak mengizinkan penutupan lewat script, Android sendiri yang
  * akan menutup aplikasi begitu tombol back ditekan sekali lagi (karena

@@ -1,0 +1,95 @@
+================================================================
+HALAMAN LACAK PELANGGAN: "SIAP" = 100%, "SELESAI" BARU MUNCUL
+SETELAH INTERNAL MENGUBAH STATUS
+Tanggal : 01-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Di halaman tautan yang dilihat pelanggan (/lacak/...), status
+"Siap Diambil / Dikirim" sekarang dianggap tahap akhir dan
+menampilkan progres 100%. Status "Selesai" (penanda internal bahwa
+barang sudah diserahkan) baru muncul di halaman pelanggan SETELAH
+tim percetakan benar-benar mengubah status pekerjaan ke "Selesai".
+Alur status internal TIDAK berubah sama sekali, dan angka progres
+di dashboard / daftar pekerjaan internal juga tetap (siap = 95%).
+
+
+YANG DILIHAT PELANGGAN SEKARANG
+----------------------------------------------------------------
+Status SIAP:
+  - Progres 100%, kartu header hijau "Pesanan Anda sudah siap!"
+  - Pesan hijau: "Pesanan Anda sudah siap diambil / dikirim..."
+  - Chip tahapan: Antrian sampai Siap menyala. Chip "Selesai"
+    masih abu-abu (belum menyala).
+Status SELESAI (setelah internal update):
+  - Progres 100%, header "Pesanan Anda sudah selesai!"
+  - Pesan: "Pesanan Anda sudah selesai dan diserahkan. Terima
+    kasih sudah memesan!"
+  - Semua chip tahapan menyala, termasuk "Selesai".
+Status lainnya (antrian, desain, cetak, finishing, QC, ditunda,
+batal): tampilan tidak berubah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/lib/domain.ts
+   - Fungsi baru customerProgress(): mengembalikan 100 untuk
+     status siap & selesai, selain itu memakai progres asli.
+   - Nilai progress di daftar STATUSES TIDAK diubah.
+
+B) src/app/lacak/[token]/page.tsx
+   - Persen & bar progres memakai customerProgress().
+   - Header hijau + judul khusus untuk status siap.
+   - Pesan hijau terpisah untuk siap dan selesai.
+   - Chip tahapan sekarang dinyalakan berdasarkan URUTAN tahap,
+     bukan angka progres. Kalau tetap pakai angka, siap (100%)
+     akan ikut menyalakan chip "Selesai" lebih awal. Untuk
+     ditunda/batal (tidak ada di daftar tahap) cara lama dipakai.
+   - Teks kartu pengambilan: "sejak dinyatakan selesai" jadi
+     "sejak dinyatakan siap".
+
+C) src/lib/whatsapp-share.ts
+   - Pesan WhatsApp untuk status siap sekarang: "Pesanan Anda
+     <judul> sudah SIAP dan bisa diambil / dikirim", plus ajakan
+     lihat foto hasil dan pengingat cek kelengkapan item (kalau
+     lebih dari 1), sama seperti pesan untuk selesai.
+   - Teks pesan untuk status selesai tidak diubah.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit : lolos (exit code 0, bersih)
+  Tes logic (tsx)  : customerProgress -> antrian 5, cetak 45,
+                     qc 85, siap 100 (internal tetap 95),
+                     selesai 100, ditunda 10, batal 0.
+                     Pesan WA status siap tersusun benar.
+  next build       : tidak bisa diselesaikan di lingkungan tes
+                     karena tidak ada akses internet untuk
+                     mengunduh Google Fonts (Geist/Inter). Itu
+                     tidak terkait perubahan ini; di Vercel
+                     seharusnya normal.
+  Catatan          : tampilan visual halaman /lacak belum dicoba
+                     langsung di browser. Mohon cek sekali dengan
+                     order berstatus siap lalu selesai.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/lib/domain.ts
+  src/app/lacak/[token]/page.tsx
+  src/lib/whatsapp-share.ts
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-01-halaman-lacak-siap-100-persen.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Hanya logika tampilan.
+
+================================================================

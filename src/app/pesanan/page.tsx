@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, Clock, Factory, Image as ImageIcon, Package, Plus, Search, User } from "lucide-react";
+import { ClipboardCheck, ClipboardList, Clock, Factory, FilterX, Image as ImageIcon, Package, Plus, Search, SearchX, User } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
 import { QuickStatusPopup } from "@/components/QuickStatusPopup";
@@ -12,7 +12,6 @@ import { outsourceStatusMeta } from "@/lib/outsource";
 import {
   MACHINES,
   STATUSES,
-  canBeLate,
   deadlineOf,
   formatDateID,
   formatRupiah,
@@ -21,6 +20,7 @@ import {
 } from "@/lib/domain";
 import { listOrders } from "@/lib/queries";
 import { summarizeItems } from "@/lib/order-items";
+import { EmptyState } from "@/components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +60,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-900 md:text-2xl">
+          <h1 className="page-title flex items-center gap-2">
             <ClipboardList size={22} strokeWidth={2.3} /> Daftar Pekerjaan
           </h1>
           <p className="text-sm text-slate-500">
@@ -81,7 +81,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 key={tab.key}
                 href={`/pesanan?scope=${tab.key}`}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                  scope === tab.key ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  scope === tab.key ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 {tab.label}
@@ -120,14 +120,45 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       </div>
 
       {orders.length === 0 ? (
-        <div className="card p-10 text-center">
-          <Search size={40} strokeWidth={1.6} className="mx-auto text-slate-300" />
-          <p className="mt-2 font-bold text-slate-700">Tidak ada pekerjaan yang cocok</p>
-          <p className="mt-1 text-sm text-slate-500">Coba ubah filter, atau buat pekerjaan baru.</p>
-          <Link href="/pesanan/baru" className="btn-primary mt-4 inline-flex items-center gap-1.5">
-            <Plus size={15} strokeWidth={2.5} /> Buat Pekerjaan
-          </Link>
-        </div>
+        // Dua keadaan kosong yang berbeda langkah lanjutnya:
+        // filter/pencarian tidak menemukan apa pun, atau memang belum ada pekerjaan.
+        q || status !== "all" || machine !== "all" || scope === "selesai" ? (
+          <EmptyState
+            icon={<SearchX size={26} />}
+            title="Tidak ada pekerjaan yang cocok"
+            description={
+              q ? (
+                <>
+                  Tidak ada hasil untuk &ldquo;{q}&rdquo;
+                  {scope === "aktif" ? " di pekerjaan aktif" : ""}. Periksa ejaan, atau cari di semua pekerjaan.
+                </>
+              ) : (
+                "Tidak ada pekerjaan dengan kombinasi filter ini."
+              )
+            }
+            action={{ href: "/pesanan", label: "Hapus filter", icon: <FilterX size={15} />, variant: "ghost" }}
+            secondary={
+              q && scope !== "semua"
+                ? { href: `/pesanan?scope=semua&q=${encodeURIComponent(q)}`, label: "Cari di semua pekerjaan", icon: <Search size={15} /> }
+                : undefined
+            }
+          />
+        ) : scope === "aktif" ? (
+          <EmptyState
+            icon={<ClipboardCheck size={26} />}
+            title="Tidak ada pekerjaan aktif"
+            description="Semua pekerjaan sudah selesai, atau belum ada yang dicatat. Pekerjaan baru akan langsung muncul di sini."
+            action={{ href: "/pesanan/baru", label: "Buat pekerjaan", icon: <Plus size={15} /> }}
+            secondary={{ href: "/pesanan?scope=selesai", label: "Lihat yang selesai" }}
+          />
+        ) : (
+          <EmptyState
+            icon={<ClipboardList size={26} />}
+            title="Belum ada pekerjaan"
+            description="Catat pekerjaan pertama, lalu pantau tahap, tenggat, dan risikonya dari sini."
+            action={{ href: "/pesanan/baru", label: "Buat pekerjaan pertama", icon: <Plus size={15} /> }}
+          />
+        )
       ) : (
         <>
           {/* MOBILE CARDS */}
@@ -137,14 +168,17 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
               return (
                 <Link key={order.id} href={`/pesanan/${order.id}`} className="card block p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[11px] font-bold text-indigo-600">{order.code}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-teal-700">{order.code}</p>
                       <p className="text-sm font-bold text-slate-900">{order.title}</p>
                       <p className="text-xs text-slate-500">{order.customerName}</p>
-                      <p className="flex items-center gap-1 text-[11px] text-slate-500">
-                        <Package size={12} className="shrink-0" /> {summarizeItems(order.items)}
+                      {/* Chip jumlah produk dikunci satu baris (shrink-0 + whitespace-nowrap).
+                          Yang boleh turun baris hanya teks ringkasan produknya. */}
+                      <p className="flex items-start gap-1.5 text-[11px] text-slate-500">
+                        <Package size={12} className="mt-0.5 shrink-0" />
+                        <span className="min-w-0 flex-1">{summarizeItems(order.items)}</span>
                         {order.items.length > 1 ? (
-                          <span className="ml-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700">
+                          <span className="shrink-0 whitespace-nowrap rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold leading-4 text-teal-700">
                             {order.items.length} produk
                           </span>
                         ) : null}
@@ -179,11 +213,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                           count={photoCountsMap.get(order.id) ?? 0}
                         />
                       </span>
-                      <span className={insight.hoursLeft < 0 && canBeLate(order.status) ? "font-bold text-rose-600" : "font-semibold"}>
-                        {order.status === "siap"
-                          ? insight.hoursLeft < 0
-                            ? `siap · menunggu diambil ${humanDuration(insight.hoursLeft)}`
-                            : `siap · sisa ${humanDuration(insight.hoursLeft)}`
+                      {/* Status siap = tinggal menunggu pelanggan, tidak dihitung telat. */}
+                      <span
+                        className={
+                          insight.hoursLeft < 0 && insight.status !== "siap" ? "font-bold text-rose-600" : "font-semibold"
+                        }
+                      >
+                        {insight.status === "siap"
+                          ? "siap diambil"
                           : insight.hoursLeft < 0
                             ? `telat ${humanDuration(insight.hoursLeft)}`
                             : `sisa ${humanDuration(insight.hoursLeft)}`}
@@ -216,14 +253,15 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                   return (
                     <tr key={order.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3">
-                        <Link href={`/pesanan/${order.id}`} className="font-semibold text-slate-900 hover:text-indigo-600">
+                        <Link href={`/pesanan/${order.id}`} className="font-semibold text-slate-900 hover:text-teal-700">
                           {order.title}
                         </Link>
-                        <p className="text-[11px] font-bold text-indigo-500">{order.code}</p>
-                        <p className="flex items-center gap-1 text-[11px] text-slate-500">
-                          <Package size={12} className="shrink-0" /> {summarizeItems(order.items, 3)}
+                        <p className="text-[11px] font-bold text-teal-600">{order.code}</p>
+                        <p className="flex items-start gap-1.5 text-[11px] text-slate-500">
+                          <Package size={12} className="mt-0.5 shrink-0" />
+                          <span className="min-w-0 flex-1">{summarizeItems(order.items, 3)}</span>
                           {order.items.length > 1 ? (
-                            <span className="ml-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700">
+                            <span className="shrink-0 whitespace-nowrap rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold leading-4 text-teal-700">
                               {order.items.length} produk
                             </span>
                           ) : null}
@@ -242,7 +280,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         {order.customerName}
                         {(photoCountsMap.get(order.id) ?? 0) > 0 ? (
                           <span
-                            className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600"
+                            className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-700"
                             title={`${photoCountsMap.get(order.id)} foto terlampir`}
                           >
                             <ImageIcon size={11} /> {photoCountsMap.get(order.id)}
@@ -267,14 +305,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         {formatDateID(order.dueDate)}
                         <p
                           className={`text-[11px] font-semibold ${
-                            hoursLeft < 0 && !statusMeta(order.status).done && canBeLate(order.status) ? "text-rose-600" : "text-slate-500"
+                            hoursLeft < 0 && !statusMeta(order.status).done && order.status !== "siap"
+                              ? "text-rose-600"
+                              : "text-slate-500"
                           }`}
                         >
                           {order.dueTime} ·{" "}
                           {order.status === "siap"
-                            ? hoursLeft < 0
-                              ? `siap · menunggu diambil ${humanDuration(hoursLeft / 3_600_000)}`
-                              : `siap · sisa ${humanDuration(hoursLeft / 3_600_000)}`
+                            ? "siap diambil"
                             : hoursLeft < 0
                               ? `telat ${humanDuration(hoursLeft / 3_600_000)}`
                               : `sisa ${humanDuration(hoursLeft / 3_600_000)}`}

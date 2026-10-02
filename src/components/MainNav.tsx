@@ -46,7 +46,7 @@ function CountBadge({ count, floating = false }: { count: number; floating?: boo
   return (
     <span
       aria-label={`${count} serah terima menunggu`}
-      className={`${floating ? "absolute -right-1 -top-1" : "ml-0.5"} inline-flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_2px_7px_rgba(244,63,94,.38)] ring-2 ring-white/20`}
+      className={`${floating ? "absolute -right-1 -top-1" : "ml-0.5"} inline-flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 py-0.5 text-[9px] font-bold leading-none text-white shadow-[0_2px_7px_rgba(244,63,94,.38)] ring-2 ring-white/20`}
     >
       {label}
     </span>
@@ -187,7 +187,7 @@ export function MainNav({ role = "owner" }: { role?: UserRole }) {
                         <span
                           className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition ${
                             primary
-                              ? "-mt-4 h-11 w-11 bg-amber-400 text-[#07384f] shadow-[0_8px_20px_rgba(251,191,36,.35)]"
+                              ? "-mt-4 h-11 w-11 bg-amber-400 text-[color:var(--pf-ink)] shadow-[0_8px_20px_rgba(251,191,36,.35)]"
                               : active
                                 ? "bg-teal-50 text-teal-700"
                                 : ""

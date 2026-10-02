@@ -1,6 +1,39 @@
 @import "tailwindcss";
 
+/* Sistem token Print Flow dan tata letak dashboard.
+   Keduanya aditif (kelas berawalan pf-) dan berada di @layer components,
+   jadi semua kelas lama di bawah tetap berlaku dan utility Tailwind
+   seperti lg:hidden tidak tertimpa. */
+@import "./design-tokens.css";
+@import "./dashboard.css";
+
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Daftar pilihan bawaan (<select>) mengikuti tema.
+   Isi daftar yang terbuka digambar oleh browser/sistem operasi, bukan
+   oleh halaman. Tanpa aturan ini, di mode gelap daftar bisa tampil putih
+   dengan teks terang (tidak terbaca), terutama di Chrome Windows.
+   color-scheme membuat browser memakai kontrol dan scrollbar gelap;
+   warna option ditetapkan eksplisit supaya kontrasnya selalu cukup. */
+@layer base {
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: var(--pf-surface-solid);
+    color: var(--pf-ink);
+  }
+
+  select option:disabled {
+    color: var(--pf-ink-3);
+  }
+}
 
 :root {
   color-scheme: light;
@@ -69,65 +102,244 @@ body {
 }
 
 @layer components {
-  /* Mode terang: solid seperti semula. Mode gelap: dibuat senada dengan
-     .panel-glass (tint transparan + border terang tipis + inset highlight)
-     supaya gradient mesh di body konsisten tembus di SEMUA kartu di SEMUA
-     halaman, bukan cuma di panel-panel besar Dashboard. Tanpa backdrop-blur
-     (sama seperti .panel-glass) supaya tetap ringan di GPU/WebView APK. */
-  .card {
-    @apply min-w-0 max-w-full rounded-2xl border border-slate-200/80 bg-white shadow-[0_7px_24px_rgba(15,75,84,.065)] dark:border-white/[0.12] dark:bg-white/[0.028] dark:shadow-[0_7px_24px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.06)];
-  }
+  /* =================================================================
+     KOMPONEN DASAR, SATU BAHASA VISUAL UNTUK SEMUA HALAMAN
+     -----------------------------------------------------------------
+     Semua nilai diambil dari design-tokens.css (--pf-*), jadi panel
+     dashboard, daftar pekerjaan, detail, form, pelanggan, mitra, dan
+     pengaturan memakai permukaan, garis, radius, dan tombol yang sama.
 
-  /* Kesan "kaca" TANPA backdrop-blur — mahal buat GPU/WebView APK kalau
-     dipasang di banyak elemen sekaligus. Efek kaca di sini cuma dari tint
-     transparan + border terang tipis (highlight ala tepian kaca) + shadow
-     berlapis, supaya mesh gradient di body tetap samar keliatan nembus. */
+     Nama kelas TIDAK berubah (.card, .btn-primary, .input, dst.),
+     jadi tidak ada halaman yang perlu diubah struktur HTML-nya.
+     ================================================================= */
+
+  /* Kartu dan panel. .panel-glass kini identik dengan .card: dulu
+     keduanya beda tipis (putih solid vs putih 70%), sehingga dua
+     kartu bersebelahan bisa terlihat seperti dari aplikasi berbeda. */
+  .card,
   .panel-glass {
-    @apply relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-white/70 bg-white/70 shadow-[0_8px_28px_rgba(15,75,84,.08),inset_0_1px_0_rgba(255,255,255,.6)] dark:border-white/[0.12] dark:bg-white/[0.028] dark:shadow-[0_8px_28px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.06)];
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+    border-radius: var(--pf-r-card);
+    border: 1px solid var(--pf-line);
+    background: var(--pf-surface);
+    box-shadow: var(--pf-shadow-1);
   }
 
-  .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  .panel-glass {
+    overflow: hidden;
+  }
+
+  /* ---------- Tombol ----------
+     Tinggi minimal 40px (nyaman disentuh), radius 12px, berat 600.
+     Peran warna:
+       .btn-primary   amber  satu aksi utama per layar (buat / simpan)
+       .btn-secondary teal   aksi berwarna kedua
+       .btn-ghost     netral aksi biasa
+       .btn-danger    merah  hapus / batalkan */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--pf-r-control);
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition:
+      background-color var(--pf-fast) ease,
+      border-color var(--pf-fast) ease,
+      color var(--pf-fast) ease,
+      box-shadow var(--pf-fast) ease,
+      transform var(--pf-fast) ease;
+  }
+
+  .btn:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-ghost:active,
+  .btn-danger:active {
+    transform: translateY(1px);
+  }
+
+  .btn:disabled,
+  .btn-primary:disabled,
+  .btn-secondary:disabled,
+  .btn-ghost:disabled,
+  .btn-danger:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
   }
 
   .btn-primary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-bold text-slate-900 shadow-[0_6px_16px_rgba(251,191,36,.24)] transition-all hover:bg-amber-300 hover:shadow-[0_8px_22px_rgba(251,191,36,.32)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--pf-cta);
+    color: var(--pf-cta-ink);
+    box-shadow: var(--pf-cta-shadow);
   }
 
   .btn-secondary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_6px_16px_rgba(13,148,136,.2)] transition-all hover:bg-teal-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--pf-accent);
+    color: #ffffff;
+  }
+
+  .dark .btn-secondary {
+    color: #05242c;
   }
 
   .btn-ghost {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-teal-200 bg-white px-4 py-2.5 text-sm font-bold text-teal-800 transition-all hover:border-teal-300 hover:bg-teal-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-800/50 dark:bg-[#101e29] dark:text-teal-300 dark:hover:border-teal-700 dark:hover:bg-teal-950/40;
+    border-color: var(--pf-line);
+    background: var(--pf-surface-2);
+    color: var(--pf-ink);
   }
 
   .btn-danger {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 transition-all hover:bg-rose-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50;
+    border-color: transparent;
+    background: var(--pf-danger-soft);
+    color: var(--pf-danger);
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover:not(:disabled) {
+      background: var(--pf-cta-hover);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--pf-accent-strong);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      border-color: var(--pf-accent-line);
+      background: var(--pf-accent-soft);
+      color: var(--pf-accent-strong);
+    }
+    .btn-danger:hover:not(:disabled) {
+      border-color: currentColor;
+    }
+  }
+
+  /* ---------- Form ----------
+     Label di atas, huruf biasa (bukan kapital kecil berjarak lebar),
+     sama dengan label di dashboard. Fokus memakai cincin teal. */
   .input {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 dark:border-white/10 dark:bg-[#0c1c27] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-teal-400 dark:focus:ring-0 dark:focus:shadow-[0_0_0_3px_rgba(45,212,191,.22),0_0_18px_rgba(45,212,191,.35)];
+    width: 100%;
+    min-height: 42px;
+    padding: 0.5625rem 0.75rem;
+    border-radius: var(--pf-r-control);
+    border: 1px solid var(--pf-line-strong);
+    background: var(--pf-surface-solid);
+    color: var(--pf-ink);
+    font-size: 0.875rem;
+    outline: none;
+    transition:
+      border-color var(--pf-fast) ease,
+      box-shadow var(--pf-fast) ease;
+  }
+
+  .dark .input {
+    background: #0c1c27;
+  }
+
+  .input::placeholder {
+    color: var(--pf-ink-3);
+  }
+
+  .input:focus {
+    border-color: var(--pf-accent);
+    box-shadow: 0 0 0 3px var(--pf-accent-soft);
+  }
+
+  .input:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
   }
 
   .label {
-    @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[.08em] text-slate-500 dark:text-slate-400;
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pf-ink-2);
   }
 
+  /* ---------- Label kecil / badge status ----------
+     Warna isi tetap dari domain.ts (status.badge), di sini hanya
+     bentuk dan ukurannya yang diseragamkan. */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1875rem 0.625rem;
+    border-radius: var(--pf-r-pill);
+    border: 1px solid transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
   }
 
+  /* ---------- Progres ---------- */
   .progress-track {
-    @apply h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10;
+    height: 0.5rem;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--pf-r-pill);
+    background: var(--pf-surface-3);
   }
 
+  /* ---------- Judul seksi ----------
+     Sama dengan judul seksi dashboard: 15px (17px di layar lebar),
+     berat 600. */
   .section-title {
-    @apply text-base font-extrabold tracking-tight text-[#07384f] md:text-lg dark:text-slate-100;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--pf-ink);
   }
 
+  @media (min-width: 768px) {
+    .section-title {
+      font-size: 1.0625rem;
+    }
+  }
+
+  /* ---------- Judul halaman ----------
+     Satu pola untuk semua halaman (Pekerjaan, Detail, Order Baru,
+     Pelanggan, Mitra, Shift, Pengaturan, Notifikasi). Dulu ada dua pola:
+     sebagian text-xl semibold, sebagian text-2xl bold dengan label
+     kapital kecil di atasnya. */
+  .page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--pf-ink);
+  }
+
+  @media (min-width: 768px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* ---------- Kotak ikon ---------- */
   .icon-tile {
-    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300;
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--pf-r-control);
+    background: var(--pf-accent-soft);
+    color: var(--pf-accent-strong);
   }
 
   .scroll-x {
@@ -206,6 +418,281 @@ body {
         rgba(6, 20, 27, 0.03) 100%
       ),
       url("/images/login-hero.jpg");
+  }
+}
+
+/* ==========================================================================
+   Login page — redesign kartu kaca melengkung (referensi LOGIN_PAGE.pdf +
+   curved-divider-master.svg, Okt 2026). Background gelap full-layar +
+   kartu glassmorphism dengan kurva "S" pembatas panel video vs panel
+   form. Video tetap rasio 1:1 apa adanya (object-cover) — yang melengkung
+   adalah "jendela" clip-path di atasnya, bukan videonya. Halaman /login
+   sengaja TIDAK ikut toggle terang/gelap aplikasi (toggle memang tidak
+   tampil sebelum login).
+   ========================================================================== */
+
+/* ---- printflow-login-background.css — DITEMPEL APA ADANYA sesuai file
+   yang dikirim (nama kelas, angka, urutan layer semuanya persis, tidak
+   diubah). Dipasang di wrapper TERLUAR halaman login (bukan fixed
+   overlay), dengan 2 elemen tambahan kosong (.printflow-bg-texture &
+   .printflow-bg-vignette) yang ditambahkan di JSX sesuai instruksi file
+   ini sendiri — bukan bagian dari markup/logic form login. ---- */
+
+.printflow-login-bg {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  /* Base color sampled from the dark upper background — dinaikin sedikit
+     brightness & sebaran mesh-nya (terutama sisi kanan/tengah, tempat
+     panel form berada) supaya efek kaca kartunya lebih kerasa, dan
+     gradasinya nyampe ke belakang panel form bukan cuma di ujung
+     viewport. Wrapper-nya sendiri sekarang dibatasi lebarnya & dipusatkan
+     sejajar kartu lewat max-w di JSX (login/page.tsx), jadi persentase di
+     bawah ini otomatis lebih "nempel" ke kartu daripada sebelumnya.
+     3 radial paling atas (biru, cyan terang, teal) ditambahkan khusus di
+     area belakang panel form (kanan) supaya mesh-nya lebih "ramai"/
+     berwarna-warni — opacity-nya dijaga sedang (bukan mendekati putih)
+     supaya setelah kena blur di kartu kaca tetap cukup gelap buat
+     kontras teks (lihat juga "pengaman kontras" di .login-glass-card). */
+  background:
+    radial-gradient(
+      26% 30% at 74% 24%,
+      rgba(37, 99, 235, 0.65) 0%,
+      rgba(29, 78, 216, 0.3) 42%,
+      rgba(29, 78, 216, 0) 76%
+    ),
+    radial-gradient(
+      24% 28% at 76% 74%,
+      rgba(34, 211, 238, 0.7) 0%,
+      rgba(6, 182, 212, 0.32) 42%,
+      rgba(6, 182, 212, 0) 78%
+    ),
+    radial-gradient(
+      26% 30% at 64% 56%,
+      rgba(45, 212, 191, 0.5) 0%,
+      rgba(20, 184, 166, 0.22) 46%,
+      rgba(20, 184, 166, 0) 78%
+    ),
+    radial-gradient(
+      58% 72% at 2% 54%,
+      rgba(232, 169, 24, 0.92) 0%,
+      rgba(185, 157, 42, 0.68) 9%,
+      rgba(78, 132, 82, 0.42) 22%,
+      rgba(18, 88, 91, 0.16) 39%,
+      rgba(4, 52, 74, 0) 63%
+    ),
+    radial-gradient(
+      48% 42% at 52% 104%,
+      rgba(0, 176, 232, 0.78) 0%,
+      rgba(0, 132, 190, 0.52) 25%,
+      rgba(8, 92, 137, 0.24) 48%,
+      rgba(5, 57, 83, 0) 72%
+    ),
+    radial-gradient(
+      64% 86% at 96% 52%,
+      rgba(10, 200, 214, 0.95) 0%,
+      rgba(6, 158, 182, 0.62) 26%,
+      rgba(5, 108, 138, 0.34) 52%,
+      rgba(2, 53, 74, 0) 80%
+    ),
+    radial-gradient(
+      78% 74% at 58% 46%,
+      rgba(14, 116, 132, 0.4) 0%,
+      rgba(6, 74, 96, 0.2) 48%,
+      rgba(2, 45, 64, 0) 78%
+    ),
+    linear-gradient(
+      180deg,
+      #033a50 0%,
+      #0a4b60 38%,
+      #0f6883 72%,
+      #0a5678 100%
+    );
+
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Soft atmospheric bloom — keeps the yellow area diffuse rather than "blob-like". */
+.printflow-login-bg::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+
+  width: 68vw;
+  height: 68vw;
+  min-width: 720px;
+  min-height: 720px;
+
+  left: -31vw;
+  top: 8vh;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 191, 25, 0.46) 0%,
+      rgba(238, 171, 28, 0.25) 19%,
+      rgba(103, 151, 74, 0.13) 42%,
+      rgba(10, 77, 87, 0) 72%
+    );
+
+  filter: blur(34px);
+  opacity: 0.82;
+}
+
+/* Bottom cyan atmospheric bloom. */
+.printflow-login-bg::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+
+  width: 105vw;
+  height: 42vw;
+  min-height: 360px;
+
+  left: 8vw;
+  bottom: -30vw;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 38%,
+      rgba(0, 190, 242, 0.52) 0%,
+      rgba(0, 142, 211, 0.31) 28%,
+      rgba(8, 94, 153, 0.16) 49%,
+      rgba(0, 54, 91, 0) 73%
+    );
+
+  filter: blur(38px);
+  opacity: 0.95;
+}
+
+/*
+  Optional texture layer.
+  The SVG noise is intentionally extremely subtle so the result stays
+  close to the supplied reference instead of looking "grainy".
+*/
+.printflow-login-bg > .printflow-bg-texture {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.055;
+  mix-blend-mode: soft-light;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/*
+  Vignette.
+  The reference is darker around the outer edges while keeping the
+  center/visual area readable.
+*/
+.printflow-login-bg > .printflow-bg-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0) 43%,
+      rgba(0, 15, 28, 0.08) 67%,
+      rgba(0, 13, 25, 0.27) 100%
+    );
+}
+
+/* Mobile adjustment — preserve the same visual character. */
+@media (max-width: 768px) {
+  .printflow-login-bg {
+    background:
+      radial-gradient(
+        95% 60% at -5% 50%,
+        rgba(232, 169, 24, 0.72) 0%,
+        rgba(90, 133, 78, 0.28) 32%,
+        rgba(4, 52, 74, 0) 70%
+      ),
+      radial-gradient(
+        90% 48% at 55% 105%,
+        rgba(0, 175, 232, 0.65) 0%,
+        rgba(0, 118, 183, 0.24) 43%,
+        rgba(4, 52, 74, 0) 75%
+      ),
+      radial-gradient(
+        80% 62% at 105% 50%,
+        rgba(8, 174, 191, 0.62) 0%,
+        rgba(5, 91, 121, 0.18) 48%,
+        rgba(2, 53, 74, 0) 76%
+      ),
+      linear-gradient(180deg, #02354a 0%, #06465b 58%, #063f65 100%);
+  }
+
+  .printflow-login-bg::before {
+    width: 105vw;
+    height: 105vw;
+    left: -55vw;
+    top: 10vh;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .printflow-login-bg::after {
+    width: 150vw;
+    height: 65vw;
+    left: -20vw;
+    bottom: -40vw;
+    min-height: 0;
+  }
+}
+/* ---- selesai printflow-login-background.css ---- */
+
+@layer components {
+  .login-glass-card {
+    @apply relative w-full overflow-hidden border border-white/[0.14] shadow-[0_30px_80px_-24px_rgba(2,10,16,.7),inset_0_1px_0_rgba(255,255,255,.08)];
+    /* Lapisan pertama (putih tipis) = sentuhan kaca seperti semula.
+       Lapisan kedua (navy gelap tipis) = "pengaman kontras" — supaya
+       walau background di belakangnya dibikin makin rame/berwarna,
+       teks putih & abu-abu di form tetap gampang dibaca. */
+    background:
+      linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025)),
+      linear-gradient(180deg, rgba(2, 18, 27, 0.32), rgba(2, 18, 27, 0.32));
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+  }
+
+  .login-input {
+    @apply w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-400/70 focus:border-teal-300/70 focus:bg-black/35 focus:ring-4 focus:ring-teal-400/20;
+  }
+
+  .login-label {
+    @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[.08em] text-slate-300/80;
+  }
+
+  .login-icon-tile {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-400/15 text-teal-200 ring-1 ring-teal-300/25;
+  }
+}
+
+/* Kurva cuma aktif dari breakpoint md ke atas (layout 2-kolom sisi-sisian).
+   Di mobile, panel foto tetap kotak biasa di atas seperti sebelumnya —
+   kurva "S" ini didesain untuk kartu lebar (rasio ~2:1), bukan panel
+   pendek yang ditumpuk vertikal. Kedua clip-path pakai path Bezier YANG
+   SAMA (satu utuh, satu komplemennya) supaya kedua panel nyambung tanpa
+   celah sepixel pun, walau kartu di-resize di layar berapa pun. */
+@media (min-width: 768px) {
+  .login-video-panel {
+    clip-path: url(#loginVideoClip);
+  }
+  .login-form-panel {
+    clip-path: url(#loginFormClip);
   }
 }
 
@@ -309,7 +796,9 @@ button, a, [role="button"] {
   }
 }
 
-/* Brand override: komponen lama otomatis mengikuti teal tanpa merusak warna status. */
+/* Brand override: kelas indigo lama otomatis mengikuti teal.
+   Sebagian besar sudah diganti langsung ke teal di komponen; aturan ini
+   tetap ada sebagai jaring pengaman untuk kelas indigo yang tersisa. */
 .text-indigo-600, .text-indigo-700, .text-indigo-800 { color: #0f766e !important; }
 .bg-indigo-600 { background-color: #0d9488 !important; }
 .bg-indigo-700 { background-color: #0f766e !important; }
@@ -329,10 +818,6 @@ button, a, [role="button"] {
 .dark .border-indigo-300 { border-color: rgba(20,184,166,.4) !important; }
 .dark .focus\:border-indigo-500:focus { border-color: #2dd4bf !important; }
 .dark .focus\:ring-indigo-100:focus { --tw-ring-color: rgba(20,184,166,.2) !important; }
-
-@media (max-width: 640px) {
-  .card { border-radius: 1rem; }
-}
 
 @media print {
   .no-print { display: none !important; }
@@ -496,156 +981,3 @@ button, a, [role="button"] {
 .dark [class*="border-teal-300/"] { border-color: rgba(20,184,166,.4) !important; }
 .dark [class*="border-teal-400/"] { border-color: rgba(20,184,166,.32) !important; }
 .dark [class*="border-teal-900/"] { border-color: rgba(20,184,166,.3) !important; }
-
-/* ==========================================================================
-   Halaman Login — desain ulang "kartu kaca di atas gradient tebal", meniru
-   referensi yang dikirim user. SENGAJA cuma nyala lewat class `login-shell`
-   di <body> (lihat proxy.ts + layout.tsx: dikirim khusus untuk rute /login),
-   jadi tidak menyentuh tampilan halaman lain sama sekali.
-
-   Warnanya ditulis langsung (bukan lewat varian .dark) karena tombol
-   ganti tema memang belum muncul sebelum login — desainnya sengaja tetap,
-   tidak ikut terang/gelap bawaan aplikasi, persis seperti referensi.
-
-   Tanpa backdrop-blur — sama seperti alasan .panel-glass di atas: berat di
-   GPU/WebView APK. Kesan "kaca" di sini murni dari tint gelap transparan +
-   border tipis terang + shadow berlapis, bukan dari blur sungguhan.
-   ========================================================================== */
-body.login-shell {
-  min-height: 100dvh;
-  background-color: #051822;
-  background-image:
-    radial-gradient(ellipse 48% 62% at 8% 46%, rgba(251, 191, 36, 0.32), transparent 62%),
-    radial-gradient(ellipse 48% 62% at 95% 54%, rgba(56, 189, 248, 0.3), transparent 62%),
-    radial-gradient(ellipse 85% 55% at 50% 4%, rgba(45, 212, 191, 0.34), transparent 66%),
-    linear-gradient(160deg, #062639 0%, #0a3a50 30%, #0e4a5e 52%, #0a3346 76%, #041721 100%);
-}
-
-.login-shell .app-header,
-.login-shell .mobile-bottom-nav {
-  display: none !important;
-}
-
-.login-shell .app-main {
-  display: flex !important;
-  min-height: 100dvh;
-  max-width: none !important;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 1rem !important;
-}
-
-@media (min-width: 768px) {
-  .login-shell .app-main {
-    padding: 2.5rem !important;
-  }
-}
-
-.login-shell footer {
-  padding: 0 1rem 1.5rem !important;
-}
-
-.login-shell footer > div {
-  border-top-color: rgba(255, 255, 255, 0.14) !important;
-}
-
-.login-shell footer p {
-  color: rgba(226, 232, 240, 0.55) !important;
-}
-
-.login-shell footer a {
-  color: #5eead4 !important;
-}
-
-.login-shell footer a:hover {
-  color: #99f6e4 !important;
-}
-
-/* Kartu utama: grid 2 kolom (foto/video kiri, form kanan) di desktop,
-   ditumpuk di HP — sama seperti .card lama, tapi lebih lebar & lebih
-   membulat supaya berkesan "kartu besar" seperti referensi. */
-.login-card {
-  position: relative;
-  width: 100%;
-  max-width: 74rem;
-  display: grid;
-  overflow: hidden;
-  border-radius: 1.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 30px 80px rgba(2, 16, 26, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-@media (min-width: 768px) {
-  .login-card {
-    grid-template-columns: 1.3fr 1fr;
-    border-radius: 2rem;
-  }
-}
-
-/* Panel form: gradasi teal gelap solid (bukan transparan tembus pandang
-   penuh) — sesuai referensi yang panel kanannya memang pekat, bukan kaca
-   tipis. Border kiri tipis baru muncul di desktop saat sejajar dgn foto. */
-.login-form-panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 1.75rem;
-  background: linear-gradient(165deg, rgba(10, 48, 66, 0.94) 0%, rgba(7, 36, 50, 0.95) 55%, rgba(4, 22, 31, 0.97) 100%);
-}
-
-@media (min-width: 640px) {
-  .login-form-panel { padding: 2.25rem; }
-}
-
-@media (min-width: 768px) {
-  .login-form-panel {
-    padding: 2.75rem 3rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-  }
-}
-
-.login-icon-badge {
-  display: flex;
-  height: 2.5rem;
-  width: 2.5rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: rgba(45, 212, 191, 0.15);
-  color: #7ee7d6;
-  box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.25);
-}
-
-.login-label {
-  display: block;
-  margin-bottom: 0.375rem;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(153, 246, 228, 0.75);
-}
-
-.login-input {
-  width: 100%;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.625rem 0.75rem;
-  font-size: 0.875rem;
-  color: #ffffff;
-  outline: none;
-  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
-}
-
-.login-input::placeholder {
-  color: rgba(226, 232, 240, 0.4);
-}
-
-.login-input:focus {
-  border-color: #5eead4;
-  background: rgba(255, 255, 255, 0.09);
-  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.18);
-}

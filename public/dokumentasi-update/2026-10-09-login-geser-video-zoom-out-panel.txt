@@ -1,0 +1,80 @@
+================================================================
+LOGIN — VIDEO DIGESER LAGI KE KIRI, PANEL DI-"ZOOM OUT" ~15%
+DI DESKTOP
+Tanggal : 09-10-2026
+Status  : selesai, lanjutan dari 2026-10-08-login-geser-video-mesh-form-ramai.txt
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+2 revisi kecil lagi:
+
+1. Video digeser lebih ke kiri lagi (fokus crop dari 24% jadi 12%).
+
+2. Seluruh panel/kartu login dikecilkan ~15% di layar ≥768px
+   (desktop) — pakai CSS transform scale 0.85, jadi videonya, kurva,
+   teks, tombol, semuanya ikut mengecil proporsional bareng-bareng
+   (persis efek "browser di-zoom out ke 85%"), bukan cuma dipersempit
+   lebar boks-nya doang. Kartu tetap center di tengah halaman.
+   Mobile TIDAK disentuh — ukurannya tetap seperti sebelumnya.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   - Class video: `object-[24%_center]` → `object-[12%_center]`.
+   - Div `.login-glass-card` ditambah `origin-center md:scale-[0.85]`
+     (sebelumnya cuma `relative rounded-[1.75rem] md:aspect-[1318/665]
+     md:min-h-[440px] md:rounded-[2.5rem]`). scale-nya CUMA aktif
+     dari breakpoint md ke atas (Tailwind prefix `md:`), jadi mobile
+     tidak terpengaruh sama sekali.
+   - Wrapper flex di luarnya (`min-h-[80vh] flex items-center`)
+     SENGAJA tidak diubah — area vertikal tempat kartu di-center
+     tetap sama, cuma kartunya sendiri yang mengecil di dalam area
+     itu, jadi hasilnya kartu kelihatan lebih kecil tapi tetap pas
+     di tengah (bukan nempel ke salah satu sisi).
+
+B) src/app/globals.css — tidak disentuh di revisi ini.
+
+C) src/components/LoginForm.tsx — tidak disentuh.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (warning bawaan baseUrl, tidak terkait)
+  npx next build      : Compiled successfully
+  npx next start      : dicek manual — lebar kartu di 1600px turun
+                          dari 992px → 843px (persis 85%, dicek lewat
+                          getBoundingClientRect), tetap center; dicek
+                          juga di 1920px; mobile 420px dipastikan
+                          TIDAK berubah
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-09-login-geser-video-zoom-out-panel.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau ukurannya masih kurang/kelebihan kecil, tinggal ubah angka
+  `md:scale-[0.85]` di src/app/login/page.tsx (0.85 = 85% dari
+  ukuran asli / "zoom out" 15%). Semakin kecil angkanya (misal 0.8)
+  = semakin "zoom out"; semakin besar (misal 0.9) = semakin dekat
+  ke ukuran semula.
+- Kalau geseran video masih kurang/kelebihan ke kiri, ubah angka
+  "12%" di class `object-[12%_center]` pada elemen <video>.
+
+================================================================

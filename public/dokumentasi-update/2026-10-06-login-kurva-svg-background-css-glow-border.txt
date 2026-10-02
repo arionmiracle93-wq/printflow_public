@@ -1,0 +1,135 @@
+================================================================
+LOGIN — KURVA DARI SVG MASTER, BACKGROUND DIGANTI FILE CSS
+PEMILIK, + GARIS TEPI KACA BERCAHAYA
+Tanggal : 06-10-2026
+Status  : selesai, lanjutan dari 2026-10-05-redesign-login-kurva-kaca.txt
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Revisi dari redesign kurva kaca kemarin, 3 permintaan:
+
+1. Bentuk kurva "S" pembatas panel video/form diganti supaya PERSIS
+   ikut curved-divider-master.svg yang dikirim (bukan lagi hasil
+   ekstraksi manual dari PDF) — koordinatnya diambil langsung dari
+   path SVG itu (digeser & dinormalisasi ke sistem kartu 1318x665
+   yang sudah ada, jadi tetap konsisten dengan ukuran kartu).
+
+2. Background halaman login diganti pakai file
+   printflow-login-background.css yang dikirim — ditempel APA
+   ADANYA (kelas, angka, urutan layer tidak diubah). Sebelumnya
+   sempat ada celah warna terang di pinggir layar karena wrapper-
+   nya kena padding & max-width dari <main> shell aplikasi; sudah
+   dibetulkan dengan membungkusnya di elemen fixed penuh-viewport
+   terpisah (lihat bagian "PERBAIKAN TAMBAHAN" di bawah).
+
+3. Ditambah garis tepi tipis bercahaya (cyan/teal) yang mengikuti
+   kurva persis, meniru nuansa "tepian kaca menyala" —
+   border ~1.4px, warna rgba(90,230,235,.45), + pendar lembut
+   rgba(50,220,230,.20) blur ~4.5px. Cuma aktif di layar ≥768px
+   (bareng kurvanya), disamarkan (bukan bingkai tebal).
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   - LOGIN_CURVE_PATH diganti total, sumbernya sekarang
+     curved-divider-master.svg (path id "master-curved-divider",
+     viewBox 0 0 216 665) — bukan lagi geometri PDF lama. Titik
+     lokal SVG digeser +552 lalu dinormalisasi 0-1 supaya tetap
+     nyambung dengan sistem kartu 1318x665 yang sudah dipakai
+     komponen lain (video wrapper 58.27%, form md:pl-[60%], dst —
+     semua itu TIDAK perlu diubah karena titik ekstrem kurva baru
+     kebetulan sama seperti kurva lama: 58.27% di atas, 41.88% di
+     bawah).
+   - Ditambah konstanta LOGIN_CURVE_STROKE_D — path yang sama tapi
+     dalam satuan kartu asli (0-1318 / 0-665), dipakai buat garis
+     tepi kaca yang KELIHATAN (bukan clip-path yang invisible).
+   - Ditambah 1 elemen <svg> overlay di dalam kartu (absolute
+     inset-0, viewBox 1318x665, hidden di mobile) berisi 2 <path>
+     dengan d yang sama: satu lebar+blur (pendar), satu tipis 1.4px
+     (garis inti) — vector-effect="non-scaling-stroke" supaya
+     ketebalannya tetap 1-2px di layar ukuran berapa pun.
+   - Wrapper background diubah: sebelumnya `<div className=
+     "login-page-bg fixed inset-0 -z-10">`, sekarang jadi
+     `<div className="fixed inset-0 -z-10"><div className=
+     "printflow-login-bg h-full w-full">...</div></div>` — 2 lapis
+     supaya .printflow-login-bg (yang pasang position:relative dari
+     CSS-nya sendiri) tetap bisa "dipaksa" full-viewport lewat
+     pembungkus fixed di luarnya, tanpa konflik CSS.
+   - Di dalam .printflow-login-bg ditambah 2 elemen kosong:
+     <div className="printflow-bg-texture" /> dan
+     <div className="printflow-bg-vignette" /> — sesuai instruksi
+     komentar di file CSS yang dikirim (selector `.printflow-
+     login-bg > .printflow-bg-texture` dst). Tidak ada logic/
+     struktur form yang disentuh.
+
+B) src/app/globals.css
+   - Blok `.login-page-bg` (buatan sesi sebelumnya) DIHAPUS, diganti
+     isi printflow-login-background.css APA ADANYA (nama kelas,
+     angka, komentar asli dipertahankan, cuma ditambah heading
+     komentar Indonesia di atasnya).
+   - `.login-glass-card`, `.login-input`, `.login-label`,
+     `.login-icon-tile`, dan blok @media clip-path TIDAK berubah.
+
+C) src/components/LoginForm.tsx — tidak disentuh sama sekali di
+   revisi ini.
+
+
+PERBAIKAN TAMBAHAN (di luar 3 permintaan, ditemukan pas ngetes)
+----------------------------------------------------------------
+Percobaan pertama nempelin .printflow-login-bg langsung ke wrapper
+konten (mengikuti instruksi "pasang di wrapper terluar halaman
+login") ternyata bikin celah warna terang di pinggir layar, karena
+<main> di layout.tsx punya max-w-[1440px] + padding (px-3/sm:px-4/
+lg:px-6 + pt-5 + pb-28/md:pb-12) yang otomatis membatasi wrapper
+manapun yang ditaruh di situ. Dibetulkan dengan menaruh
+.printflow-login-bg di dalam pembungkus fixed inset-0 terpisah
+(lihat poin A di atas) — sudah dicek sampai layar 1920px, tidak ada
+celah lagi di ukuran manapun.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (warning bawaan baseUrl, tidak terkait)
+  npx next build      : Compiled successfully, /login ke-generate normal
+  npx next start       : dicek manual — desktop 1600px & 1920px, mobile
+                          420px, dan zoom close-up 3x DPR ke garis tepi
+                          kurva buat pastikan pendarnya kebaca tapi tetap
+                          halus (bukan bingkai tebal)
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-06-login-kurva-svg-background-css-glow-border.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Murni CSS + markup + 1 elemen SVG kecil, tidak menambah
+request/aset baru.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau garis tepinya dirasa masih kurang/kelebihan nyala, tinggal
+  ubah 2 angka di src/app/login/page.tsx: strokeWidth & opacity di
+  <path> kedua (pendar) dan ketiga (garis inti) dalam svg overlay
+  paling bawah komponen.
+- Footer bawah ("Print Flow · Produksi lebih terpantau...") sekarang
+  ikut ketimpa background gelap penuh-layar, dan warnanya
+  (text-slate-400 / text-teal-700) awalnya didesain buat latar
+  terang jadi agak kurang kontras. Ini bukan regresi dari revisi
+  ini — sudah begitu sejak background gelap penuh-layar pertama
+  dipasang (redesign-login-kurva-kaca.txt) — tapi kalau boss mau
+  dirapikan juga sekalian, tinggal bilang.
+
+================================================================

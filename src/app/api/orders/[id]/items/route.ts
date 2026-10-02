@@ -1,6 +1,8 @@
 import { problemResponse } from "@/lib/dbcheck";
 import { getCurrentUser } from "@/lib/auth";
-import { listOrderItems, replaceOrderItems } from "@/lib/queries";
+import { getOrderById, listOrderItems, replaceOrderItems, setItemStatus } from "@/lib/queries";
+import { isStatusKey, statusMeta } from "@/lib/domain";
+import { notifyInBackground } from "@/lib/push";
 import { MAX_ITEMS_PER_ORDER, sanitizeItems } from "@/lib/order-items";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +69,47 @@ export async function PUT(request: Request, { params }: Params) {
     });
   } catch (error) {
     console.error("PUT /api/orders/[id]/items", error);
+    return problemResponse(error);
+  }
+}
+
+/**
+ * PATCH -> ubah status SATU produk: { itemId, status }.
+ * Status pekerjaan dihitung ulang otomatis (tahap produk paling lambat).
+ * Notifikasi push hanya dikirim kalau status PEKERJAAN ikut berubah,
+ * supaya HP karyawan tidak dibanjiri notifikasi per produk.
+ */
+export async function PATCH(request: Request, { params }: Params) {
+  const { id } = await params;
+  const orderId = Number.parseInt(id, 10);
+  if (!Number.isFinite(orderId)) {
+    return Response.json({ ok: false, error: "ID tidak valid" }, { status: 400 });
+  }
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser) {
+    return Response.json({ ok: false, error: "Sesi login diperlukan." }, { status: 401 });
+  }
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const itemId = Number(body.itemId);
+  const status = typeof body.status === "string" ? body.status : "";
+  if (!Number.isInteger(itemId) || !isStatusKey(status)) {
+    return Response.json({ ok: false, error: "Produk atau status tidak valid." }, { status: 400 });
+  }
+  try {
+    const result = await setItemStatus(orderId, itemId, status, sessionUser.name);
+    if (!result) return Response.json({ ok: false, error: "Produk tidak ditemukan." }, { status: 404 });
+    if (result.orderTo !== result.orderFrom) {
+      const order = await getOrderById(orderId);
+      notifyInBackground({
+        title: `${order?.code ?? "Pekerjaan"}: ${statusMeta(result.orderTo).label}`,
+        body: `${order?.title ?? ""} otomatis pindah tahap mengikuti produk paling lambat.`,
+        url: `/pesanan/${orderId}`,
+        tag: `status-${orderId}`,
+      });
+    }
+    return Response.json({ ok: true, data: { ...result, items: await listOrderItems(orderId) } });
+  } catch (error) {
+    console.error("PATCH /api/orders/[id]/items", error);
     return problemResponse(error);
   }
 }

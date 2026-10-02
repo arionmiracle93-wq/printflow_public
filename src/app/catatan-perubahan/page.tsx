@@ -6,7 +6,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Catatan Perubahan — Print Flow",
+  title: "Catatan Perubahan - Print Flow",
   description: "Dokumentasi setiap update aplikasi dalam berkas .txt yang mudah dibaca penuh.",
 };
 
@@ -43,7 +43,7 @@ export default function CatatanPerubahanPage() {
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-5 text-white">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-300">Dokumentasi</p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-extrabold md:text-2xl">
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold md:text-2xl">
             <FileText size={22} strokeWidth={2.3} /> Catatan Perubahan
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-300">
@@ -79,12 +79,12 @@ export default function CatatanPerubahanPage() {
                   <a
                     href={`/${FOLDER}/${doc.name}`}
                     download
-                    className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm transition hover:bg-indigo-50"
+                    className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm transition hover:bg-teal-50"
                   >
                     <span className="flex items-center gap-1 truncate font-semibold text-slate-700">
                       <FileText size={13} className="shrink-0" /> {doc.name}
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-indigo-600">
+                    <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-teal-700">
                       <Download size={11} /> {(doc.size / 1024).toFixed(1)} KB
                     </span>
                   </a>
@@ -102,7 +102,7 @@ export default function CatatanPerubahanPage() {
                   href={`/${FOLDER}/${doc.name}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[11px] font-bold text-indigo-600 hover:underline"
+                  className="text-[11px] font-bold text-teal-700 hover:underline"
                 >
                   buka berkas asli →
                 </a>

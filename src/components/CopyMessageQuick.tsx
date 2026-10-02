@@ -9,11 +9,24 @@ import { buildWhatsAppMessage, ensureTrackingUrl, type ShareOrder } from "@/lib/
  * Tombol pintas "Salin teks pesan" untuk kartu pekerjaan di dashboard.
  *
  * Menyusun teks yang PERSIS sama dengan tombol "Kirim WA" (termasuk tautan
- * lacak), tapi hanya menyalinnya ke clipboard — buat dipaste ke mana saja:
+ * lacak), tapi hanya menyalinnya ke clipboard - buat dipaste ke mana saja:
  * WhatsApp Web, grup karyawan, Telegram, catatan, dsb. Berguna juga kalau
  * pop-up WhatsApp diblokir browser.
  */
-export function CopyMessageQuick({ order, className = "" }: { order: ShareOrder; className?: string }) {
+export function CopyMessageQuick({
+  order,
+  className = "",
+  label = "Salin teks pesan",
+}: {
+  order: ShareOrder;
+  className?: string;
+  /**
+   * Teks tombol. Opsional, bawaannya tetap "Salin teks pesan" sehingga
+   * semua pemakaian lama tidak berubah. Kartu antrean di HP memakai
+   * "Salin pesan" supaya muat satu baris di layar sempit.
+   */
+  label?: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -63,7 +76,7 @@ export function CopyMessageQuick({ order, className = "" }: { order: ShareOrder;
       title="Salin teks pesan status (termasuk tautan lacak) ke clipboard"
       className={`${className} ${copied ? "!border-emerald-300 !bg-emerald-50 !text-emerald-800" : ""} disabled:cursor-wait disabled:opacity-60`}
     >
-      {copied ? "Tersalin!" : "Salin teks pesan"}{" "}
+      {copied ? "Tersalin!" : label}{" "}
       {busy ? <Loader2 size={14} className="animate-spin" /> : copied ? <Check size={14} /> : <Copy size={14} />}
     </button>
   );

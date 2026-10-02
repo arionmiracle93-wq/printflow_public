@@ -1,0 +1,26 @@
+================================================================
+JUDUL PEKERJAAN DI KARTU DASHBOARD TIDAK KEPOTONG LAGI (MOBILE)
+Tanggal : 12-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Di HP, nama pekerjaan di kartu dashboard sebelumnya dipotong jadi
+satu baris ("order bpk andi paket pro..."), soalnya di kanannya ada
+2 badge (status + risiko) yang makan tempat. Sekarang:
+  - Font di HP dikecilin dikit (15px), di layar >= 640px tetap
+    besar seperti semula (18px).
+  - Judul boleh turun ke baris ke-2 (maksimal 2 baris). Kalau
+    masih terlalu panjang baru dipotong "...".
+  - Kata yang sangat panjang tanpa spasi tetap dipatahkan supaya
+    tidak melebar keluar kartu.
+  - Nama lengkap tetap bisa dilihat lewat tooltip (tahan/hover).
+
+
+FILE YANG DIUBAH
+----------------------------------------------------------------
+src/components/ui.tsx  (komponen InsightCard, baris judul)
+
+Tidak ada perubahan database, TIDAK perlu buka /api/setup.

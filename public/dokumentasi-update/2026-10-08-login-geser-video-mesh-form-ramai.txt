@@ -1,0 +1,95 @@
+================================================================
+LOGIN — VIDEO DIGESER LAGI KE KIRI, MESH DI BELAKANG FORM
+DIRAMEIN (BIRU/CYAN/TEAL) + PENGAMAN KONTRAS DI KARTU
+Tanggal : 08-10-2026
+Status  : selesai, lanjutan dari 2026-10-07-login-hapus-logo-geser-video-mesh-form.txt
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+2 revisi kecil lagi dari hasil kemarin:
+
+1. Video digeser lebih ke kiri lagi (titik fokus crop dari 38%
+   jadi 24%).
+
+2. Warna gradasi PERSIS di belakang panel form (bukan seluruh
+   background) dibikin lebih "ramai" — ditambah 3 warna baru: biru
+   (blue-600), cyan terang (cyan-400), teal (teal-400), diposisikan
+   supaya nyala di belakang panel form kanan. Supaya teks form tetap
+   kontras walau background-nya makin berwarna, kartu kaca-nya
+   ditambah 1 lapisan "pengaman" — semacam scrim navy tipis
+   (opacity 0.32) di antara tint kaca putih dan blur-nya.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   - Class video diubah dari `object-[38%_center]` jadi
+     `object-[24%_center]` — geser fokus crop lebih jauh ke kiri.
+
+B) src/app/globals.css
+   - `.login-glass-card`: background jadi 2 layer —
+       linear-gradient(155deg, rgba(255,255,255,.1), rgba(255,255,255,.025)),
+       linear-gradient(180deg, rgba(2,18,27,.32), rgba(2,18,27,.32))
+     Layer kedua ini scrim navy gelap tipis, murni buat jaga kontras
+     teks — efeknya nyaris tidak kelihatan sebagai "gelap" tapi
+     nahan supaya warna-warni baru di background tidak bikin kartu
+     jadi terlalu terang/pucat.
+   - `.printflow-login-bg` (desktop, bukan blok @media mobile):
+     ditambah 3 radial-gradient baru di urutan PALING ATAS (jadi di
+     depan/lebih kelihatan dari yang lama):
+       - biru: 26% 30% at 74% 24%, rgba(37,99,235,...)
+       - cyan terang: 24% 28% at 76% 74%, rgba(34,211,238,...)
+       - teal: 26% 30% at 64% 56%, rgba(45,212,191,...)
+     Posisinya (74-76% / 64%) dikalkulasi supaya titik terangnya
+     jatuh PERSIS di belakang panel form pada lebar viewport umum
+     (1440-1920px+, sudah dicek), bukan di ujung viewport yang
+     jauh dari kartu. Radial-radial lama (gold kiri, cyan bawah,
+     cyan kanan, tengah) TIDAK diubah, cuma jadi lapisan bawah dari
+     3 warna baru ini.
+
+C) src/components/LoginForm.tsx — tidak disentuh.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (warning bawaan baseUrl, tidak terkait)
+  npx next build      : Compiled successfully
+  npx next start      : dicek manual 1600px (zoom close-up ke kartu
+                          buat pastikan transisi biru→cyan→teal
+                          kelihatan jelas di belakang form & teks
+                          tetap kontras) + mobile 420px (dipastikan
+                          TIDAK berubah — sesuai permintaan sebelumnya
+                          kalau versi HP sudah oke)
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/app/globals.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-08-login-geser-video-mesh-form-ramai.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Murni CSS + 1 class Tailwind.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau 3 warna baru di background masih dirasa kurang/kelewat
+  rame, gampang di-tweak: angka opacity (rgba(...,X)) di 3 blok
+  radial-gradient paling atas pada `.printflow-login-bg`
+  (src/app/globals.css) — makin besar angkanya makin nyala.
+- Kalau teks form dirasa masih kurang kontras di kondisi tertentu
+  (misal monitor yang beda kalibrasi warnanya), tinggal naikkan
+  angka 0.32 di scrim `.login-glass-card` (globals.css) jadi 0.4
+  atau 0.45.
+
+================================================================

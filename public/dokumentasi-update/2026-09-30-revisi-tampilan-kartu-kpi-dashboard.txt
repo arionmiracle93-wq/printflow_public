@@ -1,0 +1,41 @@
+=========================================================
+REVISI TAMPILAN KARTU KPI DASHBOARD, 30 September 2026
+=========================================================
+
+YANG DIUBAH
+-----------
+Enam kartu KPI di dashboard (Pekerjaan aktif, Terlambat,
+Waspada / risiko, Siap diambil, Nilai order aktif, DP /
+terbayar) sekarang berbentuk "strip datar" seperti gambar
+acuan:
+  - tanpa kotak dan border,
+  - ikon besar di kiri, lalu label, angka besar, dan garis
+    progres tipis di bawah angka,
+  - antar-KPI dipisah garis vertikal tipis,
+  - keterangan kecil (mis. "Semua aman") di sebelah angka.
+
+YANG SENGAJA TIDAK BERUBAH
+--------------------------
+  - Ikon: tetap ikon asli yang sama (hanya ukurannya diperbesar).
+  - Animasi hover: kartu tetap naik sedikit, ada bayangan, dan
+    garis gradasi di atasnya muncul. Saat di-hover kartu tampil
+    sebagai panel (latar + bayangan) seperti versi lama.
+  - Angka, warna angka, dan aturan bisnis tidak diubah.
+
+CATATAN
+-------
+  - Panjang garis progres di bawah angka hanya hiasan visual,
+    BUKAN data (garis tetap tampil walau angkanya 0).
+  - Angka rupiah yang panjang (mis. Rp 12.500.000) otomatis
+    dikecilkan sedikit supaya tetap muat di layar lebar.
+  - Tampilan HP: 2 kolom, tablet: 3 kolom, layar lebar: 6 kolom.
+  - Kerangka muat (skeleton) dashboard ikut disesuaikan.
+
+FILE YANG BERUBAH
+-----------------
+  src/components/ui.tsx                          (KpiCard)
+  src/app/page.tsx                               (grid + panjang garis)
+  src/app/dashboard.css                          (garis pemisah .pf-kpi)
+  src/components/dashboard/DashboardSkeleton.tsx (kerangka muat)
+
+Tidak ada perubahan database. Tidak perlu buka /api/setup.

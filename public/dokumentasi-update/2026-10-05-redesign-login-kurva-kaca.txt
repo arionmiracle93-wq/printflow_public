@@ -1,0 +1,124 @@
+================================================================
+REDESIGN LOGIN — KARTU KACA (GLASSMORPHISM) DENGAN KURVA "S"
+MENGIKUTI REFERENSI PDF, VIDEO 1:1 TETAP DIPAKAI APA ADANYA
+Tanggal : 05-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Bisa, dan videonya TIDAK perlu diubah ke rasio lain. Halaman /login
+dirombak total mengikuti referensi gambar + geometri persis dari
+LOGIN_PAGE.pdf yang dikasih pemilik: latar belakang gelap navy/
+teal/cyan dengan secercah gold, dan satu kartu kaca (glassmorphism)
+lebar yang panel foto/video vs panel form-nya dipisah kurva "S",
+bukan garis lurus.
+
+Triknya: video/foto TETAP object-cover normal (rasio aslinya tidak
+disentuh) — yang melengkung adalah "jendela" clip-path di atasnya.
+Panel form punya clip-path KOMPLEMEN dari panel video (satu kurva,
+dua sisi), jadi keduanya selalu nyambung pas tanpa celah walau
+kartu di-resize di layar berapa pun.
+
+Titik kurva diambil dengan mengekstrak koordinat vektor asli dari
+LOGIN_PAGE.pdf (bukan dikira-kira dari gambar), jadi bentuknya
+presisi sama seperti referensi: mulai 58,27% lebar kartu di bagian
+atas, melengkung ke 41,88% di bagian bawah, dengan rasio kartu
+1318:665 (≈1,98:1) juga diikuti lewat aspect-ratio di CSS.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+
+A) src/app/login/page.tsx
+   Ditulis ulang total.
+     - Latar belakang halaman kini gelap penuh-layar (fixed, di
+       belakang header juga), bukan lagi latar terang aplikasi.
+     - Kartu diubah dari `.card` (putih/terang, grid 2 kolom lurus)
+       jadi `.login-glass-card` (kaca gelap) dengan rasio lebar
+       ~1318:665 mulai layar ≥768px (md), radius sudut lebih besar.
+     - Ditambah definisi <clipPath> SVG (loginVideoClip &
+       loginFormClip) — dua kurva komplementer, dinormalisasi
+       0–1 (objectBoundingBox) supaya otomatis ikut ukuran kartu
+       di layar manapun tanpa perlu dihitung ulang per breakpoint.
+     - Panel video & panel form sekarang saling tumpuk penuh
+       (position absolute, inset-0) dan masing-masing di-clip oleh
+       kurvanya sendiri — HANYA di layar ≥768px. Di HP, keduanya
+       tetap ditumpuk vertikal biasa (panel foto pendek di atas,
+       form di bawah) seperti sebelumnya, TANPA kurva — kurva "S"
+       ini memang didesain untuk kartu lebar rasio ~2:1, bukan
+       panel pendek yang ditumpuk.
+     - Video (login-hero.mp4) & poster (login-hero.jpg) tetap
+       dipakai persis seperti sebelumnya, tidak diubah asetnya.
+     - 2 lingkaran blur dekoratif lama di panel foto dihapus
+       (redundan dengan glow latar belakang baru yang lebih halus).
+
+B) src/app/globals.css
+   Ditambahkan (murni tambahan, tidak menghapus kelas lama):
+     - `.login-page-bg` — gradient radial navy/teal/cyan + gold
+       tipis, latar gelap penuh-layar khusus halaman login.
+     - `.login-glass-card` — kartu glassmorphism gelap (tint putih
+       transparan + backdrop-blur + border & shadow lembut).
+     - `.login-input`, `.login-label`, `.login-icon-tile` — versi
+       gelap dari `.input`/`.label`/`.icon-tile` supaya kebaca di
+       atas kartu kaca gelap.
+     - Blok @media (min-width:768px) yang memasang clip-path kurva
+       ke `.login-video-panel` & `.login-form-panel`.
+   Kelas lama (`.login-photo-bg`, `.card`, dll) TIDAK dihapus/
+   diubah — tetap dipakai halaman lain seperti biasa, aman.
+
+C) src/components/LoginForm.tsx
+   Logic form (submit, toggle lihat password, pesan alasan sesi
+   berakhir, pesan error, tombol "Buat akun Owner pertama") SAMA
+   PERSIS, cuma kelas styling-nya diganti ke versi gelap
+   (`.login-input`/`.login-label` + warna teks/border disesuaikan
+   supaya kontras di atas kaca gelap).
+
+CATATAN PENTING SOAL HALAMAN LAIN
+   Perubahan ini 100% terkurung di halaman /login — tidak menyentuh
+   Dashboard, hero foto Dashboard, atau tema terang/gelap aplikasi
+   (toggle tema memang tidak tampil sebelum login, jadi halaman ini
+   sengaja punya tampilan gelap tetap, tidak ikut toggle).
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit    : lolos (1 warning bawaan tsconfig soal
+                         baseUrl, tidak terkait perubahan ini)
+  npx next build      : Compiled successfully, semua 60 rute
+                         (termasuk /login) ke-generate normal
+  npx next start      : dicoba manual, /login merender kartu +
+                         kurva sesuai referensi PDF (desktop &
+                         mobile, screenshot dicek langsung)
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  src/app/globals.css
+  src/components/LoginForm.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-05-redesign-login-kurva-kaca.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Murni CSS + markup, tidak menambah request/aset baru
+(video & foto yang dipakai sama seperti sebelumnya).
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau nanti mau ganti login-hero.mp4 dengan video baru, tidak
+  perlu ubah kode apa pun — rasio 1:1 (atau rasio lain) tetap aman
+  karena object-cover yang menyesuaikan, kurva tidak terpengaruh.
+- Kalau dirasa kurva terlalu "dalam" di layar sangat lebar/sangat
+  sempit, tinggal minta sesuaikan — titik kurva ada di satu baris
+  konstanta (LOGIN_CURVE_PATH) di src/app/login/page.tsx, gampang
+  diubah tanpa bongkar struktur lain.
+
+================================================================

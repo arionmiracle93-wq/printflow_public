@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { customers, orders } from "@/db/schema";
 import { problemResponse } from "@/lib/dbcheck";
 import { SEED_CUSTOMER_NAMES, SEED_ORDER_TITLES } from "@/lib/seed";
+import { photoBlobUrls } from "@/lib/queries";
+import { deletePhotoBlobs } from "@/lib/photo-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -30,15 +32,20 @@ export async function POST(request: Request) {
 
   try {
     if (mode === "semua") {
+      const blobUrls = await photoBlobUrls();
       await db.execute(sql.raw("truncate order_events, ai_notes, orders, customers restart identity cascade"));
+      await deletePhotoBlobs(blobUrls);
       return Response.json({ ok: true, mode, deletedOrders: "semua", deletedCustomers: "semua" });
     }
 
     // Hapus pekerjaan contoh
+    const demoIds = (await db.select({ id: orders.id }).from(orders).where(inArray(orders.title, SEED_ORDER_TITLES))).map((r) => r.id);
+    const demoBlobUrls = await photoBlobUrls(demoIds);
     const removedOrders = await db
       .delete(orders)
       .where(inArray(orders.title, SEED_ORDER_TITLES))
       .returning({ id: orders.id });
+    await deletePhotoBlobs(demoBlobUrls);
 
     // Hapus pelanggan contoh yang sudah tidak punya pekerjaan
     const removedCustomers = await db

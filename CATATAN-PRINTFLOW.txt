@@ -1,0 +1,850 @@
+=====================================================================
+CATATAN PRINT FLOW
+Dokumentasi percakapan dengan asisten AI
+=====================================================================
+
+Berkas ini berisi balasan lengkap dan informasi penting dari setiap
+percakapan, supaya tetap bisa dibaca utuh walaupun tampilan chat
+terpotong.
+
+Cara membaca:
+  - Bagian A : hal WAJIB yang perlu Anda lakukan (checklist).
+  - Bagian B : status paket berkas saat ini.
+  - Bagian C : log percakapan, entri terbaru ada di PALING BAWAH.
+
+Berkas ini diperbarui di setiap balasan berikutnya.
+
+
+=====================================================================
+BAGIAN A. CHECKLIST WAJIB (belum tentu sudah Anda lakukan)
+=====================================================================
+
+Terakhir diperbarui: 1 November 2026
+
+[ ] 1. Unggah paket terbaru ke GitHub
+       - Unduh printflow-redesign-v2.zip dari halaman preview,
+         lalu ekstrak di komputer.
+       - Di GitHub: Add file > Upload files.
+       - Seret folder "src" dan "public", PLUS berkas
+         "package.json" dan "package-lock.json" dari hasil ekstrak.
+         (package.json WAJIB ikut: ada pustaka baru @vercel/blob.
+          Tanpa itu, build di Vercel gagal.)
+       - Tulis pesan commit, lalu klik Commit changes.
+       - Berkas .md dan .txt di dalam zip TIDAK perlu diunggah.
+
+[ ] 2. Hapus berkas lama yang sudah tidak dipakai
+       (buka berkas di GitHub > titik tiga > Delete file)
+       - src/components/dashboard/DashboardPanels.tsx
+       - src/components/dashboard/DashboardStats.tsx
+       - src/components/dashboard/JobCard.tsx
+       - src/components/dashboard/JobCarousel.tsx
+       - src/components/dashboard/StatusBand.tsx (kalau masih ada)
+
+[ ] 3. SETIAP KALI selesai deploy paket baru, buka SEKALI:
+         https://alamat-aplikasi-anda.vercel.app/api/setup
+       (tambahkan ?token=... kalau memakai SETUP_TOKEN)
+       Tunggu sampai muncul "ok": true. Aman diulang.
+       Untuk aplikasi Anda sekarang:
+         https://printflow-orcin.vercel.app/api/setup
+       Kebiasaan yang disarankan: deploy selesai = buka /api/setup.
+
+[ ] 4. Pasang Vercel Blob (lihat entri [3] bagian "LANGKAH ANDA").
+       Ringkasnya: Vercel > project > Storage > Create > Blob >
+       akses PRIVATE > Connect ke project > Redeploy.
+       Lalu di aplikasi: Pengaturan > kartu "Penyimpanan foto" >
+       Uji koneksi > Pindahkan foto lama > Kembalikan ruang
+       database.
+       Sebelum langkah ini, foto tetap tersimpan di database
+       seperti biasa, jadi tidak ada yang rusak kalau ditunda.
+
+[ ] 4b. (Dianjurkan, tidak mendesak) Tambahkan AUTH_SECRET di
+       Vercel. Lihat entri [4]. Efeknya: semua pengguna, termasuk
+       di APK, perlu login ulang SEKALI.
+
+[ ] 5. Di HP / APK: tutup aplikasi lalu buka lagi. Kalau tampilan
+       lama masih muncul, hapus cache aplikasi di setelan Android.
+
+[ ] 6. Cek langsung di perangkat Anda (tidak bisa saya lihat):
+       - Popup status per produk di layar HP.
+       - Panel pilihan tahap di Chrome desktop, mode gelap.
+       - Scroll dashboard di HP.
+       - Foto tampil normal di detail pekerjaan dan halaman lacak.
+
+
+=====================================================================
+BAGIAN B. STATUS PAKET BERKAS
+=====================================================================
+
+Lokasi di platform ini : folder public/printflow-redesign-v2/
+Unduhan satu berkas    : printflow-redesign-v2.zip
+Dasar pembuatan        : repo Anda, commit 1040095 ("tes5")
+
+Isi paket (ringkas):
+  - Satu bahasa visual untuk seluruh aplikasi (token warna,
+    tombol, kartu, form, judul halaman, mode gelap).
+  - Dashboard redesign (hero dan kartu KPI tetap desain asli).
+  - Antrean prioritas: 1 kartu penuh per layar di HP.
+  - Optimasi scroll dashboard di HP.
+  - Fitur status per produk.
+  - Fitur lebih dari 1 mitra per pekerjaan, termasuk langsung dari
+    form Order Baru.
+  - Perbaikan tampilan pemilih tahap (HP dan desktop).
+  - Foto pindah ke Vercel Blob (private) + celah foto publik
+    ditutup + dashboard hanya memuat pekerjaan aktif.
+
+Dokumen pendukung di dalam paket:
+  - BACA-SAYA.md
+  - FITUR-STATUS-PRODUK-DAN-MULTI-MITRA.md
+  - HAPUS-BERKAS-INI.txt
+  - public/dokumentasi-update/2026-10-14-redesign-dashboard.txt
+    (catatan perubahan teknis, juga tampil di /catatan-perubahan)
+
+Yang TIDAK diubah: src/lib/domain.ts, src/lib/ai.ts, src/proxy.ts,
+service worker, manifest, assetlinks, halaman login.
+Environment variable baru: tidak perlu diisi manual. Vercel
+menambahkannya otomatis saat Blob dihubungkan ke project.
+
+
+=====================================================================
+BAGIAN C. LOG PERCAKAPAN
+=====================================================================
+
+---------------------------------------------------------------------
+[1] SARAN DAN REKOMENDASI PENGEMBANGAN APLIKASI
+---------------------------------------------------------------------
+Permintaan Anda:
+  Saran dan rekomendasi bagian mana yang bisa dikembangkan, baik
+  fitur maupun UI.
+
+Catatan: tidak ada kode yang diubah pada percakapan ini. Saran di
+bawah disusun setelah memeriksa kode dan skema database Anda.
+Prinsip yang dipegang: karyawan tidak boleh merasa ribet.
+
+
+PRIORITAS 1. AMANKAN DULU SEBELUM MENAMBAH FITUR
+(belum terasa sekarang, tapi jadi masalah saat data bertambah)
+
+1) Foto disimpan langsung di database Neon.
+   Paket gratis Neon hanya 0,5 GB per project. Satu foto setelah
+   dikompres aplikasi kira-kira 150-350 KB. Perkiraan kasar: dengan
+   2-3 foto per pekerjaan, database bisa penuh di sekitar
+   700-1.000 pekerjaan. Kalau penuh, aplikasi tidak bisa menyimpan
+   data apa pun, bukan hanya foto.
+   Saran: pindahkan foto ke penyimpanan file, misalnya Vercel Blob,
+   atau Object Storage Neon (paket gratis 5 GB). Database cukup
+   menyimpan alamat fotonya. Cara pakai untuk karyawan tetap sama.
+
+2) Dashboard memuat SEMUA pekerjaan setiap kali dibuka, termasuk
+   yang sudah selesai berbulan-bulan lalu.
+   Setelah ratusan atau ribuan pekerjaan, beranda makin lambat,
+   terutama di HP.
+   Saran: dashboard cukup memuat pekerjaan aktif, angka uang
+   dihitung langsung oleh database.
+
+3) Belum ada tes otomatis.
+   Selama ini setiap revisi diuji manual. Kalau nanti ada yang
+   merevisi tanpa pengujian, sesuatu bisa rusak tanpa ketahuan.
+   Saran: skrip uji browser yang sudah dibuat selama pengerjaan
+   dijadikan tes permanen yang berjalan otomatis di GitHub sebelum
+   Vercel melakukan deploy.
+
+
+PRIORITAS 2. FITUR DENGAN DAMPAK BISNIS PALING BESAR
+
+4) Riwayat pembayaran
+   Sekarang pembayaran hanya SATU angka ("DP/terbayar"). Tidak
+   tercatat kapan DP, kapan pelunasan, tunai/transfer/QRIS, dan
+   siapa yang menerima. Ini sumber selisih kas paling umum di
+   percetakan.
+   Beban karyawan: rendah (satu tombol "Terima pembayaran").
+
+5) Nota / invoice (cetak, PDF, kirim lewat WhatsApp)
+   Belum ada sama sekali. Datanya sudah lengkap, tinggal dibuat.
+   Beban karyawan: nol (otomatis dari data yang ada).
+
+6) Harga per produk
+   Harga sekarang hanya per pekerjaan. Setelah ada multi mitra,
+   margin per produk tidak bisa dihitung.
+   Beban karyawan: rendah (satu kolom tambahan di tabel produk).
+
+7) Halaman Laporan
+   Omzet per minggu/bulan, produk terlaris, pelanggan teratas,
+   persentase tepat waktu, mitra yang paling sering telat.
+   Semua datanya sudah ada di riwayat.
+   Beban karyawan: nol (hanya dibaca Owner).
+
+
+PRIORITAS 3. MEMPERMUDAH KERJA KARYAWAN
+
+8)  Layar "Tugas Saya": karyawan yang login langsung melihat
+    pekerjaan yang ia pegang hari ini, dengan tombol besar
+    "Tahap ini selesai".
+9)  Scan QR: label QR ditempel di barang atau nota, dipindai
+    kamera HP untuk langsung membuka pekerjaan dan memperbarui
+    tahapnya. Cocok untuk barang fisik di percetakan.
+10) Pengingat otomatis lewat notifikasi push: tenggat besok,
+    barang mitra lewat target kembali, barang "siap diambil"
+    lebih dari 3 hari belum diambil.
+11) Template pesan WhatsApp: "siap diambil", "minta pelunasan",
+    "konfirmasi desain".
+
+
+PRIORITAS 4. UI
+
+12) Kartu "Analisa AI" berwarna gradasi ungu. Ungu tidak termasuk
+    sistem warna yang sudah disepakati, jadi ini satu-satunya
+    bagian yang masih lepas dari bahasa visual aplikasi.
+13) Pencarian cepat di header: cari kode PJ, nama pelanggan, atau
+    nomor HP dari halaman mana saja.
+14) Kerangka loading dan tampilan kosong di halaman selain
+    dashboard, yang sekarang masih langsung kosong atau menunggu.
+15) Halaman lacak pelanggan: tambah logo usaha, tombol WhatsApp
+    ke toko, dan foto hasil jadi. Ini halaman yang dilihat
+    pelanggan Anda.
+
+
+YANG TIDAK DISARANKAN SEKARANG
+
+Manajemen stok bahan. Terdengar menarik, tapi hanya berguna kalau
+setiap pemakaian bahan dicatat dengan disiplin. Di percetakan yang
+sibuk, ini paling berisiko membuat karyawan merasa ribet lalu
+datanya tidak akurat. Lebih baik ditunda sampai fitur di atas
+berjalan.
+
+
+URUTAN YANG DIREKOMENDASIKAN
+
+1. Nomor 1 dan 2 dulu (foto dan dashboard). Tidak terlihat oleh
+   pengguna, tapi mencegah aplikasi macet di kemudian hari.
+2. Lalu nomor 4 dan 5 (riwayat pembayaran dan nota), karena
+   manfaatnya langsung terasa di kas dan pelayanan.
+
+PERTANYAAN YANG MENUNGGU JAWABAN ANDA
+  Untuk nomor 1 (penyimpanan foto), pilih salah satu:
+  a) Vercel Blob   : satu tempat dengan hosting Anda.
+  b) Object Storage Neon : satu tempat dengan database.
+
+
+---------------------------------------------------------------------
+[2] PERMINTAAN BERKAS CATATAN .TXT
+---------------------------------------------------------------------
+Permintaan Anda:
+  Balasan tidak bisa terbaca utuh karena keterbatasan platform.
+  Minta dibuatkan berkas .txt berisi balasan dan informasi penting,
+  mulai dari percakapan ini dan selanjutnya.
+
+Yang dikerjakan:
+  - Membuat berkas ini: CATATAN-PRINTFLOW.txt
+  - Lokasi: public/printflow-redesign-v2/CATATAN-PRINTFLOW.txt
+  - Ikut dimasukkan ke printflow-redesign-v2.zip.
+  - Ditambahkan ke daftar unduhan di halaman preview, di urutan
+    paling atas.
+  - Mulai sekarang, setiap balasan akan menambah entri baru di
+    bagian C ini, dan Bagian A (checklist) ikut diperbarui.
+
+Tidak ada kode aplikasi Print Flow yang diubah.
+
+---------------------------------------------------------------------
+[3] FOTO KE PENYIMPANAN FILE + DASHBOARD LEBIH RINGAN
+---------------------------------------------------------------------
+Permintaan Anda:
+  - Kerjakan nomor 1 (foto) dan 2 (dashboard) dulu.
+  - Nomor 4 dan 5 (pembayaran, nota) TIDAK dikerjakan: Print Flow
+    khusus monitoring pekerjaan. Transaksi dan cash flow ditangani
+    aplikasi lain di percetakan.
+  - Anda non-programmer dan minta dibantu memilih penyimpanan
+    foto yang terbaik.
+
+Catatan keputusan Anda (untuk ke depan):
+  Print Flow = aplikasi MONITORING PEKERJAAN. Fitur transaksi
+  (riwayat pembayaran, nota, laporan keuangan) tidak dikembangkan.
+  Kartu KPI "Nilai order aktif" dan "DP / terbayar" di dashboard
+  tetap ada (desain original). Kalau nanti ingin diganti menjadi
+  angka monitoring (misalnya "Selesai minggu ini" atau "Tepat
+  waktu %"), bilang saja.
+
+
+A. ANALISA: VERCEL BLOB atau OBJECT STORAGE NEON?
+
+KEPUTUSAN: VERCEL BLOB, mode PRIVATE.
+
+Alasan utama (dari riset dokumentasi resmi, Oktober 2026):
+
+1) Object Storage Neon BELUM BISA dipakai untuk aplikasi Anda.
+   - Statusnya masih BETA dan Neon sendiri menulis "belum
+     disarankan untuk produksi".
+   - Hanya tersedia di server Amerika (Ohio) dan Eropa
+     (Frankfurt). Database Anda ada di Singapore, jadi fitur ini
+     tidak tersedia untuk project Anda.
+   - Pemasangannya juga butuh membuat kunci akses lewat
+     perintah khusus lalu menyalinnya manual.
+
+2) Vercel Blob sudah resmi (bukan beta), dan mode PRIVATE-nya
+   sudah resmi sejak Juni 2026. Private artinya foto desain dan
+   nota pelanggan TIDAK bisa dibuka orang lain; hanya lewat
+   aplikasi Anda, setelah login atau lewat tautan lacak.
+
+3) Pemasangannya paling mudah untuk non-programmer: beberapa klik
+   di dashboard Vercel yang sama dengan hosting Anda. Tidak ada
+   kunci yang perlu disalin; Vercel mengisinya otomatis.
+
+Perbandingan singkat:
+
+                     Vercel Blob        Object Storage Neon
+  Status             resmi              beta (belum utk produksi)
+  Tersedia di        semua region       hanya Ohio & Frankfurt
+  Foto private       ya                 ya
+  Cara pasang        klik di dashboard  perintah + salin kunci
+  Gratis (Hobby)     1 GB simpan        5 GB (selama beta)
+
+Batasan Vercel Blob yang perlu Anda tahu (paket gratis Hobby):
+  - Simpan 1 GB (kira-kira 3.000-6.000 foto yang sudah
+    dikompres aplikasi).
+  - Baca 10.000 kali per bulan, transfer 10 GB per bulan.
+    Untuk menghemat, aplikasi menyuruh browser menyimpan tiap
+    foto di perangkat, jadi satu foto cukup diunduh sekali per
+    perangkat, tidak setiap kali dibuka.
+  - Pada paket berbayar Pro: 5 GB simpan dan 100.000 baca.
+
+Hal jujur yang perlu Anda ketahui:
+  Menurut syarat Vercel, paket gratis Hobby ditujukan untuk
+  penggunaan pribadi / non-komersial. Aplikasi untuk usaha
+  percetakan secara aturan termasuk penggunaan komersial, yang
+  seharusnya memakai paket Pro (sekitar US$20 per bulan). Ini
+  berlaku untuk seluruh aplikasi Anda di Vercel, bukan hanya
+  Blob. Keputusan ada di tangan Anda; saya hanya
+  menyampaikannya supaya Anda tahu.
+
+Kalau suatu saat 1 GB penuh:
+  Upgrade ke Pro, atau pindah ke Cloudflare R2 (gratis 10 GB,
+  tapi pemasangannya lebih rumit). Kode penyimpanan foto sudah
+  dipisah di satu berkas (src/lib/photo-storage.ts), jadi
+  pindah layanan nanti tidak perlu membongkar banyak tempat.
+
+
+B. YANG DIKERJAKAN
+
+1) Foto baru disimpan di Vercel Blob (private).
+   - Database hanya mencatat alamat file, jadi kuota 0,5 GB Neon
+     tidak lagi habis oleh foto.
+   - Kalau Blob belum dipasang: foto tetap di database seperti
+     dulu. Aplikasi tidak rusak walaupun langkah pasang ditunda.
+   - Kalau Blob sedang gangguan: foto otomatis disimpan di
+     database sebagai cadangan, tidak pernah hilang. Dibatasi
+     15 detik per percobaan, dan setelah satu kegagalan Blob
+     dilewati selama 1 menit supaya unggahan tidak tertahan.
+
+2) Kartu baru "Penyimpanan foto" di Pengaturan (khusus Owner).
+   - Menampilkan jumlah foto di database dan di Blob.
+   - Kalau Blob belum dipasang: langkah pemasangan.
+   - Tombol "Uji koneksi", "Pindahkan N foto lama" (bisa
+     dihentikan dan dilanjutkan kapan saja), dan "Kembalikan
+     ruang database" setelah semua pindah.
+
+3) CELAH KEAMANAN DITUTUP.
+   Sebelumnya, alamat foto (/api/photos/1, /2, /3 ...) bisa
+   dibuka SIAPA SAJA tanpa login, dan nomornya berurutan. Orang
+   luar yang tahu alamat aplikasi bisa melihat semua foto desain
+   dan nota hanya dengan mengganti angka. Sekarang foto hanya
+   bisa dibuka oleh:
+     - pengguna yang login (Owner / Karyawan), atau
+     - pelanggan lewat halaman lacak (alamat foto membawa token
+       lacak pekerjaan itu saja, tidak bisa dipakai untuk foto
+       pekerjaan lain).
+
+4) Perbaikan kecil: setelah "kosongkan semua data", nomor foto
+   mulai lagi dari 1 dan browser bisa menampilkan foto LAMA.
+   Sekarang alamat tiap foto unik selamanya.
+
+5) Menghapus foto / pekerjaan / data contoh ikut menghapus
+   filenya di Blob, jadi kuota Blob tidak terbuang.
+
+6) Dashboard hanya memuat pekerjaan AKTIF (antrian sampai siap,
+   plus ditunda). Dulu semua pekerjaan dimuat, termasuk yang
+   selesai berbulan-bulan lalu. Angka yang butuh semua data
+   (jumlah per tahap, total DP/terbayar) sekarang dihitung
+   langsung oleh database, hasilnya sama persis.
+   Halaman Daftar Pekerjaan sudah memuat yang aktif saja sejak
+   dulu, jadi tidak perlu diubah.
+
+
+C. LANGKAH ANDA (setelah paket diunggah dan /api/setup dibuka)
+
+  1. Buka vercel.com, masuk ke project Print Flow.
+  2. Tab "Storage" > tombol "Create" > pilih "Blob".
+  3. PENTING: pada pilihan akses, pilih "Private".
+     (Kalau terlanjur "Public", uji koneksi akan memberi tahu;
+      buat store baru dengan akses Private.)
+  4. Hubungkan (Connect) store itu ke project Print Flow.
+  5. Tab "Deployments" > titik tiga di deployment teratas >
+     "Redeploy".
+  6. Buka aplikasi > Pengaturan > kartu "Penyimpanan foto".
+  7. Tekan "Uji koneksi". Harus muncul pesan hijau berhasil.
+  8. Tekan "Pindahkan N foto lama". Tunggu sampai selesai.
+     Aplikasi tetap bisa dipakai selama proses ini.
+  9. Tekan "Kembalikan ruang database".
+  10. Buka satu pekerjaan yang ada fotonya, pastikan foto tampil.
+      Buka juga satu tautan lacak pelanggan.
+
+
+D. PENGUJIAN YANG SUDAH DILAKUKAN
+
+Mensimulasikan upgrade produksi dengan database uji:
+  1. Versi LAMA dijalankan, diisi data contoh dan 4 foto JPEG
+     asli (270 KB - 1,4 MB). Terbukti: foto #1 bisa dibuka
+     tanpa login (HTTP 200) = celah.
+  2. Versi BARU di atas database yang sama, SEBELUM Blob
+     dipasang: migrasi aman, foto lama tetap tampil dan isinya
+     identik, foto baru masuk database, tanpa login = 404,
+     token lacak salah = 404, token lacak benar = 200, token
+     pekerjaan lain untuk foto pekerjaan ini = 404.
+  3. Versi BARU DENGAN Blob: 6 foto lama dipindah tanpa gagal,
+     isinya identik byte per byte. Tabel foto di database
+     menyusut dari 4.392 KB menjadi 48 KB. Semua unggahan
+     memakai akses private.
+  4. Hapus 1 foto dan hapus 1 pekerjaan: file di Blob ikut
+     terhapus.
+  5. Blob MATI saat unggah 3 foto: tersimpan di database dalam
+     5 detik (sebelum perbaikan: tertahan lebih dari 60 detik).
+     Setelah Blob pulih, foto itu berhasil dipindahkan.
+  6. Karyawan tidak bisa membuka menu pemindahan (403), tapi
+     tetap bisa melihat foto. Tanpa login: 401.
+  7. Dashboard: "DP / terbayar" = total dari database, persis.
+     Semua halaman terbuka, tidak ada error tak terduga.
+
+Batasan pengujian (jujur):
+  Vercel Blob sungguhan tidak bisa saya akses dari sini. Yang
+  diuji adalah kode Print Flow bersama pustaka resmi Vercel
+  (@vercel/blob 2.8.0) terhadap server tiruan lokal yang meniru
+  cara kerja Blob. Karena itu, langkah C.7 (Uji koneksi) di
+  aplikasi Anda adalah pemeriksaan pertama terhadap layanan
+  aslinya.
+
+
+E. BERKAS YANG BERUBAH
+
+  package.json, package-lock.json   (pustaka @vercel/blob)
+  src/db/schema.ts                  (kolom blob_url)
+  src/app/api/setup/route.ts        (migrasi aditif)
+  src/lib/photo-storage.ts          (BARU)
+  src/lib/photo-migration.ts        (BARU)
+  src/lib/queries.ts
+  src/app/api/photos/[id]/route.ts  (pemeriksaan izin)
+  src/app/api/admin/photos/route.ts (BARU, khusus Owner)
+  src/app/api/orders/[id]/route.ts
+  src/app/api/admin/reset/route.ts
+  src/components/PhotoStorageCard.tsx (BARU)
+  src/app/pengaturan/page.tsx
+  src/app/page.tsx                  (dashboard)
+
+  Zona C yang sengaja disentuh (fitur teknis ini memang
+  menyangkut penyimpanan): schema, api, photos. proxy.ts TIDAK
+  diubah; pemeriksaan izin foto dilakukan di rute fotonya.
+
+
+---------------------------------------------------------------------
+[4] PEMERIKSAAN ENVIRONMENT VARIABLE DI VERCEL
+---------------------------------------------------------------------
+Pertanyaan Anda:
+  Screenshot daftar Environment Variables di Vercel, "apakah ini
+  sudah benar?"
+
+Cara memeriksa: setiap nama dicocokkan dengan kode aplikasi
+(nama variabel yang benar-benar dibaca Print Flow).
+
+JAWABAN SINGKAT
+  Aplikasi Anda sudah bisa berjalan dengan daftar ini. Ada 1 yang
+  belum ada karena memang belum dipasang (Blob), 1 yang dianjurkan
+  (AUTH_SECRET), dan 2 yang tidak dibaca aplikasi tapi tidak
+  berbahaya.
+
+RINCIAN PER VARIABEL
+
+  DATABASE_URL                    BENAR. Wajib, dipakai aplikasi.
+  OPENAI_API_KEY                  BENAR. Mengaktifkan Tanya AI (GPT).
+  VAPID_SUBJECT                   BENAR. Notifikasi push.
+  VAPID_PRIVATE_KEY               BENAR. Notifikasi push.
+  NEXT_PUBLIC_..._PUBLIC_KEY      BENAR. Harus bernama persis
+                                  NEXT_PUBLIC_VAPID_PUBLIC_KEY.
+                                  "All Environments" tidak masalah.
+  ANDROID_PACKAGE_NAME            BENAR. Untuk APK tanpa address bar.
+  ANDROID_SHA2..._FINGERPRINT     Namanya terpotong di screenshot.
+                                  Harus persis:
+                                  ANDROID_SHA256_CERT_FINGERPRINT
+                                  Kalau APK Anda tampil tanpa
+                                  address bar, berarti sudah benar.
+
+  DATABASE_URL_UNPOOLED           TIDAK dibaca aplikasi. Biasanya
+                                  ditambahkan otomatis oleh
+                                  integrasi Neon. BIARKAN SAJA,
+                                  jangan dihapus.
+  OPENAI_MODEL                    TIDAK dibaca aplikasi. Model AI
+                                  sudah ditetapkan di kode
+                                  (gpt-4o-mini). Mengubah nilai ini
+                                  tidak berpengaruh apa pun. Boleh
+                                  dibiarkan atau dihapus.
+
+YANG BELUM ADA
+
+  1) Variabel Vercel Blob (BLOB_STORE_ID dan/atau
+     BLOB_READ_WRITE_TOKEN)
+     Belum ada karena Blob belum dihubungkan ke project. Ini wajar
+     kalau langkah pemasangan (entri [3] bagian C) belum
+     dilakukan.
+     - JANGAN tambahkan manual. Vercel mengisinya otomatis saat
+       store Blob di-Connect ke project.
+     - Saat Connect, pastikan "Production" ikut dicentang.
+     - Setelah itu variabelnya akan muncul di daftar ini, lalu
+       wajib Redeploy.
+
+  2) AUTH_SECRET (dianjurkan, tidak mendesak)
+     Kunci untuk menandatangani sesi login. Karena belum ada,
+     aplikasi memakai DATABASE_URL sebagai kunci cadangan. Login
+     tetap berjalan normal.
+     Kenapa tetap dianjurkan: kunci login sebaiknya terpisah dari
+     alamat database, supaya masing-masing bisa diganti sendiri.
+     Contoh: kalau suatu saat password database diganti, semua
+     orang ikut ter-logout; dengan AUTH_SECRET sendiri, tidak.
+     Efek saat ditambahkan: SEMUA pengguna, termasuk di APK,
+     ter-logout dan perlu login ulang SEKALI. Data tidak berubah.
+     Pilih waktu yang sepi, misalnya setelah jam kerja.
+
+     Cara menambahkan:
+       a. Buka halaman preview, bagian "Pembuat nilai
+          AUTH_SECRET", tekan "Buat nilai acak", lalu "Salin".
+          (Nilainya dibuat di browser Anda, tidak dikirim ke mana
+          pun. Jangan kirim ke siapa pun, termasuk ke chat.)
+       b. Vercel > project > Settings > Environment Variables >
+          Add. Name: AUTH_SECRET, Value: tempel. Environment:
+          Production dan Preview.
+       c. Save, lalu Redeploy.
+       d. Login ulang di semua perangkat.
+     Setelah dipasang, JANGAN diubah-ubah. Mengubahnya membuat
+     semua orang ter-logout lagi.
+
+PENGINGAT UMUM
+  Setiap kali menambah atau mengubah Environment Variable di
+  Vercel, WAJIB Redeploy supaya perubahan berlaku.
+
+  Screenshot hanya menampilkan 9 variabel. Kalau ada variabel lain
+  di bawahnya yang tidak terlihat, kirimkan saja untuk dicek.
+
+Yang dikerjakan:
+  - Tidak ada kode aplikasi Print Flow yang diubah.
+  - Ditambahkan "Pembuat nilai AUTH_SECRET" di halaman preview
+    (hanya di preview, tidak masuk paket aplikasi Anda).
+
+---------------------------------------------------------------------
+[5] PENGATURAN MENAMPILKAN "GAGAL MENGHUBUNGI DATABASE"
+---------------------------------------------------------------------
+Laporan Anda:
+  - /api/health: "ok": true, "Database siap dipakai".
+  - Sudah Redeploy (commit a56a6d9 "update vercel foto storage").
+  - Tapi setiap membuka Pengaturan muncul "Gagal menghubungi
+    database" dengan pesan "Failed query: ... blob_url ...".
+
+PENYEBAB
+  Database Anda TIDAK bermasalah dan koneksinya baik. Kode yang
+  baru di-deploy membaca kolom baru "blob_url" (untuk foto di
+  Vercel Blob), tetapi kolom itu belum dibuat di database.
+  Kolom dibuat oleh /api/setup, dan langkah itu belum dijalankan
+  setelah deploy terakhir.
+
+  Kenapa /api/health bilang "siap": /api/health versi lama hanya
+  memeriksa koneksi dan keberadaan tabel, tidak memeriksa kolom.
+
+  Kenapa pesannya "Gagal menghubungi database": pustaka database
+  membungkus error aslinya ("kolom blob_url tidak ada") di dalam
+  error lain. Pemeriksa error hanya membaca bungkus luarnya, jadi
+  salah menyimpulkan masalah koneksi. Pesannya menyesatkan.
+
+  Dugaan saya kuat, karena kondisinya sudah saya reproduksi
+  persis: database versi lama + kode baru tanpa /api/setup
+  menghasilkan layar yang sama dengan screenshot Anda. Setelah
+  /api/setup dibuka, Pengaturan langsung normal.
+
+YANG PERLU ANDA LAKUKAN SEKARANG (tidak perlu unggah apa pun)
+  1. Buka di browser:
+       https://printflow-orcin.vercel.app/api/setup
+  2. Tunggu sampai muncul "ok": true.
+  3. Buka lagi Pengaturan. Kartu "Penyimpanan foto" akan muncul.
+  Data tidak berubah dan tidak ada yang hilang.
+
+  Kalau setelah itu Pengaturan MASIH error, kemungkinan berkas
+  src/app/api/setup/route.ts versi baru belum ikut terunggah.
+  Kirimkan screenshot hasil /api/setup untuk dicek.
+
+YANG DIPERBAIKI DI PAKET (supaya tidak membingungkan lagi)
+  1) Layar error sekarang mengenali "kolom belum ada" dan
+     menulis "Database perlu diperbarui", lengkap dengan nama
+     kolomnya, keterangan bahwa data aman, dan tombol baru
+     "Perbarui database sekarang" (membuka /api/setup).
+  2) /api/health ikut memeriksa kolom dari pembaruan terbaru.
+     Kalau /api/setup belum dibuka, hasilnya "ok": false,
+     "Database perlu diperbarui", bukan lagi "siap".
+
+  Diuji dengan database versi lama:
+    - Sebelum perbaikan: health "siap", Pengaturan "Gagal
+      menghubungi database" (sama dengan screenshot Anda).
+    - Sesudah perbaikan: health "Database perlu diperbarui",
+      Pengaturan menampilkan penjelasan + tombol.
+    - Setelah tombol ditekan: health "siap", Pengaturan normal
+      dengan kartu "Penyimpanan foto", halaman lain normal.
+
+  Berkas berubah (ikut di zip, TIDAK wajib diunggah sekarang;
+  cukup ikut di unggahan berikutnya):
+    src/lib/dbcheck.ts
+    src/components/ProblemScreen.tsx
+
+CATATAN TAMBAHAN
+  Repo publik printflow_public masih di commit lama (1040095),
+  sedangkan Vercel men-deploy commit a56a6d9 dari repo lain. Itu
+  tidak masalah. Hanya saja saya tidak bisa melihat isi repo yang
+  benar-benar ter-deploy, jadi pemeriksaan saya berdasarkan pesan
+  error dan paket yang saya kirim.
+
+---------------------------------------------------------------------
+[6] PENUTUP SESI + BEKAL UNTUK SESI BERIKUTNYA
+---------------------------------------------------------------------
+Kabar Anda:
+  Setelah /api/setup dibuka, Pengaturan sudah normal. Sesi
+  ditutup; sesi berikutnya akan mengerjakan PRIORITAS 3 dan 4
+  (lihat entri [1]).
+
+POSISI TERAKHIR
+  Aplikasi berjalan normal di printflow-orcin.vercel.app,
+  commit a56a6d9 ("update vercel foto storage").
+
+  Satu hal yang ada di zip tapi belum Anda unggah (tidak
+  mendesak, ikutkan di unggahan berikutnya):
+    src/lib/dbcheck.ts
+    src/components/ProblemScreen.tsx
+  Isinya: pesan "Database perlu diperbarui" yang lebih jelas dan
+  /api/health yang ikut memeriksa kolom (entri [5]).
+
+  Yang belum pasti statusnya (cek sendiri kalau sempat):
+    - Vercel Blob sudah dipasang atau belum? Cek di Pengaturan >
+      "Penyimpanan foto". Kalau tertulis "Foto masih disimpan di
+      database", ikuti langkah di entri [3] bagian C.
+    - AUTH_SECRET (dianjurkan, tidak mendesak, entri [4]).
+
+UNTUK MEMULAI SESI BERIKUTNYA
+  Asisten di sesi baru TIDAK mengingat percakapan ini. Supaya
+  bisa langsung lanjut:
+  1. Lampirkan atau tempelkan berkas CATATAN-PRINTFLOW.txt ini.
+  2. Pastikan repo GitHub yang dibaca asisten berisi kode
+     TERBARU. Saat ini repo publik printflow_public masih di
+     commit lama (1040095), sedangkan yang berjalan di Vercel
+     adalah commit a56a6d9. Pilihannya:
+       a. unggah isi repo terbaru ke printflow_public, atau
+       b. berikan alamat repo yang benar-benar ter-deploy.
+     Tanpa ini, asisten akan bekerja dari kode lama dan bisa
+     menimpa perbaikan yang sudah ada.
+  3. Sebutkan bagian yang ingin dikerjakan, misalnya:
+     "lanjutkan PRIORITAS 3 nomor 8 (Tugas Saya)".
+
+DAFTAR PEKERJAAN SESI BERIKUTNYA (dari entri [1])
+  PRIORITAS 3. Mempermudah kerja karyawan
+    8)  Layar "Tugas Saya": pekerjaan yang dipegang karyawan
+        hari ini, tombol besar "Tahap ini selesai".
+    9)  Scan QR di barang/nota untuk membuka pekerjaan dan
+        memperbarui tahap.
+    10) Pengingat otomatis (push): tenggat besok, barang mitra
+        lewat target, barang siap diambil lebih dari 3 hari.
+    11) Template pesan WhatsApp.
+  PRIORITAS 4. UI
+    12) Kartu "Analisa AI" masih gradasi ungu, belum ikut sistem
+        warna.
+    13) Pencarian cepat di header (kode PJ, pelanggan, no. HP).
+    14) Kerangka loading dan tampilan kosong di halaman selain
+        dashboard.
+    15) Halaman lacak pelanggan: logo usaha, tombol WhatsApp ke
+        toko, foto hasil jadi.
+
+  Tetap berlaku: Print Flow khusus MONITORING PEKERJAAN. Fitur
+  transaksi (pembayaran, nota, laporan keuangan) tidak
+  dikembangkan (keputusan Anda, entri [3]).
+
+KEBIASAAN YANG DISARANKAN
+  - Setiap selesai deploy paket baru: buka /api/setup sekali.
+  - Setiap mengubah Environment Variable di Vercel: Redeploy.
+  - Sebelum mengunggah paket besar, simpan dulu salinan repo
+    (misalnya unduh ZIP repo dari GitHub) sebagai cadangan.
+
+Tidak ada kode aplikasi yang diubah pada entri ini.
+
+Terima kasih untuk sesi ini. Sampai jumpa di sesi berikutnya.
+
+---------------------------------------------------------------------
+[7] SESI BARU: KARTU ANALISA AI, PENCARIAN CEPAT, LOADING & KOSONG
+---------------------------------------------------------------------
+Permintaan Anda:
+  Kerjakan poin 12, 13, 14 dari daftar entri [1] (boleh bertahap).
+  Ketiganya selesai sekaligus di sesi ini.
+
+Catatan kode: repo publik printflow_public masih versi lama
+(1040095). Pekerjaan ini dibuat dari repo tersebut DITAMBAH paket
+terakhir yang sudah Anda deploy, jadi hasilnya sama dengan yang
+berjalan di Vercel sekarang.
+
+
+A. POIN 12: KARTU "ANALISA AI" TANPA UNGU
+
+  - Kepala kartu tidak lagi bergradasi teal ke ungu. Sekarang
+    sama dengan panel dashboard: kepala polos, kotak ikon teal,
+    badge tingkat risiko berwarna di kanan.
+  - Skor risiko: angka besar + bar + skala (Aman, Waspada,
+    Berisiko, Terlambat), tingkat yang berlaku ditebalkan.
+  - "Kenapa begitu?" dan "Saran tindakan" lebih mudah dibaca;
+    saran tindakan diberi latar teal lembut.
+  - "Riwayat catatan AI" dilipat (ketuk untuk membuka), supaya
+    kartu ringkas.
+  - Emoji dan tanda pisah panjang dari mesin analisa dirapikan
+    SAAT DITAMPILKAN saja. src/lib/ai.ts tidak diubah.
+  - Gradasi ungu yang sama ternyata juga ada di halaman LACAK
+    PELANGGAN dan halaman MULAI. Keduanya diganti navy ke teal
+    (warna merek). Sekarang tidak ada warna ungu lagi di aplikasi,
+    kecuali warna status "Desain" yang memang ditetapkan di
+    domain.ts sebagai warna status.
+
+
+B. POIN 13: PENCARIAN CEPAT DI HEADER
+
+  Tombol kaca pembesar di header, ada di SEMUA halaman (HP dan
+  desktop). Bisa mencari:
+    - kode pekerjaan : "PJ-2026-0002", "0002", "pj20260002"
+    - nama pekerjaan : "stiker"
+    - nama pelanggan : "berkah"
+    - nomor HP       : "0812 3456", "+62 812-3456-7890",
+                       "(0857) 1111" (format apa pun ketemu,
+                       awalan +62 disamakan dengan 0)
+
+  Hasil dikelompokkan:
+    - Pekerjaan (maks. 8): kode, judul, pelanggan, tenggat, status.
+      Yang masih aktif selalu di atas; yang sudah selesai tetap
+      muncul (berguna untuk pelanggan yang datang lagi).
+      Ketuk untuk membuka detail pekerjaan.
+    - Pelanggan (maks. 5): nama, nomor HP, jumlah pekerjaan.
+      Ketuk untuk membuka SEMUA pekerjaan pelanggan itu.
+
+  Pintasan di desktop:
+    Ctrl+K (Mac: Cmd+K) atau tombol "/" dari halaman mana saja.
+    Panah atas/bawah memilih, Enter membuka, Esc menutup.
+
+  Di HP: header kini berisi 4 elemen (nama, cari, tema, menu).
+  Nama pengguna yang panjang otomatis dipotong rapi dengan "..."
+  supaya tombol tidak terdorong keluar layar.
+
+  Keamanan: hanya untuk pengguna yang login (Owner dan Karyawan).
+
+
+C. POIN 14: KERANGKA LOADING DAN TAMPILAN KOSONG
+
+  Kerangka loading (tampil selama data diambil dari database):
+    Dulu: satu tampilan untuk semua halaman (logo berkedip).
+    Sekarang: bentuknya meniru halaman tujuan, supaya saat data
+    muncul tidak ada yang "melompat":
+      - Daftar Pekerjaan : filter + kartu (HP) / tabel (desktop)
+      - Detail Pekerjaan : tata letak 3 kolom (kiri navigasi,
+                           tengah isi, kanan foto) + bilah tab HP
+      - Pelanggan, Mitra, Serah Terima, Pengaturan : masing-masing
+      - Halaman lain     : kerangka umum
+    Efek kilau otomatis mati kalau HP memakai setelan "kurangi
+    gerak". Tidak ada spinner bulat.
+
+  Tampilan kosong (satu gaya untuk semua halaman):
+    - Daftar Pekerjaan dibedakan dua keadaan:
+        a. pencarian / filter tidak menemukan apa pun:
+           tombol "Hapus filter", dan "Cari di semua pekerjaan"
+           kalau yang dicari ada di pekerjaan yang sudah selesai.
+        b. tidak ada pekerjaan aktif:
+           tombol "Buat pekerjaan" dan "Lihat yang selesai".
+    - Pelanggan, Mitra, Serah Terima: penjelasan singkat + langkah
+      berikutnya yang jelas.
+
+
+D. PENGUJIAN
+
+  Aplikasi dijalankan dengan database berisi data contoh dan
+  nomor HP berbagai format.
+
+  Pencarian lewat server (12 variasi): kode lengkap, sebagian,
+  tanpa tanda hubung, nama, nomor HP berbagai format, 1 huruf
+  (tidak mencari), karakter aneh (% ' _), tanpa login (ditolak).
+  Ditemukan dan diperbaiki 2 masalah saat pengujian:
+    1. "+62 812-3456-7890" tidak ketemu (tanda + dan - dihitung
+       sebagai huruf). Sudah ketemu.
+    2. Jumlah pekerjaan per pelanggan selalu 0 (kolom tertukar
+       di dalam kueri). Sekarang cocok dengan hitungan database.
+
+  Uji browser (Chromium), 24 dari 24 lulus:
+    - Desktop 1360px: header tetap satu baris (65px), Ctrl+K,
+      "/", panah + Enter membuka pekerjaan, Esc menutup dan fokus
+      kembali ke tombol, jendela tertutup setelah pindah halaman.
+    - Kartu Analisa AI: tanpa ungu, tanpa emoji, tanpa tanda pisah
+      panjang, skor dan saran tampil.
+    - HP 360px: tidak ada geser samping, 4 elemen header utuh di
+      layar, cari nomor HP lalu ketuk pelanggan membuka 2
+      pekerjaannya.
+    - Tampilan kosong: Daftar Pekerjaan, Mitra, Serah Terima,
+      Pelanggan.
+  Kerangka loading: terkirim di 7 halaman (Daftar, Detail,
+  Pelanggan, Mitra, Serah Terima, Pengaturan, halaman lain).
+
+  Batasan: isi gambar tangkapan layar tidak bisa saya nilai
+  dengan yakin; hasil di atas berdasarkan pengukuran. Mohon cek
+  tampilan langsung di HP dan desktop setelah deploy.
+
+
+E. BERKAS
+
+  BARU:
+    src/components/AiInsightCard.tsx
+    src/components/QuickSearch.tsx
+    src/components/EmptyState.tsx
+    src/components/PageSkeleton.tsx
+    src/lib/search-queries.ts
+    src/app/api/search/route.ts
+    src/app/pesanan/loading.tsx
+    src/app/pesanan/[id]/loading.tsx
+    src/app/pesanan/baru/loading.tsx
+    src/app/pelanggan/loading.tsx
+    src/app/mitra/loading.tsx
+    src/app/serah-terima/loading.tsx
+    src/app/pengaturan/loading.tsx
+  DIUBAH:
+    src/app/layout.tsx          (tombol cari di header)
+    src/app/loading.tsx         (kerangka umum)
+    src/components/UserMenu.tsx (nama panjang dipotong rapi)
+    src/app/pesanan/[id]/page.tsx
+    src/app/pesanan/page.tsx
+    src/app/pelanggan/page.tsx
+    src/app/mitra/page.tsx
+    src/app/serah-terima/page.tsx
+    src/app/lacak/[token]/page.tsx
+    src/app/mulai/page.tsx
+
+  Tidak ada perubahan database. /api/setup TIDAK wajib dibuka
+  kali ini (tapi tidak apa-apa kalau dibuka, aman diulang).
+  Tidak ada pustaka baru.
+
+
+F. CARA PASANG
+
+  Seperti biasa: unduh printflow-redesign-v2.zip, ekstrak, lalu
+  di GitHub Add file > Upload files, seret folder "src" (dan
+  "public" kalau belum pernah). Zip ini juga berisi semua
+  perubahan sebelumnya, termasuk dbcheck.ts dan ProblemScreen.tsx
+  dari entri [5] yang belum sempat diunggah.
+
+
+G. SISA DAFTAR PEKERJAAN (dari entri [1])
+
+  PRIORITAS 3: 8) Tugas Saya, 9) Scan QR, 10) Pengingat otomatis,
+               11) Template pesan WhatsApp
+  PRIORITAS 4: 15) Halaman lacak pelanggan (logo, tombol WA ke
+               toko, foto hasil jadi)
+
+---------------------------------------------------------------------
+(entri berikutnya akan ditambahkan di bawah ini)
+---------------------------------------------------------------------

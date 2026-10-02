@@ -129,7 +129,7 @@ export function MoreMenu({ role }: { role: UserRole }) {
         title="Menu lainnya"
         className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all md:h-9 md:w-9 ${
           open || isUtilityPage
-            ? "border-amber-300 bg-amber-400 text-[#07384f] shadow-[0_5px_16px_rgba(251,191,36,.24)]"
+            ? "border-amber-300 bg-amber-400 text-[color:var(--pf-ink)] shadow-[0_5px_16px_rgba(251,191,36,.24)]"
             : "border-white/15 bg-white/10 text-white hover:bg-white/20"
         }`}
       >
@@ -139,7 +139,7 @@ export function MoreMenu({ role }: { role: UserRole }) {
       {open ? (
         <div className="absolute right-0 top-12 z-[80] max-h-[calc(100dvh-5.5rem)] w-[min(19rem,calc(100vw-1rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_55px_rgba(7,56,79,.3)] md:top-11">
           <div className="border-b border-slate-100 px-2.5 pb-2 pt-1">
-            <p className="text-[10px] font-extrabold uppercase tracking-[.12em] text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-slate-400">
               Menu lainnya
             </p>
           </div>
@@ -167,7 +167,7 @@ export function MoreMenu({ role }: { role: UserRole }) {
                     <Icon size={17} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-extrabold">{item.label}</span>
+                    <span className="block text-xs font-semibold">{item.label}</span>
                     <span className="mt-0.5 block text-[10px] leading-tight text-slate-400">
                       {item.description}
                     </span>

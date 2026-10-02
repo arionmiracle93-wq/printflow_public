@@ -2,9 +2,11 @@ import { randomBytes } from "node:crypto";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { aiNotes, customers, orderEvents, orderItems, orderPhotos, orders, settings } from "@/db/schema";
-import { ACTIVE_STATUSES, estimateHoursForItems, orderCode, type StatusKey } from "@/lib/domain";
+import { ACTIVE_STATUSES, estimateHoursForItems, orderCode, statusMeta, type StatusKey } from "@/lib/domain";
+import { effectiveItemStatus, flowIndex, rollupStatus } from "@/lib/item-status";
 import { type OrderItem, type OrderItemInput } from "@/lib/order-items";
 import type { AiOrder } from "@/lib/ai";
+import { blobUsable, deletePhotoBlobs, putPhotoBlob } from "@/lib/photo-storage";
 
 export type OrderFilter = {
   status?: string;
@@ -50,6 +52,8 @@ export async function itemsByOrderId(ids: number[]): Promise<Map<number, OrderIt
       productType: orderItems.productType,
       quantity: orderItems.quantity,
       unit: orderItems.unit,
+      status: orderItems.status,
+      outsourceJobId: orderItems.outsourceJobId,
     })
     .from(orderItems)
     .where(inArray(orderItems.orderId, ids))
@@ -57,7 +61,14 @@ export async function itemsByOrderId(ids: number[]): Promise<Map<number, OrderIt
 
   for (const row of rows) {
     const list = map.get(row.orderId) ?? [];
-    list.push({ id: row.id, productType: row.productType, quantity: row.quantity, unit: row.unit });
+    list.push({
+      id: row.id,
+      productType: row.productType,
+      quantity: row.quantity,
+      unit: row.unit,
+      status: row.status,
+      outsourceJobId: row.outsourceJobId,
+    });
     map.set(row.orderId, list);
   }
   return map;
@@ -126,23 +137,41 @@ export async function getOrderById(id: number) {
  * Estimasi jam kerja pekerjaan ikut dihitung ulang agar analisa risiko AI
  * tetap nyambung dengan isi terbaru.
  */
+/**
+ * Simpan daftar produk sebuah pekerjaan.
+ *
+ * Dulu: hapus semua baris lalu tulis ulang. Aman selama produk belum punya
+ * status sendiri. Sekarang baris yang sudah ada (punya id) DIPERBARUI di
+ * tempat, baris baru ditambahkan, dan baris yang tidak dikirim lagi dihapus.
+ * Dengan begitu status produk dan mitranya tidak hilang saat jumlah atau
+ * nama produk dikoreksi.
+ */
 export async function replaceOrderItems(orderId: number, items: OrderItemInput[]) {
-  await db.delete(orderItems).where(eq(orderItems.orderId, orderId));
-  if (items.length) {
-    await db.insert(orderItems).values(
-      items.map((item, index) => ({
-        orderId,
-        productType: item.productType,
-        quantity: item.quantity,
-        unit: item.unit,
-        position: index,
-      })),
-    );
+  const existing = await db
+    .select({ id: orderItems.id })
+    .from(orderItems)
+    .where(eq(orderItems.orderId, orderId));
+  const ownIds = new Set(existing.map((r) => r.id));
+  const keep = new Set<number>();
+
+  for (const [index, item] of items.entries()) {
+    const values = { productType: item.productType, quantity: item.quantity, unit: item.unit, position: index };
+    if (item.id && ownIds.has(item.id)) {
+      keep.add(item.id);
+      await db.update(orderItems).set(values).where(eq(orderItems.id, item.id));
+    } else {
+      await db.insert(orderItems).values({ orderId, ...values });
+    }
   }
+
+  const removed = [...ownIds].filter((id) => !keep.has(id));
+  if (removed.length) await db.delete(orderItems).where(inArray(orderItems.id, removed));
+
   await db
     .update(orders)
     .set({ estHours: estimateHoursForItems(items), updatedAt: new Date() })
     .where(eq(orders.id, orderId));
+  await syncOrderStatusFromItems(orderId, "Sistem");
   return listOrderItems(orderId);
 }
 
@@ -275,6 +304,84 @@ export async function updateOrderStatus(
   return { from, to: toStatus };
 }
 
+/* =====================================================================
+   STATUS PER PRODUK
+   Aturan hitungnya ada di src/lib/item-status.ts.
+   ===================================================================== */
+
+/**
+ * Hitung ulang status pekerjaan dari produk-produknya. Hanya berlaku
+ * kalau ada produk yang memakai status sendiri. Kalau hasilnya berbeda
+ * dari status sekarang, status pekerjaan diperbarui lewat
+ * updateOrderStatus sehingga riwayat tetap tercatat seperti biasa.
+ */
+export async function syncOrderStatusFromItems(orderId: number, actor: string) {
+  const [order] = await db.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order) return null;
+  const items = await listOrderItems(orderId);
+  if (!items.some((i) => i.status)) return null;
+  const target = rollupStatus(items.map((i) => effectiveItemStatus(i.status, order.status)));
+  if (!target || target === order.status) return null;
+  return updateOrderStatus(orderId, target, "Otomatis mengikuti tahap produk paling lambat.", actor);
+}
+
+/**
+ * Ubah status SATU produk. Saat pertama kali dipisah, produk lain diberi
+ * status pekerjaan saat ini supaya tidak ada yang ikut berubah tanpa sengaja.
+ * Mengembalikan status pekerjaan sebelum dan sesudah.
+ */
+export async function setItemStatus(orderId: number, itemId: number, toStatus: string, actor: string) {
+  const [order] = await db.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order) return null;
+  const items = await listOrderItems(orderId);
+  const item = items.find((i) => i.id === itemId);
+  if (!item) return null;
+
+  const from = effectiveItemStatus(item.status, order.status);
+  await db
+    .update(orderItems)
+    .set({ status: order.status })
+    .where(and(eq(orderItems.orderId, orderId), isNull(orderItems.status)));
+  await db.update(orderItems).set({ status: toStatus }).where(eq(orderItems.id, itemId));
+
+  if (from !== toStatus) {
+    await db.insert(orderEvents).values({
+      orderId,
+      fromStatus: `produk:${from}`,
+      toStatus: `produk:${toStatus}`,
+      note: `${item.productType} (${item.quantity} ${item.unit}): ${statusMeta(from).short} ke ${statusMeta(toStatus).short}`,
+      actor: actor || "Owner",
+    });
+  }
+  const changed = await syncOrderStatusFromItems(orderId, actor);
+  return { orderFrom: order.status, orderTo: changed?.to ?? order.status, itemFrom: from };
+}
+
+/**
+ * Status pekerjaan diubah langsung (tombol status biasa). Kalau produknya
+ * sedang memakai status terpisah, perubahan diteruskan ke produk:
+ *   - Tahap normal (antrian..selesai): produk yang tertinggal dinaikkan ke
+ *     tahap itu. Produk yang sudah lebih maju tidak dimundurkan.
+ *   - Ditunda / batal: berlaku untuk semua produk yang belum selesai.
+ * Hasilnya status pekerjaan tetap sama dengan yang dipilih pengguna.
+ */
+export async function applyOrderStatusToItems(orderId: number, toStatus: string) {
+  const items = await listOrderItems(orderId);
+  if (!items.some((i) => i.status)) return;
+  const target = flowIndex(toStatus);
+  for (const item of items) {
+    const current = item.status ?? toStatus;
+    if (current === "batal") continue;
+    let next = current;
+    if (target === -1) {
+      if (current !== "selesai") next = toStatus;
+    } else if (flowIndex(current) === -1 || flowIndex(current) < target) {
+      next = toStatus;
+    }
+    if (next !== item.status) await db.update(orderItems).set({ status: next }).where(eq(orderItems.id, item.id));
+  }
+}
+
 export async function saveAiNote(input: {
   orderId: number | null;
   riskScore: number;
@@ -320,6 +427,17 @@ import { MAX_PHOTOS_PER_ORDER, PHOTO_KINDS, type PhotoItem } from "@/lib/photos"
 export { MAX_PHOTOS_PER_ORDER, PHOTO_KINDS, photoKindLabel } from "@/lib/photos";
 export type { PhotoItem as PhotoMeta } from "@/lib/photos";
 
+/**
+ * Alamat foto untuk ditampilkan. Parameter v (dari waktu unggah) membuat
+ * alamat tiap foto unik selamanya. Tanpa ini, setelah "kosongkan semua
+ * data" nomor foto mulai lagi dari 1, dan browser yang menyimpan foto
+ * lama selama setahun bisa menampilkan foto LAMA untuk nomor yang sama.
+ */
+export function photoUrl(id: number, createdAt: Date, shareToken?: string | null): string {
+  const v = createdAt.getTime().toString(36);
+  return `/api/photos/${id}?v=${v}${shareToken ? `&t=${encodeURIComponent(shareToken)}` : ""}`;
+}
+
 export async function listPhotos(orderId: number): Promise<PhotoItem[]> {
   const rows = await db
     .select({
@@ -338,10 +456,16 @@ export async function listPhotos(orderId: number): Promise<PhotoItem[]> {
   return rows.map((row) => ({
     ...row,
     createdAt: row.createdAt.toISOString(),
-    url: `/api/photos/${row.id}`,
+    url: photoUrl(row.id, row.createdAt),
   }));
 }
 
+/**
+ * Simpan foto baru. Kalau Vercel Blob sudah dipasang, file disimpan di
+ * sana dan database hanya mencatat alamatnya. Kalau belum dipasang, atau
+ * Blob sedang bermasalah, foto disimpan di database seperti dulu supaya
+ * tidak pernah hilang.
+ */
 export async function insertPhoto(input: {
   orderId: number;
   kind: string;
@@ -351,6 +475,15 @@ export async function insertPhoto(input: {
   data: Buffer;
   uploadedBy?: string | null;
 }): Promise<PhotoItem> {
+  let blobUrl: string | null = null;
+  if (blobUsable()) {
+    try {
+      blobUrl = await putPhotoBlob(input.orderId, input.data, input.mime);
+    } catch (error) {
+      console.error("insertPhoto: Vercel Blob gagal, foto disimpan di database sebagai cadangan", error);
+    }
+  }
+
   const [row] = await db
     .insert(orderPhotos)
     .values({
@@ -360,40 +493,76 @@ export async function insertPhoto(input: {
       sizeBytes: input.sizeBytes,
       caption: input.caption,
       uploadedBy: input.uploadedBy ?? null,
-      data: input.data,
+      data: blobUrl ? null : input.data,
+      blobUrl,
     })
     .returning({ id: orderPhotos.id, createdAt: orderPhotos.createdAt });
 
-  const created: PhotoItem = {
+  return {
     id: row.id,
     kind: input.kind,
     caption: input.caption,
     sizeBytes: input.sizeBytes,
     createdAt: row.createdAt.toISOString(),
-    url: `/api/photos/${row.id}`,
+    url: photoUrl(row.id, row.createdAt),
   };
-  return created;
 }
 
-export async function getPhotoBlob(
-  photoId: number,
-): Promise<{ data: Buffer; mime: string } | null> {
+/**
+ * Data untuk menyajikan satu foto: isinya (kalau masih di database) atau
+ * alamat Blob-nya, plus token lacak pekerjaannya untuk pemeriksaan izin.
+ */
+export async function getPhotoBlob(photoId: number): Promise<{
+  mime: string;
+  data: Buffer | null;
+  blobUrl: string | null;
+  orderId: number;
+  shareToken: string | null;
+} | null> {
   const rows = await db
-    .select({ data: orderPhotos.data, mime: orderPhotos.mime })
+    .select({
+      data: orderPhotos.data,
+      blobUrl: orderPhotos.blobUrl,
+      mime: orderPhotos.mime,
+      orderId: orderPhotos.orderId,
+      shareToken: orders.shareToken,
+    })
     .from(orderPhotos)
+    .innerJoin(orders, eq(orders.id, orderPhotos.orderId))
     .where(eq(orderPhotos.id, photoId))
     .limit(1);
   const row = rows[0];
   if (!row) return null;
-  return { data: Buffer.from(row.data), mime: row.mime };
+  return {
+    mime: row.mime,
+    data: row.data ? Buffer.from(row.data) : null,
+    blobUrl: row.blobUrl,
+    orderId: row.orderId,
+    shareToken: row.shareToken,
+  };
 }
 
 export async function deletePhoto(photoId: number, orderId: number): Promise<boolean> {
   const removed = await db
     .delete(orderPhotos)
     .where(and(eq(orderPhotos.id, photoId), eq(orderPhotos.orderId, orderId)))
-    .returning({ id: orderPhotos.id });
+    .returning({ id: orderPhotos.id, blobUrl: orderPhotos.blobUrl });
+  await deletePhotoBlobs(removed.map((r) => r.blobUrl));
   return removed.length > 0;
+}
+
+/**
+ * Alamat Blob semua foto milik pekerjaan tertentu (atau semua pekerjaan
+ * kalau orderIds tidak diisi). Dipanggil SEBELUM pekerjaan dihapus,
+ * karena setelah itu baris fotonya ikut terhapus dan alamatnya hilang.
+ */
+export async function photoBlobUrls(orderIds?: number[]): Promise<string[]> {
+  if (orderIds && !orderIds.length) return [];
+  const rows = await db
+    .select({ blobUrl: orderPhotos.blobUrl })
+    .from(orderPhotos)
+    .where(orderIds ? inArray(orderPhotos.orderId, orderIds) : sql`true`);
+  return rows.map((r) => r.blobUrl).filter((u): u is string => Boolean(u));
 }
 
 export async function countPhotos(orderId: number): Promise<number> {
@@ -526,20 +695,47 @@ export async function getPublicTracking(token: string): Promise<PublicTracking |
       caption: p.caption,
       sizeBytes: p.sizeBytes,
       createdAt: p.createdAt.toISOString(),
-      url: `/api/photos/${p.id}`,
+      // Pelanggan tidak login, jadi alamat fotonya membawa token lacak.
+      url: photoUrl(p.id, p.createdAt, order.shareToken),
     })),
   };
 }
 
 /** Total penyimpanan yang dipakai foto (untuk halaman pengaturan). */
-export async function photoStorageUsage(): Promise<{ files: number; bytes: number }> {
+export async function photoStorageUsage(): Promise<{
+  files: number;
+  bytes: number;
+  dbFiles: number;
+  dbBytes: number;
+  blobFiles: number;
+  blobBytes: number;
+}> {
   const [row] = await db
     .select({
       files: sql<number>`cast(count(*) as int)`,
       bytes: sql<number>`cast(coalesce(sum(size_bytes),0) as bigint)`,
+      dbFiles: sql<number>`cast(count(*) filter (where blob_url is null) as int)`,
+      dbBytes: sql<number>`cast(coalesce(sum(size_bytes) filter (where blob_url is null),0) as bigint)`,
     })
     .from(orderPhotos);
-  return { files: Number(row?.files ?? 0), bytes: Number(row?.bytes ?? 0) };
+  const files = Number(row?.files ?? 0);
+  const bytes = Number(row?.bytes ?? 0);
+  const dbFiles = Number(row?.dbFiles ?? 0);
+  const dbBytes = Number(row?.dbBytes ?? 0);
+  return { files, bytes, dbFiles, dbBytes, blobFiles: files - dbFiles, blobBytes: bytes - dbBytes };
+}
+
+/**
+ * Total uang masuk (DP + pelunasan) semua pekerjaan kecuali yang batal,
+ * dihitung langsung di database. Dipakai kartu KPI "DP / terbayar" di
+ * dashboard, yang sekarang hanya memuat pekerjaan aktif.
+ */
+export async function paidTotal(): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<number>`cast(coalesce(sum(${orders.paidAmount}),0) as bigint)` })
+    .from(orders)
+    .where(sql`${orders.status} <> 'batal'`);
+  return Number(row?.total ?? 0);
 }
 
 export async function statusCounts() {

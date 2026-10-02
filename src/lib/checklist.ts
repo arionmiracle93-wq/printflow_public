@@ -74,7 +74,7 @@ export async function buildChecklist(): Promise<ChecklistState> {
       .select({
         total: sql<number>`cast(count(*) as int)`,
         active: sql<number>`cast(count(*) filter (where status not in ('selesai','batal')) as int)`,
-        late: sql<number>`cast(count(*) filter (where status <> 'selesai' and status <> 'batal' and (due_date + due_time::interval) < now()) as int)`,
+        late: sql<number>`cast(count(*) filter (where status <> 'selesai' and status <> 'batal' and status <> 'siap' and (due_date + due_time::interval) < now()) as int)`,
       })
       .from(orders);
     const [customerAgg] = await db.select({ total: sql<number>`cast(count(*) as int)` }).from(customers);

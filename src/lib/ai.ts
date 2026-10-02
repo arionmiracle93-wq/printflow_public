@@ -1,6 +1,5 @@
 import {
   ACTIVE_STATUSES,
-  canBeLate,
   deadlineOf,
   estimateHoursForItems,
   hoursBetween,
@@ -107,10 +106,8 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
   } else if (order.status === "batal") {
     riskScore = 0;
   } else if (order.status === "siap") {
-    // Barang sudah jadi & siap diambil/dikirim — tidak ada lagi risiko
-    // PRODUKSI, jadi tidak dihitung "terlambat" walau deadline sudah lewat.
-    // Sisa waktunya cuma soal jadwal pelanggan datang mengambil, lihat
-    // canBeLate() di lib/domain.ts.
+    // Produksi sudah kelar; tinggal menunggu pelanggan mengambil. Waktu
+    // pengambilan di luar kendali percetakan, jadi tidak dihitung telat.
     riskScore = 0;
   } else if (hoursLeft <= 0) {
     riskScore = Math.min(100, 92 + Math.min(8, Math.abs(hoursLeft) / 6));
@@ -131,11 +128,18 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
     reasons.push("Pekerjaan dibatalkan, tidak dihitung dalam beban produksi.");
   } else if (order.status === "siap") {
     reasons.push(
-      hoursLeft < 0
-        ? `Barang sudah jadi dan siap diambil/dikirim — sudah menunggu ${humanDuration(hoursLeft)} sejak jadwal serah terima. Ini BUKAN keterlambatan produksi, tinggal menunggu pelanggan datang.`
-        : `Barang sudah jadi dan siap diambil/dikirim, ${humanDuration(hoursLeft)} lebih awal dari jadwal serah terima.`,
+      "Pekerjaan sudah jadi dan siap diambil / dikirim. Waktu pengambilan tergantung pelanggan, jadi tidak dihitung terlambat.",
     );
     recommendations.push('Kirim pesan "Sudah bisa diambil" ke pelanggan agar rak/gudang cepat kosong.');
+    if (hoursLeft < 0) {
+      reasons.push(`Sudah ±${humanDuration(hoursLeft)} lewat dari jadwal pengambilan / pengiriman.`);
+      recommendations.push("Follow-up pelanggan untuk memastikan jadwal pengambilan / pengiriman.");
+    }
+    if (order.items.length > 1) {
+      recommendations.push(
+        `Cek ulang kelengkapan ${order.items.length} item sebelum diserahkan — jangan sampai ada satu produk yang tertinggal.`,
+      );
+    }
   } else {
     reasons.push(
       `Progres ${done}% (${meta.short}) • sisa kerja ±${humanDuration(workLeftHours)} • sisa waktu ${humanDuration(hoursLeft)}${
@@ -162,8 +166,6 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
     } else {
       reasons.push("Kapasitas waktu masih cukup untuk menyelesaikan pekerjaan ini.");
     }
-  }
-  if (order.status !== "selesai" && order.status !== "batal") {
     if (order.items.length > 1) {
       reasons.push(
         `Pekerjaan ini berisi ${order.items.length} jenis produk: ${summarizeItems(order.items, 4)}. Semuanya harus siap sebelum diserahkan.`,
@@ -183,6 +185,9 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
     if (order.status === "antrian" && hoursLeft < 48) {
       recommendations.push("Pindahkan dari antrian ke proses cetak hari ini (jangan menunggu besok).");
     }
+    if (order.status === "siap") {
+      recommendations.push('Kirim pesan "Sudah bisa diambil" ke pelanggan agar rak/gudang cepat kosong.');
+    }
   }
 
   if (recommendations.length === 0) {
@@ -196,11 +201,11 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
         ? "Dibatalkan ⛔"
         : order.status === "siap"
           ? hoursLeft < 0
-            ? `📦 Siap diambil — menunggu pelanggan ${humanDuration(hoursLeft)}`
-            : `📦 Siap diambil — ${humanDuration(hoursLeft)} lebih awal dari jadwal`
+            ? `Siap diambil/dikirim, tinggal menunggu pelanggan 📦 (±${humanDuration(hoursLeft)} sejak jadwal)`
+            : "Siap diambil/dikirim, tinggal menunggu pelanggan 📦"
           : hoursLeft < 0
-            ? `Terlambat ${humanDuration(hoursLeft)} dari deadline 🔴`
-            : `${RISK_META[level].emoji} ${RISK_META[level].label} — target selesai dalam ${humanDuration(hoursLeft)}`;
+          ? `Terlambat ${humanDuration(hoursLeft)} dari deadline 🔴`
+          : `${RISK_META[level].emoji} ${RISK_META[level].label} — target selesai dalam ${humanDuration(hoursLeft)}`;
 
   return {
     orderId: order.id,
@@ -248,13 +253,15 @@ export function buildDashboardInsight(
 ): DashboardInsight {
   const insights = orders.map((o) => analyzeOrder(o, now));
   const active = insights.filter((i) => i.status !== "selesai" && i.status !== "batal");
-  const late = active.filter((i) => i.hoursLeft < 0 && canBeLate(i.status));
+  // Status "siap" tidak dihitung telat (tinggal menunggu pelanggan).
+  const late = active.filter((i) => i.hoursLeft < 0 && i.status !== "siap");
   const risky = active.filter((i) => i.riskLevel === "risiko");
   const warn = active.filter((i) => i.riskLevel === "waspada");
   const ready = orders.filter((o) => o.status === "siap");
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
   const finishingToday = active.filter((i) => {
+    if (i.status === "siap") return false;
     const order = orders.find((o) => o.id === i.orderId)!;
     const deadline = deadlineOf(order.dueDate, order.dueTime);
     return deadline >= now && deadline <= todayEnd;
@@ -354,7 +361,10 @@ export function ruleAnswer(question: string, orders: AiOrder[], now: Date = new 
   }
 
   if (/(telat|terlambat|lewat|deadline lewat|overdue)/.test(q)) {
-    const late = insight.insights.filter((i) => i.hoursLeft < 0 && canBeLate(i.status));
+    // siap / selesai / batal tidak dihitung telat.
+    const late = insight.insights.filter(
+      (i) => i.hoursLeft < 0 && i.status !== "siap" && i.status !== "selesai" && i.status !== "batal",
+    );
     lines.push(late.length ? `Ada ${late.length} pekerjaan terlambat:` : "Tidak ada pekerjaan yang terlambat. 🎉");
     for (const i of late.slice(0, 8)) {
       lines.push(`• ${i.code} — ${i.title} (${i.customerName}) terlambat ${humanDuration(i.hoursLeft)}`);

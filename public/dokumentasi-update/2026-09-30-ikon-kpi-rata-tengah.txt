@@ -1,0 +1,31 @@
+=========================================================
+IKON KPI RATA TENGAH TERHADAP LABEL + ANGKA, 30 September 2026
+=========================================================
+
+MASALAH
+-------
+Ikon di kartu KPI rata tengah terhadap seluruh blok teks, termasuk
+garis progres di bawahnya, jadi terlihat agak turun dibanding
+label dan angka.
+
+YANG DIUBAH
+-----------
+Isi kartu KPI sekarang memakai grid dua baris:
+  - baris 1: ikon + (label dan angka), ikon rata tengah vertikal
+    hanya terhadap label + angka,
+  - baris 2: garis progres, tetap sejajar dengan sisi kiri teks.
+Diukur di browser: selisih pusat ikon dan pusat teks 0 px di semua
+kartu (layar lebar, tablet, HP).
+
+YANG TIDAK BERUBAH
+------------------
+Ukuran ikon, font, isi garis progres, separator, dan animasi hover
+(naik sedikit) sama seperti sebelumnya. Kerangka muat (skeleton)
+ikut disesuaikan.
+
+FILE YANG BERUBAH
+-----------------
+  src/components/ui.tsx (KpiCard)
+  src/components/dashboard/DashboardSkeleton.tsx
+
+Tidak ada perubahan database. Tidak perlu buka /api/setup.

@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { pushSubscriptions } from "@/db/schema";
+import { sendOneSignalFor, type OneSignalResult } from "@/lib/onesignal";
 
 export type PushPayload = {
   title: string;
@@ -32,8 +33,11 @@ function configure() {
   return true;
 }
 
-/** Broadcast versi sekarang: semua perangkat internal aktif menerima notifikasi. */
-export async function sendPushToAll(payload: PushPayload, targetOperator?: string, targetUserId?: number) {
+/**
+ * Jalur Web Push (VAPID): Chrome, PWA, dan APK TWA. Dipakai langsung oleh
+ * tombol "Uji Push Server" supaya tidak ikut mengirim lewat OneSignal.
+ */
+export async function sendWebPush(payload: PushPayload, targetOperator?: string, targetUserId?: number) {
   if (!configure()) return { configured: false, attempted: 0, sent: 0, failed: 0, removed: 0, errors: [] };
   const activeRows = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.active, true));
   const normalizedTarget = targetOperator?.trim().toLocaleLowerCase("id-ID");
@@ -78,6 +82,19 @@ export async function sendPushToAll(payload: PushPayload, targetOperator?: strin
     }),
   );
   return { configured: true, attempted: rows.length, sent, failed, removed, errors };
+}
+
+/**
+ * Kirim ke SEMUA jalur sekaligus: Web Push (Chrome / TWA) dan OneSignal
+ * (APK WebView). Bentuk hasil lama tetap sama; hasil OneSignal ada di
+ * field `oneSignal`. Salah satu jalur gagal tidak membatalkan yang lain.
+ */
+export async function sendPushToAll(payload: PushPayload, targetOperator?: string, targetUserId?: number) {
+  const [web, oneSignal] = await Promise.all([
+    sendWebPush(payload, targetOperator, targetUserId),
+    sendOneSignalFor(payload, targetOperator, targetUserId),
+  ]);
+  return { ...web, oneSignal } as typeof web & { oneSignal: OneSignalResult };
 }
 
 /**

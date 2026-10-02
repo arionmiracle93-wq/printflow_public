@@ -1,0 +1,32 @@
+=========================================================
+HAPUS TAUTAN INTERNAL DI HALAMAN TAUTAN LACAK, 30 September 2026
+=========================================================
+
+MASALAH
+-------
+Di bagian paling bawah halaman tautan lacak (yang dibuka
+pelanggan lewat WhatsApp) muncul tulisan "Panduan" dan
+"Catatan Perubahan". Itu tautan internal untuk owner, jadi
+tidak pantas dilihat pelanggan (dan kalau diklik pelanggan
+hanya dilempar ke halaman login).
+
+YANG DIUBAH
+-----------
+1. src/app/layout.tsx
+   Footer sekarang hanya menampilkan tautan "Panduan" dan
+   "Catatan Perubahan" kalau pengguna sudah login DAN halaman
+   yang dibuka bukan halaman tautan lacak. Tulisan
+   "Print Flow · Produksi lebih terpantau, pelanggan lebih
+   tenang." tetap tampil seperti biasa.
+
+2. src/proxy.ts
+   Untuk alamat /lacak/..., proxy menambahkan penanda
+   (x-print-flow-lacak) supaya layout tahu ini halaman lacak.
+   Aturan login dan akses halaman tidak berubah.
+
+YANG TIDAK BERUBAH
+------------------
+- Tampilan footer di halaman internal (setelah login) sama
+  seperti sebelumnya.
+- Menu "Lainnya" tetap punya Panduan dan Catatan Perubahan.
+- Tidak ada perubahan database. Tidak perlu buka /api/setup.

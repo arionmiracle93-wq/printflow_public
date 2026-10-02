@@ -143,6 +143,21 @@ export function isStatusKey(value: string): value is StatusKey {
   return STATUS_MAP.has(value);
 }
 
+/**
+ * Progres (%) yang dilihat PELANGGAN di halaman tautan /lacak.
+ *
+ * Buat pelanggan, tahap "Siap Diambil / Dikirim" sudah berarti pesanannya
+ * kelar, jadi ditampilkan 100%. Tahap "Selesai / Diserahkan" murni urusan
+ * internal percetakan (penanda barang sudah benar-benar diserahkan) dan
+ * baru kelihatan di halaman pelanggan setelah tim mengubah statusnya.
+ *
+ * Angka `progress` asli di STATUSES TIDAK diubah (siap tetap 95), karena
+ * dashboard & daftar pekerjaan internal masih memakainya.
+ */
+export function customerProgress(key: string): number {
+  return key === "siap" || key === "selesai" ? 100 : statusMeta(key).progress;
+}
+
 export type PriorityKey = "rendah" | "normal" | "tinggi" | "urgent";
 
 export const PRIORITIES: { key: PriorityKey; label: string; badge: string }[] = [
@@ -197,19 +212,6 @@ export const NEXT_STATUS: Record<StatusKey, StatusKey | null> = {
   ditunda: "antrian",
   batal: null,
 };
-
-/**
- * Status yang barangnya SUDAH JADI secara fisik: "siap" (siap diambil/
- * dikirim, tinggal menunggu pelanggan), "selesai", dan "batal". Begitu
- * order mencapai salah satu status ini, dia TIDAK BOLEH lagi dihitung/
- * ditampilkan sebagai "terlambat" walau deadline sudah dekat atau lewat —
- * di lapangan tidak ada lagi risiko produksi, cuma soal jadwal pelanggan
- * mengambil barangnya. Dipakai di semua tempat yang menghitung status
- * telat: lib/ai.ts (skor risiko AI), daftar pekerjaan, dan detail pekerjaan.
- */
-export function canBeLate(status: string): boolean {
-  return status !== "siap" && status !== "selesai" && status !== "batal";
-}
 
 export function formatRupiah(value: number): string {
   return new Intl.NumberFormat("id-ID", {
