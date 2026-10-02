@@ -24,6 +24,7 @@ type PushStatus = {
   publicKey: string | null;
   subscriptions: number;
   mySubscriptions: number;
+  oneSignal?: { configured: boolean; targeting: "all" | "external_id" };
 };
 
 type GeneratedKeys = {
@@ -46,7 +47,15 @@ export function PushNotificationSettings() {
   async function refreshStatus() {
     const can = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
     setSupported(can);
-    if (!can) return;
+    if (!can) {
+      // APK WebView: tidak ada Web Push, tapi status OneSignal tetap dibaca dari server.
+      try {
+        setStatus((await fetch("/api/push", { cache: "no-store" }).then((r) => r.json())) as PushStatus);
+      } catch {
+        /* status tidak terbaca, bagian OneSignal menampilkan petunjuk umum */
+      }
+      return;
+    }
     setPermission(Notification.permission);
     try {
       const [api, registration, workerText] = await Promise.all([
@@ -245,7 +254,44 @@ export function PushNotificationSettings() {
     } finally { setBusy(false); }
   }
 
+  async function testOneSignal() {
+    setBusy(true); setMessage(null);
+    try {
+      const res = await fetch("/api/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test-onesignal" }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        id?: string | null;
+        recipients?: number | null;
+        targeting?: "all" | "external_id";
+        error?: string;
+      };
+      if (json.ok) {
+        setMessage(
+          <span className="inline-flex items-start gap-1.5">
+            <CheckCircle2 size={13} className="mt-0.5 shrink-0" />
+            <span>
+              OneSignal menerima notifikasi uji{typeof json.recipients === "number" ? ` (${json.recipients} perangkat)` : ""}. Minimize APK lalu cek panel notifikasi Android. Kalau tidak muncul: pastikan APK dibangun ulang dengan OneSignal App ID, izin notifikasi aktif, dan Firebase (FCM) sudah terhubung di OneSignal.
+            </span>
+          </span>,
+        );
+      } else {
+        setMessage(
+          `${json.error ?? "Uji OneSignal gagal."}${
+            json.targeting === "external_id" ? " Mode target external_id butuh APK yang menautkan akun lewat OneSignal.login()." : ""
+          }`,
+        );
+      }
+    } catch {
+      setMessage("Tidak dapat menghubungi server untuk uji OneSignal.");
+    } finally { setBusy(false); }
+  }
+
   const configured = Boolean(status?.configured);
+  const oneSignalReady = Boolean(status?.oneSignal?.configured);
 
   return (
     <div className="card min-w-0 max-w-full overflow-hidden p-4">
@@ -305,7 +351,34 @@ export function PushNotificationSettings() {
         </section>
       </div>
 
-      {!supported ? <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">Browser/perangkat ini tidak mendukung Web Push.</p> : null}
+      {oneSignalReady || !supported ? (
+        <section className={`mt-3 rounded-xl border p-3 ${oneSignalReady ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60"}`}>
+          <div className="flex items-center gap-2">
+            <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold ${oneSignalReady ? "bg-emerald-500 text-white" : "bg-amber-400 text-[color:var(--pf-ink)]"}`}>{oneSignalReady ? <Check size={14} /> : "4"}</span>
+            <p className="text-xs font-semibold text-[color:var(--pf-ink)]">OneSignal untuk APK WebView (web to apk)</p>
+          </div>
+          {oneSignalReady ? (
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+              Server siap mengirim lewat OneSignal. Target: <strong>{status?.oneSignal?.targeting === "external_id" ? "owner + pengguna yang dituju (butuh external ID)" : "semua perangkat yang berlangganan"}</strong>. Notifikasi dikirim bersamaan dengan Web Push.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs leading-relaxed text-amber-900">
+              Belum aktif. Isi <code>ONESIGNAL_APP_ID</code> dan <code>ONESIGNAL_REST_API_KEY</code> di Vercel → Environment Variables, lalu Redeploy. Langkah lengkapnya ada di <a href="/panduan-onesignal-apk.md" className="font-bold underline">panduan OneSignal</a>.
+            </p>
+          )}
+          <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap">
+            <button type="button" onClick={testOneSignal} disabled={busy || !oneSignalReady} className="btn-secondary w-full sm:w-auto"><Send size={15} /> Uji OneSignal</button>
+          </div>
+        </section>
+      ) : null}
+
+      {!supported ? (
+        <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
+          {oneSignalReady
+            ? "Aplikasi ini berjalan di WebView, yang tidak mendukung Web Push. Notifikasinya memakai OneSignal (lihat bagian 4)."
+            : "Browser/perangkat ini tidak mendukung Web Push. Pada APK hasil web to apk (WebView), pakai OneSignal (lihat bagian 4)."}
+        </p>
+      ) : null}
       {permission === "denied" ? <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">Izin pernah ditolak. Android Settings → Apps → Chrome/Print Flow → Notifications → Allow.</p> : null}
       {message ? <p className="mt-3 break-words rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">{message}</p> : null}
     </div>

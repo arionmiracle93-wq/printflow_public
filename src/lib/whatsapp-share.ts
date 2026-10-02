@@ -22,6 +22,10 @@ export type ShareOrder = {
 export function buildWhatsAppMessage(order: ShareOrder, url: string): string {
   const meta = statusMeta(order.status);
   const selesai = order.status === "selesai";
+  // "Siap" = kabar akhir yang dilihat pelanggan (selesai = penanda internal
+  // barang sudah diserahkan), jadi pesannya diperlakukan sama seperti selesai.
+  const siap = order.status === "siap";
+  const kelar = selesai || siap;
   const items = order.items ?? [];
 
   // Satu item: ditulis inline supaya pesan tetap pendek.
@@ -42,17 +46,19 @@ export function buildWhatsAppMessage(order: ShareOrder, url: string): string {
     "",
     selesai
       ? `Pesanan Anda *${order.title}* sudah *SELESAI* ✅ dan siap diambil / dikirim.`
-      : `Berikut kabar terbaru pesanan Anda di percetakan kami:`,
+      : siap
+        ? `Pesanan Anda *${order.title}* sudah *SIAP* 📦 dan bisa diambil / dikirim.`
+        : `Berikut kabar terbaru pesanan Anda di percetakan kami:`,
     "",
     `• No. pesanan : ${order.code}`,
     `• Pekerjaan   : ${order.title}`,
     ...rincian,
     `• Status      : ${meta.emoji} ${meta.label}`,
     "",
-    selesai && items.length > 1
+    kelar && items.length > 1
       ? `Mohon dicek kembali kelengkapan ${items.length} item di atas saat serah terima ya 🙏`
       : undefined,
-    selesai
+    kelar
       ? "Silakan lihat foto hasilnya di tautan ini 👇"
       : "Anda bisa memantau progres & foto pesanan lewat tautan ini 👇",
     url,

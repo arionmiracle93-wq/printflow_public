@@ -3,7 +3,7 @@ import { CheckCircle2, History, Image as ImageIcon, Lock, PackageCheck, PartyPop
 import { STATUS_ICONS } from "@/components/ui";
 import { safeDb } from "@/lib/dbcheck";
 import { getPublicTracking } from "@/lib/queries";
-import { STATUSES, formatDateID, formatDateTimeID, formatNumber, statusMeta } from "@/lib/domain";
+import { STATUSES, customerProgress, formatDateID, formatDateTimeID, formatNumber, statusMeta } from "@/lib/domain";
 import { effectiveItemStatus, isSplit } from "@/lib/item-status";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,17 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
 
   const meta = statusMeta(order.status);
   const selesai = order.status === "selesai";
+  // "Siap Diambil/Dikirim" = tahap terakhir yang dilihat pelanggan (progres
+  // 100%). Status "Selesai / Diserahkan" baru muncul di sini setelah tim
+  // internal benar-benar mengubah statusnya ke Selesai.
+  const siap = order.status === "siap";
   const batal = order.status === "batal";
+  const progress = customerProgress(order.status);
+  // Urutan tahap (tanpa Ditunda/Batal) - dipakai untuk menyalakan chip.
+  // Tidak bisa pakai angka progres lagi, karena Siap sekarang 100% di sini
+  // dan akan ikut menyalakan chip "Selesai" lebih awal.
+  const stageList = STATUSES.filter((s) => !["ditunda", "batal"].includes(s.key));
+  const currentStage = stageList.findIndex((s) => s.key === order.status);
   // "Siap Diambil/Dikirim" progress-nya 95% (belum "selesai" 100%), tapi buat
   // pelanggan awam dua-duanya kedengeran sama saja "sudah kelar" - jadi teks
   // deadline/perkiraan selesai disembunyikan mulai status ini, bukan cuma pas
@@ -40,7 +50,7 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
       <div className="card overflow-hidden">
         <div
           className={`px-5 py-5 text-white ${
-            selesai
+            selesai || siap
               ? "bg-gradient-to-r from-emerald-500 to-teal-600"
               : batal
                 ? "bg-gradient-to-r from-rose-500 to-rose-600"
@@ -52,6 +62,10 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
             {selesai ? (
               <>
                 <CheckCircle2 size={20} strokeWidth={2.3} /> Pesanan Anda sudah selesai!
+              </>
+            ) : siap ? (
+              <>
+                <PackageCheck size={20} strokeWidth={2.3} /> Pesanan Anda sudah siap!
               </>
             ) : (
               (() => {
@@ -75,17 +89,20 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
           <div>
             <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-slate-500">
               <span>Progres pengerjaan</span>
-              <span>{meta.progress}%</span>
+              <span>{progress}%</span>
             </div>
             <div className="progress-track">
-              <div className={`h-full rounded-full ${meta.bar} transition-all`} style={{ width: `${meta.progress}%` }} />
+              <div className={`h-full rounded-full ${meta.bar} transition-all`} style={{ width: `${progress}%` }} />
             </div>
             <div className="mt-2 flex flex-wrap gap-1">
-              {STATUSES.filter((s) => !["ditunda", "batal"].includes(s.key)).map((s) => (
+              {stageList.map((s, index) => (
                 <span
                   key={s.key}
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    s.progress <= meta.progress ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-400"
+                    // Ditunda/Batal tidak ada di daftar tahap -> pakai cara lama (angka progres).
+                    (currentStage >= 0 ? index <= currentStage : s.progress <= meta.progress)
+                      ? "bg-teal-100 text-teal-700"
+                      : "bg-slate-100 text-slate-400"
                   }`}
                 >
                   {s.short}
@@ -143,9 +160,15 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
             </p>
           ) : null}
 
+          {siap ? (
+            <p className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
+              <PartyPopper size={16} className="shrink-0" /> Pesanan Anda sudah siap diambil / dikirim. Silakan ikuti informasi pengambilan di bawah ya!
+            </p>
+          ) : null}
+
           {selesai ? (
             <p className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800">
-              <PartyPopper size={16} className="shrink-0" /> Pesanan Anda sudah bisa diambil / dikirim. Terima kasih sudah memesan!
+              <PartyPopper size={16} className="shrink-0" /> Pesanan Anda sudah selesai dan diserahkan. Terima kasih sudah memesan!
             </p>
           ) : null}
         </div>
@@ -182,7 +205,7 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
           📌 <span className="font-bold">Catatan penting:</span> Barang yang tidak diambil selama{" "}
-          <span className="font-bold">1 minggu</span> sejak dinyatakan selesai bukan menjadi tanggung jawab toko.
+          <span className="font-bold">1 minggu</span> sejak dinyatakan siap bukan menjadi tanggung jawab toko.
         </div>
 
         <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700">

@@ -143,6 +143,21 @@ export function isStatusKey(value: string): value is StatusKey {
   return STATUS_MAP.has(value);
 }
 
+/**
+ * Progres (%) yang dilihat PELANGGAN di halaman tautan /lacak.
+ *
+ * Buat pelanggan, tahap "Siap Diambil / Dikirim" sudah berarti pesanannya
+ * kelar, jadi ditampilkan 100%. Tahap "Selesai / Diserahkan" murni urusan
+ * internal percetakan (penanda barang sudah benar-benar diserahkan) dan
+ * baru kelihatan di halaman pelanggan setelah tim mengubah statusnya.
+ *
+ * Angka `progress` asli di STATUSES TIDAK diubah (siap tetap 95), karena
+ * dashboard & daftar pekerjaan internal masih memakainya.
+ */
+export function customerProgress(key: string): number {
+  return key === "siap" || key === "selesai" ? 100 : statusMeta(key).progress;
+}
+
 export type PriorityKey = "rendah" | "normal" | "tinggi" | "urgent";
 
 export const PRIORITIES: { key: PriorityKey; label: string; badge: string }[] = [

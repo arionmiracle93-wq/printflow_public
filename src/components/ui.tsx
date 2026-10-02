@@ -114,14 +114,16 @@ export function KpiCard({
           : "text-base md:text-lg xl:text-[length:clamp(12px,.95vw,15px)]";
   return (
     <div className="pf-kpi group relative py-3 pl-4 pr-2 md:pl-6 xl:pl-5">
-      <div className="flex items-center gap-3 transition-transform duration-200 group-hover:-translate-y-0.5 md:gap-3.5">
+      {/* Grid dua kolom: baris 1 = ikon + (label & angka), baris 2 = garis progres.
+          Ikon rata tengah HANYA terhadap label + angka, tidak ikut garis progres. */}
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 transition-transform duration-200 group-hover:-translate-y-0.5 md:gap-x-3.5">
         <div
-          className={`shrink-0 ${iconTone[accent]} [&>svg]:h-8 [&>svg]:w-8 [&>svg]:[stroke-width:1.6] md:[&>svg]:h-9 md:[&>svg]:w-9`}
+          className={`row-start-1 shrink-0 ${iconTone[accent]} [&>svg]:h-8 [&>svg]:w-8 [&>svg]:[stroke-width:1.6] md:[&>svg]:h-9 md:[&>svg]:w-9`}
           aria-hidden
         >
           {icon}
         </div>
-        <div className="min-w-0">
+        <div className="row-start-1 min-w-0">
           <p className="pf-kpi-label whitespace-nowrap text-[10px] font-normal uppercase leading-tight tracking-[.02em] md:text-[11px] xl:text-[length:clamp(10px,.8vw,12px)]">
             {label}
           </p>
@@ -129,13 +131,19 @@ export function KpiCard({
             <p className={`whitespace-nowrap font-semibold leading-none tracking-tight ${valueSize} ${tone}`}>{value}</p>
             {hint ? <p className="min-w-0 truncate text-[11px] font-normal text-slate-400">{hint}</p> : null}
           </div>
-          <div className="mt-1 w-24 py-1 md:w-[6.5rem]" title={barLabel} role={barLabel ? "img" : undefined} aria-label={barLabel} aria-hidden={barLabel ? undefined : true}>
-            <div className="h-[3px] w-full overflow-hidden rounded-full bg-slate-200">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${barTone[accent]} transition-[width] duration-500`}
-                style={{ width: `${Math.min(100, Math.max(0, bar))}%` }}
-              />
-            </div>
+        </div>
+        <div
+          className="col-start-2 row-start-2 mt-1 w-24 py-1 md:w-[6.5rem]"
+          title={barLabel}
+          role={barLabel ? "img" : undefined}
+          aria-label={barLabel}
+          aria-hidden={barLabel ? undefined : true}
+        >
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              className={`h-full rounded-full bg-gradient-to-r ${barTone[accent]} transition-[width] duration-500`}
+              style={{ width: `${Math.min(100, Math.max(0, bar))}%` }}
+            />
           </div>
         </div>
       </div>

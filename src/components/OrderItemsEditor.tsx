@@ -138,6 +138,67 @@ function QuickPick({
 }
 
 /**
+ * Input jumlah (angka bulat >= 1)
+ * ----------------------------------------------------------------
+ * Sebelumnya field ini langsung "memaksa" nilainya jadi minimal 1 setiap
+ * kali isinya berubah. Akibatnya, begitu angka 1 dihapus (kolom kosong),
+ * langsung dikembalikan jadi 1 lagi - makanya angka 1 susah dihapus.
+ *
+ * Sekarang isi kolom disimpan sebagai teks sementara selama diketik, jadi
+ * boleh kosong. Aturan "minimal 1" baru diterapkan saat kolom ditinggalkan
+ * (blur). Saat diklik, isinya otomatis terblok supaya langsung bisa ditimpa.
+ */
+function QuantityInput({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(String(value));
+  const focused = useRef(false);
+
+  // Ikuti nilai dari luar (mis. baris dihapus/form direset),
+  // tapi jangan ganggu selama user sedang mengetik.
+  useEffect(() => {
+    if (!focused.current) setText(String(value));
+  }, [value]);
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={text}
+      onFocus={(e) => {
+        focused.current = true;
+        e.target.select();
+      }}
+      onChange={(e) => {
+        const clean = e.target.value.replace(/\D/g, "");
+        setText(clean);
+        const n = Number.parseInt(clean, 10);
+        if (Number.isFinite(n) && n >= 1) onChange(n);
+      }}
+      onBlur={() => {
+        focused.current = false;
+        const n = Number.parseInt(text, 10);
+        if (!Number.isFinite(n) || n < 1) {
+          setText("1");
+          onChange(1);
+        } else {
+          setText(String(n));
+        }
+      }}
+      disabled={disabled}
+      className="input"
+    />
+  );
+}
+
+/**
  * TABEL ITEM PEKERJAAN (bisa diedit)
  * ----------------------------------------------------------------
  * Satu pekerjaan = satu kartu, satu status, satu deadline - tapi isinya
@@ -219,15 +280,10 @@ export function OrderItemsEditor({
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="label">Jumlah</label>
-                  <input
-                    type="number"
-                    min={1}
+                  <QuantityInput
                     value={item.quantity}
-                    onChange={(e) =>
-                      updateRow(index, { quantity: Math.max(1, Number.parseInt(e.target.value || "1", 10)) })
-                    }
+                    onChange={(q) => updateRow(index, { quantity: q })}
                     disabled={disabled}
-                    className="input"
                   />
                 </div>
                 <div>
@@ -271,15 +327,10 @@ export function OrderItemsEditor({
                   />
                 </td>
                 <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    min={1}
+                  <QuantityInput
                     value={item.quantity}
-                    onChange={(e) =>
-                      updateRow(index, { quantity: Math.max(1, Number.parseInt(e.target.value || "1", 10)) })
-                    }
+                    onChange={(q) => updateRow(index, { quantity: q })}
                     disabled={disabled}
-                    className="input"
                   />
                 </td>
                 <td className="px-3 py-2">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { AlertTriangle, Bot, Factory, History, Image as ImageIcon, Package, StickyNote, UserRound } from "lucide-react";
+import { AlertTriangle, Bot, Factory, History, Image as ImageIcon, Package, PackageCheck, StickyNote, UserRound } from "lucide-react";
 import { OrderQuickEdit, OrderStatusControls } from "@/components/OrderControls";
 import { OrderDetailTabs } from "@/components/OrderDetailTabs";
 import { OrderItemsManager } from "@/components/OrderItemsManager";
@@ -196,7 +196,12 @@ function DetailBody({
           <Info
             label="Sisa waktu"
             value={
-              hoursLeft < 0 && !meta.done ? (
+              order.status === "siap" ? (
+                // Siap = tinggal menunggu pelanggan, tidak dihitung terlambat.
+                <span className="inline-flex items-center gap-1 text-emerald-700">
+                  <PackageCheck size={13} /> Siap diambil/dikirim
+                </span>
+              ) : hoursLeft < 0 && !meta.done ? (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
                 </span>
@@ -446,7 +451,12 @@ function FallbackDetailBody({
           <Info
             label="Sisa waktu"
             value={
-              hoursLeft < 0 && !meta.done ? (
+              order.status === "siap" ? (
+                // Siap = tinggal menunggu pelanggan, tidak dihitung terlambat.
+                <span className="inline-flex items-center gap-1 text-emerald-700">
+                  <PackageCheck size={13} /> Siap diambil/dikirim
+                </span>
+              ) : hoursLeft < 0 && !meta.done ? (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle size={13} /> Terlambat {humanDuration(hoursLeft)}
                 </span>

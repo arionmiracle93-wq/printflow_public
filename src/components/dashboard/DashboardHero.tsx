@@ -28,10 +28,19 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *     terlihat, tapi biayanya besar saat header ikut ber-backdrop-blur
  *   - hero dijadikan lapisan GPU tersendiri (.pf-hero) supaya saat
  *     digulir cukup digeser, tidak digambar ulang
+ *
+ * Revisi 30 September 2026:
+ *   - bayangan (drop shadow) kartu hero dihapus di tema terang; di tema
+ *     gelap tetap ada (dark:shadow-...)
+ *   - dua tombol selalu sejajar kiri-kanan (dulu numpuk atas-bawah di HP
+ *     sempit). Di HP kedua tombol berbagi lebar sama rata; ikon panah di
+ *     tombol "Pekerjaan Baru" disembunyikan di bawah 390px, dan di bawah
+ *     350px jarak/ukuran huruf dirapatkan supaya tidak kepotong. Di layar
+ *     >= 640px tombol kembali selebar isinya, rata kiri seperti semula.
  */
 export function DashboardHero({ summary, highlights }: { summary: string; highlights: string[] }) {
   return (
-    <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white shadow-[0_20px_46px_rgba(3,16,23,.35)] dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
+    <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
       {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop, lihat .hero-photo-bg di globals.css */}
       <div className="hero-photo-bg absolute inset-0 -z-20" />
       {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto.
@@ -62,16 +71,16 @@ export function DashboardHero({ summary, highlights }: { summary: string; highli
           <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-white/70 md:text-sm">{summary}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-nowrap gap-2">
           <Link
             href="/pesanan/baru"
-            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-[#07384f] shadow-[0_8px_18px_rgba(0,0,0,.28)] transition-transform active:scale-[0.97] sm:text-xs"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full max-[349px]:gap-1 max-[349px]:px-2 max-[349px]:text-[10px] bg-white px-3 py-2 text-[11px] font-extrabold text-[#07384f] shadow-[0_8px_18px_rgba(0,0,0,.28)] transition-transform active:scale-[0.97] sm:flex-none sm:px-4 sm:text-xs"
           >
-            <Plus size={14} strokeWidth={2.8} className="shrink-0" /> Pekerjaan Baru <ArrowRight size={12} className="shrink-0" />
+            <Plus size={14} strokeWidth={2.8} className="shrink-0" /> Pekerjaan Baru <ArrowRight size={12} className="shrink-0 max-[389px]:hidden" />
           </Link>
           <Link
             href="/pesanan"
-            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[11px] font-bold text-white transition-colors md:backdrop-blur-sm hover:bg-white/20 sm:text-xs"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full max-[349px]:gap-1 max-[349px]:px-2 max-[349px]:text-[10px] border border-white/25 bg-white/10 px-3 py-2 text-[11px] font-bold text-white transition-colors md:backdrop-blur-sm hover:bg-white/20 sm:flex-none sm:px-4 sm:text-xs"
           >
             <ListTodo size={14} className="shrink-0" /> Semua Pekerjaan
           </Link>

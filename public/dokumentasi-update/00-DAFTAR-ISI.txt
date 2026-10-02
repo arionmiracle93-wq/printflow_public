@@ -18,6 +18,28 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[59] 2026-10-01-status-siap-tidak-dihitung-telat.txt
+    Pesanan berstatus Siap tidak lagi dihitung terlambat/berisiko
+    (skor risiko, KPI dashboard, daftar & detail pekerjaan, AI).
+
+[58] 2026-10-01-halaman-lacak-siap-100-persen.txt
+    Di halaman tautan pelanggan, status Siap = progres 100%, dan
+    status Selesai baru muncul setelah internal mengubahnya.
+    Pesan WhatsApp untuk status Siap ikut disesuaikan.
+
+[57] 2026-10-01-notifikasi-onesignal-untuk-apk-webview.txt
+    Notifikasi native Android lewat OneSignal untuk APK web to
+    apk (WebView), berjalan bersamaan dengan Web Push. Ada
+    panduan setup dan tombol Uji OneSignal di Pengaturan.
+
+[56] 2026-09-30-hero-tanpa-shadow-terang-dan-tombol-sejajar.txt
+    Shadow kartu hero dihapus di tema terang (gelap tetap), dan
+    dua tombol hero selalu sejajar kiri-kanan, juga di HP sempit.
+
+[55] 2026-09-30-ikon-kpi-rata-tengah.txt
+    Ikon kartu KPI rata tengah terhadap label + angka
+    (garis progres tidak ikut dihitung).
+
 [54] 2026-09-30-kpi-garis-data-font-inter-hover-polos.txt
     Garis progres KPI mewakili data (porsi terlambat, dll),
     font Inter, hover hanya naik sedikit, separator dipertegas.

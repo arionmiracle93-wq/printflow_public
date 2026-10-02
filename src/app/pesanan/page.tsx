@@ -213,10 +213,17 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                           count={photoCountsMap.get(order.id) ?? 0}
                         />
                       </span>
-                      <span className={insight.hoursLeft < 0 ? "font-bold text-rose-600" : "font-semibold"}>
-                        {insight.hoursLeft < 0
-                          ? `telat ${humanDuration(insight.hoursLeft)}`
-                          : `sisa ${humanDuration(insight.hoursLeft)}`}
+                      {/* Status siap = tinggal menunggu pelanggan, tidak dihitung telat. */}
+                      <span
+                        className={
+                          insight.hoursLeft < 0 && insight.status !== "siap" ? "font-bold text-rose-600" : "font-semibold"
+                        }
+                      >
+                        {insight.status === "siap"
+                          ? "siap diambil"
+                          : insight.hoursLeft < 0
+                            ? `telat ${humanDuration(insight.hoursLeft)}`
+                            : `sisa ${humanDuration(insight.hoursLeft)}`}
                       </span>
                     </div>
                 </Link>
@@ -298,13 +305,17 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                         {formatDateID(order.dueDate)}
                         <p
                           className={`text-[11px] font-semibold ${
-                            hoursLeft < 0 && !statusMeta(order.status).done ? "text-rose-600" : "text-slate-500"
+                            hoursLeft < 0 && !statusMeta(order.status).done && order.status !== "siap"
+                              ? "text-rose-600"
+                              : "text-slate-500"
                           }`}
                         >
                           {order.dueTime} ·{" "}
-                          {hoursLeft < 0
-                            ? `telat ${humanDuration(hoursLeft / 3_600_000)}`
-                            : `sisa ${humanDuration(hoursLeft / 3_600_000)}`}
+                          {order.status === "siap"
+                            ? "siap diambil"
+                            : hoursLeft < 0
+                              ? `telat ${humanDuration(hoursLeft / 3_600_000)}`
+                              : `sisa ${humanDuration(hoursLeft / 3_600_000)}`}
                         </p>
                       </td>
                       <td className="px-4 py-3">

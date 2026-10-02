@@ -1,0 +1,103 @@
+================================================================
+STATUS "SIAP DIAMBIL / DIKIRIM" TIDAK DIHITUNG TERLAMBAT
+Tanggal : 01-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Pesanan yang sudah berstatus "Siap" sekarang TIDAK dihitung
+terlambat/berisiko, berapa pun lama lewat deadline-nya. Alasannya:
+barang sudah jadi, tinggal menunggu pelanggan, dan waktu
+pengambilan di luar kendali percetakan. Pekerjaan yang produksinya
+memang belum kelar (antrian, desain, cetak, finishing, QC) tetap
+dihitung telat seperti biasa.
+
+CATATAN: ada catatan lama "2026-10-11-status-siap-tidak-dihitung-
+telat.txt" yang menyebut perbaikan serupa. Tapi di kode yang
+diupload kali ini, perbaikan itu ternyata tidak ada di mesin
+penilai risiko (ai.ts), daftar pekerjaan, detail pekerjaan, dan
+query checklist. Jadi semuanya dikerjakan ulang di sini, dan
+dicek semua tempat yang menghitung telat. Kartu dashboard
+(JobCard, JobQueue) dan halaman /lacak pelanggan memang sudah
+benar sebelumnya, jadi tidak disentuh.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/lib/ai.ts - analyzeOrder
+   - Skor risiko status siap = 0 (Aman), sejajar selesai & batal.
+     Sebelumnya lewat deadline bisa dapat skor 92-100 (Terlambat).
+   - Alasan & saran khusus siap: "waktu pengambilan tergantung
+     pelanggan, tidak dihitung terlambat". Kalau sudah lewat
+     jadwal, ada saran follow-up pelanggan (tanpa kata "telat").
+   - Judul ringkasan: "Siap diambil/dikirim, tinggal menunggu
+     pelanggan" (bukan "Terlambat X dari deadline").
+
+B) src/lib/ai.ts - buildDashboardInsight & jawaban AI Assistant
+   - Hitungan "Terlambat" (kartu KPI dashboard, ringkasan, bar KPI)
+     tidak lagi memasukkan status siap.
+   - "Berdeadline hari ini" tidak memasukkan status siap.
+   - Jawaban AI Assistant untuk "ada yang telat?" juga tidak
+     menyebut order siap (sekalian: selesai & batal juga tidak).
+
+C) src/lib/checklist.ts
+   - Query SQL kartu "Lewat deadline" di halaman Mulai: ditambah
+     status <> 'siap'.
+
+D) src/app/page.tsx
+   - Panel "jatuh tempo hari ini" di dashboard tidak memuat order
+     berstatus siap.
+
+E) src/app/pesanan/page.tsx (daftar pekerjaan, kartu HP & tabel)
+   - Status siap menampilkan "siap diambil" dengan warna netral,
+     bukan "telat X" merah.
+
+F) src/app/pesanan/[id]/page.tsx (detail pekerjaan, 2 tampilan)
+   - Kolom "Sisa waktu" untuk siap: "Siap diambil/dikirim" (hijau),
+     bukan badge merah "Terlambat X". Import ikon PackageCheck.
+
+TIDAK BERUBAH: alur status internal, angka progres internal
+(siap tetap 95%), halaman /lacak, dan status mitra/vendor.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit : lolos (exit code 0, bersih)
+  Skenario logic (dites langsung dengan tsx):
+    1. Siap, lewat deadline 5 hari  -> skor 0, "aman", judul
+       "Siap diambil/dikirim, tinggal menunggu pelanggan"
+    2. Cetak, lewat deadline 5 hari -> skor 100, "terlambat"
+       (kontrol: peringatan telat untuk status lain tetap jalan)
+    3. Siap, belum jatuh tempo      -> skor 0, "aman"
+    4. Dashboard 4 order campuran   -> Terlambat = 1 (hanya yang
+       cetak), berdeadline hari ini = 0, siap = 3
+    5. Tanya AI "ada yang telat?"   -> hanya order cetak disebut
+  next build : tidak bisa diselesaikan di lingkungan tes (tidak ada
+               internet untuk unduh Google Fonts). Tidak terkait
+               perubahan ini.
+  Tampilan visual belum dicoba di browser: mohon cek satu order
+  berstatus siap yang deadline-nya sudah lewat.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/lib/ai.ts
+  src/lib/checklist.ts
+  src/app/page.tsx
+  src/app/pesanan/page.tsx
+  src/app/pesanan/[id]/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-01-status-siap-tidak-dihitung-telat.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Hanya logika tampilan dan satu kondisi di query SQL
+yang sudah ada.
+
+================================================================

@@ -101,7 +101,7 @@ async function DashboardContent() {
 
   const today = todayISO();
   const dueToday = orders
-    .filter((o) => o.dueDate === today && o.status !== "selesai" && o.status !== "batal")
+    .filter((o) => o.dueDate === today && o.status !== "selesai" && o.status !== "batal" && o.status !== "siap")
     .sort((a, b) => a.dueTime.localeCompare(b.dueTime))
     .map((o) => ({
       id: o.id,

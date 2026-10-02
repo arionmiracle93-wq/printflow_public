@@ -2,7 +2,8 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pushSubscriptions } from "@/db/schema";
 import { problemResponse } from "@/lib/dbcheck";
-import { pushConfig, sendPushToAll } from "@/lib/push";
+import { pushConfig, sendWebPush } from "@/lib/push";
+import { oneSignalConfig, resolveOneSignalTarget, sendOneSignal } from "@/lib/onesignal";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export async function GET() {
     const current = await getCurrentUser();
     if (!current) return Response.json({ ok: false, error: "Sesi login diperlukan." }, { status: 401 });
     const config = pushConfig();
+    const oneSignal = oneSignalConfig();
     const [all, mine] = await Promise.all([
       db.select({ count: sql<number>`cast(count(*) as int)` }).from(pushSubscriptions).where(eq(pushSubscriptions.active, true)),
       db.select({ count: sql<number>`cast(count(*) as int)` }).from(pushSubscriptions).where(eq(pushSubscriptions.userId, current.id)),
@@ -23,6 +25,7 @@ export async function GET() {
         publicKey: config.publicKey || null,
         subscriptions: Number(all[0]?.count ?? 0),
         mySubscriptions: Number(mine[0]?.count ?? 0),
+        oneSignal: { configured: oneSignal.ready, targeting: oneSignal.targeting },
         user: { name: current.name, role: current.role },
       },
       { headers: { "Cache-Control": "no-store" } },
@@ -36,8 +39,29 @@ export async function POST(request: Request) {
   try {
     const current = await getCurrentUser();
     if (!current) return Response.json({ ok: false, error: "Sesi login diperlukan." }, { status: 401 });
+    if (action === "test-onesignal") {
+      const config = oneSignalConfig();
+      if (!config.ready) {
+        return Response.json({
+          ok: false,
+          error: "OneSignal belum dikonfigurasi di Vercel (ONESIGNAL_APP_ID dan ONESIGNAL_REST_API_KEY). Isi lalu Redeploy.",
+        });
+      }
+      const target = await resolveOneSignalTarget(current.name, current.id);
+      const result = await sendOneSignal(
+        {
+          title: "Uji OneSignal Print Flow",
+          body: `Notifikasi native Android berhasil untuk ${current.name}.`,
+          url: "/notifikasi",
+          tag: `os-test-${current.id}-${Date.now()}`,
+        },
+        target,
+      );
+      return Response.json({ targeting: config.targeting, ...result });
+    }
+
     if (action === "test") {
-      const result = await sendPushToAll(
+      const result = await sendWebPush(
         {
           title: "Uji Push Server Print Flow",
           body: `Push Vercel → Android berhasil untuk ${current.name}.`,
