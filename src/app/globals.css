@@ -261,6 +261,77 @@ body {
     opacity: 0.65;
   }
 
+  /* ---------- Dropdown (<select>) ----------
+     Panah bawaan browser (terutama di HP) digambar mepet ke tepi kanan
+     field. Di sini panah bawaan dimatikan dan diganti ikon chevron sendiri
+     dengan jarak 0.75rem dari tepi; padding kanan dilebihkan supaya teks
+     pilihan yang panjang tidak menimpa panah. Berlaku ke semua <select>
+     yang memakai kelas .input (detail pekerjaan, form baru, mitra, dll). */
+  select.input {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 2.5rem;
+    text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem 1rem;
+  }
+
+  /* Tombol pemicu komponen <Select> (components/Select.tsx). Memakai kelas
+     .input supaya ukuran/warna/fokusnya sama dengan field lain; di sini
+     cuma ditambah tata letak (teks kiri, chevron kanan) dan cincin saat
+     daftar terbuka. */
+  .pf-select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .pf-select[aria-expanded="true"] {
+    border-color: var(--pf-accent);
+    box-shadow: 0 0 0 3px var(--pf-accent-soft);
+  }
+
+  .pf-select:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Panel pilihan muncul halus (dimatikan kalau perangkat minta gerakan minim). */
+  .pf-select-pop {
+    animation: pf-select-pop 0.12s ease-out;
+    transform-origin: top center;
+  }
+
+  @keyframes pf-select-pop {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-select-pop {
+      animation: none;
+    }
+  }
+
+  /* .dark .input di atas memakai shorthand `background` yang menghapus
+     gambar panah, jadi gambar & posisinya ditetapkan ulang untuk mode gelap. */
+  .dark select.input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem 1rem;
+  }
+
   .label {
     display: block;
     margin-bottom: 0.375rem;
@@ -351,37 +422,30 @@ body {
 .scroll-x::-webkit-scrollbar-thumb { background: #99d6cf; border-radius: 999px; }
 .dark .scroll-x::-webkit-scrollbar-thumb { background: #1f4a52; }
 
-/* Foto hero dashboard: mobile & desktop kini pakai FILE BEDA
-   (mobile = dashboard-hero-mobile.jpg, desktop = dashboard-hero.jpg),
-   sekalian gradasinya beda karena kontennya sendiri beda posisi —
-   di HP kontennya selebar kartu (butuh gelap merata), di desktop
-   teks cuma di kiri (foto boleh lebih kelihatan di kanan). Kalau
-   cuma mau 1 foto dulu, aman — panel tetap tampil rapi (gradasi +
-   tekstur titik) selama salah satu file belum ada. */
+/* Overlay gradasi hero dashboard. Foto-nya sekarang TIDAK lagi di sini:
+   foto digeser otomatis oleh komponen HeroSlideshow (3 slide, geser
+   kiri tiap 6 detik), jadi kelas ini cuma bertugas jadi lapisan
+   gradasi gelap di ATAS foto. Strategi gradasi tetap beda mobile vs
+   desktop — di HP kontennya selebar kartu (butuh gelap merata), di
+   desktop teks cuma di kiri (foto boleh lebih kelihatan di kanan).
+   JANGAN tambah background-color di sini: nanti menutupi foto. */
 .hero-photo-bg {
-  background-color: #07141d;
-  background-size: cover;
-  background-position: center;
-  background-image:
-    linear-gradient(180deg, rgba(5, 15, 21, 0.6) 0%, rgba(6, 20, 27, 0.48) 60%, rgba(6, 20, 27, 0.4) 100%),
-    url("/images/dashboard-hero-mobile.jpg");
+  background-image: linear-gradient(180deg, rgba(5, 15, 21, 0.6) 0%, rgba(6, 20, 27, 0.48) 60%, rgba(6, 20, 27, 0.4) 100%);
 }
 
 @media (min-width: 768px) {
   .hero-photo-bg {
     /* Gradasi dipersempit: gelap pekat cuma di zona teks (kiri), lalu cepat
-       memudar ke transparan sebelum area foto (dua cowok baju hitam) —
-       supaya foto tetap terang di sana, bukan ikut ketutup gelap sampai ujung kanan. */
-    background-image:
-      linear-gradient(
-        100deg,
-        rgba(5, 15, 21, 0.88) 0%,
-        rgba(6, 20, 27, 0.78) 14%,
-        rgba(6, 20, 27, 0.4) 26%,
-        rgba(6, 20, 27, 0.1) 36%,
-        rgba(6, 20, 27, 0) 46%
-      ),
-      url("/images/dashboard-hero.jpg");
+       memudar ke transparan sebelum area foto — supaya foto tetap terang
+       di sana, bukan ikut ketutup gelap sampai ujung kanan. */
+    background-image: linear-gradient(
+      100deg,
+      rgba(5, 15, 21, 0.88) 0%,
+      rgba(6, 20, 27, 0.78) 14%,
+      rgba(6, 20, 27, 0.4) 26%,
+      rgba(6, 20, 27, 0.1) 36%,
+      rgba(6, 20, 27, 0) 46%
+    );
   }
 }
 
@@ -981,3 +1045,93 @@ button, a, [role="button"] {
 .dark [class*="border-teal-300/"] { border-color: rgba(20,184,166,.4) !important; }
 .dark [class*="border-teal-400/"] { border-color: rgba(20,184,166,.32) !important; }
 .dark [class*="border-teal-900/"] { border-color: rgba(20,184,166,.3) !important; }
+
+/* ==========================================================
+   MODUL INVOICE - kertas & editor (tahap B2)
+   Kertas SELALU terang seperti lembar cetak asli, meski
+   PrintFlow sedang mode gelap (sama seperti app invoice lama).
+   ========================================================== */
+.ppi-paper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #1e293b;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
+  color-scheme: light;
+}
+.ppi-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 7px;
+  background: linear-gradient(90deg, #0d9488 0%, #14b8a6 55%, #f5b41b 55%, #f5b41b 70%, transparent 70%);
+}
+.ppi-in {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #0f172a;
+  outline: none;
+  resize: none;
+}
+.ppi-in::placeholder { color: #94a3b8; }
+.ppi-in:hover { background: #f1f5f9; }
+.ppi-in:focus { background: #fff; border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16); }
+.ppi-in.boxed { background: #f1f5f9; border-color: #e2e8f0; }
+.ppi-in.boxed:focus { background: #fff; border-color: #14b8a6; }
+.ppi-num { text-align: right; font-variant-numeric: tabular-nums; }
+.ppi-label { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+.ppi-thead {
+  display: none;
+  border-radius: 10px;
+  background: #0d9488;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ppi-row { display: grid; gap: 6px 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ppi-row > .ppi-c-wide { grid-column: 1 / -1; }
+.ppi-mlabel { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; }
+@media (min-width: 768px) {
+  .ppi-thead { display: grid; gap: 8px; padding: 9px 8px; grid-template-columns: var(--ppi-cols); align-items: center; }
+  .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 8px; }
+  .ppi-row > .ppi-c-wide { grid-column: auto; }
+  .ppi-mlabel { display: none; }
+}
+.ppi-rowwrap { border-bottom: 1px solid #f1f5f9; }
+.ppi-rowwrap:nth-child(even) { background: #fafcfd; }
+.ppi-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 8px; border: 1px solid #cbd5e1;
+  background: #fff; color: #0f766e; cursor: pointer;
+}
+.ppi-icon-btn:hover { background: #ecfeff; border-color: #14b8a6; }
+.ppi-icon-btn.on { background: #0d9488; border-color: #0d9488; color: #fff; }
+.ppi-thead .ppi-icon-btn { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); color: #fff; width: 22px; height: 22px; }
+.ppi-seg { display: inline-flex; border-radius: 9px; background: #f1f5f9; padding: 2px; }
+.ppi-seg button { border-radius: 7px; padding: 4px 10px; font-size: 11px; font-weight: 800; color: #475569; }
+.ppi-seg button.on { background: #0d9488; color: #fff; }
+.ppi-modal-back { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 23, 42, 0.55); }
+.ppi-modal { width: 100%; max-width: 380px; max-height: 90vh; overflow: auto; border-radius: 18px; background: #fff; color: #0f172a; padding: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); color-scheme: light; }
+.ppi-side-btn {
+  display: flex; width: 100%; align-items: center; gap: 10px; border-radius: 12px; padding: 9px 10px;
+  font-size: 12.5px; font-weight: 700; color: var(--pf-ink); text-align: left;
+  transition: background-color 0.15s ease;
+}
+.ppi-side-btn:hover { background: rgba(13, 148, 136, 0.1); }
+.ppi-side-btn.active { background: rgba(13, 148, 136, 0.14); color: #0f766e; }
+.ppi-side-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ppi-side-btn .ppi-ico { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 9px; background: rgba(13, 148, 136, 0.12); color: #0f766e; flex: none; }
+.ppi-side-btn.danger .ppi-ico { background: rgba(225, 29, 72, 0.1); color: #be123c; }
+.ppi-side-btn.danger { color: #be123c; }
+@media print { .ppi-screen-only { display: none !important; } }

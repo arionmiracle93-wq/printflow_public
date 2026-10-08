@@ -1,7 +1,8 @@
 "use client";
 
+import { Select } from "@/components/Select";
 import { useEffect, useState } from "react";
-import { KeyRound, Pencil, Plus, Shield, UserCheck, UserX } from "lucide-react";
+import { KeyRound, Pencil, Plus, ReceiptText, Shield, UserCheck, UserX } from "lucide-react";
 import { roleLabel } from "@/lib/auth-client";
 
 type User = {
@@ -10,6 +11,7 @@ type User = {
   username: string;
   role: string;
   active: boolean;
+  canInvoice: boolean;
   lastLoginAt: string | null;
   createdAt: string;
 };
@@ -48,7 +50,7 @@ export function UserManagement() {
     selfUpdated?: boolean;
     reloginRequired?: boolean;
     targetName?: string;
-    changed?: { password?: boolean; username?: boolean; role?: boolean; active?: boolean };
+    changed?: { password?: boolean; username?: boolean; role?: boolean; active?: boolean; canInvoice?: boolean };
   };
 
   async function patch(id: number, data: Record<string, unknown>) {
@@ -66,10 +68,12 @@ export function UserManagement() {
     // sehingga owner bingung kenapa tiba-tiba diminta login ulang.
     const c = json.changed ?? {};
     const nama = json.targetName ?? "Pengguna";
-    const apa = c.password ? "Password" : c.username ? "Username" : c.role ? "Role" : c.active ? "Status akun" : "Data";
+    const apa = c.password ? "Password" : c.username ? "Username" : c.role ? "Role" : c.active ? "Status akun" : c.canInvoice ? "Izin Invoice" : "Data";
 
     if (json.selfUpdated) {
       setNotice(`${apa} akun Anda sendiri berhasil diubah. Anda tetap login di perangkat ini, tetapi perangkat lain yang memakai akun Anda otomatis keluar dan harus login ulang.`);
+    } else if (c.canInvoice && !json.reloginRequired) {
+      setNotice(`Izin Invoice ${nama} berhasil diubah. Berlaku langsung, tanpa perlu login ulang.`);
     } else if (json.reloginRequired) {
       setNotice(`${apa} ${nama} berhasil diubah. Semua perangkat ${nama} otomatis keluar dan harus login ulang${c.password ? " memakai password baru" : ""}.`);
     } else {
@@ -119,7 +123,7 @@ export function UserManagement() {
           <label className="min-w-0"><span className="label">Nama Lengkap</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input min-w-0" /></label>
           <label className="min-w-0"><span className="label">Username</span><input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase().replace(/\s/g, "") })} className="input min-w-0" /></label>
           <label className="min-w-0"><span className="label">Password awal</span><input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input min-w-0" /></label>
-          <label className="min-w-0"><span className="label">Role</span><select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input min-w-0"><option value="karyawan">Karyawan</option><option value="owner">Owner</option></select></label>
+          <label className="min-w-0"><span className="label">Role</span><Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input min-w-0"><option value="karyawan">Karyawan</option><option value="owner">Owner</option></Select></label>
           <div className="sm:col-span-2"><button disabled={busy} className="btn-secondary w-full sm:w-auto"><Plus size={14} /> Simpan Pengguna</button></div>
         </form>
       ) : null}
@@ -135,8 +139,25 @@ export function UserManagement() {
               <span className={`chip shrink-0 ${user.active ? "border-teal-200 bg-teal-50 text-teal-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}><Shield size={11} /> {roleLabel(user.role)}</span>
             </div>
             <p className="mt-3 break-words text-[11px] text-slate-400">Login terakhir: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString("id-ID") : "Belum pernah"}</p>
+            {user.role === "karyawan" ? (
+              <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800/40">
+                <input
+                  type="checkbox"
+                  checked={user.canInvoice}
+                  disabled={busy}
+                  onChange={(e) => void patch(user.id, { canInvoice: e.target.checked })}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-teal-600"
+                />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1 font-bold text-[color:var(--pf-ink)]"><ReceiptText size={13} /> Boleh akses Invoice</span>
+                  <span className="block text-slate-500">Bisa melihat harga, membuat invoice, dan mencatat pembayaran. Kalau mati, menu Invoice tidak muncul untuk akun ini.</span>
+                </span>
+              </label>
+            ) : (
+              <p className="mt-3 flex items-center gap-1 text-[11px] text-slate-400"><ReceiptText size={12} /> Owner selalu punya akses Invoice.</p>
+            )}
             <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-              <select value={user.role} disabled={busy} onChange={(e) => void patch(user.id, { role: e.target.value })} className="input min-w-0 py-1.5 text-xs sm:max-w-32"><option value="owner">Owner</option><option value="karyawan">Karyawan</option></select>
+              <Select value={user.role} disabled={busy} onChange={(e) => void patch(user.id, { role: e.target.value })} className="input min-w-0 py-1.5 text-xs sm:max-w-32"><option value="owner">Owner</option><option value="karyawan">Karyawan</option></Select>
               <button onClick={() => void editUsername(user)} disabled={busy} className="btn-ghost w-full px-3 py-1.5 text-xs sm:w-auto"><Pencil size={13} /> Ubah Username</button>
               <button onClick={() => void reset(user)} disabled={busy} className="btn-ghost w-full px-3 py-1.5 text-xs sm:w-auto"><KeyRound size={13} /> Reset Password</button>
               <button onClick={() => void patch(user.id, { active: !user.active })} disabled={busy} className={`${user.active ? "btn-danger" : "btn-secondary"} w-full px-3 py-1.5 text-xs sm:w-auto`}>{user.active ? <UserX size={13} /> : <UserCheck size={13} />}{user.active ? " Nonaktifkan" : " Aktifkan"}</button>

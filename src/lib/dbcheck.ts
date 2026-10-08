@@ -16,6 +16,11 @@ export const REQUIRED_TABLES = [
   "push_subscriptions",
   "shift_handovers",
   "business_branding",
+  "invoice_counters",
+  "invoices",
+  "invoice_items",
+  "payments",
+  "invoice_events",
 ] as const;
 
 /**
@@ -28,6 +33,9 @@ export const REQUIRED_COLUMNS: { table: string; column: string }[] = [
   { table: "order_items", column: "status" },
   { table: "order_items", column: "outsource_job_id" },
   { table: "order_photos", column: "blob_url" },
+  { table: "users", column: "can_invoice" },
+  { table: "invoices", column: "doc_type" },
+  { table: "invoices", column: "needs_production" },
 ];
 
 /**

@@ -4,6 +4,7 @@ import {
   estimateHoursForItems,
   hoursBetween,
   humanDuration,
+  jakartaDateISO,
   priorityMeta,
   statusMeta,
   type StatusKey,
@@ -115,7 +116,10 @@ export function analyzeOrder(order: AiOrder, now: Date = new Date()): OrderInsig
     // Kapasitas kerja nyata diasumsikan ~35% dari waktu kalender (ada jam istirahat/malam).
     const capacityHours = hoursLeft * 0.35;
     const ratio = workLeftHours / Math.max(capacityHours, 0.4);
-    riskScore = Math.round(Math.min(100, Math.max(0, ratio * 52 + priorityBoost + (hoursLeft < 24 ? 8 : 0))));
+    // Dibatasi 89: level "Terlambat" (>= 90) HANYA untuk deadline yang benar-benar
+    // sudah lewat, supaya badge risiko selalu sejalan dengan hitungan "telat"
+    // di dashboard. Yang belum lewat tapi mepet mentok di "Berisiko Telat".
+    riskScore = Math.round(Math.min(89, Math.max(0, ratio * 52 + priorityBoost + (hoursLeft < 24 ? 8 : 0))));
   }
 
   const level = riskLevelOf(riskScore);
@@ -258,13 +262,13 @@ export function buildDashboardInsight(
   const risky = active.filter((i) => i.riskLevel === "risiko");
   const warn = active.filter((i) => i.riskLevel === "waspada");
   const ready = orders.filter((o) => o.status === "siap");
-  const todayEnd = new Date(now);
-  todayEnd.setHours(23, 59, 59, 999);
+  // "Hari ini" menurut WIB (bukan zona server), dan deadline-nya belum lewat.
+  const todayWib = jakartaDateISO(now);
   const finishingToday = active.filter((i) => {
     if (i.status === "siap") return false;
     const order = orders.find((o) => o.id === i.orderId)!;
     const deadline = deadlineOf(order.dueDate, order.dueTime);
-    return deadline >= now && deadline <= todayEnd;
+    return order.dueDate === todayWib && deadline >= now;
   });
 
   const revenueActive = orders

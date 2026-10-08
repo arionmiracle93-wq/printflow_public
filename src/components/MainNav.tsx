@@ -11,6 +11,7 @@ import {
   Gauge,
   Handshake,
   Plus,
+  ReceiptText,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -25,6 +26,9 @@ const DESKTOP_LINKS: NavItem[] = [
   { href: "/mitra", label: "Mitra", icon: Factory },
   { href: "/serah-terima", label: "Shift", icon: Handshake },
 ];
+
+/** Menu Invoice hanya muncul untuk akun yang punya izin (Owner, atau Karyawan yang disalakan saklarnya). */
+const INVOICE_LINK: NavItem = { href: "/invoice", label: "Invoice", icon: ReceiptText };
 
 const MOBILE_LINKS: NavItem[] = [
   { href: "/", label: "Beranda", icon: Gauge },
@@ -91,7 +95,7 @@ function NavLink({
   );
 }
 
-export function MainNav({ role = "owner" }: { role?: UserRole }) {
+export function MainNav({ role = "owner", canInvoice = false }: { role?: UserRole; canInvoice?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -106,7 +110,7 @@ export function MainNav({ role = "owner" }: { role?: UserRole }) {
   // Persiapkan menu utama saat browser idle. Data hasil mutasi tetap segar karena
   // semua form memanggil router.refresh() setelah menyimpan.
   useEffect(() => {
-    const common = ["/", "/pesanan", "/pesanan/baru", "/serah-terima", "/mitra", "/pelanggan"];
+    const common = ["/", "/pesanan", "/pesanan/baru", "/serah-terima", "/mitra", "/pelanggan", ...(canInvoice ? ["/invoice"] : [])];
     const run = () => common.filter((href) => href !== pathname).forEach((href) => router.prefetch(href));
     const idleWindow = window as typeof window & {
       requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
@@ -118,7 +122,7 @@ export function MainNav({ role = "owner" }: { role?: UserRole }) {
     }
     const id = window.setTimeout(run, 700);
     return () => window.clearTimeout(id);
-  }, [pathname, router]);
+  }, [pathname, router, canInvoice]);
 
   useEffect(() => {
     let active = true;
@@ -151,11 +155,14 @@ export function MainNav({ role = "owner" }: { role?: UserRole }) {
 
   // Role Karyawan menggabungkan akses lapangan Operator dan Kasir.
   const allowed = (_item: NavItem) => true;
+  const desktopLinks = canInvoice
+    ? [...DESKTOP_LINKS.slice(0, 4), INVOICE_LINK, ...DESKTOP_LINKS.slice(4)]
+    : DESKTOP_LINKS;
 
   return (
     <>
       <nav className="hidden items-center gap-0.5 xl:flex">
-        {DESKTOP_LINKS.filter(allowed).map((item) => (
+        {desktopLinks.filter(allowed).map((item) => (
           <NavLink key={item.href} item={item} pathname={pathname} compact pendingCount={pendingCount} onIntent={prefetch} />
         ))}
       </nav>

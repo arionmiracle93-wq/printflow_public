@@ -17,7 +17,8 @@ deadline, risiko telat, dan rekomendasi tindakan dari AI.
 - 💬 **Tanya AI** — tanya kondisi produksi dengan bahasa sehari-hari.
 - 🖼️ **Lampiran foto** — desain, hasil jadi, dan nota; kamera HP + kompresi otomatis.
 - 🏭 **Produksi Mitra / Lempar Order** — status vendor, target barang kembali, biaya, margin, QC, dan riwayat.
-- 🤝 **Serah Terima Shift** — tujuan dropdown akun aktif, target user ID, penerimaan aman, PIC otomatis, dan badge mutasi.
+- 🤝 **Serah Terima Shift** — bisa dibuat langsung dari tab Shift (pilih pekerjaan) atau dari detail pekerjaan; tujuan dropdown akun aktif, target user ID, penerimaan aman, PIC otomatis, dan badge mutasi.
+- 🧾 **Modul Invoice (tahap A–D)** — tampilan meniru app invoice lama: sidebar, kertas sebagai editor, kalkulator m², harga bertingkat, 4 mode dokumen (Invoice, Estimasi, Surat Jalan, PO), diskon % atau Rp, Jadikan Invoice, duplikat, autosave draft, pembayaran DP/cicilan/lunas anti-dobel. Tahap C: Cetak, Unduh PDF, Kirim WhatsApp, QRIS dinamis (nominal tertanam), kode unik transfer, tanda tangan & stempel, serta sambungan ke produksi (centang "Perlu monitoring produksi" + deadline, tombol Buat Pekerjaan Produksi, dan Buat Invoice dari Pekerjaan). Tahap D: Riwayat lengkap (ringkasan belum dibayar / lewat tempo / sudah dibayar, filter bulan, cocokkan mutasi bank, Export CSV), Laporan Bulanan/Harian/Rentang (khusus Owner), dan Pengingat Tagihan lewat WhatsApp dengan 3 nada.
 - 📋 **Paste screenshot** — unggah attachment langsung dari Windows clipboard dengan Ctrl+V.
 - 👥 **Buku pelanggan** — total order & nilai transaksi per pelanggan.
 - 🔐 **Login & Role** — hanya Owner dan Karyawan; edit username, reset password, audit dan revokasi session.

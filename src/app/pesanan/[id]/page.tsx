@@ -22,6 +22,7 @@ import type { AiOrder } from "@/lib/ai";
 import { MAX_PHOTOS_PER_ORDER, listPhotos } from "@/lib/queries";
 import { PriorityBadge, ProgressBar, RiskBadge, STATUS_ICONS, StatusBadge } from "@/components/ui";
 import { analyzeOrder } from "@/lib/ai";
+import { OrderInvoiceCard } from "@/components/OrderInvoiceCard";
 import {
   MACHINES,
   STATUSES,
@@ -338,6 +339,7 @@ function DetailBody({
       <OrderQuickEdit
         order={{
           id: order.id,
+          customerName: order.customerName,
           dueDate: order.dueDate,
           dueTime: order.dueTime,
           priority: order.priority,
@@ -388,6 +390,7 @@ function DetailBody({
             ← Kembali ke daftar pekerjaan
           </Link>
           <OrderHeader order={order} insight={insight} />
+          <OrderInvoiceCard orderId={order.id} />
         </>
       }
       ringkasan={ringkasanContent}

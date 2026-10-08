@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { Select } from "@/components/Select";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Building2, CheckCircle2, Layers, Loader2, X } from "lucide-react";
@@ -21,6 +22,8 @@ type OutsourceFull = {
   qcResult: string | null;
   itemIds: number[];
 };
+
+const noopSubscribe = () => () => {};
 
 /**
  * POPUP UPDATE CEPAT
@@ -58,17 +61,28 @@ export function QuickStatusPopup({
   trigger: ReactNode;
 }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  // true hanya di browser (false saat render di server) - dipakai supaya
+  // portal ke <body> baru dibuat setelah halaman ada di sisi klien.
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(currentStatus);
+  // Samakan status lokal bila status dari server (props) berubah, mis. setelah
+  // router.refresh(). Pola "sesuaikan state saat render" yang disarankan React,
+  // pengganti useEffect + setState.
+  const [syncedStatus, setSyncedStatus] = useState(currentStatus);
+  if (currentStatus !== syncedStatus) {
+    setSyncedStatus(currentStatus);
+    setStatus(currentStatus);
+  }
   const [items, setItems] = useState<OrderItem[] | null>(null);
   const [jobs, setJobs] = useState<OutsourceFull[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<ReactNode | null>(null);
-
-  useEffect(() => setMounted(true), []);
-  useEffect(() => setStatus(currentStatus), [currentStatus]);
 
   useEffect(() => {
     if (!open) return;
@@ -311,7 +325,7 @@ export function QuickStatusPopup({
                         <label className="sr-only" htmlFor={`st-${item.id}`}>
                           Pilih tahap lain untuk {item.productType}
                         </label>
-                        <select
+                        <Select
                           id={`st-${item.id}`}
                           value={current}
                           disabled={busy !== null}
@@ -323,7 +337,7 @@ export function QuickStatusPopup({
                               {s.short}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
                     </li>
                   );
@@ -414,7 +428,7 @@ export function QuickStatusPopup({
                         <label className="sr-only" htmlFor={`job-${job.id}`}>
                           Status mitra {job.partnerName}
                         </label>
-                        <select
+                        <Select
                           id={`job-${job.id}`}
                           value={job.status}
                           disabled={busy !== null}
@@ -426,7 +440,7 @@ export function QuickStatusPopup({
                               {s.short}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </li>
                     );
                   })}

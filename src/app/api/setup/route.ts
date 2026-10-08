@@ -240,6 +240,104 @@ const DDL = [
    )`,
   `CREATE INDEX IF NOT EXISTS user_sessions_user_idx ON user_sessions (user_id)`,
   `CREATE INDEX IF NOT EXISTS user_sessions_revoked_idx ON user_sessions (revoked_at)`,
+  // --- MODUL INVOICE (Oktober 2026) ---
+  // Semuanya aditif dan aman dijalankan berulang. Tidak mengubah data lama.
+  // Izin akun Karyawan membuka Invoice (Owner selalu boleh). Bawaan mati.
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS can_invoice boolean NOT NULL DEFAULT false`,
+  // Penomoran: satu baris per hari WIB, diambil atomik saat invoice diterbitkan.
+  `CREATE TABLE IF NOT EXISTS invoice_counters (
+      period_key text PRIMARY KEY,
+      last_seq integer NOT NULL DEFAULT 0
+   )`,
+  `CREATE TABLE IF NOT EXISTS invoices (
+      id serial PRIMARY KEY,
+      number text UNIQUE,
+      status text NOT NULL DEFAULT 'draft',
+      customer_id integer REFERENCES customers(id) ON DELETE SET NULL,
+      customer_name text NOT NULL,
+      customer_phone text,
+      issue_date date NOT NULL,
+      due_date date,
+      pay_method text NOT NULL DEFAULT 'Transfer',
+      subtotal integer NOT NULL DEFAULT 0,
+      discount_rate numeric(6,3) NOT NULL DEFAULT 0,
+      discount_amount integer NOT NULL DEFAULT 0,
+      tax_rate numeric(6,3) NOT NULL DEFAULT 0,
+      tax_amount integer NOT NULL DEFAULT 0,
+      total integer NOT NULL DEFAULT 0,
+      paid_amount integer NOT NULL DEFAULT 0,
+      pay_status text NOT NULL DEFAULT 'belum',
+      notes text,
+      terms jsonb NOT NULL DEFAULT '[]'::jsonb,
+      order_id integer REFERENCES orders(id) ON DELETE SET NULL,
+      client_ref text UNIQUE,
+      version integer NOT NULL DEFAULT 1,
+      void_reason text,
+      created_by text NOT NULL DEFAULT 'Owner',
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      issued_at timestamptz,
+      voided_at timestamptz
+   )`,
+  // 1 invoice = 1 pekerjaan: satu pesanan hanya boleh tertaut ke satu invoice.
+  `CREATE UNIQUE INDEX IF NOT EXISTS invoices_order_id_key ON invoices (order_id) WHERE order_id IS NOT NULL`,
+  `CREATE INDEX IF NOT EXISTS invoices_status_idx ON invoices (status)`,
+  `CREATE INDEX IF NOT EXISTS invoices_pay_status_idx ON invoices (pay_status)`,
+  `CREATE INDEX IF NOT EXISTS invoices_issue_date_idx ON invoices (issue_date)`,
+  `CREATE INDEX IF NOT EXISTS invoices_customer_idx ON invoices (customer_id)`,
+  `CREATE TABLE IF NOT EXISTS invoice_items (
+      id serial PRIMARY KEY,
+      invoice_id integer NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+      position integer NOT NULL DEFAULT 0,
+      product_name text NOT NULL,
+      description text,
+      unit text NOT NULL DEFAULT 'pcs',
+      qty numeric(14,3) NOT NULL DEFAULT 1,
+      area_m2 numeric(14,4) NOT NULL DEFAULT 0,
+      base_price integer NOT NULL DEFAULT 0,
+      tiers jsonb,
+      unit_price numeric(14,2) NOT NULL DEFAULT 0,
+      amount integer NOT NULL DEFAULT 0
+   )`,
+  `CREATE INDEX IF NOT EXISTS invoice_items_invoice_idx ON invoice_items (invoice_id)`,
+  `CREATE TABLE IF NOT EXISTS payments (
+      id serial PRIMARY KEY,
+      invoice_id integer NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+      kind text NOT NULL DEFAULT 'bayar',
+      amount integer NOT NULL CHECK (amount > 0),
+      method text NOT NULL DEFAULT 'Transfer',
+      paid_at timestamptz NOT NULL DEFAULT now(),
+      note text,
+      client_ref text UNIQUE,
+      created_by text NOT NULL DEFAULT 'Owner',
+      created_at timestamptz NOT NULL DEFAULT now(),
+      voided_at timestamptz,
+      voided_by text,
+      void_reason text
+   )`,
+  `CREATE INDEX IF NOT EXISTS payments_invoice_idx ON payments (invoice_id)`,
+  `CREATE TABLE IF NOT EXISTS invoice_events (
+      id serial PRIMARY KEY,
+      invoice_id integer NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+      kind text NOT NULL,
+      actor text NOT NULL DEFAULT 'Owner',
+      detail text,
+      created_at timestamptz NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX IF NOT EXISTS invoice_events_invoice_idx ON invoice_events (invoice_id)`,
+  // --- MODUL INVOICE tahap B2: mode dokumen, diskon Rp, jadikan invoice ---
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS doc_type text NOT NULL DEFAULT 'invoice'`,
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS discount_type text NOT NULL DEFAULT 'persen'`,
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS discount_input numeric(14,3) NOT NULL DEFAULT 0`,
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS source_id integer REFERENCES invoices(id) ON DELETE SET NULL`,
+  // Data tahap B (sebelum ada kolom discount_input): isian diskon = persentase yang tersimpan.
+  `UPDATE invoices SET discount_input = discount_rate WHERE discount_input = 0 AND discount_rate > 0 AND discount_type = 'persen'`,
+  `CREATE INDEX IF NOT EXISTS invoices_doc_type_idx ON invoices (doc_type)`,
+  `CREATE INDEX IF NOT EXISTS invoices_source_idx ON invoices (source_id) WHERE source_id IS NOT NULL`,
+  // --- MODUL INVOICE tahap C: tautan produksi ---
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS needs_production boolean NOT NULL DEFAULT false`,
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS prod_due_date date`,
+  `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS prod_due_time text`,
 ];
 
 type SeedCustomer = [string, string | null, string | null, string, string];
@@ -389,6 +487,11 @@ export async function GET(request: Request) {
         "shift_handovers",
         "business_branding",
         "user_sessions",
+        "invoice_counters",
+        "invoices",
+        "invoice_items",
+        "payments",
+        "invoice_events",
       ],
       seeded,
       hint: seeded ? "Contoh data sudah diisi. Buka halaman utama aplikasi." : "Untuk mengisi contoh data, buka /api/setup?seed=1",

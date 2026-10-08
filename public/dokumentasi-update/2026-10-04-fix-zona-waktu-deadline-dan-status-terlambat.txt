@@ -1,0 +1,112 @@
+================================================================
+FIX: STATUS "TERLAMBAT" MUNCUL TERLAMBAT 7 JAM (ZONA WAKTU)
+Tanggal : 04-10-2026
+Status  : selesai (sudah diuji)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Pekerjaan berstatus "Cetak" dengan deadline ketat yang sudah
+lewat hanya ditandai "Waspada" (bukan "Terlambat"). Penyebabnya
+BUKAN rumus risiko, tapi zona waktu: server Vercel jalan di UTC,
+sedangkan deadline diketik dalam WIB. Deadline "14:10" dibaca
+server sebagai 14:10 UTC (= 21:10 WIB), jadi di mata server
+deadline molor 7 jam. Sekarang deadline selalu dibaca sebagai WIB.
+
+
+PENYEBAB
+----------------------------------------------------------------
+Fungsi deadlineOf() (src/lib/domain.ts) memakai
+new Date(tahun, bulan, tanggal, jam, menit), yang artinya "jam
+menurut zona waktu mesin". Di laptop (WIB) hasilnya benar, di
+Vercel (UTC) geser 7 jam. Karena semua hitungan telat/risiko
+lewat fungsi ini, semuanya ikut geser.
+
+Contoh (cetak 45%, deadline lewat 20 menit):
+   Estimasi kerja 2 jam : Aman       (seharusnya Terlambat)
+   Estimasi kerja 3-4 j : Waspada    (seharusnya Terlambat)
+   Estimasi kerja 6 jam : Berisiko   (seharusnya Terlambat)
+Teks kartu juga salah ("sisa 6 jam" padahal sudah telat).
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/lib/domain.ts
+   - deadlineOf() sekarang membaca jam sebagai WIB (+07:00) lewat
+     Date.UTC, hasilnya sama di server UTC maupun browser mana pun.
+   - Fungsi baru jakartaDateISO(): tanggal hari ini menurut WIB.
+   - Ada komentar peringatan supaya fungsi ini tidak diubah balik.
+
+B) src/lib/ai.ts
+   - "Berdeadline hari ini" memakai tanggal WIB (sebelumnya akhir
+     hari menurut zona server, jadi geser).
+   - Skor risiko untuk deadline yang BELUM lewat dibatasi maksimal
+     89. Level "Terlambat" (skor 90+) kini hanya untuk deadline yang
+     benar-benar sudah lewat. Sebelumnya badge bisa merah
+     "Terlambat" padahal counter dashboard bilang 0 terlambat.
+
+C) src/lib/checklist.ts
+   - Query SQL kartu "Lewat deadline" di halaman Mulai: waktu
+     deadline diartikan Asia/Jakarta
+     (... AT TIME ZONE 'Asia/Jakarta') < now().
+
+Ikut terbenahi otomatis karena memakai deadlineOf(): counter
+Terlambat dashboard, ringkasan AI, catatan risiko yang disimpan,
+status telat mitra, daftar & detail pekerjaan.
+Aturan lama tetap: status Siap/Selesai/Batal tidak dihitung telat.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+----------------------------------------------------------------
+Tidak perlu membuka /api/setup (tidak ada perubahan tabel).
+Cukup upload 3 file kode + 2 file dokumentasi di bawah, lalu
+tunggu Vercel selesai deploy.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+   src/lib/domain.ts
+   src/lib/ai.ts
+   src/lib/checklist.ts
+   public/dokumentasi-update/2026-10-04-fix-zona-waktu-deadline-dan-status-terlambat.txt
+   public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+Kode asli ai.ts + domain.ts di-bundle lalu dijalankan di 3 zona
+waktu (UTC = kondisi Vercel, WIB, New York). 13 skenario, semuanya
+lulus di ketiganya:
+ - deadline 14:10 WIB terbaca 07:10 UTC; default 17:00 WIB benar;
+   jam 00:30 WIB jatuh ke tanggal sebelumnya di UTC dan tetap benar
+ - cetak + estimasi 2/3/4/6 jam + lewat 20 menit -> Terlambat
+ - belum lewat tapi mepet (urgent, kerja 6 jam, sisa 20 menit)
+   -> Berisiko Telat, skor maksimal 89, bukan Terlambat
+ - status Siap lewat deadline -> tetap Aman
+ - counter dashboard "terlambat" tidak menghitung order Siap
+ - "deadline hari ini" benar, termasuk dini hari WIB
+Belum diuji di Neon/Vercel langsung (itu perlu deploy), jadi
+uji manual di bawah.
+
+
+CARA UJI MANUAL SETELAH DEPLOY
+----------------------------------------------------------------
+1) Buat pekerjaan baru: deadline 5 menit dari sekarang, status Cetak.
+2) Tunggu deadline lewat, lalu refresh dashboard.
+3) Harusnya langsung merah "Terlambat X menit", counter Terlambat
+   bertambah, tanpa menunggu 7 jam.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Perubahan hanya hitungan di kode.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Data lama tidak perlu dimigrasi (jam deadline di database sudah
+  benar, yang salah cuma cara membacanya).
+- Catatan risiko lama di riwayat (saveAiNote) tetap menyimpan
+  level yang saat itu salah hitung; itu hanya riwayat dan akan
+  benar lagi untuk perubahan status berikutnya.

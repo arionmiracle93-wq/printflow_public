@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/Select";
 import { useEffect, useRef, useState } from "react";
 import { Camera, ClipboardPaste, ImagePlus, X } from "lucide-react";
 import { compressImage } from "@/lib/photo-client";
@@ -142,13 +143,13 @@ export function NewOrderPhotoPicker({
           <div className="grid gap-2 sm:grid-cols-2">
             <div>
               <label className="label">Jenis foto</label>
-              <select value={kind} onChange={(e) => setKind(e.target.value)} className="input" disabled={disabled}>
+              <Select value={kind} onChange={(e) => setKind(e.target.value)} className="input" disabled={disabled}>
                 {PHOTO_KINDS.map((k) => (
                   <option key={k} value={k}>
                     {photoKindLabel(k)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
               <label className="label">Keterangan (opsional)</label>

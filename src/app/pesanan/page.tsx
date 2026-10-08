@@ -1,3 +1,4 @@
+import { Select } from "@/components/Select";
 import Link from "next/link";
 import { ClipboardCheck, ClipboardList, Clock, Factory, FilterX, Image as ImageIcon, Package, Plus, Search, SearchX, User } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
@@ -96,22 +97,22 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
               placeholder="Cari kode / nama pekerjaan / pelanggan…"
               className="input sm:max-w-xs"
             />
-            <select name="status" defaultValue={status} className="input sm:max-w-[190px]">
+            <Select name="status" defaultValue={status} className="input sm:max-w-[190px]">
               <option value="all">Semua status</option>
               {STATUSES.map((s) => (
                 <option key={s.key} value={s.key}>
                   {s.emoji} {s.short}
                 </option>
               ))}
-            </select>
-            <select name="machine" defaultValue={machine} className="input sm:max-w-[200px]">
+            </Select>
+            <Select name="machine" defaultValue={machine} className="input sm:max-w-[200px]">
               <option value="all">Semua mesin</option>
               {MACHINES.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
               ))}
-            </select>
+            </Select>
             <button type="submit" className="btn-ghost inline-flex items-center gap-1.5">
               <Search size={14} /> Filter
             </button>

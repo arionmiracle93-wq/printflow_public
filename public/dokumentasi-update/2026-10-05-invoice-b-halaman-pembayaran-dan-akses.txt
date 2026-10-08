@@ -1,0 +1,149 @@
+================================================================
+MODUL INVOICE TAHAP B: HALAMAN INVOICE, PEMBAYARAN, DAN AKSES
+Tanggal : 05-10-2026
+Status  : selesai (typecheck bersih; eslint tidak menambah masalah
+          baru; alur lengkap diuji ke database PostgreSQL sungguhan)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Sekarang ada menu "Invoice" di PrintFlow. Anda bisa membuat
+invoice (draft atau langsung terbit), mengedit, mencatat DP /
+cicilan / pelunasan, membatalkan, dan melihat kertas invoice di
+layar. Semua tersimpan di database PrintFlow, bukan di browser.
+
+Yang BELUM ada (menyusul di tahap C): tombol Cetak / PDF / Kirim
+WhatsApp, checkbox "Perlu monitoring produksi", tombol "Buat
+Pekerjaan Produksi", dan "Buat Invoice dari Pekerjaan Ini".
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+1) Deploy zip ini seperti biasa. TIDAK ada perubahan database baru
+   di tahap ini, tapi kalau tahap A belum pernah Anda deploy,
+   buka /api/setup satu kali (aman diulang).
+2) Buka menu Invoice > "Pengaturan Invoice" (tombol di kanan atas
+   daftar). Isi nama usaha, alamat, telepon, info rekening, dan
+   syarat bawaan. Ini yang tampil di kop kertas invoice.
+3) Kalau ada karyawan yang perlu membuat invoice: buka halaman
+   Pengguna, nyalakan "Boleh akses Invoice" di kartu akunnya.
+   Berlaku LANGSUNG, tanpa perlu karyawan login ulang.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) HALAMAN BARU
+   /invoice                Daftar invoice. Filter: Semua, Belum
+                           bayar, Sebagian, Lunas, Draft, Batal.
+                           Cari nomor atau nama pelanggan. Di atas
+                           ada ringkasan "N invoice belum lunas,
+                           sisa tagihan Rp ...".
+   /invoice/baru           Form buat invoice (lihat B).
+   /invoice/[id]           Detail: kertas invoice, panel
+                           pembayaran, riwayat aktivitas, tombol
+                           aksi.
+   /invoice/[id]/edit      Edit invoice (draft maupun terbit).
+   /invoice/pengaturan     Identitas usaha & nilai bawaan (Owner).
+
+B) FORM INVOICE
+   - Pelanggan dengan saran nama; nama baru otomatis jadi
+     pelanggan baru, dan HP terisi kalau pelanggan sudah dikenal.
+   - Tabel item: produk, keterangan, qty, satuan, luas m2 per
+     unit, harga dasar. Tiap baris punya bagian "Harga bertingkat
+     (tier)" yang dilipat; isinya satu tingkat per baris, mis.
+     10=4000. Tambahan opsional: mode=progresif, basis=m2.
+   - Jumlah per baris, subtotal, diskon %, pajak %, dan total
+     tampil langsung saat mengetik. Itu hanya pratinjau: saat
+     disimpan, server menghitung ulang dan itulah angka resmi.
+   - DP awal (opsional) saat langsung Terbitkan.
+   - Tombol "Simpan Draft" (tanpa nomor) dan "Terbitkan" (nomor
+     INV-20261005-001 keluar di sini).
+   - Kode unik di setiap form: kalau tombol tertekan dua kali atau
+     sinyal putus lalu dicoba lagi, invoice tidak jadi dobel.
+
+C) PANEL PEMBAYARAN (halaman detail)
+   - Riwayat DP/cicilan, bilah progres, sisa tagihan.
+   - Catat Pembayaran: nominal, tombol "Lunasi sisa", metode,
+     tanggal bayar (boleh mundur, tidak boleh masa depan),
+     catatan. Kelebihan bayar menampilkan konfirmasi dulu.
+   - Kode unik tiap percobaan: pembayaran yang terkirim dua kali
+     tercatat sekali.
+   - Owner bisa "Batalkan" pembayaran (wajib alasan). Catatannya
+     tidak dihapus, hanya dicoret dan tetap terlihat.
+
+D) EDIT BERSAMAAN
+   Kalau invoice sudah diubah orang lain saat Anda mengedit,
+   muncul pesan jelas dan tombol "Muat ulang halaman". Perubahan
+   orang lain tidak tertimpa.
+
+E) HAK AKSES
+   - Owner: semuanya.
+   - Karyawan: hanya jika saklar "Boleh akses Invoice" di akunnya
+     menyala (bawaan MATI). Boleh buat invoice dan catat bayar.
+   - Hanya Owner: batalkan invoice, batalkan pembayaran, edit
+     invoice yang sudah ada pembayarannya, Pengaturan Invoice.
+   - Akun tanpa izin: menu Invoice tidak muncul, dan membuka
+     alamatnya langsung hanya mengarah ke "Akses tidak diizinkan".
+     Diuji: tidak ada nomor, nama pelanggan, atau total yang
+     bocor di halaman itu.
+
+F) MENU
+   Desktop lebar: "Invoice" muncul di bar atas antara Pelanggan
+   dan Mitra. Layar sempit/HP: bar bawah sudah penuh, jadi Invoice
+   ada di menu titik tiga (Menu lainnya). Hanya tampil untuk akun
+   yang berizin.
+
+G) KERTAS INVOICE (tampilan layar)
+   Kop usaha, data pelanggan, tabel item, subtotal/diskon/pajak/
+   total, terbayar dan sisa, info pembayaran, catatan, syarat.
+   Stempel miring: DRAFT, BATAL, atau LUNAS.
+
+H) FILE YANG DISENTUH
+   Baru   : src/app/invoice/** (5 halaman),
+            src/components/Invoice*.tsx (7 komponen),
+            src/lib/invoice-settings.ts,
+            src/app/api/invoice-settings/route.ts
+   Diubah : src/app/layout.tsx, src/components/MainNav.tsx,
+            src/components/MoreMenu.tsx,
+            src/components/UserManagement.tsx,
+            src/app/api/users/route.ts,
+            src/app/api/users/[id]/route.ts,
+            src/lib/invoice-pricing.ts (satu fungsi angka
+            ditambah), README.md
+
+
+TIDAK BERUBAH
+----------------------------------------------------------------
+Semua tabel dan alur pesanan, shift, pelanggan yang sudah ada.
+Tidak ada perubahan struktur database di tahap ini. Menu dan
+halaman lama tampil seperti sebelumnya untuk akun tanpa izin
+Invoice.
+
+
+CARA SAYA MENGUJI
+----------------------------------------------------------------
+Dijalankan ke PostgreSQL sungguhan: login Owner dan Karyawan,
+akses ditolak lalu dibuka lewat saklar (berlaku tanpa login
+ulang), semua halaman terbuka, draft > edit > versi lama ditolak
+> terbit > bayar mundur tanggal > kode sama dikirim ulang (tidak
+dobel) > kelebihan bayar ditolak sampai dikonfirmasi > tanggal
+masa depan ditolak > lunas > batalkan pembayaran. Semuanya sesuai.
+Catatan jujur: tampilan visual (tata letak di HP/APK) belum saya
+lihat dengan mata; mohon dicoba di perangkat Anda dan kabari kalau
+ada yang kurang rapi.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada layanan baru. Beban database kecil (satu pengecekan izin
+per halaman untuk pengguna yang login).
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+Tahap C: Cetak / PDF / Kirim WhatsApp, checkbox "Perlu monitoring
+produksi" (+ deadline), tombol "Buat Pekerjaan Produksi", "Buat
+Invoice dari Pekerjaan Ini", dan kartu mini invoice di halaman
+pekerjaan. Kalau ada revisi untuk tahap A/B (tampilan, istilah,
+urutan kolom), sampaikan dulu, saya gabung sekalian.

@@ -1,5 +1,6 @@
 "use client";
 
+import { ComboInput } from "@/components/ComboInput";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { LogIn, ShieldAlert, Image as ImageIcon, Repeat, GitCommitHorizontal } from "lucide-react";
@@ -50,18 +51,13 @@ export function AuditTimeline({ entries }: { entries: AuditEntry[] }) {
             </button>
           ))}
         </div>
-        <input
-          list="audit-actor-list"
+        <ComboInput
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={setQuery}
+          options={actors}
           placeholder="Cari nama / username…"
           className="input"
         />
-        <datalist id="audit-actor-list">
-          {actors.map((a) => (
-            <option key={a} value={a} />
-          ))}
-        </datalist>
         <p className="text-[11px] text-slate-500">
           Menampilkan {filtered.length} dari {entries.length} aktivitas terakhir.
         </p>

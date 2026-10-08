@@ -11,6 +11,7 @@ import {
   FileClock,
   History,
   MoreVertical,
+  ReceiptText,
   Settings,
   Smartphone,
   Stethoscope,
@@ -24,10 +25,23 @@ type MoreItem = {
   description: string;
   icon: LucideIcon;
   mobileOnly?: boolean;
+  /** Hanya tampil bila akun punya izin Invoice. */
+  needsInvoice?: boolean;
+  /** Sudah ada di bar atas layar lebar (xl), jadi disembunyikan di sana. */
+  hideOnXl?: boolean;
   roles: UserRole[];
 };
 
 const ITEMS: MoreItem[] = [
+  {
+    href: "/invoice",
+    label: "Invoice",
+    description: "Tagihan, DP, cicilan, dan pelunasan",
+    icon: ReceiptText,
+    hideOnXl: true,
+    needsInvoice: true,
+    roles: ["owner", "karyawan"],
+  },
   {
     href: "/mitra",
     label: "Produksi Mitra",
@@ -87,12 +101,12 @@ const ITEMS: MoreItem[] = [
   },
 ];
 
-export function MoreMenu({ role }: { role: UserRole }) {
+export function MoreMenu({ role, canInvoice = false }: { role: UserRole; canInvoice?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const allowedItems = ITEMS.filter((item) => item.roles.includes(role));
+  const allowedItems = ITEMS.filter((item) => item.roles.includes(role) && (!item.needsInvoice || canInvoice));
   const isUtilityPage = allowedItems.some(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
@@ -155,7 +169,7 @@ export function MoreMenu({ role }: { role: UserRole }) {
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   onClick={() => setOpen(false)}
-                  className={`${item.mobileOnly ? "flex md:hidden" : "flex"} items-center gap-3 rounded-xl px-2.5 py-2.5 transition ${
+                  className={`${item.mobileOnly ? "flex md:hidden" : item.hideOnXl ? "flex xl:hidden" : "flex"} items-center gap-3 rounded-xl px-2.5 py-2.5 transition ${
                     active ? "bg-teal-50 text-teal-800" : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >

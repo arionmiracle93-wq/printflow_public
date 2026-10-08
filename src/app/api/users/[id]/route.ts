@@ -29,11 +29,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   if (typeof body.role === "string" && ROLES.includes(body.role as typeof ROLES[number])) { patch.role = body.role; revoke = true; }
   if (typeof body.active === "boolean") { patch.active = body.active; revoke = true; }
+  // Izin Invoice dibaca dari database di setiap permintaan, jadi berlaku langsung
+  // tanpa perlu mengeluarkan (logout) pengguna - makanya TIDAK menaikkan tokenVersion.
+  if (typeof body.canInvoice === "boolean") patch.canInvoice = body.canInvoice;
   if (typeof body.password === "string" && body.password.length >= 8) { patch.passwordHash = await hash(body.password, 12); revoke = true; }
   if (revoke) patch.tokenVersion = sql`${users.tokenVersion} + 1` as unknown as number;
 
   try {
-    const [row] = await db.update(users).set(patch).where(eq(users.id, id)).returning({ id: users.id, name: users.name, username: users.username, role: users.role, active: users.active, tokenVersion: users.tokenVersion });
+    const [row] = await db.update(users).set(patch).where(eq(users.id, id)).returning({ id: users.id, name: users.name, username: users.username, role: users.role, active: users.active, canInvoice: users.canInvoice, tokenVersion: users.tokenVersion });
     if (!row) return Response.json({ ok: false, error: "Pengguna tidak ditemukan." }, { status: 404 });
 
     // Owner mengubah AKUN SENDIRI (mis. reset password miliknya dari halaman
@@ -55,7 +58,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     return Response.json({
       ok: true,
-      data: { id: row.id, name: row.name, username: row.username, role: row.role, active: row.active },
+      data: { id: row.id, name: row.name, username: row.username, role: row.role, active: row.active, canInvoice: row.canInvoice },
       reloginRequired: revoke,
       // Sesi perangkat ini TIDAK lagi ikut dicabut saat owner mengubah akunnya
       // sendiri — cookie-nya sudah diperbarui di atas.
@@ -67,6 +70,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         username: typeof body.username === "string",
         role: typeof body.role === "string",
         active: typeof body.active === "boolean",
+        canInvoice: typeof body.canInvoice === "boolean",
       },
       targetName: row.name,
       targetUsername: row.username,

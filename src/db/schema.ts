@@ -3,6 +3,8 @@ import {
   customType,
   date,
   integer,
+  jsonb,
+  numeric,
   pgTable,
   serial,
   text,
@@ -213,6 +215,12 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("karyawan"),
   active: boolean("active").notNull().default(true),
+  /**
+   * Izin membuka modul Invoice (melihat harga & mencatat pembayaran).
+   * Owner SELALU boleh, kolom ini hanya berlaku untuk akun Karyawan.
+   * Bawaan false: operator produksi tidak otomatis melihat harga.
+   */
+  canInvoice: boolean("can_invoice").notNull().default(false),
   tokenVersion: integer("token_version").notNull().default(1),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -299,6 +307,149 @@ export const businessBranding = pgTable("business_branding", {
   data: bytea("data").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * ===================== MODUL INVOICE =====================
+ * Invoice = acuan UANG (total, DP, cicilan, lunas).
+ * Pesanan (`orders`) = acuan PRODUKSI. Keduanya nyambung lewat
+ * `invoices.orderId`, tapi invoice TIDAK wajib punya pesanan.
+ * Semua nominal rupiah disimpan sebagai integer (sama seperti orders.price).
+ */
+
+/** Konfigurasi harga bertingkat per baris item (lihat src/lib/invoice-pricing.ts). */
+export type InvoiceTierConfig = {
+  mode: "flat" | "graduated";
+  basis: "qty" | "m2";
+  list: { min: number; price: number }[];
+};
+
+/**
+ * PENOMORAN INVOICE
+ * Satu baris per hari (WIB), format kunci YYYYMMDD. Nomor urut diambil
+ * secara atomik lewat INSERT ... ON CONFLICT DO UPDATE ... RETURNING,
+ * jadi dua kasir yang menerbitkan invoice bersamaan tidak akan dapat nomor kembar.
+ */
+export const invoiceCounters = pgTable("invoice_counters", {
+  periodKey: text("period_key").primaryKey(),
+  lastSeq: integer("last_seq").notNull().default(0),
+});
+
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  /** Kosong selama masih draft. Nomor resmi baru dibuat saat "Terbitkan". */
+  number: text("number").unique(),
+  /** Jenis dokumen: invoice | estimasi | suratjalan | po. Hanya "invoice" yang punya pembayaran & masuk omzet. */
+  docType: text("doc_type").notNull().default("invoice"),
+  /** draft | terbit | batal */
+  status: text("status").notNull().default("draft"),
+  customerId: integer("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  /** Salinan nama/HP pelanggan saat invoice dibuat, supaya invoice lama tidak berubah kalau data pelanggan diedit. */
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone"),
+  issueDate: date("issue_date", { mode: "string" }).notNull(),
+  dueDate: date("due_date", { mode: "string" }),
+  /** Transfer | Cash | QRIS */
+  payMethod: text("pay_method").notNull().default("Transfer"),
+  subtotal: integer("subtotal").notNull().default(0),
+  /** Tipe diskon: persen (0-100) atau rp (nominal, dibatasi maksimal subtotal). */
+  discountType: text("discount_type").notNull().default("persen"),
+  /** Isian mentah kasir: persen atau rupiah, sesuai discountType. */
+  discountInput: numeric("discount_input", { precision: 14, scale: 3, mode: "number" }).notNull().default(0),
+  /** Persentase diskon (0 bila tipe rp). Dipertahankan agar data lama tetap terbaca. */
+  discountRate: numeric("discount_rate", { precision: 6, scale: 3, mode: "number" }).notNull().default(0),
+  discountAmount: integer("discount_amount").notNull().default(0),
+  taxRate: numeric("tax_rate", { precision: 6, scale: 3, mode: "number" }).notNull().default(0),
+  taxAmount: integer("tax_amount").notNull().default(0),
+  total: integer("total").notNull().default(0),
+  /** Cache: jumlah pembayaran yang tidak dibatalkan. Selalu dihitung ulang oleh server. */
+  paidAmount: integer("paid_amount").notNull().default(0),
+  /** belum | sebagian | lunas — cache, dihitung ulang oleh server. */
+  payStatus: text("pay_status").notNull().default("belum"),
+  notes: text("notes"),
+  terms: jsonb("terms").$type<string[]>().notNull().default([]),
+  /**
+   * Perlu monitoring produksi? Bila true, saat invoice DITERBITKAN otomatis dibuatkan
+   * pekerjaan produksi (status Antrian) dengan deadline di bawah ini. Idempoten: 1 invoice = 1 pekerjaan.
+   */
+  needsProduction: boolean("needs_production").notNull().default(false),
+  prodDueDate: date("prod_due_date", { mode: "string" }),
+  prodDueTime: text("prod_due_time"),
+  /** Dokumen asal bila ini hasil "Jadikan Invoice" dari Estimasi/PO/SJ. */
+  sourceId: integer("source_id"),
+  /** Pekerjaan produksi yang tertaut. Unik bila terisi: 1 invoice = 1 pekerjaan. */
+  orderId: integer("order_id").references(() => orders.id, { onDelete: "set null" }),
+  /** Kode unik dari perangkat agar pembuatan invoice yang terkirim dua kali tidak jadi dobel. */
+  clientRef: text("client_ref").unique(),
+  /** Naik 1 setiap isi invoice diedit. Dipakai untuk mendeteksi edit bersamaan. */
+  version: integer("version").notNull().default(1),
+  voidReason: text("void_reason"),
+  createdBy: text("created_by").notNull().default("Owner"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  issuedAt: timestamp("issued_at", { withTimezone: true }),
+  voidedAt: timestamp("voided_at", { withTimezone: true }),
+});
+
+export const invoiceItems = pgTable("invoice_items", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  position: integer("position").notNull().default(0),
+  productName: text("product_name").notNull(),
+  description: text("description"),
+  unit: text("unit").notNull().default("pcs"),
+  qty: numeric("qty", { precision: 14, scale: 3, mode: "number" }).notNull().default(1),
+  /** Luas per unit (m²). 0 = bukan produk berbasis luas. */
+  areaM2: numeric("area_m2", { precision: 14, scale: 4, mode: "number" }).notNull().default(0),
+  basePrice: integer("base_price").notNull().default(0),
+  tiers: jsonb("tiers").$type<InvoiceTierConfig>(),
+  /** Hasil hitung server, disimpan sebagai arsip. */
+  unitPrice: numeric("unit_price", { precision: 14, scale: 2, mode: "number" }).notNull().default(0),
+  amount: integer("amount").notNull().default(0),
+});
+
+/**
+ * PEMBAYARAN
+ * Catatan hanya ditambah (append-only). Salah input dikoreksi dengan
+ * "membatalkan" (voidedAt terisi), bukan dihapus — jejak uang tetap utuh.
+ */
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  /** dp | bayar */
+  kind: text("kind").notNull().default("bayar"),
+  amount: integer("amount").notNull(),
+  method: text("method").notNull().default("Transfer"),
+  paidAt: timestamp("paid_at", { withTimezone: true }).notNull().defaultNow(),
+  note: text("note"),
+  /** Kode unik dari perangkat (anti-dobel saat pembayaran dikirim ulang / dari antrean offline). */
+  clientRef: text("client_ref").unique(),
+  createdBy: text("created_by").notNull().default("Owner"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  voidedAt: timestamp("voided_at", { withTimezone: true }),
+  voidedBy: text("voided_by"),
+  voidReason: text("void_reason"),
+});
+
+/** JEJAK AKTIVITAS INVOICE (dibuat, diedit, terbit, bayar, batal, ...). */
+export const invoiceEvents = pgTable("invoice_events", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  actor: text("actor").notNull().default("Owner"),
+  detail: text("detail"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InvoiceItemRow = typeof invoiceItems.$inferSelect;
+export type PaymentRow = typeof payments.$inferSelect;
+export type InvoiceEventRow = typeof invoiceEvents.$inferSelect;
 
 export type Customer = typeof customers.$inferSelect;
 export type Order = typeof orders.$inferSelect;

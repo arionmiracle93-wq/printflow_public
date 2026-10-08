@@ -1,6 +1,7 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { orderEvents, orders, shiftHandovers } from "@/db/schema";
+import { ACTIVE_STATUSES } from "@/lib/domain";
 
 export type HandoverRecord = {
   id: number;
@@ -119,4 +120,43 @@ export async function listPendingHandovers(): Promise<PendingHandover[]> {
     dueTime: orders.dueTime,
   }).from(shiftHandovers).innerJoin(orders, eq(shiftHandovers.orderId, orders.id)).where(eq(shiftHandovers.status, "menunggu")).orderBy(asc(orders.dueDate), asc(orders.dueTime));
   return rows.map((r) => ({ ...r, handedOverAt: r.handedOverAt.toISOString(), acceptedAt: r.acceptedAt?.toISOString() ?? null }));
+}
+
+/** Pekerjaan yang bisa dipilih di halaman Shift untuk dibuatkan serah terima. */
+export type HandoverCandidate = {
+  id: number;
+  code: string;
+  title: string;
+  customerName: string;
+  status: string;
+  operator: string | null;
+  dueDate: string;
+  dueTime: string;
+};
+
+/**
+ * Pekerjaan aktif (belum selesai/batal) yang BELUM punya serah terima
+ * berstatus "menunggu". Aturan terakhir sama dengan API: satu pekerjaan hanya
+ * boleh punya satu serah terima menunggu dalam satu waktu.
+ */
+export async function listHandoverCandidates(): Promise<HandoverCandidate[]> {
+  const [rows, pending] = await Promise.all([
+    db
+      .select({
+        id: orders.id,
+        code: orders.code,
+        title: orders.title,
+        customerName: orders.customerName,
+        status: orders.status,
+        operator: orders.operator,
+        dueDate: orders.dueDate,
+        dueTime: orders.dueTime,
+      })
+      .from(orders)
+      .where(inArray(orders.status, ACTIVE_STATUSES))
+      .orderBy(asc(orders.dueDate), asc(orders.dueTime), asc(orders.id)),
+    db.select({ orderId: shiftHandovers.orderId }).from(shiftHandovers).where(eq(shiftHandovers.status, "menunggu")),
+  ]);
+  const blocked = new Set(pending.map((row) => row.orderId));
+  return rows.filter((row) => !blocked.has(row.id));
 }

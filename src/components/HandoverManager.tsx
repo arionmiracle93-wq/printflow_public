@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/Select";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { ArrowRight, CheckCircle2, Clock3, Handshake, Send, UserRoundCheck } from "lucide-react";
@@ -160,17 +161,17 @@ export function HandoverManager({
               <input value={form.fromOperator} disabled={loggedInRole !== "owner"} onChange={(event) => setForm({ ...form, fromOperator: event.target.value })} className="input disabled:bg-slate-100" />
             </Field>
             <Field label="Kepada Karyawan">
-              <select value={form.toUserId} onChange={(event) => setForm({ ...form, toUserId: event.target.value })} className="input" disabled={!employees.length}>
+              <Select value={form.toUserId} onChange={(event) => setForm({ ...form, toUserId: event.target.value })} className="input" disabled={!employees.length}>
                 <option value="">Pilih akun Karyawan…</option>
                 {employees.map((employee) => (
                   <option key={employee.id} value={employee.id}>{employee.name} (@{employee.username})</option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Nama shift">
-              <select value={form.shiftLabel} onChange={(event) => setForm({ ...form, shiftLabel: event.target.value })} className="input">
+              <Select value={form.shiftLabel} onChange={(event) => setForm({ ...form, shiftLabel: event.target.value })} className="input">
                 <option>Shift Pagi</option><option>Shift Siang</option><option>Shift Malam</option><option>Shift Berikutnya</option>
-              </select>
+              </Select>
             </Field>
             <Field label="Posisi terakhir">
               <input value={form.lastPosition} onChange={(event) => setForm({ ...form, lastPosition: event.target.value })} className="input" />

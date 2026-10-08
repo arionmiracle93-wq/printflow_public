@@ -18,6 +18,48 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[67] 2026-10-08-invoice-d-riwayat-laporan-tagihan.txt
+    Modul Invoice tahap D: Riwayat lengkap (ringkasan piutang, lewat
+    tempo, filter bulan, cocokkan mutasi bank, Export CSV), Laporan
+    Bulanan/Harian/Rentang (Owner), dan pengingat tagihan WhatsApp
+    dengan 3 nada.
+
+[66] 2026-10-07-invoice-c-cetak-pdf-whatsapp-qris-produksi.txt
+    Modul Invoice tahap C: Cetak, Unduh PDF, Kirim WhatsApp, QRIS
+    dinamis, kode unik transfer, tanda tangan & stempel, serta
+    sambungan ke produksi (centang monitoring produksi, Buat
+    Pekerjaan Produksi, Buat Invoice dari Pekerjaan).
+
+[65] 2026-10-06-invoice-b2-tampilan-seperti-app-lama.txt
+    Modul Invoice tahap B2: tampilan seperti app invoice lama
+    (sidebar, kertas sebagai editor, kalkulator m2, harga
+    bertingkat), 4 mode dokumen (Invoice, Estimasi, Surat Jalan,
+    PO), diskon % atau Rp, Jadikan Invoice, duplikat, dan
+    pengaturan 4 tab.
+
+[64] 2026-10-05-invoice-b-halaman-pembayaran-dan-akses.txt
+    Modul Invoice tahap B: menu dan halaman Invoice (daftar, buat,
+    edit, detail), Catat Pembayaran, saklar akses per karyawan,
+    dan pengaturan identitas usaha. Cetak/PDF/produksi di tahap C.
+
+[63] 2026-10-05-invoice-a-fondasi-database-dan-api.txt
+    Modul Invoice tahap A: tabel invoice di database, rumus harga
+    (tier, m2) dari app lama, penomoran otomatis dari server,
+    pembayaran anti-dobel, dan API. Belum ada halaman baru.
+
+[62] 2026-10-04-buat-serah-terima-dari-tab-shift.txt
+    Halaman Shift punya tombol "Buat Serah Terima": pilih pekerjaan,
+    isi catatan, serahkan ke karyawan, tanpa buka detail pekerjaan.
+
+[61] 2026-10-04-fix-zona-waktu-deadline-dan-status-terlambat.txt
+    Fix status "Terlambat" baru muncul 7 jam kemudian: deadline kini
+    dibaca sebagai WIB (bukan zona server UTC). Level Terlambat hanya
+    untuk deadline yang benar-benar lewat. Query checklist ikut WIB.
+
+[60] 2026-10-13-hero-dashboard-slideshow-3-foto.txt
+    Foto hero Dashboard jadi slideshow 3 foto (geser kiri tiap 6 detik),
+    tanpa titik indikator.
+
 [59] 2026-10-01-status-siap-tidak-dihitung-telat.txt
     Pesanan berstatus Siap tidak lagi dihitung terlambat/berisiko
     (skor risiko, KPI dashboard, daftar & detail pekerjaan, AI).

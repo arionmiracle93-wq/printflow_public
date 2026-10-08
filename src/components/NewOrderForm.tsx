@@ -1,5 +1,8 @@
 "use client";
 
+import { TimeFieldID } from "@/components/TimeFieldID";
+import { ComboInput } from "@/components/ComboInput";
+import { Select } from "@/components/Select";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AlertTriangle, Bot, Building2, Camera, ClipboardList, Phone, Plus, Save, Truck, X } from "lucide-react";
@@ -338,7 +341,7 @@ export function NewOrderForm({
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div>
                 <label className="label">Pilih pelanggan lama / baru</label>
-                <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className={inputCls}>
+                <Select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className={inputCls}>
                   <option value="__new">➕ Pelanggan baru (ketik nama)</option>
                   {customers.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -346,7 +349,7 @@ export function NewOrderForm({
                       {c.phone ? ` · ${c.phone}` : ""}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               {customerId === "__new" ? (
                 <div>
@@ -399,38 +402,33 @@ export function NewOrderForm({
               <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div>
                   <label className="label">Mesin / tahapan utama</label>
-                  <select value={machine} onChange={(e) => setMachine(e.target.value)} className={inputCls}>
+                  <Select value={machine} onChange={(e) => setMachine(e.target.value)} className={inputCls}>
                     {MACHINES.map((m) => (
                       <option key={m} value={m}>
                         {m}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div>
                   <label className="label">Operator / penanggung jawab</label>
-                  <input
+                  <ComboInput
                     value={operator}
-                    onChange={(e) => setOperator(e.target.value)}
-                    list="operator-list"
+                    onChange={setOperator}
+                    options={operatorSuggestions}
                     placeholder="Boleh dikosongkan"
                     className={inputCls}
                   />
-                  <datalist id="operator-list">
-                    {operatorSuggestions.map((o) => (
-                      <option key={o} value={o} />
-                    ))}
-                  </datalist>
                 </div>
                 <div>
                   <label className="label">Prioritas</label>
-                  <select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputCls}>
+                  <Select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputCls}>
                     {PRIORITIES.map((p) => (
                       <option key={p.key} value={p.key}>
                         {p.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -454,7 +452,7 @@ export function NewOrderForm({
               </div>
               <div>
                 <label className="label">Jam</label>
-                <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} className={inputCls} />
+                <TimeFieldID value={dueTime} onChange={setDueTime} className={inputCls} />
               </div>
               <div>
                 <label className="label">Total harga (Rp)</label>
@@ -571,7 +569,7 @@ export function NewOrderForm({
                         <div>
                           <label className="label" htmlFor={`nm-pilih-${k}`}>Mitra / percetakan pusat</label>
                           <div className="flex gap-2">
-                            <select id={`nm-pilih-${k}`} value={m.partnerId} onChange={(e) => selectPartner(k, e.target.value)} className="input">
+                            <Select id={`nm-pilih-${k}`} value={m.partnerId} onChange={(e) => selectPartner(k, e.target.value)} className="input">
                               <option value="">Pilih mitra atau ketik manual</option>
                               {partners
                                 .filter((p) => p.active)
@@ -580,7 +578,7 @@ export function NewOrderForm({
                                     {p.name} · {partnerKindLabel(p.kind)}
                                   </option>
                                 ))}
-                            </select>
+                            </Select>
                             <button
                               type="button"
                               onClick={() => setAddPartnerFor(addPartnerFor === k ? null : k)}
@@ -599,13 +597,13 @@ export function NewOrderForm({
                             </p>
                             <div className="mt-2 grid gap-2">
                               <input value={newPartner.name} onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })} placeholder="Nama percetakan / pusat" className="input" aria-label="Nama mitra baru" />
-                              <select value={newPartner.kind} onChange={(e) => setNewPartner({ ...newPartner, kind: e.target.value })} className="input" aria-label="Jenis mitra">
+                              <Select value={newPartner.kind} onChange={(e) => setNewPartner({ ...newPartner, kind: e.target.value })} className="input" aria-label="Jenis mitra">
                                 {PARTNER_KINDS.map((kind) => (
                                   <option key={kind.key} value={kind.key}>
                                     {kind.label}
                                   </option>
                                 ))}
-                              </select>
+                              </Select>
                               <input value={newPartner.phone} onChange={(e) => setNewPartner({ ...newPartner, phone: e.target.value })} placeholder="No. WhatsApp" className="input" aria-label="Nomor WhatsApp mitra" />
                               <input value={newPartner.address} onChange={(e) => setNewPartner({ ...newPartner, address: e.target.value })} placeholder="Alamat (opsional)" className="input" aria-label="Alamat mitra" />
                             </div>
@@ -659,13 +657,13 @@ export function NewOrderForm({
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div>
                             <label className="label" htmlFor={`nm-status-${k}`}>Status di mitra</label>
-                            <select id={`nm-status-${k}`} value={m.status} onChange={(e) => patchMitra(k, { status: e.target.value })} className="input">
+                            <Select id={`nm-status-${k}`} value={m.status} onChange={(e) => patchMitra(k, { status: e.target.value })} className="input">
                               {OUTSOURCE_STATUSES.map((st) => (
                                 <option key={st.key} value={st.key}>
                                   {st.label}
                                 </option>
                               ))}
-                            </select>
+                            </Select>
                           </div>
                           <div>
                             <label className="label" htmlFor={`nm-biaya-${k}`}>Biaya mitra (Rp)</label>
@@ -677,7 +675,7 @@ export function NewOrderForm({
                           </div>
                           <div>
                             <label className="label" htmlFor={`nm-jam-${k}`}>Jam kembali</label>
-                            <input id={`nm-jam-${k}`} type="time" value={m.expectedTime} onChange={(e) => patchMitra(k, { expectedTime: e.target.value })} className="input" />
+                            <TimeFieldID id={`nm-jam-${k}`} value={m.expectedTime} onChange={(v) => patchMitra(k, { expectedTime: v })} className="input" />
                           </div>
                         </div>
 

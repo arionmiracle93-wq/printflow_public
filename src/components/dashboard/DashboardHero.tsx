@@ -3,6 +3,7 @@ import { ArrowRight, Hand, ListTodo, Plus, Sparkles } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { Greeting } from "@/components/Greeting";
 import { HeroHighlightsCarousel } from "@/components/HeroHighlightsCarousel";
+import { HeroSlideshow } from "@/components/dashboard/HeroSlideshow";
 import { LocalDateTime } from "@/components/LocalDateTime";
 
 /**
@@ -18,8 +19,8 @@ import { LocalDateTime } from "@/components/LocalDateTime";
  *   - judul, ringkasan AI, dua tombol
  *   - badge Insight AI dan carousel sorotan (HeroHighlightsCarousel)
  *
- * Foto: /public/images/dashboard-hero.jpg (desktop) dan
- * dashboard-hero-mobile.jpg (HP).
+ * Foto: slideshow 3 slide, geser kiri tiap 6 detik — lihat
+ * HeroSlideshow.tsx untuk daftar file foto (desktop + HP per slide).
  *
  * Optimasi scroll (Oktober 2026), tampilan tetap sama:
  *   - blur-3xl diganti gradasi radial (.pf-hero-glow)
@@ -41,13 +42,18 @@ import { LocalDateTime } from "@/components/LocalDateTime";
 export function DashboardHero({ summary, highlights }: { summary: string; highlights: string[] }) {
   return (
     <section className="pf-hero relative isolate overflow-hidden rounded-[1.5rem] border border-white/10 text-white dark:border-white/5 dark:shadow-[0_20px_46px_rgba(0,0,0,.5)]">
-      {/* Foto latar + gradasi gelap. Strategi overlay beda mobile vs desktop, lihat .hero-photo-bg di globals.css */}
-      <div className="hero-photo-bg absolute inset-0 -z-20" />
-      {/* Aksen brand (amber + teal) sebagai cahaya lembut di belakang foto.
+      {/* Foto latar (slideshow) lalu gradasi gelap di atasnya. Urutan DOM ini penting:
+          keduanya -z-20, yang belakangan tampil di atas. Strategi overlay beda mobile vs desktop,
+          lihat .hero-photo-bg di globals.css */}
+      <HeroSlideshow />
+      <div className="hero-photo-bg absolute inset-0 -z-20" aria-hidden />
+      {/* Aksen brand sebagai cahaya lembut di belakang foto. Cahaya amber di sudut kanan
+          bawah DIHAPUS (Oktober 2026) karena menguning-kan foto; tinggal cahaya teal.
+          (Kelas .pf-hero-glow-amber di dashboard.css sekarang tidak terpakai.)
+          Catatan lama:
           Dulu dibuat dengan filter blur-3xl (blur 64px), salah satu efek
           paling berat untuk GPU HP. Sekarang memakai gradasi radial dengan
           posisi dan warna yang sama, hasil visualnya setara tanpa filter. */}
-      <div className="pf-hero-glow pf-hero-glow-amber" aria-hidden />
       <div className="pf-hero-glow pf-hero-glow-teal" aria-hidden />
       <div className="print-halftone absolute inset-0 -z-10 hidden md:block" />
 

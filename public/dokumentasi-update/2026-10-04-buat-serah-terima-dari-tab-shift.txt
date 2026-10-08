@@ -1,0 +1,120 @@
+================================================================
+BUAT SERAH TERIMA LANGSUNG DARI TAB SHIFT
+Tanggal : 04-10-2026
+Status  : selesai (typecheck, lint, dan tes interaksi lulus)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Halaman Shift (/serah-terima) sekarang punya tombol "Buat Serah
+Terima". Pilih pekerjaan dari daftar, isi catatan, lalu serahkan
+ke karyawan shift berikutnya, semuanya dari halaman Shift tanpa
+harus membuka detail pekerjaan > tab Komunikasi dulu. Jalur lama
+(tab Komunikasi) tetap ada dan tidak diubah.
+
+
+ALASAN PERUBAHAN
+----------------------------------------------------------------
+Sebelumnya halaman Shift hanya menampilkan daftar serah terima
+yang menunggu. Membuat serah terima baru harus lewat detail
+pekerjaan > tab Komunikasi, jadi bolak-balik dan kurang praktis
+saat pergantian shift.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/components/ShiftHandoverCreator.tsx (FILE BARU)
+   - Kartu "Buat Serah Terima Baru" di atas daftar. Klik tombol
+     untuk membuka form.
+   - Dropdown "Pekerjaan yang diserahkan": hanya pekerjaan aktif
+     (belum selesai/batal) yang belum punya serah terima menunggu.
+     Pekerjaan yang PIC-nya akun yang login ditaruh paling atas.
+   - Memilih pekerjaan otomatis mengisi "Posisi terakhir" dari
+     statusnya dan "Dari operator" dari PIC pekerjaan.
+   - Isi form sama dengan di tab Komunikasi: karyawan tujuan, nama
+     shift, posisi terakhir, tindakan berikutnya (wajib), kendala,
+     catatan tambahan.
+   - Karyawan: "Dari operator" terkunci ke nama akunnya, dan akunnya
+     sendiri tidak muncul di pilihan tujuan. Owner bisa mengubah
+     "Dari operator".
+   - Setelah berhasil: form menutup dan bersih, badge angka di menu
+     Shift ikut diperbarui, serah terima baru langsung muncul di
+     daftar (lengkap dengan tombol kirim WhatsApp).
+
+B) src/lib/handover-queries.ts
+   - Fungsi baru listHandoverCandidates(): daftar pekerjaan aktif
+     yang boleh diserahterimakan (menyaring yang sudah punya serah
+     terima menunggu, aturan yang sama dengan API).
+
+C) src/app/serah-terima/page.tsx
+   - Memuat daftar pekerjaan + akun karyawan aktif, menampilkan
+     kartu pembuat serah terima, dan kalimat keterangan halaman &
+     tampilan kosong disesuaikan.
+
+D) README.md
+   - Poin fitur Serah Terima Shift ditambah keterangan baru.
+
+TIDAK BERUBAH: API (POST /api/orders/[id]/handovers), tabel
+database, HandoverManager (tab Komunikasi). Form baru memakai API
+yang sama, jadi validasi, notifikasi push ke karyawan tujuan dan
+Owner, serta catatan riwayat pekerjaan berjalan persis seperti
+membuat dari detail pekerjaan.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+----------------------------------------------------------------
+Tidak perlu membuka /api/setup (tidak ada perubahan tabel).
+Upload file di bawah, lalu tunggu Vercel selesai deploy.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+   src/components/ShiftHandoverCreator.tsx          (baru)
+   src/lib/handover-queries.ts
+   src/app/serah-terima/page.tsx
+   README.md
+   public/dokumentasi-update/2026-10-04-buat-serah-terima-dari-tab-shift.txt
+   public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+- Typecheck (tsc --noEmit) seluruh proyek: bersih.
+- ESLint pada semua file yang diubah: bersih.
+- Tes interaksi komponen di browser tiruan (jsdom), 14 skenario
+  lulus: form tertutup di awal dan terbuka saat tombol diklik;
+  pekerjaan milik akun login di urutan atas; "Dari operator" dan
+  "Posisi terakhir" terisi otomatis; tombol Serahkan nonaktif
+  sampai pekerjaan dan karyawan dipilih; tindakan berikutnya
+  kosong ditolak tanpa memanggil server; kiriman ke endpoint
+  pekerjaan yang benar dengan data yang benar; setelah sukses
+  form menutup, daftar di-refresh, badge Shift diperbarui, dan
+  form bersih saat dibuka lagi.
+BELUM diuji langsung di Neon/Vercel (perlu deploy): query
+daftar pekerjaan dan pengiriman push sungguhan. Uji manual:
+
+CARA UJI MANUAL SETELAH DEPLOY
+----------------------------------------------------------------
+1) Buka menu Shift, klik "Buat Serah Terima".
+2) Pilih satu pekerjaan, pilih karyawan tujuan, isi "Tindakan
+   berikutnya", klik "Serahkan ke Karyawan".
+3) Kartu serah terima baru harus muncul di daftar, dan badge
+   angka di menu Shift bertambah.
+4) Pekerjaan tadi harus hilang dari dropdown (karena sudah punya
+   serah terima menunggu) sampai diterima.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Halaman Shift sekarang menjalankan 2 query tambahan ringan
+(daftar pekerjaan aktif dan akun karyawan) saat dibuka. Tidak ada
+dampak berarti ke kuota Neon.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Tombol "Terima" langsung di kartu daftar Shift (sekarang masih
+  lewat tombol "Buka & Terima Pekerjaan" ke detail pekerjaan).
+- Pilih beberapa pekerjaan sekaligus untuk satu serah terima
+  saat pergantian shift (sekarang satu pekerjaan per serah terima).
