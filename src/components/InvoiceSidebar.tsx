@@ -4,12 +4,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BarChart3, FilePlus2, History, Package, ReceiptText, Settings } from "lucide-react";
+import { SidebarThemeButton } from "@/components/ThemeToggle";
+import { AccentLastWord } from "@/components/AccentLastWord";
 import { DOC_MODES, DOC_TYPES, docModeOf, type DocType } from "@/lib/invoice-modes";
 
 /**
- * SIDEBAR MODUL INVOICE (meniru app lama)
- *  - Layar lebar: panel kiri berisi logo, MODE DOKUMEN, tombol aksi, dan menu.
- *  - Layar sempit/HP: baris ringkas di atas (mode + 3 tombol), aksi ada di tempat lain.
+ * SIDEBAR MODUL INVOICE
+ * Panel kiri berisi: identitas usaha, pemilih MODE DOKUMEN, tombol
+ * aksi halaman ini, menu navigasi, dan catatan sistem.
+ *
+ * Catatan desain: sidebar TIDAK pernah punya max-height atau overflow.
+ * Isinya boleh bertambah dan kartunya ikut memanjang, sesuai gambar
+ * acuan. Kalau kontennya melebihi tinggi layar, halaman yang digulir -
+ * bukan sidebar-nya.
  *
  * modeBehavior:
  *   "filter"  -> memilih mode = menyaring daftar (/invoice?m=...)
@@ -43,39 +50,43 @@ export function InvoiceSidebar({
 
   const newHref = `/invoice/baru${docType !== "semua" && docType !== "invoice" ? `?m=${docType}` : ""}`;
   const select = (
-    <select
-      value={docType}
-      disabled={modeBehavior === "fixed"}
-      onChange={(e) => onModeChange(e.target.value)}
-      className="w-full rounded-xl border border-teal-200 bg-white px-3 py-2 text-xs font-bold text-slate-800 disabled:opacity-70"
-      aria-label="Mode dokumen"
-    >
-      {modeBehavior === "filter" ? <option value="semua">Semua dokumen</option> : null}
-      {DOC_TYPES.map((t) => (
-        <option key={t} value={t}>
-          {DOC_MODES[t].label}
-        </option>
-      ))}
-    </select>
+    <div className="relative">
+      <ReceiptText size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[color:var(--ppi-accent)]" />
+      <select
+        value={docType}
+        disabled={modeBehavior === "fixed"}
+        onChange={(e) => onModeChange(e.target.value)}
+        className="ppi-side-select !pl-8"
+        aria-label="Mode dokumen"
+      >
+        {modeBehavior === "filter" ? <option value="semua">Semua dokumen</option> : null}
+        {DOC_TYPES.map((t) => (
+          <option key={t} value={t}>
+            {DOC_MODES[t].label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 
   const links = [
-    { href: "/invoice", label: "Riwayat", icon: History, active: pathname === "/invoice" },
+    { href: "/invoice", label: "Riwayat Dokumen", icon: History, active: pathname === "/invoice" },
     { href: newHref, label: current.newBtn, icon: FilePlus2, active: pathname === "/invoice/baru" },
     { href: "/invoice/katalog", label: "Katalog Produk", icon: Package, active: pathname === "/invoice/katalog" },
-    ...(isOwner ? [{ href: "/invoice/laporan", label: "Laporan", icon: BarChart3, active: pathname === "/invoice/laporan" }] : []),
-    ...(isOwner ? [{ href: "/invoice/pengaturan", label: "Pengaturan", icon: Settings, active: pathname === "/invoice/pengaturan" }] : []),
+    ...(isOwner ? [{ href: "/invoice/laporan", label: "Laporan Bulanan", icon: BarChart3, active: pathname === "/invoice/laporan" }] : []),
   ];
 
   return (
     <>
       {/* ======= Layar lebar ======= */}
-      <aside className="card sticky top-20 hidden max-h-[calc(100vh-6rem)] w-full flex-col gap-3 self-start overflow-y-auto p-3 lg:flex">
-        <div className="flex items-center gap-2.5 px-1 pt-1">
+      <aside className="ppi-side sticky top-20 hidden w-full flex-col self-start p-4 lg:flex">
+        <div className="ppi-side-brand">
           {logoFailed ? (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white"><ReceiptText size={20} /></span>
+            <span className="ppi-side-logo text-[color:var(--ppi-accent)]">
+              <ReceiptText size={22} />
+            </span>
           ) : (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <span className="ppi-side-logo">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/api/branding/logo"
@@ -90,29 +101,48 @@ export function InvoiceSidebar({
             </span>
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-extrabold text-[color:var(--pf-ink)]">{businessName}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Dokumen usaha</p>
+            <p className="ppi-side-name">
+              <AccentLastWord text={businessName} />
+            </p>
+            <span className="ppi-side-tag">Dokumen Elektronik</span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-teal-200/70 bg-teal-50/60 p-2.5 dark:border-teal-500/20 dark:bg-teal-500/5">
-          <span className="mb-1 block text-[9.5px] font-extrabold uppercase tracking-wider text-teal-700">Mode dokumen</span>
-          {select}
-          <span className="mt-1 block text-[10px] font-semibold leading-snug text-slate-500">
+        <hr className="ppi-side-hr my-4" />
+
+        <div className="ppi-side-mode">
+          <span className="ppi-kicker">Mode Dokumen</span>
+          <div className="mt-2">{select}</div>
+          <p className="ppi-side-hint">
             {modeBehavior === "fixed" ? "Jenis dokumen tidak bisa diubah setelah dibuat." : current.hint}
-          </span>
+          </p>
         </div>
 
-        {actions ? <div className="space-y-0.5">{actions}</div> : null}
+        {actions ? <div className="mt-3 space-y-0.5">{actions}</div> : null}
 
-        <nav className="space-y-0.5 border-t border-slate-200/70 pt-2 dark:border-slate-700/60">
+        <hr className="ppi-side-hr my-4" />
+
+        <nav className="space-y-0.5">
           {links.map((l) => (
-            <Link key={l.label} href={l.href} className={`ppi-side-btn ${l.active ? "active" : ""}`}>
-              <span className="ppi-ico"><l.icon size={15} /></span>
-              {l.label}
-            </Link>
+            <SideButtonLink key={l.label} href={l.href} label={l.label} icon={<l.icon size={15} />} active={l.active} />
           ))}
+          {isOwner ? (
+            <SideButtonLink href="/invoice/pengaturan" label="Pengaturan" icon={<Settings size={15} />} active={pathname === "/invoice/pengaturan"} />
+          ) : null}
         </nav>
+
+        <div className="mt-5 space-y-1.5">
+          <p className="ppi-side-status">Draft editor tersimpan otomatis di perangkat</p>
+          <p className="ppi-side-status">
+            <span className="ppi-side-dot" aria-hidden />
+            Nomor dokumen keluar otomatis saat terbit
+          </p>
+        </div>
+
+        <div className="ppi-side-mode mt-5">
+          <span className="ppi-kicker">Tampilan</span>
+          <SidebarThemeButton className="mt-2" />
+        </div>
       </aside>
 
       {/* ======= HP / layar sempit ======= */}
@@ -134,6 +164,16 @@ export function InvoiceSidebar({
   );
 }
 
+/** Nama usaha di kop: gaya "Pamulang Printing" (kata terakhir beraksen). */
+function SideButtonLink({ href, label, icon, active }: { href: string; label: string; icon: ReactNode; active?: boolean }) {
+  return (
+    <Link href={href} className={`ppi-side-btn ${active ? "active" : ""}`}>
+      <span className="ppi-ico">{icon}</span>
+      {label}
+    </Link>
+  );
+}
+
 /** Pembungkus 2 kolom (sidebar + isi). */
 export function InvoiceFrame({
   sidebar,
@@ -143,7 +183,7 @@ export function InvoiceFrame({
   children: ReactNode;
 }) {
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-5">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-5">
       <div className="contents lg:block">{sidebar}</div>
       <div className="min-w-0">{children}</div>
     </div>

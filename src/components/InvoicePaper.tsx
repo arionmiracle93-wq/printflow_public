@@ -1,7 +1,8 @@
-import { Check, Mail, MapPin, MessageCircle, Receipt, User } from "lucide-react";
+import { CircleCheck, Mail, MapPin, MessageCircle, Receipt, User } from "lucide-react";
 import { PaperLogo } from "@/components/PaperLogo";
 import { InvoicePayPanel } from "@/components/InvoicePayPanel";
 import { InvoiceSignature } from "@/components/InvoiceSignature";
+import { AccentLastWord } from "@/components/AccentLastWord";
 import { formatDateID, formatRupiah } from "@/lib/domain";
 import { docModeOf } from "@/lib/invoice-modes";
 import { computePayInfo } from "@/lib/invoice-pay";
@@ -34,30 +35,39 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
   const stamp = isVoid ? { t: "BATAL", c: "border-rose-600 text-rose-600" } : isDraft ? { t: "DRAFT", c: "border-slate-500 text-slate-500" } : mode.hasPayments && summary.status === "lunas" ? { t: "LUNAS", c: "border-emerald-600 text-emerald-600" } : null;
 
   return (
-    <article id="ppi-paper" className="ppi-paper px-4 pb-6 pt-8 sm:px-8">
+    <article id="ppi-paper" className="ppi-paper px-5 pb-8 pt-8 sm:px-8">
       {stamp ? (
         <span aria-hidden className={`pointer-events-none absolute right-6 top-24 z-10 -rotate-12 select-none rounded-lg border-4 px-4 py-1 text-3xl font-black tracking-widest opacity-25 ${stamp.c}`}>
           {stamp.t}
         </span>
       ) : null}
 
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+      <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
           <PaperLogo />
           <div className="min-w-0 space-y-0.5 text-xs text-slate-600">
-            <p className="break-words text-lg font-extrabold text-slate-900">{settings.businessName}</p>
-            {addressLines.length ? <p className="flex items-start gap-1.5"><MapPin size={12} className="mt-0.5 shrink-0 text-teal-600" /><span className="break-words">{addressLines.join(", ")}</span></p> : null}
-            {settings.email ? <p className="flex items-center gap-1.5"><Mail size={12} className="shrink-0 text-teal-600" /><span className="break-all">{settings.email}</span></p> : null}
-            {settings.phone ? <p className="flex items-center gap-1.5"><MessageCircle size={12} className="shrink-0 text-teal-600" />{settings.phone}</p> : null}
+            <p className="break-words text-lg font-extrabold text-slate-900"><AccentLastWord text={settings.businessName} /></p>
+            {addressLines.length ? <p className="flex items-start gap-2"><MapPin size={13} className="mt-0.5 shrink-0 text-[color:var(--ppi-accent)]" /><span className="break-words leading-relaxed">{addressLines.join(", ")}</span></p> : null}
+            {settings.email ? <p className="flex items-center gap-2"><Mail size={13} className="shrink-0 text-[color:var(--ppi-accent)]" /><span className="break-all">{settings.email}</span></p> : null}
+            {settings.phone ? <p className="flex items-center gap-2"><MessageCircle size={13} className="shrink-0 text-[color:var(--ppi-accent)]" />{settings.phone}</p> : null}
           </div>
         </div>
-        <div className="sm:text-right">
-          <p className="text-3xl font-black tracking-wider text-teal-700 sm:text-4xl">{mode.title}</p>
-          <div className="mt-2 space-y-1.5 rounded-xl border border-slate-200 p-2.5 text-xs sm:ml-auto sm:w-64">
-            <div className="flex items-center justify-between gap-2"><span className="font-semibold text-slate-500">No. {mode.label.split(" ")[0]}</span><b className="rounded-lg bg-slate-100 px-2 py-1">{invoice.number ?? `Draft #${invoice.id}`}</b></div>
-            <div className="flex items-center justify-between gap-2"><span className="font-semibold text-slate-500">{mode.dateLabel}</span><b className="rounded-lg bg-slate-100 px-2 py-1">{formatDateID(invoice.issueDate)}</b></div>
+        <div className="sm:w-[330px] sm:text-right">
+          <p className="text-3xl font-black tracking-[0.12em] text-[color:var(--ppi-accent)] sm:text-4xl">{mode.title}</p>
+          <div className="ppi-meta mt-3 text-xs">
+            <div className="ppi-meta-row">
+              <span className="ppi-meta-label">No. {mode.label.split(" ")[0]}</span>
+              <b className="ppi-in boxed ppi-num min-w-0 flex-1 !py-1.5 sm:max-w-[190px]">{invoice.number ?? `Draft #${invoice.id}`}</b>
+            </div>
+            <div className="ppi-meta-row">
+              <span className="ppi-meta-label">{mode.dateLabel}</span>
+              <b className="ppi-in boxed ppi-num min-w-0 flex-1 !py-1.5 sm:max-w-[190px]">{formatDateID(invoice.issueDate)}</b>
+            </div>
             {mode.dueLabel ? (
-              <div className="flex items-center justify-between gap-2"><span className="font-semibold text-slate-500">{mode.dueLabel}</span><b className="rounded-lg bg-slate-100 px-2 py-1">{invoice.dueDate ? formatDateID(invoice.dueDate) : "—"}</b></div>
+              <div className="ppi-meta-row">
+                <span className="ppi-meta-label">{mode.dueLabel}</span>
+                <b className="ppi-in boxed ppi-num min-w-0 flex-1 !py-1.5 sm:max-w-[190px]">{invoice.dueDate ? formatDateID(invoice.dueDate) : "—"}</b>
+              </div>
             ) : null}
           </div>
         </div>
@@ -105,10 +115,10 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
       </section>
 
       {/* ===== Data customer (bar layar; di lembar hanya bila diizinkan pengaturan) ===== */}
-      <div className="ppi-screen-only mt-4 flex items-center gap-3 rounded-2xl border border-dashed border-teal-400/70 bg-teal-50/50 px-3 py-2.5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700"><User size={16} /></span>
+      <div className="ppi-dashed ppi-screen-only mt-4 flex items-center gap-3 px-4 py-3">
+        <User size={18} className="shrink-0 text-[color:var(--ppi-accent)]" />
         <span className="min-w-0 flex-1">
-          <span className="block text-[10px] font-extrabold uppercase tracking-wider text-teal-700">Data Customer</span>
+          <span className="ppi-kicker">Data Customer</span>
           <span className="block truncate text-sm font-bold text-slate-800">{invoice.customerName}{invoice.customerPhone ? ` · ${invoice.customerPhone}` : ""}</span>
           <span className="block text-[10.5px] text-slate-500">{settings.showCustomerOnPrint ? "Ikut tercetak di lembar dokumen." : "Tidak ikut tercetak (bisa diubah di Pengaturan > Dokumen)."}</span>
         </span>
@@ -123,7 +133,7 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
 
       {/* ===== Pembayaran + total ===== */}
       {mode.showTotals ? (
-        <section className={`mt-5 grid gap-4 ${mode.hasPayments ? "md:grid-cols-2" : ""}`}>
+        <section className={`mt-6 grid items-start gap-4 ${mode.hasPayments ? "md:grid-cols-2" : ""}`}>
           {mode.hasPayments ? (
             <InvoicePayPanel
               info={payInfo}
@@ -132,28 +142,33 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
               showAmountBox={!isDraft && !isVoid}
               methodSlot={
                 <div>
-                  <span className="ppi-label">Metode pembayaran</span>
-                  <p className="flex items-center gap-1.5 text-sm font-bold text-slate-900"><Receipt size={14} className="text-teal-600" /> {invoice.payMethod}</p>
+                  <span className="ppi-kicker">Metode Pembayaran</span>
+                  <p className="mt-2 flex items-center gap-2 rounded-xl border border-[color:var(--ppi-line)] bg-[color:var(--ppi-fill)] px-3 py-2.5 text-sm font-bold text-slate-900"><Receipt size={15} className="text-[color:var(--ppi-accent)]" /> {invoice.payMethod}</p>
                 </div>
               }
             />
           ) : null}
 
-          <div className={`space-y-2 text-sm ${mode.hasPayments ? "" : "md:ml-auto md:w-80"}`}>
-            <div className="flex items-baseline justify-between gap-2"><span className="text-slate-600">Subtotal <span className="text-[10.5px] text-slate-400">(Sebelum Diskon &amp; Pajak)</span></span><b>{formatRupiah(invoice.subtotal)}</b></div>
-            {invoice.discountAmount > 0 ? (
-              <div className="flex items-baseline justify-between gap-2 text-slate-600"><span>Diskon {invoice.discountType === "persen" ? `${invoice.discountRate}%` : "(Rp)"}</span><span>- {formatRupiah(invoice.discountAmount)}</span></div>
-            ) : null}
-            {invoice.taxAmount > 0 ? (
-              <div className="flex items-baseline justify-between gap-2 text-slate-600"><span>PPN {invoice.taxRate}%</span><span>{formatRupiah(invoice.taxAmount)}</span></div>
-            ) : null}
-            <div className="flex items-baseline justify-between gap-2 border-t border-slate-200 pt-2"><span className="text-sm font-extrabold uppercase tracking-wide text-slate-700">Total akhir</span><span className="text-xl font-black text-slate-900">{formatRupiah(invoice.total)}</span></div>
-            {mode.hasPayments && !isDraft ? (
-              <>
-                <div className="flex justify-between text-emerald-700"><span>Terbayar</span><span>{formatRupiah(summary.paid)}</span></div>
-                <div className={`flex justify-between font-bold ${summary.remaining > 0 && !isVoid ? "text-rose-600" : "text-slate-500"}`}><span>Sisa tagihan</span><span>{formatRupiah(summary.remaining)}</span></div>
-              </>
-            ) : null}
+          <div className={mode.hasPayments ? "" : "md:ml-auto md:w-[380px]"}>
+            <div className="ppi-panel space-y-2.5 text-sm">
+              <div className="flex items-baseline justify-between gap-2"><span className="text-slate-600">Subtotal <span className="text-[10.5px] text-slate-400">(Sebelum Diskon &amp; Pajak)</span></span><b>{formatRupiah(invoice.subtotal)}</b></div>
+              {invoice.discountAmount > 0 ? (
+                <div className="flex items-baseline justify-between gap-2 text-slate-600"><span>Diskon {invoice.discountType === "persen" ? `${invoice.discountRate}%` : "(Rp)"}</span><span>- {formatRupiah(invoice.discountAmount)}</span></div>
+              ) : null}
+              {invoice.taxAmount > 0 ? (
+                <div className="flex items-baseline justify-between gap-2 text-slate-600"><span>PPN {invoice.taxRate}%</span><span>{formatRupiah(invoice.taxAmount)}</span></div>
+              ) : null}
+              <div className="flex items-baseline justify-between gap-2 border-t border-slate-200 pt-3">
+                <span className="text-sm font-extrabold uppercase tracking-wide text-[color:var(--ppi-accent)]">Total Akhir</span>
+                <span className="text-xl font-black text-slate-900">{formatRupiah(invoice.total)}</span>
+              </div>
+              {mode.hasPayments && !isDraft ? (
+                <>
+                  <div className="flex justify-between text-emerald-700"><span>Terbayar</span><span>{formatRupiah(summary.paid)}</span></div>
+                  <div className={`flex justify-between font-bold ${summary.remaining > 0 && !isVoid ? "text-rose-600" : "text-slate-500"}`}><span>Sisa tagihan</span><span>{formatRupiah(summary.remaining)}</span></div>
+                </>
+              ) : null}
+            </div>
           </div>
         </section>
       ) : (
@@ -166,14 +181,14 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
       <InvoiceSignature settings={settings} />
 
       {invoice.terms.length || invoice.notes ? (
-        <section className="mt-6 rounded-2xl border border-slate-200 p-3">
-          <p className="text-[11px] font-extrabold uppercase tracking-wider text-teal-700">Syarat &amp; ketentuan</p>
-          <ul className="mt-2 space-y-1">
+        <section className="ppi-panel mt-5">
+          <p className="ppi-kicker">Syarat & Ketentuan</p>
+          <ul className="mt-3">
             {invoice.terms.map((t, i) => (
-              <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600"><Check size={13} className="mt-0.5 shrink-0 text-teal-600" />{t}</li>
+              <li key={i} className="ppi-term"><CircleCheck size={15} strokeWidth={2.2} />{t}</li>
             ))}
           </ul>
-          {invoice.notes ? <p className="mt-2 whitespace-pre-line text-[11px] text-slate-600">Catatan: {invoice.notes}</p> : null}
+          {invoice.notes ? <p className="mt-3 whitespace-pre-line text-[11px] text-slate-500">Catatan: {invoice.notes}</p> : null}
         </section>
       ) : null}
 

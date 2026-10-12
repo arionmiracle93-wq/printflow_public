@@ -7,11 +7,13 @@ import {
   AlertTriangle,
   BadgeCheck,
   Banknote,
+  ChevronDown,
+  ChevronRight,
+  CircleCheck,
+  CreditCard,
   Factory,
   Package,
   Calculator,
-  Check,
-  ChevronRight,
   Loader2,
   Mail,
   MapPin,
@@ -26,6 +28,7 @@ import {
   ReceiptText,
 } from "lucide-react";
 import { DateFieldID } from "@/components/DateFieldID";
+import { AccentLastWord } from "@/components/AccentLastWord";
 import { CatalogPicker } from "@/components/CatalogPicker";
 import { AskPaidModal, CustomerModal, M2CalcModal, TierModal, fmtDec } from "@/components/InvoiceEditorModals";
 import { PaperLogo } from "@/components/PaperLogo";
@@ -133,10 +136,21 @@ function addDays(iso: string, days: number): string {
   return new Date(Date.UTC(y, (m || 1) - 1, (d || 1) + days)).toISOString().slice(0, 10);
 }
 
+/**
+ * Samakan tinggi textarea dengan isinya (kolom Produk & Keterangan).
+ *
+ * `scrollHeight` hanya menghitung padding + isi, TIDAK border. Karena .ppi-in
+ * memakai box-sizing: border-box, tinggi yang pas `scrollHeight` selalu kurang
+ * 2px. Dulu selisih itu tidak terasa karena scrollbar menutupnya, sekarang
+ * scrollbar-nya sengaja dimatikan (lihat .ppi-in di globals.css) sehingga huruf
+ * turun seperti g/p/y bisa ikut terpotong. Karena itu tinggi border ikut
+ * ditambahkan.
+ */
 function grow(el: HTMLTextAreaElement | null) {
   if (!el) return;
   el.style.height = "auto";
-  el.style.height = `${el.scrollHeight}px`;
+  const border = el.offsetHeight - el.clientHeight;
+  el.style.height = `${el.scrollHeight + border}px`;
 }
 
 /* --- Penyimpanan draft lokal (autosave seperti app lama) --- */
@@ -318,6 +332,25 @@ export function InvoicePaperEditor({
     number: initial?.number ?? null,
     uniqueCodeEnabled: settings.uniqueCode,
   });
+
+  /* ---------------- ukur ulang tinggi kolom teks ----------------
+     Tinggi kolom Produk & Keterangan diukur sekali saat mount. Kalau
+     font baru selesai dimuat atau lebar kolom berubah (jendela
+     diperkecil/dibesar), jumlah baris bisa beda padahal isinya sama -
+     kolomnya jadi terlalu pendek dan baris terakhir terpotong.
+     Scrollbar sengaja disembunyikan, jadi ini wajib. */
+  useEffect(() => {
+    const regrow = () => {
+      document.querySelectorAll<HTMLTextAreaElement>("#ppi-rows textarea.ppi-in").forEach((el) => grow(el));
+    };
+    regrow();
+    // Font web (Geist) menggantikan font cadangan setelah halaman tampil.
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      void document.fonts.ready.then(regrow).catch(() => {});
+    }
+    window.addEventListener("resize", regrow);
+    return () => window.removeEventListener("resize", regrow);
+  }, [items]);
 
   /* ---------------- autosave & pulihkan ---------------- */
   const stored = useSyncExternalStore(subscribeDraft, readDraft, () => null);
@@ -645,38 +678,38 @@ export function InvoicePaperEditor({
           </p>
         ) : null}
 
-        <article className="ppi-paper px-4 pb-6 pt-8 sm:px-8">
+        <article className="ppi-paper px-5 pb-8 pt-8 sm:px-8">
           {/* ===== Kop ===== */}
-          <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 gap-3">
               <PaperLogo />
               <div className="min-w-0 space-y-0.5 text-xs text-slate-600">
-                <p className="break-words text-lg font-extrabold text-slate-900">{settings.businessName}</p>
+                <p className="break-words text-lg font-extrabold text-slate-900"><AccentLastWord text={settings.businessName} /></p>
                 {addressLines.length ? (
-                  <p className="flex items-start gap-1.5"><MapPin size={12} className="mt-0.5 shrink-0 text-teal-600" /><span className="break-words">{addressLines.join(", ")}</span></p>
+                  <p className="flex items-start gap-2"><MapPin size={13} className="mt-0.5 shrink-0 text-[color:var(--ppi-accent)]" /><span className="break-words leading-relaxed">{addressLines.join(", ")}</span></p>
                 ) : null}
-                {settings.email ? <p className="flex items-center gap-1.5"><Mail size={12} className="shrink-0 text-teal-600" /><span className="break-all">{settings.email}</span></p> : null}
-                {settings.phone ? <p className="flex items-center gap-1.5"><MessageCircle size={12} className="shrink-0 text-teal-600" />{settings.phone}</p> : null}
+                {settings.email ? <p className="flex items-center gap-2"><Mail size={13} className="shrink-0 text-[color:var(--ppi-accent)]" /><span className="break-all">{settings.email}</span></p> : null}
+                {settings.phone ? <p className="flex items-center gap-2"><MessageCircle size={13} className="shrink-0 text-[color:var(--ppi-accent)]" />{settings.phone}</p> : null}
                 {isOwner && !addressLines.length && !settings.email && !settings.phone ? (
-                  <Link href="/invoice/pengaturan" className="ppi-screen-only text-[11px] font-bold text-teal-700 underline">Isi alamat & kontak di Pengaturan</Link>
+                  <Link href="/invoice/pengaturan" className="ppi-screen-only inline-block pt-1 text-[11px] font-bold text-[color:var(--ppi-accent)] underline">Isi alamat & kontak di Pengaturan</Link>
                 ) : null}
               </div>
             </div>
-            <div className="sm:text-right">
-              <p className="text-3xl font-black tracking-wider text-teal-700 sm:text-4xl">{mode.title}</p>
-              <div className="mt-2 space-y-1.5 rounded-xl border border-slate-200 p-2.5 text-xs sm:ml-auto sm:w-64">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="shrink-0 font-semibold text-slate-500">No. {mode.label.split(" ")[0]}</span>
-                  <span className="ppi-in boxed ppi-num !py-1.5 font-bold">{initial?.number ?? "Otomatis saat terbit"}</span>
+            <div className="sm:w-[330px] sm:text-right">
+              <p className="text-3xl font-black tracking-[0.12em] text-[color:var(--ppi-accent)] sm:text-4xl">{mode.title}</p>
+              <div className="ppi-meta mt-3 text-xs">
+                <div className="ppi-meta-row">
+                  <span className="ppi-meta-label">No. {mode.label.split(" ")[0]}</span>
+                  <span className="ppi-in boxed ppi-num min-w-0 flex-1 !py-1.5 font-bold sm:max-w-[190px]">{initial?.number ?? "Otomatis saat terbit"}</span>
                 </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="shrink-0 font-semibold text-slate-500">{mode.dateLabel}</span>
-                  <DateFieldID value={issueDate} onChange={setIssueDate} className="ppi-in boxed ppi-num !py-1.5 !pr-8 font-bold" />
+                <div className="ppi-meta-row">
+                  <span className="ppi-meta-label">{mode.dateLabel}</span>
+                  <DateFieldID value={issueDate} onChange={setIssueDate} className="ppi-in boxed ppi-num min-w-0 flex-1 !py-1.5 !pr-8 font-bold sm:max-w-[190px]" />
                 </div>
                 {mode.dueLabel ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="shrink-0 font-semibold text-slate-500">{mode.dueLabel}</span>
-                    <DateFieldID value={dueDate} onChange={setDueDate} className="ppi-in boxed ppi-num !py-1.5 !pr-8 font-bold" />
+                  <div className="ppi-meta-row">
+                    <span className="ppi-meta-label">{mode.dueLabel}</span>
+                    <DateFieldID value={dueDate} onChange={setDueDate} className="ppi-in boxed ppi-num min-w-0 flex-1 !py-1.5 !pr-8 font-bold sm:max-w-[190px]" />
                   </div>
                 ) : null}
               </div>
@@ -706,7 +739,7 @@ export function InvoicePaperEditor({
               <span />
             </div>
 
-            <div>
+            <div id="ppi-rows">
               {items.length === 0 ? (
                 <div className="py-10 text-center text-slate-400">
                   <ReceiptText size={34} className="mx-auto mb-2 opacity-60" />
@@ -858,12 +891,12 @@ export function InvoicePaperEditor({
               })}
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-4">
               <span className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => setItems((l) => [...l, blankItem()])} className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-teal-700">
+                <button type="button" onClick={() => setItems((l) => [...l, blankItem()])} className="ppi-dashed-btn !w-auto !rounded-xl !px-4">
                   <Plus size={14} /> Tambah Baris
                 </button>
-                <button type="button" onClick={() => { setShowPicker(true); void loadCatalog(); }} className="ppi-screen-only inline-flex items-center gap-1.5 rounded-xl border border-teal-500 bg-white px-3 py-2 text-xs font-bold text-teal-700 hover:bg-teal-50">
+                <button type="button" onClick={() => { setShowPicker(true); void loadCatalog(); }} className="ppi-screen-only inline-flex items-center gap-1.5 rounded-xl border border-[color:var(--ppi-panel-line)] bg-transparent px-3 py-2 text-xs font-bold text-[color:var(--ppi-accent)] hover:bg-[color:var(--ppi-accent-tint)]">
                   <Package size={14} /> Katalog
                 </button>
               </span>
@@ -876,11 +909,11 @@ export function InvoicePaperEditor({
           <button
             type="button"
             onClick={() => setShowCustomer(true)}
-            className="ppi-screen-only mt-4 flex w-full items-center gap-3 rounded-2xl border border-dashed border-teal-400/70 bg-teal-50/50 px-3 py-2.5 text-left hover:bg-teal-50"
+            className="ppi-dashed ppi-screen-only mt-4 flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[color:var(--ppi-accent-tint)]"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700"><User size={16} /></span>
+            <User size={18} className="shrink-0 text-[color:var(--ppi-accent)]" />
             <span className="min-w-0 flex-1">
-              <span className="block text-[10px] font-extrabold uppercase tracking-wider text-teal-700">Data Customer</span>
+              <span className="ppi-kicker">Data Customer</span>
               <span className="block truncate text-sm font-bold text-slate-800">
                 {customerName ? `${customerName}${customerPhone ? ` · ${customerPhone}` : ""}` : "Belum diisi — klik untuk mengisi"}
               </span>
@@ -888,7 +921,7 @@ export function InvoicePaperEditor({
                 {settings.showCustomerOnPrint ? "Ikut tercetak di lembar dokumen." : "Tidak ikut tercetak (bisa diubah di Pengaturan > Dokumen)."}
               </span>
             </span>
-            <Pencil size={15} className="shrink-0 text-teal-700" />
+            <Pencil size={16} className="shrink-0 text-[color:var(--ppi-accent)]" />
           </button>
           {settings.showCustomerOnPrint && customerName ? (
             <div className="mt-3 text-xs text-slate-600">
@@ -932,7 +965,7 @@ export function InvoicePaperEditor({
 
           {/* ===== Pembayaran + total ===== */}
           {mode.showTotals ? (
-            <section className={`mt-5 grid gap-4 ${mode.hasPayments ? "md:grid-cols-2" : ""}`}>
+            <section className={`mt-6 grid items-start gap-4 ${mode.hasPayments ? "md:grid-cols-2" : ""}`}>
               {mode.hasPayments ? (
                 <InvoicePayPanel
                   info={payInfo}
@@ -940,66 +973,75 @@ export function InvoicePaperEditor({
                   isOwner={isOwner}
                   methodSlot={
                     <label className="block">
-                      <span className="ppi-label">Metode pembayaran</span>
-                      <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className="ppi-in boxed">
-                        {PAY_METHODS.map((m) => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
+                      <span className="ppi-kicker">Metode Pembayaran</span>
+                      <span className="relative mt-2 block">
+                        <CreditCard size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ppi-accent)]" />
+                        <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className="ppi-in boxed !py-2.5 !pl-9 !pr-8 font-bold">
+                          {PAY_METHODS.map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--ppi-accent)]" />
+                      </span>
                     </label>
                   }
                 />
               ) : null}
 
-              <div className={`space-y-2 text-sm ${mode.hasPayments ? "" : "md:ml-auto md:w-80"}`}>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-slate-600">Subtotal <span className="text-[10.5px] text-slate-400">(Sebelum Diskon &amp; Pajak)</span></span>
-                  <b>{formatRupiah(totals.subtotal)}</b>
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700">Diskon</span>
-                  <span className="flex items-center gap-1.5">
-                    <input
-                      value={discountInput}
-                      onChange={(e) => setDiscountInput(discountType === "rp" ? thousands(e.target.value) : e.target.value)}
-                      inputMode="decimal"
-                      placeholder={discountType === "rp" ? "0" : "0"}
-                      className="ppi-in boxed ppi-num !w-24 !py-1"
-                      aria-label="Nilai diskon"
-                    />
-                    <span className="ppi-seg">
-                      <button type="button" className={discountType === "persen" ? "on" : ""} onClick={() => toggleDiscountType("persen")}>%</button>
-                      <button type="button" className={discountType === "rp" ? "on" : ""} onClick={() => toggleDiscountType("rp")}>Rp</button>
+              <div className={mode.hasPayments ? "" : "md:ml-auto md:w-[380px]"}>
+                <div className="ppi-panel space-y-2.5 text-sm">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-slate-600">Subtotal <span className="text-[10.5px] text-slate-400">(Sebelum Diskon &amp; Pajak)</span></span>
+                    <b>{formatRupiah(totals.subtotal)}</b>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-slate-700">Diskon</span>
+                    <span className="flex items-center gap-1.5">
+                      <input
+                        value={discountInput}
+                        onChange={(e) => setDiscountInput(discountType === "rp" ? thousands(e.target.value) : e.target.value)}
+                        inputMode="decimal"
+                        placeholder={discountType === "rp" ? "0" : "0"}
+                        className="ppi-in boxed ppi-num !w-20 !py-1.5"
+                        aria-label="Nilai diskon"
+                      />
+                      <span className="ppi-seg">
+                        <button type="button" className={discountType === "persen" ? "on" : ""} onClick={() => toggleDiscountType("persen")}>%</button>
+                        <button type="button" className={discountType === "rp" ? "on" : ""} onClick={() => toggleDiscountType("rp")}>Rp</button>
+                      </span>
+                      <span className="w-11 text-xs text-slate-500">%</span>
+                      <span className="w-24 text-right text-xs font-bold text-slate-700">{totals.discountAmount > 0 ? `- ${formatRupiah(totals.discountAmount)}` : "Rp 0"}</span>
                     </span>
-                    <span className="w-24 text-right text-xs text-slate-500">{totals.discountAmount > 0 ? `- ${formatRupiah(totals.discountAmount)}` : "Rp 0"}</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700">PPN <span className="text-[10.5px] font-normal text-slate-400">(Pajak)</span></span>
-                  <span className="flex items-center gap-1.5">
-                    <input value={taxRate} onChange={(e) => setTaxRate(e.target.value)} inputMode="decimal" placeholder="0" className="ppi-in boxed ppi-num !w-16 !py-1" aria-label="Persen pajak" />
-                    <span className="text-xs text-slate-500">%</span>
-                    <span className="w-24 text-right text-xs text-slate-500">{formatRupiah(totals.taxAmount)}</span>
-                  </span>
-                </div>
-                <div className="flex items-baseline justify-between gap-2 border-t border-slate-200 pt-2">
-                  <span className="text-sm font-extrabold uppercase tracking-wide text-slate-700">Total akhir</span>
-                  <span className="text-xl font-black text-slate-900">{formatRupiah(totals.total)}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-slate-700">PPN <span className="text-[10.5px] font-normal text-slate-400">(Pajak)</span></span>
+                    <span className="flex items-center gap-1.5">
+                      <input value={taxRate} onChange={(e) => setTaxRate(e.target.value)} inputMode="decimal" placeholder="0" className="ppi-in boxed ppi-num !w-16 !py-1.5" aria-label="Persen pajak" />
+                      <span className="text-xs text-slate-500">%</span>
+                      <span className="w-24 text-right text-xs font-bold text-slate-700">{formatRupiah(totals.taxAmount)}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 border-t border-slate-200 pt-3">
+                    <span className="text-sm font-extrabold uppercase tracking-wide text-[color:var(--ppi-accent)]">Total Akhir</span>
+                    <span className="text-xl font-black text-slate-900">{formatRupiah(totals.total)}</span>
+                  </div>
+                  {docType === "invoice" && !editingIssued ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-slate-700">DP</span>
+                      <input value={dp} onChange={(e) => setDp(thousands(e.target.value))} inputMode="numeric" placeholder="0" className="ppi-in boxed ppi-num !w-36 !py-1.5" aria-label="Nominal DP" />
+                    </div>
+                  ) : null}
                 </div>
                 {docType === "invoice" && !editingIssued ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-slate-700">DP</span>
-                    <input value={dp} onChange={(e) => setDp(thousands(e.target.value))} inputMode="numeric" placeholder="0" className="ppi-in boxed ppi-num !w-36 !py-1" aria-label="Nominal DP" />
-                  </div>
+                  <p className="mt-2 text-[10.5px] text-slate-400">DP dicatat sebagai pembayaran pertama saat Terbitkan. Cicilan berikutnya lewat Catat Pembayaran.</p>
                 ) : null}
-                {docType === "invoice" && !editingIssued ? <p className="text-[10.5px] text-slate-400">DP dicatat sebagai pembayaran pertama saat Terbitkan. Cicilan berikutnya lewat Catat Pembayaran.</p> : null}
                 {docType === "invoice" ? (
                   editingIssued ? (
-                    <Link href={`/invoice/${initial!.id}#pembayaran`} className="ppi-screen-only flex items-center justify-center gap-2 rounded-xl border border-dashed border-teal-400 py-2 text-xs font-bold text-teal-700 hover:bg-teal-50">
+                    <Link href={`/invoice/${initial!.id}#pembayaran`} className="ppi-dashed-btn ppi-screen-only mt-3">
                       <Banknote size={14} /> Catat Pembayaran
                     </Link>
                   ) : (
-                    <p className="ppi-screen-only flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-bold text-slate-400">
+                    <p className="ppi-dashed-btn ppi-screen-only mt-3" aria-disabled="true">
                       <Banknote size={14} /> Catat Pembayaran (setelah diterbitkan)
                     </p>
                   )
@@ -1016,27 +1058,27 @@ export function InvoicePaperEditor({
           <InvoiceSignature settings={settings} />
 
           {/* ===== Syarat & ketentuan ===== */}
-          <section className="mt-6 rounded-2xl border border-slate-200 p-3">
+          <section className="ppi-panel mt-5">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-teal-700">Syarat &amp; ketentuan</p>
-              <button type="button" onClick={() => setShowTermsEdit((v) => !v)} className="ppi-screen-only text-[11px] font-bold text-teal-700 underline">
+              <p className="ppi-kicker">Syarat & Ketentuan</p>
+              <button type="button" onClick={() => setShowTermsEdit((v) => !v)} className="ppi-screen-only text-[11px] font-bold text-[color:var(--ppi-accent)] underline">
                 {showTermsEdit ? "Selesai" : "Ubah"}
               </button>
             </div>
             {showTermsEdit ? (
-              <div className="mt-2 space-y-2">
+              <div className="mt-3 space-y-2">
                 <textarea value={termsText} onChange={(e) => setTermsText(e.target.value)} rows={4} className="ppi-in boxed" placeholder="Satu syarat per baris" />
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="ppi-in boxed" placeholder="Catatan tambahan untuk pelanggan (opsional)" />
               </div>
             ) : (
               <>
-                <ul className="mt-2 space-y-1">
+                <ul className="mt-3">
                   {termsList.map((t, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600"><Check size={13} className="mt-0.5 shrink-0 text-teal-600" />{t}</li>
+                    <li key={i} className="ppi-term"><CircleCheck size={15} strokeWidth={2.2} />{t}</li>
                   ))}
                   {termsList.length === 0 ? <li className="text-[11px] text-slate-400">Belum ada syarat.</li> : null}
                 </ul>
-                {notes ? <p className="mt-2 whitespace-pre-line text-[11px] text-slate-600">Catatan: {notes}</p> : null}
+                {notes ? <p className="mt-3 whitespace-pre-line text-[11px] text-slate-500">Catatan: {notes}</p> : null}
               </>
             )}
           </section>
