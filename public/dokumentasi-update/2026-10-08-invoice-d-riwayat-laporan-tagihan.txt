@@ -1,0 +1,135 @@
+================================================================
+MODUL INVOICE TAHAP D: RIWAYAT LENGKAP, LAPORAN, DAN PENAGIHAN
+Tanggal : 08-10-2026
+Status  : selesai (typecheck bersih; lint tidak menambah masalah
+          baru; 56 pengecekan database + uji di browser sungguhan
+          dan uji akses karyawan, semuanya lulus)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Halaman Riwayat sekarang jadi pusat memantau tagihan: ada ringkasan
+uang yang belum dibayar, yang sudah lewat tempo, dan yang sudah masuk;
+bisa menyaring per bulan; bisa mencocokkan angka dari mutasi bank; dan
+tiap invoice yang belum lunas punya tombol "Tagih lewat WhatsApp".
+Ada juga halaman Laporan (Bulanan, Harian, Rentang) dan Export CSV.
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+Deploy saja seperti biasa. Tahap ini TIDAK mengubah database, jadi
+tidak perlu membuka /api/setup (kalau dibuka pun aman).
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) RIWAYAT (menu Invoice > Riwayat)
+   - Tiga kartu ringkasan: Belum dibayar, Lewat tempo (klik untuk
+     melihat daftarnya), dan Sudah dibayar. Hanya Invoice terbit yang
+     dihitung. "Belum dibayar" memakai sisa tagihan tanpa kode unik.
+   - Filter: Semua, Belum bayar, Sebagian, Lewat tempo, Lunas, Draft,
+     Batal. Plus filter BULAN dan tombol Reset.
+   - Penanda tempo di tiap kartu: Terlambat N hari, Jatuh tempo hari
+     ini, Tinggal N hari (3 hari terakhir).
+   - Kartu invoice yang belum lunas menampilkan sisa, jumlah yang sudah
+     dibayar, dan nominal transfer lengkap dengan kode unik.
+   - COCOKKAN MUTASI BANK: ketik angka di kolom cari. Cocok bila sama
+     dengan nominal transfer (sisa + kode unik) atau total invoice,
+     kode unik (boleh 3 digit terakhir), atau akhiran angka minimal 4
+     digit. Kartu yang cocok diberi penanda (Cocok nominal / kode unik /
+     akhiran angka). Pencarian nama dan nomor tetap jalan.
+   - EXPORT CSV rekap Invoice terbit (semua atau per bulan yang dipilih):
+     No Invoice, Tanggal, Jatuh Tempo, Customer, No WhatsApp, Metode,
+     Subtotal, Diskon, PPN, Total, DP, Cicilan, Jml Cicilan, Total
+     Dibayar, Sisa, Status, Keterangan Tempo. Pemisah titik koma, bisa
+     dibuka langsung di Excel.
+
+B) LAPORAN (menu Invoice > Laporan, KHUSUS OWNER)
+   - Tiga mode: Bulanan, Harian, Rentang tanggal. Pintasan: Hari Ini,
+     Kemarin, 7 Hari, 30 Hari, Bulan Ini, Bulan Lalu. Tombol panah
+     untuk bulan/hari sebelumnya dan berikutnya.
+   - Kartu: Omzet, Jumlah invoice (keduanya dibandingkan dengan
+     periode sebelumnya: bulan lalu / kemarin / rentang sebelumnya yang
+     sama panjang), Rata-rata per invoice, Belum dibayar.
+   - Grafik penjualan per hari; untuk rentang lebih dari 60 hari
+     otomatis per minggu (Senin-Minggu).
+   - Produk terlaris (6 teratas) dan Pelanggan teratas (5 teratas).
+   - Export CSV laporan: ringkasan, produk, pelanggan, dan rincian
+     invoice pada periode itu.
+   - Dihitung dari tanggal invoice. Draft, batal, Estimasi, Surat
+     Jalan, dan PO tidak masuk omzet.
+
+C) PENGINGAT TAGIHAN WHATSAPP (tombol Tagih)
+   - Ada di kartu Riwayat dan di halaman invoice (sidebar / baris
+     tombol). Hanya untuk Invoice terbit yang belum lunas.
+   - Jendela berisi nomor WhatsApp pelanggan, pilihan nada Halus /
+     Biasa / Tegas, dan pesan yang bisa diedit. Mengganti nada menyusun
+     ulang pesan. Pesan memuat tanggal, jatuh tempo (terlambat berapa
+     hari), total, DP, cicilan, sisa tagihan, rekening, dan nominal
+     transfer lengkap dengan kode unik.
+   - Tombol Salin pesan, dan Kirim lewat WhatsApp (membuka chat ke nomor
+     tersebut). Nomor yang diketik disimpan ke invoice dan ke daftar
+     Pelanggan, dan pengiriman dicatat di Riwayat aktivitas invoice.
+
+D) YANG SENGAJA BERBEDA DARI APP LAMA
+   - Laporan hanya untuk Owner (isinya omzet). Kalau Anda ingin kasir
+     juga bisa melihat, itu mudah dilonggarkan: sampaikan saja.
+   - "Hapus Semua Riwayat" tidak dibawa: Invoice terbit tidak boleh
+     dihapus (hanya dibatalkan dengan alasan), supaya jejak uang aman.
+   - Tombol unduh JSON per invoice tidak dibawa: data sudah aman di
+     database PrintFlow.
+   - Pencocokan bank mencari di SEMUA Invoice terbit (bukan hanya yang
+     tampil di layar).
+
+E) FILE YANG DISENTUH
+   Baru   : lib/invoice-due.ts, lib/invoice-period.ts,
+            lib/invoice-reminder.ts, lib/invoice-reports.ts,
+            halaman /invoice/laporan, komponen ReminderModal, API
+            export, report-csv, dan [id]/remind.
+   Diubah : halaman Riwayat (ditulis ulang), halaman detail invoice,
+            InvoiceActions (tombol Tagih), sidebar (menu Laporan),
+            invoice-queries (filter bulan, lewat tempo, cocokkan
+            bank), README.md.
+
+
+CARA SAYA MENGUJI
+----------------------------------------------------------------
+- Database sungguhan, 56 pengecekan: status jatuh tempo, aturan
+  cocokkan bank (nominal, kode unik, akhiran), periode laporan
+  (termasuk pergantian tahun dan rentang terbalik), ringkasan piutang,
+  omzet/produk/pelanggan, rincian rekap (DP, cicilan, sisa), filter
+  bulan dan lewat tempo, pencarian nominal dengan kode unik, dan isi
+  pesan ketiga nada.
+- Browser sungguhan (laptop dan HP) dengan 24 invoice sepanjang 75
+  hari: Riwayat, cocokkan nominal transfer penuh dan 3 digit kode
+  unik, filter lewat tempo, Laporan Bulanan/Harian/Rentang (grafik
+  mingguan), jendela Tagih dari kartu (terbuka otomatis, ganti nada),
+  klik Kirim lewat WhatsApp (membuka wa.me ke nomor yang diketik dan
+  tercatat di riwayat), dan kedua CSV.
+- Akses: karyawan diarahkan keluar dari Laporan tanpa data bocor, menu
+  Laporan tidak tampil, CSV laporan ditolak (403), sedangkan Riwayat,
+  rekap, dan Tagih boleh.
+- Temuan yang diperbaiki saat uji: pengingat masih diterima untuk
+  invoice yang sudah lunas (sekarang ditolak), dan logo sidebar tampil
+  sebagai gambar rusak bila belum ada logo.
+Catatan jujur: saya tidak bisa membuka WhatsApp sungguhan di
+lingkungan uji; yang terbukti adalah alamat wa.me dan isi pesannya.
+Di APK Android, tombol Kirim lewat WhatsApp memakai cara yang sama
+dengan app lama (membuka tautan WhatsApp); mohon dicoba sekali di HP.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada layanan baru dan tidak ada biaya tambahan. Laporan dihitung
+langsung di database (ringkasan, bukan membaca semua invoice satu per
+satu), jadi tetap ringan walau invoice bertambah banyak.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+Tahap E: Katalog Produk bergambar (isi katalog, cari produk, gambar
+produk) beserta saran produk saat mengisi tabel invoice. Lalu tahap F:
+impor Backup JSON lama (kalau nanti diperlukan), auto-refresh layar,
+dan antrean offline untuk Catat Pembayaran.
+Revisi untuk tahap sebelumnya tetap dikerjakan bertahap seperti biasa.

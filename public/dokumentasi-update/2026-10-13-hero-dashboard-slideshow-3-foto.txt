@@ -1,0 +1,82 @@
+================================================================
+HERO DASHBOARD JADI SLIDESHOW 3 FOTO (GESER KIRI TIAP 6 DETIK)
+Tanggal : 03-10-2026
+Status  : selesai, tidak perlu /api/setup
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Foto latar kartu hero Dashboard sekarang berupa slideshow: 3 foto
+bergeser ke kiri otomatis tiap 6 detik, berputar terus. Tanpa titik
+indikator. Teks, tombol, sorotan Insight AI, dan gradasi gelap TIDAK
+berubah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/components/dashboard/HeroSlideshow.tsx   (BARU)
+   Komponen client yang menampilkan 3 slide. Foto desktop & HP
+   dipilih lewat <picture> (batas 768px, sama seperti sebelumnya).
+   - Interval  : INTERVAL_MS = 6000
+   - Durasi geser: SLIDE_MS = 900
+   - Hanya animasi transform (ringan untuk HP)
+   - Berhenti saat tab tidak aktif
+   - Hormati pengaturan "kurangi gerakan" di perangkat
+     (hanya foto pertama yang tampil)
+   - Foto yang belum ada disembunyikan otomatis, panel tetap rapi
+
+B) src/components/dashboard/DashboardHero.tsx
+   Menambahkan <HeroSlideshow /> tepat sebelum div .hero-photo-bg.
+   Urutan DOM ini penting: keduanya -z-20, yang belakangan (gradasi)
+   tampil di atas foto.
+
+C) src/app/globals.css
+   .hero-photo-bg sekarang HANYA gradasi (tanpa url foto dan tanpa
+   background-color). Gradasi mobile & desktop nilainya sama persis
+   seperti sebelumnya. Warna dasar #07141d pindah ke wadah slideshow.
+
+
+DAFTAR FOTO (6 FILE, di /public/images/)
+----------------------------------------------------------------
+  Slide 1: dashboard-hero.jpg     | dashboard-hero-mobile.jpg    (SUDAH ADA)
+  Slide 2: dashboard-hero-2.jpg   | dashboard-hero-2-mobile.jpg  (BARU)
+  Slide 3: dashboard-hero-3.jpg   | dashboard-hero-3-mobile.jpg  (BARU)
+
+Tips foto:
+  - Usahakan tiap file di bawah ~250 KB (WebP atau JPG kualitas ~75)
+    supaya dashboard tidak berat saat dibuka.
+  - Komposisi foto desktop sebaiknya mirip yang sekarang: sisi kiri
+    kosong/tenang untuk teks, subjek di sisi kanan. Kalau tidak, teks
+    putih bisa susah dibaca di salah satu slide.
+  - Kalau mau pakai ekstensi lain (.webp), ubah nama file di array
+    SLIDES pada HeroSlideshow.tsx.
+
+Mau 1 foto saja untuk sementara? Aman. Slide yang file-nya belum ada
+otomatis kosong (tampil warna dasar gelap) saat gilirannya. Kalau mau
+tanpa slide kosong, kurangi isi array SLIDES sesuai foto yang ada.
+
+
+UBAH PENGATURAN
+----------------------------------------------------------------
+  Interval ganti   : INTERVAL_MS di HeroSlideshow.tsx
+  Kecepatan geser  : SLIDE_MS di HeroSlideshow.tsx
+  Jumlah/nama slide: array SLIDES di HeroSlideshow.tsx
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/globals.css
+  src/components/dashboard/DashboardHero.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt (tambah 1 baris entri)
+
+BARU:
+  src/components/dashboard/HeroSlideshow.tsx
+  public/dokumentasi-update/2026-10-13-hero-dashboard-slideshow-3-foto.txt
+  public/images/dashboard-hero-2.jpg
+  public/images/dashboard-hero-2-mobile.jpg
+  public/images/dashboard-hero-3.jpg
+  public/images/dashboard-hero-3-mobile.jpg
+
+================================================================

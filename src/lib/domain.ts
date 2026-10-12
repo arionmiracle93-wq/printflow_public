@@ -225,11 +225,38 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat("id-ID").format(value || 0);
 }
 
-/** Gabungkan dueDate (YYYY-MM-DD) + dueTime (HH:MM) menjadi Date lokal. */
+/**
+ * Zona waktu bisnis. Deadline yang diketik pemilik SELALU dalam WIB.
+ * Offset tetap +07:00 (Indonesia tidak memakai DST), jadi aman di-hardcode.
+ */
+export const BUSINESS_TZ = "Asia/Jakarta";
+const WIB_OFFSET_HOURS = 7;
+
+/**
+ * Gabungkan dueDate (YYYY-MM-DD) + dueTime (HH:MM) menjadi momen waktu NYATA
+ * (Date), dengan jam diartikan sebagai WIB.
+ *
+ * PENTING: JANGAN diganti ke `new Date(y, m, d, hh, mm)`. Konstruktor itu
+ * memakai zona waktu mesin yang menjalankan kode. Server Vercel jalan di UTC,
+ * jadi "14:10" akan terbaca 14:10 UTC (= 21:10 WIB) dan semua hitungan
+ * telat/risiko molor 7 jam. Pakai Date.UTC lalu kurangi offset WIB supaya
+ * hasilnya sama persis di server (UTC) maupun di browser (zona apa pun).
+ */
 export function deadlineOf(dueDate: string, dueTime: string): Date {
   const [y, m, d] = dueDate.split("-").map((n) => Number.parseInt(n, 10));
   const [hh, mm] = (dueTime || "17:00").split(":").map((n) => Number.parseInt(n, 10));
-  return new Date(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0);
+  return new Date(Date.UTC(y, (m || 1) - 1, d || 1, (hh || 0) - WIB_OFFSET_HOURS, mm || 0, 0, 0));
+}
+
+/** Tanggal (YYYY-MM-DD) menurut WIB untuk sebuah momen waktu. Dipakai untuk "deadline hari ini". */
+export function jakartaDateISO(value: Date = new Date()): string {
+  // Locale en-CA menghasilkan format YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: BUSINESS_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(value);
 }
 
 export function formatDateID(value: string | Date | null | undefined): string {

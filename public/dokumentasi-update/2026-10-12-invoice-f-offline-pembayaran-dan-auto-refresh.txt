@@ -1,0 +1,137 @@
+================================================================
+MODUL INVOICE TAHAP F: PEMBAYARAN OFFLINE DAN AUTO-REFRESH
+Tanggal : 12-10-2026
+Status  : selesai (typecheck bersih; lint tidak menambah masalah
+          baru; build produksi berhasil; diuji dengan server yang
+          benar-benar dimatikan lalu dinyalakan lagi)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+1) Catat Pembayaran dan Tandai Lunas sekarang tetap bisa dipakai saat
+   internet putus. Pembayaran disimpan di perangkat, lalu dikirim
+   otomatis begitu internet kembali. Tidak akan tercatat dobel.
+2) Halaman Invoice (daftar dan detail) yang terakhir dibuka bisa dibuka
+   lagi walau sedang offline.
+3) Layar menyegarkan data sendiri, jadi banyak PC dan HP yang membuka
+   data yang sama tidak ketinggalan.
+
+Yang tetap butuh internet: upload foto, notifikasi, login ulang, kirim
+WhatsApp, dan membuat/mengedit invoice baru.
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+Deploy saja seperti biasa. Tahap ini TIDAK mengubah database, jadi tidak
+perlu membuka /api/setup.
+Setelah deploy, tutup lalu buka lagi aplikasi (PWA/APK) satu atau dua
+kali supaya versi service worker yang baru ikut terpasang di tiap
+perangkat. Salinan halaman offline baru terisi setelah halaman Invoice
+dibuka sekali dalam keadaan online.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) ANTREAN PEMBAYARAN OFFLINE
+   - Tombol Catat Pembayaran dan Tandai Lunas: bila tidak ada koneksi
+     (internet putus, mode pesawat, atau server sedang bermasalah),
+     pembayaran disimpan di perangkat, dan layar menampilkan blok
+     "Menunggu dikirim" beserta pesan jelas.
+   - Setiap pembayaran membawa kode unik. Kalau terkirim dua kali (sinyal
+     putus-nyambung, dua tab, dsb.), server mengenali kodenya dan hanya
+     mencatat sekali.
+   - Waktu pembayaran = saat tombol ditekan, BUKAN saat akhirnya terkirim.
+   - Terkirim otomatis: saat aplikasi dibuka, saat internet kembali, saat
+     aplikasi aktif lagi, dan tiap 15 detik selama masih ada antrean.
+     Urutan terkirim sama dengan urutan dicatat.
+   - Chip kuning kecil di pojok ("N pembayaran menunggu koneksi") muncul
+     hanya bila ada antrean. Klik untuk melihat daftar, kirim sekarang,
+     atau membuang satu item.
+
+B) PEMBAYARAN YANG DITOLAK SERVER (perlu ditinjau)
+   Bila saat akhirnya terkirim ternyata ditolak aturan (mis. melebihi
+   tagihan karena sudah ada pembayaran lain, atau invoice sudah
+   dibatalkan), item TIDAK hilang dan tidak dipaksakan: chip berubah
+   merah "perlu ditinjau", pesan dari server ditampilkan, dan Anda memilih:
+   Kirim sebagai kelebihan bayar (khusus kasus kelebihan), Coba lagi, atau
+   Buang. Pembayaran lain di belakangnya tetap terkirim normal.
+
+C) HALAMAN INVOICE BISA DIBUKA OFFLINE
+   Service worker menyimpan salinan halaman /invoice dan /invoice/<id>
+   terakhir yang dibuka. Online: selalu memakai data terbaru. Putus
+   jaringan: memakai salinan terakhir, dengan pita kuning "Sedang offline"
+   di atas layar. File aplikasi yang namanya berhash ikut disimpan agar
+   salinan itu bisa tampil.
+   Keamanan: salinan halaman dihapus dari perangkat saat Keluar akun.
+   Bila perangkat dipakai bersama, selalu Keluar akun setelah selesai.
+
+D) AUTO-REFRESH
+   Data layar disegarkan halus (isian yang sedang diketik tidak hilang):
+   tiap 45 detik selama halaman terlihat, saat aplikasi aktif lagi setelah
+   ditinggal 8 detik atau lebih, dan saat internet kembali. Tidak berjalan
+   saat layar tersembunyi, offline, ada jendela terbuka, kolom isian
+   sedang dipakai, atau di halaman formulir (buat/edit).
+   Halaman yang ikut: Beranda, Pekerjaan (daftar dan detail), Serah
+   Terima, Mitra, Pelanggan, serta Invoice (daftar, detail, Laporan,
+   Katalog).
+
+E) YANG SENGAJA TIDAK DILAKUKAN
+   - Impor Backup JSON lama dilewati sesuai permintaan Anda (Majoo masih
+     dipakai). Bisa ditambahkan kapan saja nanti.
+   - Membuat atau mengedit invoice saat offline tidak didukung (sesuai
+     rancangan: offline hanya untuk aksi terpilih, bukan offline penuh).
+   - Klik menu di dalam aplikasi saat offline tidak memuat halaman baru
+     (datanya ada di server). Yang bisa: membuka ulang/refresh halaman
+     Invoice yang pernah dibuka.
+
+F) DATABASE
+   Tidak ada perubahan.
+
+G) FILE YANG DISENTUH
+   Baru   : lib/payment-queue.ts, komponen PaymentQueueSync,
+            OfflineBanner, AutoRefresh.
+   Diubah : public/sw.js (versi 13), layout.tsx (memasang ketiga komponen),
+            InvoicePaymentPanel, InvoiceActions, halaman detail invoice,
+            README.md.
+
+
+CARA SAYA MENGUJI
+----------------------------------------------------------------
+Memakai build PRODUKSI dan browser sungguhan; server dimatikan betul-betul
+(dan dipastikan tidak merespons), lalu dinyalakan lagi:
+- Salinan halaman invoice dan file aplikasi tersimpan saat online.
+- Server mati: halaman invoice tetap terbuka dari salinan; Catat
+  Pembayaran 50.000 masuk antrean (jaringan putus, perangkat masih
+  mengira online); lalu mode pesawat: 30.000 masuk antrean; lalu 900.000
+  (melebihi tagihan) juga masuk antrean.
+- Server menyala lagi: 50.000 dan 30.000 terkirim sendiri dan tercatat
+  dengan waktu saat ditekan; 900.000 ditahan dengan pesan "melebihi
+  tagihan"; kirim ulang kode yang sama tidak mencatat dobel; tombol
+  "Kirim sebagai kelebihan bayar" menuntaskannya.
+- Auto-refresh: invoice yang dibuat dari perangkat lain muncul tanpa
+  reload; tidak menyegarkan saat kolom cari sedang difokus.
+- Keluar akun menghapus salinan halaman dari perangkat.
+Catatan jujur: pada percobaan pertama server sebenarnya belum mati karena
+perintah penghentian di skrip uji saya keliru; saya perbaiki dan ulangi
+sampai server terbukti tidak merespons. Tidak ada bug aplikasi yang
+ditemukan di putaran ini. BELUM diuji: APK Android sungguhan (cara
+WebView menangani service worker bisa berbeda). Coba satu kali di HP:
+buka invoice, matikan data seluler/Wi-Fi, catat pembayaran, nyalakan
+lagi, dan lihat apakah terkirim sendiri.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Auto-refresh membuat server dan database Neon tetap aktif selama ada yang
+membuka aplikasi (tiap 45 detik per halaman yang terlihat). Untuk usaha
+kecil ini ringan, tapi bila nanti kuota Neon terasa terpakai cepat,
+intervalnya mudah dilonggarkan. Salinan offline dan antrean memakai
+penyimpanan di perangkat, bukan server.
+
+
+STATUS RENCANA
+----------------------------------------------------------------
+Semua tahap yang direncanakan (A, B, B2, C, D, E, F) sudah terkirim.
+Sisa yang disimpan untuk nanti: impor Backup JSON lama saat Anda siap
+berhenti dari Majoo. Revisi apa pun tetap dikerjakan bertahap.

@@ -283,18 +283,12 @@ function JobTag({ item, jobs }: { item: OrderItem; jobs: { id: number; partnerNa
  * domain.ts). Produk yang masih ikut status pekerjaan diberi garis
  * putus-putus dan keterangan "ikut pekerjaan".
  *
- * Dua cara membuka daftar, dipilih otomatis sesuai perangkat:
+ * Daftar pilihan memakai panel buatan sendiri di SEMUA perangkat (HP,
+ * tablet, desktop). Daftar bawaan browser tidak bisa diatur tampilannya
+ * (jarak dalam, ukuran huruf, warna) dan beda-beda di tiap perangkat. Panel
+ * ini memakai token tema, jadi rapi di mode terang dan gelap.
  *
- * - Layar sentuh (HP, tablet): <select> bawaan. Android membuka daftar
- *   pilihan besar dari bawah layar yang sudah nyaman disentuh.
- *
- * - Mouse (desktop): panel pilihan buatan sendiri. Daftar bawaan
- *   browser di desktop tidak bisa diatur jarak dalam dan ukuran
- *   hurufnya (Chrome Windows mengabaikan padding pada <option>),
- *   sehingga teksnya menempel ke tepi. Panel ini memakai token tema,
- *   jadi rapi di mode terang dan gelap.
- *
- * Panel desktop tetap bisa dipakai penuh dengan keyboard: panah atas
+ * Panel tetap bisa dipakai penuh dengan keyboard: panah atas
  * dan bawah untuk berpindah, Enter atau Spasi untuk memilih, Home dan
  * End ke awal dan akhir, Escape atau Tab untuk menutup. Pola ARIA yang
  * dipakai: tombol dengan aria-haspopup="listbox" + role="listbox".
@@ -317,7 +311,6 @@ function StageSelect({
   const current = effectiveItemStatus(item.status, orderStatus);
   const meta = statusMeta(current);
   const following = !item.status;
-  const finePointer = useFinePointer();
 
   const shell = `relative flex min-h-10 items-center gap-2 rounded-xl border px-3 text-[13px] font-semibold transition ${meta.badge} ${
     following ? "border-dashed" : ""
@@ -333,61 +326,23 @@ function StageSelect({
     </>
   );
 
-  if (finePointer) {
-    return (
-      <StageListbox
-        label={`Tahap ${item.productType}`}
-        value={current}
-        disabled={disabled}
-        onChange={onChange}
-        className={`${shell} cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-accent)] focus-visible:ring-offset-1 disabled:cursor-not-allowed`}
-      >
-        {face}
-      </StageListbox>
-    );
-  }
-
   return (
-    <label
-      className={`${shell} cursor-pointer focus-within:ring-2 focus-within:ring-[color:var(--pf-accent)] focus-within:ring-offset-1`}
+    <StageListbox
+      label={`Tahap ${item.productType}`}
+      value={current}
+      disabled={disabled}
+      onChange={onChange}
+      className={`${shell} cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-accent)] focus-visible:ring-offset-1 disabled:cursor-not-allowed`}
     >
-      <span className="sr-only">Tahap {item.productType}</span>
       {face}
-      <select
-        value={current}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        // Tidak terlihat (opacity-0), tapi latar dan teksnya tetap diisi
-        // dari token supaya daftar bawaan yang terbuka ikut tema.
-        className="absolute inset-0 h-full w-full cursor-pointer appearance-none bg-[color:var(--pf-surface-solid)] text-[color:var(--pf-ink)] opacity-0 disabled:cursor-not-allowed"
-      >
-        {STATUSES.map((st) => (
-          <option key={st.key} value={st.key}>
-            {st.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    </StageListbox>
   );
-}
-
-/** true di perangkat dengan mouse / touchpad (desktop), false di layar sentuh. */
-function useFinePointer() {
-  const [fine, setFine] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const update = () => setFine(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return fine;
 }
 
 const POPUP_GAP = 6;
 const POPUP_MAX_H = 320;
 
-/** Panel pilihan tahap untuk desktop. Dirender di <body> supaya tidak terpotong kartu. */
+/** Panel pilihan tahap (semua perangkat). Dirender di <body> supaya tidak terpotong kartu. */
 function StageListbox({
   label,
   value,
@@ -449,7 +404,7 @@ function StageListbox({
   useEffect(() => {
     if (!open) return;
     listRef.current?.focus();
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (!listRef.current?.contains(t) && !buttonRef.current?.contains(t)) close(false);
     };
@@ -457,11 +412,11 @@ function StageListbox({
       if (!listRef.current?.contains(e.target as Node)) close(false);
     };
     const onResize = () => close(false);
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onResize);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onResize);
     };
@@ -519,7 +474,7 @@ function StageListbox({
             onMouseEnter={() => setActive(index)}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => choose(index)}
-            className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-xs leading-tight transition-colors ${
+            className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] leading-tight transition-colors ${
               index === active ? "bg-[color:var(--pf-accent-soft)] text-[color:var(--pf-accent-strong)]" : "text-[color:var(--pf-ink-2)]"
             } ${selected ? "font-semibold text-[color:var(--pf-ink)]" : "font-medium"}`}
           >

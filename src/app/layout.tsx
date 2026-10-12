@@ -12,11 +12,15 @@ import { ExitOnBackConfirm } from "@/components/ExitOnBackConfirm";
 import { MainNav } from "@/components/MainNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavigationFeedback } from "@/components/NavigationFeedback";
+import { AutoRefresh } from "@/components/AutoRefresh";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { PaymentQueueSync } from "@/components/PaymentQueueSync";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { UserMenu } from "@/components/UserMenu";
 import { QuickSearch } from "@/components/QuickSearch";
 import { MoreMenu } from "@/components/MoreMenu";
 import { getCurrentUser } from "@/lib/auth";
+import { getInvoiceAccess } from "@/lib/invoice-access";
 
 /**
  * Tipografi.
@@ -65,6 +69,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   if (requestHeaders.get("x-print-flow-protected") === "1" && !user) {
     redirect("/api/auth/logout?alasan=sesi-berakhir");
   }
+  // Menu Invoice hanya untuk akun yang berizin. Kalau database belum diperbarui
+  // lewat /api/setup (kolom izin belum ada), menu cukup disembunyikan - halaman
+  // lain tidak boleh ikut rusak gara-gara ini.
+  let canInvoice = false;
+  if (user) {
+    try {
+      canInvoice = Boolean(await getInvoiceAccess());
+    } catch {
+      canInvoice = false;
+    }
+  }
   // Tautan "Panduan" & "Catatan Perubahan" di footer hanya untuk pengguna
   // internal yang sudah login, dan tidak ditampilkan di halaman tautan lacak
   // yang dibuka pelanggan.
@@ -83,6 +98,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="min-h-screen antialiased">
         <NavigationFeedback />
         <ServiceWorkerRegister />
+        <OfflineBanner />
+        {user ? <PaymentQueueSync /> : null}
+        {user ? <AutoRefresh /> : null}
         <ExitOnBackConfirm />
         <header className="app-header sticky top-0 z-30 border-b border-white/10 bg-[#07384f]/95 shadow-[0_8px_30px_rgba(7,56,79,.14)] backdrop-blur-xl no-print">
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-2.5 lg:px-6">
@@ -95,11 +113,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </Link>
             {user ? (
               <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">
-                <MainNav role={user.role} />
+                <MainNav role={user.role} canInvoice={canInvoice} />
                 <UserMenu name={user.name} role={user.role} />
                 <QuickSearch />
                 <ThemeToggle />
-                <MoreMenu role={user.role} />
+                <MoreMenu role={user.role} canInvoice={canInvoice} />
               </div>
             ) : null}
           </div>

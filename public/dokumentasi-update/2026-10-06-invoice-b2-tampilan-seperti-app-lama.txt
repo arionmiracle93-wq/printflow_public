@@ -1,0 +1,177 @@
+================================================================
+MODUL INVOICE TAHAP B2: TAMPILAN SEPERTI APLIKASI INVOICE LAMA
+Tanggal : 06-10-2026
+Status  : selesai (typecheck bersih; lint tidak menambah masalah
+          baru; 37 pengecekan database + uji halaman lewat server
+          sungguhan, semuanya lulus)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Halaman Invoice sekarang bentuknya seperti aplikasi invoice lama:
+sidebar di kiri, kertas yang sekaligus jadi tempat mengisi, tabel
+item dengan kalkulator m2 di kolom M2 BAHAN, tombol harga bertingkat
+di kolom HARGA, bar "Data Customer", panel pembayaran dan total.
+Warnanya ikut PrintFlow (teal). Di HP tampilannya dibuat sendiri:
+tiap baris item jadi kartu bertumpuk, isiannya sama persis.
+
+Sekarang ada 4 mode dokumen: Invoice, Estimasi, Surat Jalan, PO.
+
+Yang BELUM ada (menyusul): Cetak / PDF / Kirim WhatsApp, tanda
+tangan & stempel, QRIS dinamis dan kode unik transfer, checkbox
+"Perlu monitoring produksi", Katalog Produk, Laporan, pengingat
+tagihan, dan fitur Riwayat lanjutan (ringkasan, rekap bulan, CSV,
+cocokkan mutasi bank).
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+1) Deploy zip ini seperti biasa.
+2) WAJIB buka /api/setup satu kali setelah deploy. Kali ini ada
+   kolom database baru (jenis dokumen, tipe diskon, asal-estimasi).
+   Harus muncul "ok": true. Boleh dibuka berkali-kali, aman.
+3) Buka Invoice > Pengaturan, lalu isi tab Usaha (alamat, email,
+   WhatsApp) dan tab Bayar (rekening bank). Data pengaturan tahap
+   B tidak hilang; info rekening berupa teks bebas yang dulu Anda
+   isi dipindah otomatis jadi "Catatan pembayaran".
+4) Data invoice yang sudah dibuat di tahap A/B tetap utuh. Nomor
+   lama (INV-...) tetap berlaku dan urutannya berlanjut.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) SIDEBAR (layar lebar) / BARIS MENU (HP)
+   Logo + nama usaha, kotak MODE DOKUMEN, tombol aksi, lalu menu
+   Riwayat, "<Jenis> Baru", dan Pengaturan (Owner).
+   - Di halaman riwayat, mode dokumen = menyaring daftar.
+   - Di dokumen baru, mode dokumen = ganti jenis dokumen (ada
+     konfirmasi bila tabel sudah terisi).
+   - Di dokumen yang sudah ada, jenis dokumen terkunci.
+   - Tombol aksi: Simpan Draft, Terbitkan, Tandai Lunas, Edit,
+     Duplikat, Jadikan Invoice, Hapus draft, Batalkan.
+
+B) KERTAS SEBAGAI EDITOR
+   - Kop: logo, nama usaha, alamat, email, WhatsApp (diisi di
+     Pengaturan), judul besar sesuai jenis, kotak nomor/tanggal/
+     jatuh tempo.
+   - Tabel: PRODUK | KETERANGAN | M2 BAHAN | QTY | HARGA SATUAN |
+     JUMLAH. Kolom produk dan keterangan melebar otomatis.
+     Harga diketik otomatis berformat ribuan (25.000).
+   - Kalkulator m2: ikon di header kolom M2 BAHAN (dan di tiap baris
+     pada HP). Pilih cm atau m, isi lebar x panjang, tekan Terapkan.
+   - Harga bertingkat: tombol batang di kolom HARGA. Isi tier
+     "jumlah=harga", pilih Seragam/Progresif dan basis Qty/Total m2,
+     ada simulasi hasil di bawahnya.
+   - Bar Data Customer (nama + WhatsApp, dengan saran nama). Tidak
+     ikut tercetak, kecuali pengaturan "Tampilkan data customer di
+     lembar dokumen" dinyalakan (Pengaturan > Dokumen).
+   - Panel pembayaran: metode, daftar rekening dengan tombol salin
+     nomor, catatan pembayaran, kotak "Nominal pembayaran" atau
+     "Sisa yang harus dibayar".
+   - Total: Subtotal, Diskon (pilih % atau Rp), PPN, TOTAL AKHIR,
+     DP, dan Catat Pembayaran.
+   - Syarat & ketentuan dengan tanda centang; tombol Ubah untuk
+     mengedit syarat dan catatan.
+
+C) DISKON % ATAU RP
+   Aturan app lama: mode Rp dibatasi maksimal subtotal (total tidak
+   bisa minus) dan isian direset saat ganti mode. Data tahap B
+   (diskon persen) ikut terbawa.
+
+D) EMPAT MODE DOKUMEN
+   Invoice      : pembayaran (DP/cicilan/lunas), masuk omzet.
+   Estimasi     : harga & total, tanpa pembayaran, "Berlaku Sampai".
+   Surat Jalan  : tanpa harga, jumlah, total, dan jatuh tempo; ada
+                  kolom "Diterima oleh".
+   PO           : harga & total, tanpa pembayaran, "Tanggal Diminta".
+   Nomor per jenis, urut per hari (WIB), dan tiap jenis punya urutan
+   sendiri: INV-20261006-001, EST-20261006-001, SJ-..., PO-...
+   Surat Jalan boleh total Rp 0. Hanya Invoice yang punya pembayaran;
+   sisa tagihan dan omzet hanya menghitung Invoice.
+
+E) JADIKAN INVOICE & DUPLIKAT
+   - Jadikan Invoice: Estimasi/PO/Surat Jalan yang sudah terbit
+     disalin jadi draft Invoice baru (item, customer, syarat
+     ikut; tanggal hari ini; jatuh tempo sesuai pengaturan;
+     pembayaran kosong). Dokumen asal tidak dihapus dan saling
+     menunjuk. Satu dokumen hanya bisa dijadikan Invoice sekali
+     (supaya tidak dobel).
+   - Duplikat: salinan draft dari dokumen apa pun, tanpa nomor dan
+     tanpa pembayaran.
+
+F) PENGATURAN 4 TAB (Owner)
+   Usaha   : nama usaha, alamat (2 baris), email, WhatsApp.
+   Bayar   : rekening bank (bisa banyak), catatan pembayaran,
+             jatuh tempo bawaan, "Tanya saat menerbitkan Invoice"
+             beserta batas nilainya.
+   Dokumen : tampilkan data customer di lembar, syarat bawaan.
+   Tampilan: tema mengikuti tombol terang/gelap PrintFlow; logo
+             memakai logo PrintFlow.
+
+G) FITUR LAMA YANG IKUT
+   - "Tanya saat menerbitkan": bila menyala dan total melewati
+     batas, muncul pilihan Sudah dibayar penuh / Belum / Batal.
+   - Autosave draft: isian dokumen baru tersimpan otomatis di
+     perangkat; kalau halaman tertutup tak sengaja, muncul tawaran
+     "Pulihkan".
+   - Tandai Lunas: di dokumen baru mengisi DP sebesar total; di
+     Invoice yang sudah terbit mencatat pelunasan sisa.
+   - Daftar riwayat bisa difilter per jenis dokumen.
+
+H) YANG SENGAJA BERBEDA DARI APP LAMA
+   - Alamat/email/WA di kop tidak diedit langsung di kertas;
+     diisi di Pengaturan (satu tempat, berlaku untuk semua).
+   - Tema "glass" dihapus; ikut terang/gelap PrintFlow.
+   - Kertas selalu terang walau PrintFlow mode gelap.
+   - Stempel LUNAS tampil tetap (belum bisa digeser).
+   - Tidak ada lagi Supabase, cloud snapshot, meter penyimpanan
+     browser, dan unduh JSON tiap simpan: semuanya sudah digantikan
+     database PrintFlow.
+
+I) DATABASE (lewat /api/setup, idempoten)
+   invoices: doc_type, discount_type, discount_input, source_id.
+   Data lama: isian diskon diisi dari persentase yang tersimpan.
+
+J) FILE YANG DISENTUH
+   Baru   : src/lib/invoice-modes.ts, src/components/
+            InvoicePaperEditor.tsx, InvoiceEditorModals.tsx,
+            InvoiceSidebar.tsx, CopyButton.tsx, API convert dan
+            duplicate.
+   Diganti: InvoicePaper.tsx, InvoiceActions.tsx,
+            InvoiceSettingsForm.tsx, semua halaman /invoice/*.
+   Dihapus: src/components/InvoiceForm.tsx (form kartu tahap B).
+   Diubah : schema.ts, setup/route.ts, dbcheck.ts, invoice-queries.ts,
+            invoice-pricing.ts, invoice-settings.ts, globals.css
+            (blok gaya kertas), README.md.
+
+
+CARA SAYA MENGUJI
+----------------------------------------------------------------
+Dijalankan ke PostgreSQL sungguhan: setup dua kali dan migrasi data
+lama, hitungan diskon, penomoran tiap jenis (termasuk terbit
+bersamaan), aturan tiap jenis dokumen, Jadikan Invoice (termasuk
+penolakan dobel), duplikat, pembayaran anti-dobel, kelebihan bayar,
+batal bayar, daftar dan sisa tagihan. Lalu server dijalankan dan
+semua halaman tiap mode dibuka: isinya sesuai aturan (mis. Surat
+Jalan tanpa harga, customer tercetak hanya bila pengaturannya
+menyala), dan akun tanpa izin hanya diarahkan keluar tanpa membocorkan
+data.
+Catatan jujur: saya belum melihat tampilan ini dengan mata di layar
+laptop/HP. Tata letak, jarak, dan kenyamanan sentuh di HP perlu Anda
+coba. Kirim screenshot kalau ada yang kurang pas, nanti saya rapikan.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada layanan baru, tidak ada biaya tambahan. Autosave draft
+memakai penyimpanan di perangkat, bukan server.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+Tahap C: Cetak, PDF, Kirim WhatsApp, tanda tangan & stempel, QRIS
+dinamis, kode unik transfer, checkbox "Perlu monitoring produksi"
++ deadline, tombol Buat Pekerjaan Produksi, dan tombol Buat Invoice
+dari Pekerjaan. Cetak memakai kertas yang baru ini, jadi
+layout-nya otomatis sama.

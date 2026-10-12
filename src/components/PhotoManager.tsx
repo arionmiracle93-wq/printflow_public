@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/Select";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Camera, ClipboardPaste, Download, Image as ImageIcon, ImagePlus, X } from "lucide-react";
@@ -164,13 +165,13 @@ export function PhotoManager({
           <div className="grid gap-2 sm:grid-cols-2">
             <div>
               <label className="label">Jenis foto</label>
-              <select value={kind} onChange={(e) => setKind(e.target.value)} className="input">
+              <Select value={kind} onChange={(e) => setKind(e.target.value)} className="input">
                 {KINDS.map((k) => (
                   <option key={k} value={k}>
                     {photoKindLabel(k)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
               <label className="label">Keterangan (opsional)</label>

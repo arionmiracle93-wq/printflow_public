@@ -1,0 +1,144 @@
+================================================================
+MODUL INVOICE TAHAP A: FONDASI DATABASE, RUMUS HARGA, DAN API
+Tanggal : 05-10-2026
+Status  : selesai (typecheck dan eslint bersih; 44 pengecekan
+          dijalankan ke database PostgreSQL sungguhan, semua lulus)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Ini tahap pertama dari 3 tahap Modul Invoice. Isinya "mesin di
+belakang layar": tabel-tabel baru di database, rumus harga yang
+diporting dari aplikasi invoice lama, penomoran invoice otomatis,
+pencatatan pembayaran yang tidak bisa dobel, dan pintu API-nya.
+
+PENTING: tahap ini BELUM punya halaman/tombol baru. Setelah
+di-deploy, tampilan aplikasi tidak berubah. Halaman Invoice
+(daftar, form buat, detail, catat pembayaran) datang di tahap B.
+Aman di-deploy sekarang: tidak ada data lama yang diubah.
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+1) Deploy zip ini seperti biasa.
+2) Buka /api/setup satu kali (seperti setiap ada update database).
+   Harus muncul "ok": true. Boleh dibuka berkali-kali, aman.
+3) Selesai. Tidak ada yang lain.
+
+
+ALASAN PERUBAHAN
+----------------------------------------------------------------
+Aplikasi invoice lama menyimpan semuanya di browser laptop.
+Tujuan modul ini: invoice pindah ke dalam PrintFlow (satu database,
+satu login) sebagai cadangan saat nanti berhenti langganan Majoo.
+Tahap A membangun fondasinya dulu supaya tahap berikutnya (halaman)
+berdiri di atas dasar yang sudah teruji.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) DATABASE (src/db/schema.ts + src/app/api/setup/route.ts)
+   Tabel baru, dibuat lewat /api/setup (idempoten):
+   - invoices          : data induk invoice (pelanggan, tanggal,
+                         diskon, pajak, total, terbayar, status).
+   - invoice_items     : baris item (produk, qty, m2, harga dasar,
+                         aturan tier, hasil hitung).
+   - payments          : pembayaran (DP / cicilan). Hanya ditambah,
+                         koreksi = "batalkan", jejak uang utuh.
+   - invoice_events    : jejak aktivitas (dibuat, diedit, terbit,
+                         bayar, batal).
+   - invoice_counters  : penghitung nomor urut per hari (WIB).
+   Kolom baru: users.can_invoice (izin karyawan membuka Invoice).
+   Bawaan MATI, jadi tidak ada karyawan yang tiba-tiba melihat
+   harga. Owner selalu boleh. Saklarnya muncul di halaman Pengguna
+   pada tahap B.
+
+B) RUMUS HARGA (src/lib/invoice-pricing.ts, FILE BARU)
+   Porting dari app lama: harga dasar, tier biasa, tier progresif,
+   basis qty atau m2, diskon %, pajak %. Hasil tes: 2 x 3 m2 x
+   Rp 20.000 = Rp 120.000; progresif 15 pcs (10 x 5.000 + 5 x
+   4.000) = Rp 70.000; diskon 10% lalu PPN 11% dari Rp 150.000 =
+   Rp 149.850.
+   Beda kecil dari app lama: jumlah per baris, diskon, dan pajak
+   masing-masing dibulatkan ke rupiah utuh, supaya total yang
+   tercetak sama dengan penjumlahan angka yang terlihat di kertas.
+   Server SELALU menghitung ulang; angka kiriman browser tidak
+   dipercaya.
+
+C) PENOMORAN
+   Nomor resmi berformat INV-20261005-001 (urut per hari, jam WIB),
+   diambil atomik dari database. Hasil tes: 6 invoice diterbitkan
+   bersamaan menghasilkan 6 nomor berbeda. Draft tidak punya nomor
+   dan tidak menghabiskan nomor; nomor baru keluar saat "Terbitkan".
+
+D) PEMBAYARAN
+   - DP adalah pembayaran pertama berjenis "dp" (satu model untuk
+     DP dan cicilan).
+   - Terbayar = jumlah pembayaran yang tidak dibatalkan. Lunas bila
+     terbayar >= total. Kelebihan bayar ditolak sampai dikonfirmasi.
+   - Setiap pembayaran punya kode unik dari perangkat (clientRef).
+     Kode yang sama dikirim dua kali tidak tercatat dobel. Ini
+     fondasi untuk antrean offline nanti.
+   - Empat pembayaran yang masuk bersamaan semuanya tercatat dengan
+     benar (invoice dikunci saat diproses).
+   - Batalkan pembayaran/invoice: hanya Owner, wajib beralasan.
+     Invoice yang masih punya pembayaran aktif tidak bisa dibatalkan
+     sebelum pembayarannya dibatalkan.
+
+E) HAK AKSES (src/lib/invoice-access.ts, FILE BARU)
+   Owner: semuanya. Karyawan: hanya jika saklar akunnya menyala;
+   boleh buat invoice dan catat bayar. Edit invoice yang sudah ada
+   pembayarannya, batalkan invoice, dan batalkan pembayaran: Owner.
+
+F) EDIT BERSAMAAN
+   Setiap edit isi invoice wajib membawa nomor "versi". Kalau
+   invoice sudah diubah di perangkat lain, server menolak dengan
+   pesan jelas, tidak menimpa diam-diam.
+
+G) CERMIN KE PESANAN PRODUKSI
+   Kalau invoice tertaut ke pesanan, harga dan jumlah terbayar di
+   pesanan otomatis mengikuti invoice (dalam transaksi yang sama).
+   Satu pesanan hanya boleh punya satu invoice. Pembuatan pekerjaan
+   dari invoice dan sebaliknya datang di tahap C.
+
+H) API (src/app/api/invoices/..., FILE BARU)
+   GET/POST  /api/invoices                 daftar & buat
+   GET/PATCH/DELETE /api/invoices/[id]     detail, edit, hapus draft
+   POST /api/invoices/[id]/issue           terbitkan
+   POST /api/invoices/[id]/payments        catat pembayaran
+   POST /api/invoices/[id]/payments/[pid]/void   batalkan pembayaran
+   POST /api/invoices/[id]/void            batalkan invoice
+   Semua butuh login dan izin Invoice.
+
+I) PENGECEKAN DATABASE (src/lib/dbcheck.ts)
+   Tabel invoice dan kolom users.can_invoice masuk daftar
+   pengecekan, jadi kalau lupa membuka /api/setup, halaman status
+   langsung memberi tahu.
+
+J) README.md: satu poin fitur ditambahkan.
+
+
+TIDAK BERUBAH
+----------------------------------------------------------------
+Semua halaman, tabel, dan alur yang sudah ada (pesanan, shift,
+pelanggan, pengguna). Tidak ada data lama yang diubah.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tabel baru kecil dan kosong sampai invoice dibuat. Tidak ada
+layanan pihak ketiga baru. Tidak ada biaya tambahan.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+Tahap B: halaman Invoice (daftar, form buat dengan tabel item dan
+tier, detail, Catat Pembayaran), saklar "Boleh akses Invoice" di
+halaman Pengguna, dan menu navigasi. Setelah itu tahap C:
+checkbox "Perlu monitoring produksi", tombol Buat Pekerjaan
+Produksi, invoice dari pesanan, cetak/PDF/WhatsApp.
+
+Catatan jujur: pembayaran belum bisa dicatat tanpa internet.
+API-nya sudah disiapkan (kode unik anti-dobel), jadi antrean
+offline nanti tinggal ditempel tanpa membongkar apa pun.

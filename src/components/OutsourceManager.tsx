@@ -1,5 +1,7 @@
 "use client";
 
+import { TimeFieldID } from "@/components/TimeFieldID";
+import { Select } from "@/components/Select";
 import { AlertTriangle, Building2, CheckCircle2, ExternalLink, Pencil, Phone, Plus, Save, Trash2, Truck, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -327,7 +329,7 @@ function JobForm({
             Mitra / percetakan pusat
           </label>
           <div className="flex gap-2">
-            <select id={`mitra-pilih-${job?.id ?? "baru"}`} value={partnerId} onChange={(e) => selectPartner(e.target.value)} className="input">
+            <Select id={`mitra-pilih-${job?.id ?? "baru"}`} value={partnerId} onChange={(e) => selectPartner(e.target.value)} className="input">
               <option value="">Pilih mitra atau ketik manual</option>
               {partners
                 .filter((p) => p.active)
@@ -336,7 +338,7 @@ function JobForm({
                     {p.name} · {partnerKindLabel(p.kind)}
                   </option>
                 ))}
-            </select>
+            </Select>
             <button type="button" onClick={() => setAddPartner(!addPartner)} className="btn-ghost shrink-0 px-3" title="Tambah mitra" aria-label="Tambah mitra baru">
               <Plus size={16} />
             </button>
@@ -356,13 +358,13 @@ function JobForm({
             </p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <input value={newPartner.name} onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })} placeholder="Nama percetakan / pusat" className="input" aria-label="Nama mitra baru" />
-              <select value={newPartner.kind} onChange={(e) => setNewPartner({ ...newPartner, kind: e.target.value })} className="input" aria-label="Jenis mitra">
+              <Select value={newPartner.kind} onChange={(e) => setNewPartner({ ...newPartner, kind: e.target.value })} className="input" aria-label="Jenis mitra">
                 {PARTNER_KINDS.map((k) => (
                   <option key={k.key} value={k.key}>
                     {k.label}
                   </option>
                 ))}
-              </select>
+              </Select>
               <input value={newPartner.phone} onChange={(e) => setNewPartner({ ...newPartner, phone: e.target.value })} placeholder="No. WhatsApp" className="input" aria-label="Nomor WhatsApp mitra" />
               <input value={newPartner.address} onChange={(e) => setNewPartner({ ...newPartner, address: e.target.value })} placeholder="Alamat (opsional)" className="input" aria-label="Alamat mitra" />
             </div>
@@ -407,13 +409,13 @@ function JobForm({
           <label className="label" htmlFor={`mitra-status-${job?.id ?? "baru"}`}>
             Status di mitra
           </label>
-          <select id={`mitra-status-${job?.id ?? "baru"}`} value={status} onChange={(e) => setStatus(e.target.value)} className="input">
+          <Select id={`mitra-status-${job?.id ?? "baru"}`} value={status} onChange={(e) => setStatus(e.target.value)} className="input">
             {OUTSOURCE_STATUSES.map((s) => (
               <option key={s.key} value={s.key}>
                 {s.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label className="label" htmlFor={`mitra-biaya-${job?.id ?? "baru"}`}>
@@ -431,7 +433,7 @@ function JobForm({
           <label className="label" htmlFor={`mitra-jam-${job?.id ?? "baru"}`}>
             Jam kembali
           </label>
-          <input id={`mitra-jam-${job?.id ?? "baru"}`} type="time" value={expectedTime} onChange={(e) => setExpectedTime(e.target.value)} className="input" />
+          <TimeFieldID id={`mitra-jam-${job?.id ?? "baru"}`} value={expectedTime} onChange={setExpectedTime} className="input" />
         </div>
         <div className="sm:col-span-2">
           <label className="label" htmlFor={`mitra-catatan-${job?.id ?? "baru"}`}>

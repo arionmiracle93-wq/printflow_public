@@ -1,11 +1,14 @@
 "use client";
 
+import { TimeFieldID } from "@/components/TimeFieldID";
+import { Select } from "@/components/Select";
 import { ArrowRight, CheckCircle2, Pencil, RefreshCw, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { NEXT_STATUS, STATUSES, statusMeta, type StatusKey } from "@/lib/domain";
 import { outsourceStatusMeta } from "@/lib/outsource";
 import { STATUS_ICONS } from "@/components/ui";
+import { DateFieldID } from "@/components/DateFieldID";
 
 export function OrderStatusControls({
   orderId,
@@ -136,6 +139,7 @@ export function OrderQuickEdit({
 }: {
   order: {
     id: number;
+    customerName: string;
     dueDate: string;
     dueTime: string;
     priority: string;
@@ -148,6 +152,7 @@ export function OrderQuickEdit({
 }) {
   const router = useRouter();
   const [form, setForm] = useState({
+    customerName: order.customerName,
     dueDate: order.dueDate,
     dueTime: order.dueTime,
     priority: order.priority,
@@ -159,15 +164,24 @@ export function OrderQuickEdit({
   });
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function save() {
+    const customerName = form.customerName.trim();
+    if (!customerName) {
+      setSaved(false);
+      setError("Nama pelanggan tidak boleh kosong.");
+      return;
+    }
     setBusy(true);
     setSaved(false);
+    setError(null);
     try {
       await fetch(`/api/orders/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          customerName,
           dueDate: form.dueDate,
           dueTime: form.dueTime,
           priority: form.priority,
@@ -199,27 +213,34 @@ export function OrderQuickEdit({
         <Pencil size={16} /> Ubah Data Pekerjaan
       </h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className="label">Nama pelanggan</label>
+          <input
+            value={form.customerName}
+            onChange={(e) => setForm({ ...form, customerName: e.target.value })}
+            placeholder="Nama pelanggan"
+            className="input"
+          />
+        </div>
         <div>
           <label className="label">Deadline tanggal</label>
-          <input
-            type="date"
+          <DateFieldID
             value={form.dueDate}
-            onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+            onChange={(iso) => setForm({ ...form, dueDate: iso })}
             className="input"
           />
         </div>
         <div>
           <label className="label">Jam</label>
-          <input
-            type="time"
+          <TimeFieldID
             value={form.dueTime}
-            onChange={(e) => setForm({ ...form, dueTime: e.target.value })}
+            onChange={(v) => setForm({ ...form, dueTime: v })}
             className="input"
           />
         </div>
         <div>
           <label className="label">Prioritas</label>
-          <select
+          <Select
             value={form.priority}
             onChange={(e) => setForm({ ...form, priority: e.target.value })}
             className="input"
@@ -228,7 +249,7 @@ export function OrderQuickEdit({
             <option value="normal">Normal</option>
             <option value="tinggi">Tinggi</option>
             <option value="urgent">Urgent</option>
-          </select>
+          </Select>
         </div>
         <div>
           <label className="label">Operator</label>
@@ -280,6 +301,7 @@ export function OrderQuickEdit({
           <Trash2 size={14} /> Hapus
         </button>
       </div>
+      {error ? <p className="mt-2 text-xs font-semibold text-rose-600">{error}</p> : null}
       {saved ? (
         <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
           <CheckCircle2 size={13} /> Perubahan tersimpan.

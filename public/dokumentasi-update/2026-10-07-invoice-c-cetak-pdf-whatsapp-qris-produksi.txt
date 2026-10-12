@@ -1,0 +1,148 @@
+================================================================
+MODUL INVOICE TAHAP C: CETAK, PDF, WHATSAPP, QRIS, DAN PRODUKSI
+Tanggal : 07-10-2026
+Status  : selesai (typecheck bersih; lint tidak menambah masalah
+          baru; 41 pengecekan database + 33 pengecekan QRIS/kode
+          unik + uji di browser sungguhan, semuanya lulus)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Dokumen sekarang bisa dicetak, diunduh sebagai PDF, dan dikirim lewat
+WhatsApp. Invoice bermetode QRIS menampilkan kode QRIS dinamis
+(nominal sudah tertanam), dan transfer bisa memakai kode unik.
+Tanda tangan dan stempel tampil di bagian bawah dokumen.
+Invoice juga tersambung ke produksi: centang "Perlu monitoring
+produksi" + isi deadline, maka saat invoice diterbitkan pekerjaannya
+otomatis masuk antrian PrintFlow. Sebaliknya, dari halaman pekerjaan
+ada tombol "Buat Invoice dari Pekerjaan Ini".
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+1) Deploy zip ini seperti biasa. Vercel akan memasang 3 pustaka baru
+   otomatis (jspdf, html2canvas-pro, qrcode-generator).
+2) WAJIB buka /api/setup satu kali (ada kolom database baru untuk
+   produksi). Harus muncul "ok": true.
+3) Buka Invoice > Pengaturan:
+   - tab Bayar: tempel payload QRIS statis (teks hasil baca QR
+     merchant, diawali 000201...). Status "Valid" muncul bila benar.
+     Nyalakan "Kode unik transfer" bila mau.
+   - tab Dokumen: unggah tanda tangan dan stempel (PNG transparan
+     paling bagus, maksimal 800KB). Tombol Unduh PDF dan Kirim
+     WhatsApp bisa dimatikan di sini (bawaan: nyala).
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) CETAK, PDF, KIRIM WHATSAPP (halaman dokumen; sidebar / baris tombol)
+   - Hasilnya SELALU berbentuk kertas A4 lebar, juga bila dibuka dari
+     HP. Bar customer, tombol salin, dsb. tidak ikut.
+   - Dokumen yang kelebihan tinggi sedikit dikecilkan agar muat satu
+     halaman. Dokumen panjang dipotong di celah antar baris (kotak
+     tidak terbelah).
+   - Kirim WhatsApp: bila perangkat mendukung berbagi file, PDF + teks
+     pesan dibagikan langsung (pilih kontak di WhatsApp). Bila tidak,
+     PDF diunduh dan WhatsApp dibuka ke nomor pelanggan berisi teks
+     pesan (lampirkan PDF-nya). Teks pesan memuat rincian, total, sisa
+     tagihan, rekening, dan nominal transfer.
+
+B) QRIS DINAMIS
+   Di Invoice bermetode QRIS, payload statis merchant diubah menjadi
+   QRIS dinamis dengan nominal sisa tagihan tertanam (rumus sama
+   dengan app lama). Isi kode sudah diuji dengan pemindai: cocok
+   persis dengan yang seharusnya dan CRC valid.
+
+C) KODE UNIK TRANSFER
+   Angka 1 sampai 899 yang tetap untuk satu nomor dokumen (rumus sama
+   dengan app lama), ditambahkan ke nominal transfer, hanya untuk
+   metode Transfer. Tampil di kotak "Sisa yang harus dibayar" dan di
+   teks WhatsApp. Baru ada setelah invoice terbit (butuh nomor).
+
+D) TANDA TANGAN & STEMPEL
+   Diunggah Owner di Pengaturan > Dokumen. Tampil sebagai "Hormat
+   kami," + tanda tangan + stempel di kertas, cetakan, dan PDF.
+
+E) SAMBUNGAN KE PRODUKSI
+   - Di form invoice: kotak centang "Perlu monitoring produksi"
+     (bawaan MATI). Bila dicentang, satu-satunya isian tambahan adalah
+     DEADLINE (tanggal wajib; jam bawaan 17:00).
+   - Pekerjaan dibuat otomatis saat invoice DITERBITKAN: status
+     Antrian, tanpa operator, prioritas normal, pelanggan dan item dari
+     invoice, harga dan terbayar mengikuti invoice (cermin). Riwayat
+     pekerjaan mencatat asalnya dari invoice.
+   - Invoice terbit tanpa pekerjaan: ada kartu "Produksi" dengan tombol
+     Buat Pekerjaan Produksi (isi deadline).
+   - 1 invoice = 1 pekerjaan: klik ganda atau dua kasir bersamaan hanya
+     menghasilkan satu pekerjaan.
+   - Halaman pekerjaan: kartu mini invoice (nomor, total, sisa, status
+     bayar), atau tombol Buat Invoice dari Pekerjaan Ini. Form invoice
+     terisi pelanggan dan item pekerjaan, dan tertaut ke pekerjaan itu
+     (tidak membuat pekerjaan kedua). Kartu hanya terlihat oleh akun
+     yang punya izin Invoice.
+   - Deadline tanggal yang sudah lewat ditolak.
+
+F) PERBAIKAN DARI APP LAMA (disengaja)
+   - Validasi QRIS app lama membuang semua spasi, sehingga QRIS dengan
+     nama merchant berspasi (mis. "WARUNG MAKAN ...") ditolak. Sekarang
+     diterima. Untuk payload tanpa spasi hasilnya identik.
+   - Kode QR diberi bingkai putih standar. Tanpa bingkai, pemindai
+     gagal membaca (terbukti saat diuji).
+   - Tombol WhatsApp cadangan membuka chat ke nomor PELANGGAN (app lama
+     membuka ke nomor usaha sendiri).
+   - Logo yang belum diunggah disembunyikan rapi (tidak ada gambar rusak
+     di cetakan/PDF).
+
+G) DATABASE (lewat /api/setup, idempoten)
+   invoices: needs_production, prod_due_date, prod_due_time.
+   Gambar tanda tangan/stempel disimpan di tabel pengaturan yang sudah
+   ada. Tidak ada tabel baru.
+
+H) FILE YANG DISENTUH
+   Baru   : lib/qris.ts, lib/invoice-pay.ts, lib/invoice-share.ts,
+            lib/invoice-output.ts, API invoice-assets dan production,
+            komponen InvoiceOutputActions, InvoicePayPanel,
+            InvoiceSignature, QrisImage, PaperLogo, ProductionCreator,
+            OrderInvoiceCard.
+   Diubah : editor, kertas, halaman detail/baru/edit, pengaturan,
+            halaman pekerjaan (satu kartu), schema, setup, dbcheck,
+            invoice-queries, invoice-settings, package.json.
+
+
+CARA SAYA MENGUJI
+----------------------------------------------------------------
+- Database sungguhan: 41 pengecekan produksi (otomatis saat terbit,
+  tombol manual, anti-dobel termasuk 3 klik bersamaan, deadline,
+  invoice dari pekerjaan, cermin harga/terbayar, pengaturan, teks WA).
+- QRIS dan kode unik: 33 pengecekan, termasuk dijalankan berdampingan
+  dengan kode app lama (hasil identik).
+- Browser sungguhan (laptop dan HP): semua halaman dibuka dan dilihat,
+  alur isi form > centang produksi > Terbitkan > "Sudah dibayar penuh"
+  > LUNAS + pekerjaan terbentuk, unduh PDF dari tampilan HP, klik Kirim
+  WhatsApp (membuka wa.me ke nomor pelanggan), kartu di halaman
+  pekerjaan, form dari pekerjaan, serta simulasi cetak A4.
+- Temuan yang diperbaiki saat uji: QR tanpa bingkai, kotak syarat
+  terbelah di PDF, invoice 3 item melebar ke 2 halaman, logo rusak,
+  ikon tanggal menimpa angka.
+Catatan jujur: belum diuji di APK Android sungguhan. Perintah Cetak di
+WebView Android sering tidak berfungsi; di APK gunakan Unduh PDF atau
+Kirim WhatsApp. Di Chrome/Edge/Safari laptop, Cetak berfungsi biasa.
+Perintah Cetak sendiri (dialog cetak) tidak bisa saya buka di
+lingkungan uji; yang saya uji adalah hasil layout A4-nya.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada layanan berbayar baru. PDF dibuat di perangkat pengguna
+(bukan di server), pustakanya baru diunduh saat tombol dipakai.
+Gambar tanda tangan/stempel kecil (maks 800KB) di database.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+Tahap D: Riwayat lengkap (ringkasan belum dibayar/lewat tempo/lunas,
+rekap bulan, Export CSV, cocokkan mutasi bank), Laporan (bulanan,
+harian, rentang), dan pengingat tagihan lewat WhatsApp. Lalu tahap E
+(Katalog Produk bergambar) dan F (impor Backup JSON lama, auto-refresh,
+antrean offline).
