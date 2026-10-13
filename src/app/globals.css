@@ -349,8 +349,24 @@ body {
   }
 
   @media (prefers-reduced-motion: reduce) {
+    /* PENTING: jangan mematikan animasinya sama sekali. Lingkaran yang
+       diam tidak memberi tahu apa pun bahwa ada yang sedang berjalan -
+       justru membuat loading ini terlihat macet. Yang dihindari opsi
+       "kurangi gerak" adalah gerak besar yang memicu mual (geseran
+       besar, parallax), bukan umpan balik. Jadi putarannya diganti
+       DENYUT opacity: tetap jelas hidup, tapi tidak berputar. */
     .pf-load-spin {
-      animation: none;
+      animation: pf-load-pulse-kf 1.25s ease-in-out infinite;
+    }
+  }
+
+  @keyframes pf-load-pulse-kf {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
     }
   }
 
