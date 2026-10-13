@@ -22,7 +22,14 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
   const mode = docModeOf(invoice.docType);
   const isDraft = invoice.status === "draft";
   const isVoid = invoice.status === "batal";
-  const cols = mode.showPrices ? "24fr 22fr 13fr 8fr 15fr 14fr" : "40fr 36fr 14fr 10fr";
+  /* minmax(0, Nfr) - bukan "Nfr" polos, supaya lebar tiap trek hanya
+   bergantung pada --ppi-cols dan tidak melebar karena isi sel. Tanpa
+   itu, .ppi-thead dan .ppi-row (dua grid terpisah) bisa menghitung trek
+   berbeda dan kolomnya tidak lurus. Pecahan di bawah memberi ruang cukup
+   supaya tiap judul kolom tetap satu baris di lebar desktop. */
+const cols = mode.showPrices
+    ? "minmax(0,24fr) minmax(0,21fr) minmax(0,13fr) minmax(0,7fr) minmax(0,16fr) minmax(0,13fr)"
+    : "minmax(0,40fr) minmax(0,36fr) minmax(0,14fr) minmax(0,10fr)";
   const addressLines = settings.address.split(/\r?\n/).filter(Boolean);
   const payInfo = computePayInfo({
     total: invoice.total,
@@ -88,18 +95,18 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
           return (
             <div key={it.id} className="ppi-rowwrap py-2 md:py-1">
               <div className="ppi-row" style={{ "--ppi-cols": cols } as React.CSSProperties}>
-                <div className="ppi-c-wide px-2 py-1.5 text-[13px] font-semibold text-slate-900"><span className="ppi-mlabel">Produk</span><span className="whitespace-pre-line break-words">{it.productName}</span></div>
-                <div className="ppi-c-wide px-2 py-1.5 text-[13px] text-slate-600"><span className="ppi-mlabel">Keterangan</span><span className="whitespace-pre-line break-words">{it.description || "—"}</span></div>
-                <div className="px-2 py-1.5 text-right text-[13px]"><span className="ppi-mlabel">M² bahan</span>{it.areaM2 > 0 ? String(it.areaM2).replace(".", ",") : "—"}</div>
-                <div className="px-2 py-1.5 text-right text-[13px]"><span className="ppi-mlabel">Qty</span>{String(it.qty).replace(".", ",")}</div>
+                <div className="ppi-c-wide py-1.5 text-[13px] font-semibold text-slate-900"><span className="ppi-mlabel">Produk</span><span className="whitespace-pre-line break-words">{it.productName}</span></div>
+                <div className="ppi-c-wide py-1.5 text-[13px] text-slate-600"><span className="ppi-mlabel">Keterangan</span><span className="whitespace-pre-line break-words">{it.description || "—"}</span></div>
+                <div className="py-1.5 text-right text-[13px]"><span className="ppi-mlabel">M² bahan</span>{it.areaM2 > 0 ? String(it.areaM2).replace(".", ",") : "—"}</div>
+                <div className="py-1.5 text-right text-[13px]"><span className="ppi-mlabel">Qty</span>{String(it.qty).replace(".", ",")}</div>
                 {mode.showPrices ? (
                   <>
-                    <div className="px-2 py-1.5 text-right text-[13px]">
+                    <div className="py-1.5 text-right text-[13px]">
                       <span className="ppi-mlabel">Harga satuan</span>
                       {formatRupiah(Math.round(it.unitPrice))}
                       {p.hasTier && p.tier ? <span className="block text-[10px] font-semibold text-teal-700">{p.label}</span> : null}
                     </div>
-                    <div className="flex justify-between px-2 py-1.5 text-[13px] font-extrabold text-slate-900 md:justify-end"><span className="ppi-mlabel">Jumlah</span>{formatRupiah(it.amount)}</div>
+                    <div className="flex justify-between py-1.5 text-[13px] font-extrabold text-slate-900 md:justify-end"><span className="ppi-mlabel">Jumlah</span>{formatRupiah(it.amount)}</div>
                   </>
                 ) : null}
               </div>

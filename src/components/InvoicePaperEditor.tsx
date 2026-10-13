@@ -281,7 +281,6 @@ export function InvoicePaperEditor({
   const [flashKey, setFlashKey] = useState<number | null>(null);
   const [calcKey, setCalcKey] = useState<number | null>(null);
   const [tierKey, setTierKey] = useState<number | null>(null);
-  const [lastM2Key, setLastM2Key] = useState<number | null>(null);
   const [showCustomer, setShowCustomer] = useState(false);
   const [askPaid, setAskPaid] = useState(false);
   const [busy, setBusy] = useState<null | "draft" | "terbit" | "simpan">(null);
@@ -603,7 +602,19 @@ export function InvoicePaperEditor({
   }
 
   /* ---------------- tampilan ---------------- */
-  const cols = mode.showPrices ? "24fr 22fr 13fr 8fr 15fr 14fr 4fr" : "38fr 34fr 14fr 10fr 4fr";
+  /* minmax(0, Nfr) - BUKAN "Nfr" polos. Tanpa minmax(0,..) trek kolom "aksi"
+   (tombol hapus 28px + padding sel) memaksa treknya melebar dan seluruh
+   kolom lain ikut bergeser, sehingga angka di baris tidak rata dengan
+   judul kolomnya.
+
+   Panjang label (produk 51px, keterangan 81px, m2 bahan 69px + slot 30px,
+   qty 26px, harga satuan 94px + slot 30px, jumlah 50px, aksi 20px) + 20px
+   padding sel dictates the fractions below, supaya semua judul kolom
+   muat SATU BARIS di lebar desktop. Kolom jumlah diberi 11fr karena isinya
+   "Rp 90.000" - kalau terlalu sempit nominal turun ke dua baris. */
+const cols = mode.showPrices
+    ? "minmax(0,22fr) minmax(0,18fr) minmax(0,15fr) minmax(0,6fr) minmax(0,18fr) minmax(0,11fr) minmax(0,7fr)"
+    : "minmax(0,36fr) minmax(0,30fr) minmax(0,14fr) minmax(0,6fr) minmax(0,7fr)";
   const calcItem = items.find((i) => i.key === calcKey) ?? null;
   const tierItem = items.find((i) => i.key === tierKey) ?? null;
   const calcIndex = calcItem ? items.indexOf(calcItem) + 1 : 0;
@@ -721,20 +732,12 @@ export function InvoicePaperEditor({
             <div className="ppi-thead" style={{ "--ppi-cols": cols } as React.CSSProperties}>
               <span>Produk</span>
               <span>Keterangan</span>
-              <span className="flex items-center justify-end gap-1.5">
-                M² Bahan
-                <button
-                  type="button"
-                  className="ppi-icon-btn"
-                  title="Kalkulator m²: hitung luas dari panjang & lebar"
-                  aria-label="Kalkulator meter persegi"
-                  onClick={() => setCalcKey(lastM2Key ?? items[0]?.key ?? null)}
-                >
-                  <Calculator size={12} />
-                </button>
-              </span>
+              {/* Kalkulator m&sup2; TIDAK lagi ditaruh di header (diminta): tombolnya
+                  sekarang ada di setiap baris, jadi teks kolom ini ikut menyisakan
+                  ruang 30px lewat .ppi-head-slot supaya angka baris tetap rata. */}
+              <span className="ppi-head-slot">M² Bahan</span>
               <span className="text-right">Qty</span>
-              {mode.showPrices ? <span className="text-right">Harga satuan</span> : null}
+              {mode.showPrices ? <span className="ppi-head-slot">Harga satuan</span> : null}
               {mode.showPrices ? <span className="text-right">Jumlah</span> : null}
               <span />
             </div>
@@ -753,7 +756,7 @@ export function InvoicePaperEditor({
                 return (
                   <div key={it.key} className={`ppi-rowwrap py-2 md:py-0 ${flashKey === it.key ? "ppi-flash" : ""}`}>
                     <div className="ppi-row" style={{ "--ppi-cols": cols } as React.CSSProperties}>
-                      <label className="ppi-c-wide relative">
+                      <label className="ppi-c-wide relative py-1.5">
                         <span className="ppi-mlabel">Produk #{index + 1}</span>
                         <textarea
                           ref={grow}
@@ -805,7 +808,7 @@ export function InvoicePaperEditor({
                             })()
                           : null}
                       </label>
-                      <label className="ppi-c-wide">
+                      <label className="ppi-c-wide py-1.5">
                         <span className="ppi-mlabel">Keterangan</span>
                         <textarea
                           ref={grow}
@@ -821,16 +824,15 @@ export function InvoicePaperEditor({
                       </label>
                       <label>
                         <span className="ppi-mlabel">M² bahan</span>
-                        <span className="flex items-center gap-1">
+                        <span className="ppi-cell-slot">
                           <input
                             value={it.areaM2}
                             onChange={(e) => patchItem(it.key, { areaM2: e.target.value })}
-                            onFocus={() => setLastM2Key(it.key)}
                             inputMode="decimal"
                             className="ppi-in ppi-num"
                             placeholder="0"
                           />
-                          <button type="button" className="ppi-icon-btn md:hidden" aria-label={`Kalkulator m² baris ${index + 1}`} onClick={() => setCalcKey(it.key)}>
+                          <button type="button" className="ppi-icon-btn" title="Kalkulator m²: hitung luas dari panjang & lebar" aria-label={`Kalkulator m² baris ${index + 1}`} onClick={() => setCalcKey(it.key)}>
                             <Calculator size={12} />
                           </button>
                         </span>
@@ -849,7 +851,7 @@ export function InvoicePaperEditor({
                         <>
                           <label>
                             <span className="ppi-mlabel">Harga satuan</span>
-                            <span className="flex items-center gap-1">
+                            <span className="ppi-cell-slot">
                               <input
                                 value={it.basePrice}
                                 onChange={(e) => patchItem(it.key, { basePrice: thousands(e.target.value) })}
@@ -1129,7 +1131,6 @@ export function InvoicePaperEditor({
           onClose={() => setCalcKey(null)}
           onApply={(m2) => {
             patchItem(calcItem.key, { areaM2: fmtDec(m2, 4) });
-            setLastM2Key(calcItem.key);
             setCalcKey(null);
           }}
         />

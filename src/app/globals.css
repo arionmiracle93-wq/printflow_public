@@ -1169,10 +1169,14 @@ button, a, [role="button"] {
 .ppi-modal .text-slate-400 { color: #5b6b7d; }
 .ppi-thead {
   display: none;
-  border-radius: 10px;
+  /* Bentuk strip header mengikuti gambar acuan: dua sudut ATAS bulat,
+     dua sudut BAWAH tajam (menempel ke baris pertama). */
+  border-radius: 12px 12px 0 0;
   /* #0f766e (bukan #0d9488): teks putih 10.5px di atasnya jadi 5.5:1,
-     sebelumnya 3.7:1 - di bawah ambang WCAG AA. */
+     sebelumnya 3.7:1 - di bawah ambang WCAG AA. Garis terang 1px di
+     tepi atas cuma kilau, bukan latar teks. */
   background: #0f766e;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
   color: #ffffff;
   font-size: 10.5px;
   font-weight: 800;
@@ -1182,17 +1186,59 @@ button, a, [role="button"] {
 .ppi-row { display: grid; gap: 6px 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ppi-row > .ppi-c-wide { grid-column: 1 / -1; }
 .ppi-mlabel { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ppi-muted); }
+
+/* ------------------------------------------------------------------
+   RAPI-KAN TEKS BARIS SEJAJAR DENGAN TEKS HEADER KOLOMNYA
+   ------------------------------------------------------------------
+   Dua hal yang bikin kolom Melenceng, keduanya sudah ditutup di sini:
+
+   1. Jarak antar kolom dulu menumpuk tiga kali (padding .ppi-thead,
+      padding .ppi-row, lalu padding .ppi-in di dalam sel). Sekarang
+      jarak dipegang satu variabel dan dipakai per sel, jadi teks header
+      dan teks isi baris berhenti pada garis yang sama.
+
+   2. .ppi-thead dan .ppi-row adalah DUA grid terpisah. Track `fr` punya
+      min-width: auto, jadi kolom yang isinya tombol hapus (28px + padding)
+      memaksa treknya melebar ke 48px - seluruh kolom lain ikut mengecil
+      dan teks baris tergeser 3-13px dari judul kolomnya. Karena itu
+      --ppi-cols harus ditulis minmax(0, Nfr), bukan Nfr polos; kolom
+      "aksi" juga dilebihkan (7fr) supaya tombolnya tetap muat.
+
+   --ppi-cell-x : jarak teks ke tepi sel (header & baris)
+   --ppi-btn    : lebar tombol kecil di dalam sel
+   --ppi-slot-gap : jarak teks ke tombol
+
+   Kolom yang isinya memakai tombol (M&sup2; bahan, harga satuan) memakai
+   --ppi-btn dan --ppi-slot-gap yang SAMA di header dan di baris: header
+   menambah kotak kosong sebesar tombol (::after), baris memakai tombol
+   sungguhan. Karena keduanya membaca variabel yang sama, jarak teksnya
+   identik tanpa perlu menebak-nebak angka. */
+.ppi-thead,
+.ppi-row { --ppi-cell-x: 10px; --ppi-btn: 26px; --ppi-slot-gap: 4px; }
+.ppi-row > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
+.ppi-head-slot { display: flex; align-items: center; justify-content: flex-end; gap: var(--ppi-slot-gap); }
+/* Kotak kosong setinggi 0: hanya menyisakan LEBAR tombol (tinggi tidak
+   hilang), jadi strip header tetap setinggi satu baris teks. */
+.ppi-head-slot::after { content: ""; flex: none; width: var(--ppi-btn); height: 0; }
+.ppi-cell-slot { display: flex; align-items: center; gap: var(--ppi-slot-gap); }
 @media (min-width: 768px) {
-  .ppi-thead { display: grid; gap: 8px; padding: 9px 8px; grid-template-columns: var(--ppi-cols); align-items: center; }
-  .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 8px; }
+  .ppi-thead { display: grid; gap: 8px; padding: 9px 0; grid-template-columns: var(--ppi-cols); align-items: center; }
+  .ppi-thead > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
+  .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 0; }
   .ppi-row > .ppi-c-wide { grid-column: auto; }
+  /* Isian di dalam sel tidak menambah padding sendiri. Kalau ditambah,
+     teks baris terdorong 8px dari teks header kolomnya. */
+  .ppi-row .ppi-in { padding-left: 0; padding-right: 0; }
   .ppi-mlabel { display: none; }
 }
 .ppi-rowwrap { border-bottom: 1px solid var(--ppi-line-soft); }
 .ppi-rowwrap:nth-child(even) { background: var(--ppi-zebra); }
 .ppi-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--ppi-line);
+  /* Lebar diambil dari --ppi-btn yang sama dengan kotak kosong di header,
+     jadi ruang yang disisakan header tidak mungkin meleset. */
+  width: var(--ppi-btn, 26px); height: var(--ppi-btn, 26px); flex: none;
+  border-radius: 8px; border: 1px solid var(--ppi-line);
   background: var(--ppi-btn-bg); color: var(--ppi-btn-ink); cursor: pointer;
 }
 .ppi-icon-btn:hover { background: var(--ppi-btn-hover); border-color: #14b8a6; }
