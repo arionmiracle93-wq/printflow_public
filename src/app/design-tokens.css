@@ -74,6 +74,14 @@
   --pf-accent-soft: rgb(13 125 117 / 0.1);
   --pf-accent-line: rgb(13 125 117 / 0.26);
 
+  /* Cincin loader (LoadingIndicator).
+     Arc = teal terang yang berputar. Track sengaja jauh lebih redup:
+     bentuk cincin harus tetap terbaca walau yang sedang berputar tidak.
+     Arc dipilih agar kontrasnya >= 3:1 (batas minimum WCAG untuk elemen
+     antarmuka) di kedua tema - teal-500 #14b8a6 cuma 2.5:1 di putih. */
+  --pf-load-arc: #0d9488;
+  --pf-load-track: rgb(13 148 136 / 0.18);
+
   /* Aksi utama (satu per layar) */
   --pf-cta: #fbbf24;
   --pf-cta-hover: #fcd34d;
@@ -128,6 +136,11 @@
   --pf-accent-strong: #67ded1;
   --pf-accent-soft: rgb(62 203 189 / 0.13);
   --pf-accent-line: rgb(62 203 189 / 0.3);
+
+  /* Cincin loader: di mode gelap teal terang jauh lebih menyala
+     (9.2:1 di latar #101e29) dan tetap enak dibaca tanpa menyilaukan. */
+  --pf-load-arc: #2dd4bf;
+  --pf-load-track: rgb(45 212 191 / 0.2);
 
   --pf-cta-shadow: 0 6px 18px rgb(251 191 36 / 0.18);
 

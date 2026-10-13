@@ -324,6 +324,37 @@ body {
   }
 
   /* -------------------------------------------------------------
+     INDIKATOR LOADING BERCINCIN (LoadingIndicator)
+     -------------------------------------------------------------
+     Warna arc & track diambil dari token --pf-load-arc /
+     --pf-load-track supaya tema terang/gelap tertangani di satu
+     tempat. Berhenti saat "kurangi gyrus" dipilih; busurnya tetap
+     kelihatan sebagai busur, jadi tahu sedang memuat tanpa gerak. */
+  @keyframes pf-load-spin-kf {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .pf-load-arc {
+    stroke: var(--pf-load-arc);
+  }
+  .pf-load-track {
+    stroke: var(--pf-load-track);
+  }
+  .pf-load-spin {
+    animation: pf-load-spin-kf 0.85s linear infinite;
+    transform-origin: 50% 50%;
+    color: var(--pf-load-arc);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-load-spin {
+      animation: none;
+    }
+  }
+
+  /* -------------------------------------------------------------
      SAKELAR ON/OFF (gaya pill)
      -------------------------------------------------------------
      Track 44x26, knob putih 20px meluncur dari kiri ke kanan. Warna
