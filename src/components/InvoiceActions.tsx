@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Ban, BadgeCheck, BellRing, Copy, FileCheck2, Loader2, Pencil, Send, Trash2 } from "lucide-react";
 import { OPEN_REMINDER_EVENT } from "@/components/ReminderModal";
+import { submitPaymentOrQueue } from "@/lib/payment-queue";
 import { SideButton } from "@/components/InvoiceSidebar";
 import { formatRupiah } from "@/lib/domain";
 
@@ -30,6 +31,7 @@ export function InvoiceActions({
   remaining,
   payMethod,
   alreadyConverted,
+  label,
 }: {
   layout: "side" | "row";
   id: number;
@@ -41,6 +43,8 @@ export function InvoiceActions({
   remaining: number;
   payMethod: string;
   alreadyConverted: boolean;
+  /** Nomor invoice + pelanggan, untuk daftar antrean offline. */
+  label: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -76,8 +80,17 @@ export function InvoiceActions({
     if (kind === "convert" && !confirm("Jadikan Invoice?\n\nIsi item, customer, dan syarat disalin ke draft Invoice baru. Dokumen ini tidak dihapus.")) return;
     if (kind === "lunas") {
       if (!confirm(`Tandai LUNAS?\n\nDicatat pembayaran ${formatRupiah(remaining)} via ${payMethod} sebagai pelunasan.`)) return;
-      url = `/api/invoices/${id}/payments`;
-      body = { amount: remaining, method: payMethod, note: "Tandai lunas", clientRef: payCode };
+      setBusy("lunas");
+      try {
+        const r = await submitPaymentOrQueue({ invoiceId: id, label, amount: remaining, method: payMethod, note: "Tandai lunas", ref: payCode });
+        if (r.kind === "rejected") return setError(r.error || "Aksi gagal. Coba lagi.");
+        setPayCode(uuid());
+        if (r.kind === "queued") setError("Tidak ada koneksi. Pelunasan disimpan di perangkat ini dan akan dikirim otomatis saat online.");
+        else router.refresh();
+      } finally {
+        setBusy(null);
+      }
+      return;
     }
     setBusy(kind);
     try {
@@ -86,7 +99,6 @@ export function InvoiceActions({
         setError(json.error ?? json.penjelasan ?? "Aksi gagal. Coba lagi.");
         return;
       }
-      if (kind === "lunas") setPayCode(uuid());
       if (kind === "delete") router.push("/invoice");
       else if ((kind === "convert" || kind === "duplicate") && json.newId) router.push(`/invoice/${json.newId}`);
       router.refresh();

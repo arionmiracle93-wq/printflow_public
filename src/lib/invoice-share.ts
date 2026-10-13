@@ -36,7 +36,9 @@ type ShareDoc = {
 export function buildWhatsAppMessage(doc: ShareDoc, settings: InvoiceSettings, pay: PayInfo, paid: number): string {
   const mode = docModeOf(doc.docType);
   const L: string[] = [];
-  L.push(`Halo ${doc.customerName}, berikut ${mode.label} dari ${settings.businessName}:`);
+  // Data customer boleh kosong; jangan tulis "Halo ," ke pelanggan.
+  const nama = doc.customerName.trim();
+  L.push(nama ? `Halo ${nama}, berikut ${mode.label} dari ${settings.businessName}:` : `Berikut ${mode.label} dari ${settings.businessName}:`);
   L.push("");
   L.push(`*${mode.label} ${doc.number ?? "(draft)"}*`);
   L.push(`${mode.dateLabel}: ${formatDateID(doc.issueDate)}`);

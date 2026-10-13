@@ -338,6 +338,22 @@ const DDL = [
   `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS needs_production boolean NOT NULL DEFAULT false`,
   `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS prod_due_date date`,
   `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS prod_due_time text`,
+  // --- MODUL INVOICE tahap E: katalog produk ---
+  `CREATE TABLE IF NOT EXISTS invoice_products (
+      id serial PRIMARY KEY,
+      name text NOT NULL,
+      description text,
+      price integer NOT NULL DEFAULT 0,
+      tiers jsonb,
+      category text,
+      image_data text,
+      image_v integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+   )`,
+  // Satu nama produk hanya sekali (tidak peduli huruf besar/kecil & spasi pinggir).
+  `CREATE UNIQUE INDEX IF NOT EXISTS invoice_products_name_key ON invoice_products ((lower(btrim(name))))`,
+  `CREATE INDEX IF NOT EXISTS invoice_products_category_idx ON invoice_products (category)`,
 ];
 
 type SeedCustomer = [string, string | null, string | null, string, string];
@@ -492,6 +508,7 @@ export async function GET(request: Request) {
         "invoice_items",
         "payments",
         "invoice_events",
+        "invoice_products",
       ],
       seeded,
       hint: seeded ? "Contoh data sudah diisi. Buka halaman utama aplikasi." : "Untuk mengisi contoh data, buka /api/setup?seed=1",

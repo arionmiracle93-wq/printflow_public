@@ -21,6 +21,7 @@ export const REQUIRED_TABLES = [
   "invoice_items",
   "payments",
   "invoice_events",
+  "invoice_products",
 ] as const;
 
 /**

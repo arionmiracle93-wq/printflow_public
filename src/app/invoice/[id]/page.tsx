@@ -11,7 +11,7 @@ import { InvoicePaymentPanel } from "@/components/InvoicePaymentPanel";
 import { InvoiceFrame, InvoiceSidebar } from "@/components/InvoiceSidebar";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { safeDb } from "@/lib/dbcheck";
-import { formatDateTimeID, jakartaDateISO } from "@/lib/domain";
+import { customerLabel, formatDateTimeID, jakartaDateISO } from "@/lib/domain";
 import { getInvoiceAccess } from "@/lib/invoice-access";
 import { DOC_MODES, docModeOf } from "@/lib/invoice-modes";
 import { getInvoiceDetail } from "@/lib/invoice-queries";
@@ -96,6 +96,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
     remaining: summary.remaining,
     payMethod: invoice.payMethod,
     alreadyConverted: activeConverted.length > 0,
+    label: `${invoice.number ?? `Draft #${invoice.id}`} · ${customerLabel(invoice.customerName)}`,
   };
 
   return (
@@ -169,6 +170,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
               isOwner={access.isOwner}
               today={jakartaDateISO()}
               defaultMethod={invoice.payMethod}
+              label={actionProps.label}
               payments={payments.map((p) => ({
                 id: p.id,
                 kind: p.kind,

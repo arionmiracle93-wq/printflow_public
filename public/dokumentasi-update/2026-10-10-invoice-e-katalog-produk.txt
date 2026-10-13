@@ -1,0 +1,135 @@
+================================================================
+MODUL INVOICE TAHAP E: KATALOG PRODUK BERGAMBAR
+Tanggal : 10-10-2026
+Status  : selesai (typecheck bersih; lint tidak menambah masalah
+          baru; 52 pengecekan database + uji di browser sungguhan
+          dan uji akses, semuanya lulus)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Sekarang ada Katalog Produk di dalam PrintFlow: daftar produk lengkap
+dengan gambar, harga, dan harga bertingkat. Saat mengisi tabel invoice,
+ketik beberapa huruf nama produk dan muncul saran dari katalog; atau
+klik tombol "Katalog" untuk memilih dari galeri. Satu katalog dipakai
+bersama oleh semua perangkat (tidak lagi tersimpan per-browser).
+
+
+YANG PERLU ANDA LAKUKAN
+----------------------------------------------------------------
+1) Deploy zip ini seperti biasa.
+2) WAJIB buka /api/setup satu kali (ada tabel database baru untuk
+   katalog). Harus muncul "ok": true.
+3) Buka Invoice > Katalog Produk. Isi sendiri, atau klik "Muat produk
+   contoh" (25 produk percetakan) untuk melihat cara kerjanya, atau
+   "Impor CSV" bila punya daftar harga di Excel.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) HALAMAN KATALOG PRODUK (menu Invoice > Katalog Produk)
+   - Galeri kartu: gambar, kategori, nama, keterangan, harga, dan
+     lencana harga bertingkat (mis. "3 tier", "2 tier m2").
+   - Pencarian (nama, keterangan, kategori) dan chip kategori beserta
+     jumlah produknya (Semua, Tanpa Kategori, dan tiap kategori).
+   - OWNER dapat: Produk Baru, ubah (klik kartu), hapus, mode Pilih untuk
+     menghapus banyak sekaligus, Kelola Kategori (satu per baris),
+     Impor CSV (Gabungkan atau Ganti seluruh katalog), Export CSV,
+     Contoh CSV, dan Muat produk contoh.
+   - Akun KARYAWAN berizin Invoice: boleh melihat galeri dan Export CSV,
+     tapi tidak bisa mengubah katalog (tombolnya tidak tampil dan server
+     juga menolak).
+
+B) FORMULIR PRODUK
+   Nama, keterangan, harga dasar, kategori (boleh mengetik kategori baru),
+   harga bertingkat (satu baris, mis. 2=8000;11=7000 atau
+   mode=progresif;basis=m2;5=23000; ada petunjuk valid/tidaknya), dan
+   gambar. Gambar dikecilkan otomatis di perangkat (sisi terpanjang 400px,
+   JPEG), jadi foto dari kamera HP pun tidak membebani database.
+
+C) DI EDITOR INVOICE
+   - SARAN PRODUK saat mengetik nama produk (maksimal 8): urutan awalan
+     nama, lalu awalan kata, lalu mengandung, lalu cocok di keterangan.
+     Bisa dipilih dengan klik, atau panah atas/bawah + Enter. Memilih
+     saran mengisi nama, keterangan (bila masih kosong), harga (bila masih
+     kosong), dan harga bertingkat.
+   - Tombol KATALOG di bawah tabel: galeri dengan pencarian dan kategori;
+     klik produk untuk menambahkannya ke tabel (baris kosong terakhir
+     dipakai dulu, lalu baris baru), jendela tetap terbuka supaya bisa
+     memilih beberapa produk, lalu klik Selesai. Baris yang baru terisi
+     berkedip sebentar.
+
+D) IMPOR / EKSPOR CSV
+   Kolom: Nama Produk; Keterangan; Harga; Harga Bertingkat; Kategori
+   (pemisah titik koma atau koma, kutip ganda, baris judul dan BOM dibaca
+   otomatis). Gabungkan: produk bernama sama dilengkapi (isian yang masih
+   kosong diisi, isian yang sudah ada tidak ditimpa). Ganti: seluruh
+   katalog lama diganti (ada konfirmasi). Diuji bolak-balik: ekspor lalu
+   impor menghasilkan hitungan harga yang sama.
+
+E) YANG SENGAJA BERBEDA DARI APP LAMA
+   - Nama produk tidak boleh kembar (huruf besar/kecil dan spasi di pinggir
+     diabaikan): menghindari produk ganda yang membingungkan saat disarankan.
+   - Katalog hanya bisa diubah Owner (karena memuat harga).
+   - Urutan galeri: abjad nama (app lama: terbaru di atas).
+   - Katalog tersimpan di database PrintFlow (menggantikan penyimpanan
+     browser dan Supabase), jadi sama di semua perangkat tanpa perlu sinkron.
+   - Mode galeri "kompak/penuh layar" tidak dibawa; halaman Katalog sendiri
+     sudah penuh layar.
+
+F) PERBAIKAN YANG DITEMUKAN SAAT UJI
+   - Harga bertingkat dan harga dalam CSV memakai format ribuan Indonesia:
+     "25.000" kini dibaca 25000 (sebelumnya sempat terbaca 25). Berlaku
+     juga untuk "Rp 7.000" dan "1.500.000".
+   - Koreksi informasi saya sebelumnya: produk contoh di app lama berjumlah
+     25, bukan 26. Semuanya sudah ikut.
+
+G) DATABASE (lewat /api/setup, idempoten)
+   Tabel baru invoice_products. Gambar disimpan di tabel itu tetapi TIDAK
+   ikut terbaca saat daftar dimuat (diambil terpisah dan di-cache browser).
+   Tidak ada perubahan pada data invoice yang sudah ada.
+
+H) FILE YANG DISENTUH
+   Baru   : lib/invoice-catalog.ts, invoice-catalog-match.ts,
+            invoice-catalog-sample.ts, csv-parse.ts, image-compress.ts,
+            halaman /invoice/katalog, komponen CatalogManager,
+            CatalogParts, CatalogPicker, dan API invoice-products
+            (daftar, ubah, gambar, hapus massal, impor, export, kategori).
+   Diubah : editor invoice (saran + tombol Katalog), sidebar (menu
+            Katalog Produk), schema, setup, dbcheck, globals.css (efek
+            kedip), README.md.
+
+
+CARA SAYA MENGUJI
+----------------------------------------------------------------
+- Database sungguhan, 52 pengecekan: aturan isian, format harga
+  Indonesia, nama kembar (beda huruf/spasi), ubah/ganti/hapus gambar
+  (versi gambar), impor gabung vs ganti, impor berulang tanpa duplikat,
+  25 produk contoh, hitungan harga bertingkat dari katalog (progresif
+  dan basis m2), ekspor-impor bolak-balik, pembaca CSV, kategori, dan
+  urutan saran produk.
+- Browser sungguhan (laptop dan HP): katalog kosong, muat contoh, cari
+  dan kategori, tambah produk dengan unggah gambar (dikecilkan jadi
+  400x400 JPEG dan tampil di kartu), nama kembar ditolak, ubah dan hapus
+  gambar, mode Pilih + hapus massal, impor CSV, export CSV, saran produk
+  di editor (panah + Enter mengisi nama, keterangan, harga, dan harga
+  bertingkat), tombol Katalog menambah baris, dan akses karyawan (boleh
+  lihat, ditolak mengubah: kode 403).
+Catatan jujur: foto kamera HP asli (ribuan piksel) belum saya coba;
+yang diuji gambar 600px. Pengecilan memakai cara yang sama untuk semua
+ukuran, jadi seharusnya aman.
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada layanan baru. Gambar yang sudah dikecilkan sekitar 30 sampai
+60 KB per produk, jadi 100 produk bergambar kira-kira 3 sampai 6 MB di
+database, jauh di bawah batas paket gratis Neon.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+Tahap F: impor Backup JSON lama (bila nanti diperlukan), auto-refresh
+layar berkala, dan antrean offline untuk Catat Pembayaran. Revisi untuk
+tahap A sampai E tetap dikerjakan bertahap.

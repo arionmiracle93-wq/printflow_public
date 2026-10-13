@@ -10,13 +10,7 @@ function applyTheme(dark: boolean) {
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }
 
-/**
- * Tombol pindah tema terang/gelap. Pilihan disimpan di localStorage supaya
- * konsisten setiap kali aplikasi dibuka lagi. Skrip anti-flash di layout
- * yang menentukan tema awal saat load - komponen ini cuma menyinkronkan
- * state tombolnya lalu menangani klik.
- */
-export function ThemeToggle() {
+function useDarkMode() {
   const [isDark, setIsDark] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -34,6 +28,18 @@ export function ThemeToggle() {
     }
   };
 
+  return { isDark, toggle };
+}
+
+/**
+ * Tombol pindah tema terang/gelap. Pilihan disimpan di localStorage supaya
+ * konsisten setiap kali aplikasi dibuka lagi. Skrip anti-flash di layout
+ * yang menentukan tema awal saat load - komponen ini cuma menyinkronkan
+ * state tombolnya lalu menangani klik.
+ */
+export function ThemeToggle() {
+  const { isDark, toggle } = useDarkMode();
+
   return (
     <button
       type="button"
@@ -49,6 +55,28 @@ export function ThemeToggle() {
       ) : (
         <Moon size={18} strokeWidth={2.3} />
       )}
+    </button>
+  );
+}
+
+/**
+ * Tombol tema berbentuk panel lebar untuk sidebar modul invoice. Bentuknya
+ * mengikuti tombol biasa (bukan tombol ikon bundar header) supaya nyambung
+ * dengan daftar menu di atasnya.
+ */
+export function SidebarThemeButton({ className = "" }: { className?: string }) {
+  const { isDark, toggle } = useDarkMode();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? "Pindah ke tema terang" : "Pindah ke tema gelap"}
+      className={`ppi-side-theme ${className}`}
+    >
+      <span>{isDark === null ? "Tema" : isDark ? "Mode Gelap" : "Mode Terang"}</span>
+      <span className="ppi-side-theme-icon" aria-hidden>
+        {isDark ? <Moon size={14} strokeWidth={2.3} /> : <Sun size={14} strokeWidth={2.3} />}
+      </span>
     </button>
   );
 }

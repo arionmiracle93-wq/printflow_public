@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Banknote, Loader2, Plus, Undo2 } from "lucide-react";
+import { AlertTriangle, Banknote, CloudOff, Loader2, Plus, Undo2 } from "lucide-react";
 import { DateFieldID } from "@/components/DateFieldID";
 import { Select } from "@/components/Select";
 import { formatDateTimeID, formatRupiah } from "@/lib/domain";
 import { PAY_METHODS, parseLooseNumber } from "@/lib/invoice-pricing";
+import { parseQueue, readRaw, submitPaymentOrQueue, subscribeQueue } from "@/lib/payment-queue";
 
 export type PanelPayment = {
   id: number;
@@ -46,6 +47,7 @@ export function InvoicePaymentPanel({
   isOwner,
   today,
   defaultMethod,
+  label,
 }: {
   invoiceId: number;
   status: string;
@@ -56,6 +58,8 @@ export function InvoicePaymentPanel({
   isOwner: boolean;
   today: string;
   defaultMethod: string;
+  /** Nomor invoice + pelanggan, untuk daftar antrean offline. */
+  label: string;
 }) {
   const router = useRouter();
   const [amount, setAmount] = useState("");
@@ -68,6 +72,9 @@ export function InvoicePaymentPanel({
   const [notice, setNotice] = useState<string | null>(null);
   const clientRef = useRef(uuid());
 
+  const queueRaw = useSyncExternalStore(subscribeQueue, readRaw, () => "[]");
+  const queued = useMemo(() => parseQueue(queueRaw).filter((x) => x.invoiceId === invoiceId), [queueRaw, invoiceId]);
+  const queuedTotal = queued.reduce((n, x) => n + x.amount, 0);
   const canPay = status === "terbit";
   const value = Math.round(parseLooseNumber(amount));
 
@@ -77,45 +84,34 @@ export function InvoicePaymentPanel({
     if (value <= 0) return setError("Isi nominal pembayaran dulu.");
     setBusy(true);
     try {
-      const send = async (confirmOverpay: boolean) => {
-        const res = await fetch(`/api/invoices/${invoiceId}/payments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: value,
-            method,
-            note,
-            // Tanggal hari ini = pakai jam server saat ini; tanggal lain = tengah hari WIB pada tanggal itu.
-            paidAt: date && date !== today ? `${date}T12:00:00+07:00` : undefined,
-            clientRef: clientRef.current,
-            confirmOverpay,
-          }),
-        });
-        return (await res.json().catch(() => ({}))) as {
-          ok?: boolean;
-          error?: string;
-          code?: string;
-          duplicate?: boolean;
-        };
-      };
-
-      let json = await send(false);
-      if (!json.ok && json.code === "KELEBIHAN_BAYAR") {
-        if (!confirm(`${json.error}\n\nTetap catat sebagai kelebihan bayar?`)) return;
-        json = await send(true);
+      // Waktu pembayaran dicatat dari perangkat saat tombol ditekan (penting bila nanti terkirim belakangan lewat antrean offline).
+      const paidAt = date && date !== today ? `${date}T12:00:00+07:00` : new Date().toISOString();
+      const base = { invoiceId, label, amount: value, method, note, paidAt, ref: clientRef.current };
+      let r = await submitPaymentOrQueue(base);
+      if (r.kind === "rejected" && r.code === "KELEBIHAN_BAYAR") {
+        if (!confirm(`${r.error}\n\nTetap catat sebagai kelebihan bayar?`)) return;
+        r = await submitPaymentOrQueue({ ...base, confirmOverpay: true });
       }
-      if (!json.ok) {
-        setError(json.error ?? "Gagal mencatat pembayaran. Coba lagi.");
+      if (r.kind === "rejected") {
+        setError(r.error || "Gagal mencatat pembayaran. Coba lagi.");
         return;
       }
-      setNotice(json.duplicate ? "Pembayaran ini sudah tercatat sebelumnya (tidak dicatat dobel)." : "Pembayaran tercatat.");
+      if (r.kind === "queued") {
+        setNotice(
+          r.reason === "login"
+            ? "Sesi login habis. Pembayaran disimpan di perangkat ini dan terkirim otomatis setelah login ulang."
+            : "Tidak ada koneksi. Pembayaran disimpan di perangkat ini dan akan dikirim otomatis saat online (tidak akan tercatat dobel).",
+        );
+      } else {
+        setNotice(r.duplicate ? "Pembayaran ini sudah tercatat sebelumnya (tidak dicatat dobel)." : "Pembayaran tercatat.");
+        router.refresh();
+      }
       setAmount("");
       setNote("");
       setDate(today);
       clientRef.current = uuid();
-      router.refresh();
     } catch {
-      setError("Koneksi terputus. Cek internet lalu tekan Catat lagi. Aman, pembayaran tidak akan tercatat dobel.");
+      setError("Terjadi gangguan. Coba lagi sebentar lagi. Aman, pembayaran tidak akan tercatat dobel.");
     } finally {
       setBusy(false);
     }
@@ -194,6 +190,21 @@ export function InvoicePaymentPanel({
           ))}
         </ul>
       )}
+
+      {queued.length ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900">
+          <p className="mb-1 flex items-center gap-1.5 font-bold"><CloudOff size={13} /> Menunggu dikirim ({formatRupiah(queuedTotal)})</p>
+          <ul className="space-y-0.5">
+            {queued.map((q) => (
+              <li key={q.ref} className="flex justify-between gap-2">
+                <span>{q.kind === "dp" ? "DP" : "Bayar"} · {q.method} · {new Date(q.paidAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                <b>{formatRupiah(q.amount)}{q.status === "failed" ? " (perlu ditinjau)" : ""}</b>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1 text-[10.5px] text-amber-800">Terkirim otomatis begitu ada internet. Total di atas belum termasuk jumlah ini.</p>
+        </div>
+      ) : null}
 
       {canPay ? (
         <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/30">

@@ -221,6 +221,20 @@ export function formatRupiah(value: number): string {
   }).format(value || 0);
 }
 
+/**
+ * Nama pelanggan untuk DITAMPILKAN.
+ *
+ * Data customer di invoice tidak wajib diisi, jadi nilainya bisa kosong.
+ * Kolomnya di database tetap NOT NULL (diberi string kosong), karena
+ * mengubah skema berarti perlu migrasi. Semua tempat yang menampilkan
+ * nama customer sebaiknya memakai fungsi ini supaya tidak pernah ada
+ * baris kosong tanpa keterangan - dan supaya layar reader pun tetap
+ * berbunyi jelas.
+ */
+export function customerLabel(name: string | null | undefined): string {
+  return (name ?? "").trim() || "Tanpa nama";
+}
+
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat("id-ID").format(value || 0);
 }

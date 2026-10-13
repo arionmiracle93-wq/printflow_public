@@ -323,6 +323,58 @@ body {
     }
   }
 
+  /* -------------------------------------------------------------
+     SAKELAR ON/OFF (gaya pill)
+     -------------------------------------------------------------
+     Track 44x26, knob putih 20px meluncur dari kiri ke kanan. Warna
+     track saat aktif ditentukan .pf-switch-<tone>; nonaktif selalu
+     abu-abu dan jauh lebih terang dari warna aktif, jadi statusnya
+     terbaca sekilas. */
+  .pf-switch {
+    position: relative;
+    flex: none;
+    width: 44px;
+    height: 26px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid #94a3b8;
+    background: #cbd5e1;
+    cursor: pointer;
+    transition: background-color var(--pf-base) var(--pf-ease), border-color var(--pf-base) var(--pf-ease);
+  }
+
+  .pf-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+    transition: transform var(--pf-base) var(--pf-ease);
+  }
+
+  .pf-switch.on .pf-switch-knob { transform: translateX(20px); }
+  .pf-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pf-switch:focus-visible { outline: 2px solid var(--pf-accent); outline-offset: 2px; }
+
+  .pf-switch-teal.on { background: #0d9488; border-color: #0d9488; }
+  .pf-switch-green.on { background: #16a34a; border-color: #16a34a; }
+  .pf-switch-rose.on { background: #e11d48; border-color: #e11d48; }
+  .pf-switch-sky.on { background: #0284c7; border-color: #0284c7; }
+  .pf-switch-amber.on { background: #d97706; border-color: #d97706; }
+
+  /* Mode gelap: track nonaktif sedikit lebih terang dari latar panel,
+     knob tetap putih supaya tidak ikut gelap. */
+  .dark .pf-switch.off { background: #2c5163; border-color: #3d6a80; }
+  .dark .pf-switch-teal.on { background: #14b8a6; border-color: #14b8a6; }
+  .dark .pf-switch-green.on { background: #22c55e; border-color: #22c55e; }
+  .dark .pf-switch-rose.on { background: #f43f5e; border-color: #f43f5e; }
+  .dark .pf-switch-sky.on { background: #0ea5e9; border-color: #0ea5e9; }
+  .dark .pf-switch-amber.on { background: #f59e0b; border-color: #f59e0b; }
+  .dark .pf-switch-knob { background: #ffffff; }
+
   /* .dark .input di atas memakai shorthand `background` yang menghapus
      gambar panah, jadi gambar & posisinya ditetapkan ulang untuk mode gelap. */
   .dark select.input {
@@ -925,6 +977,7 @@ button, a, [role="button"] {
 .dark .text-teal-600 { color: #38c7b3 !important; }
 .dark .text-teal-700 { color: #4fd8c4 !important; }
 .dark .text-teal-800 { color: #7ee7d6 !important; }
+.dark .text-teal-900 { color: #99f6e4 !important; }
 .dark .bg-teal-50 { background-color: rgba(20,184,166,.14) !important; }
 .dark .bg-teal-100 { background-color: rgba(20,184,166,.22) !important; }
 .dark .border-teal-100 { border-color: rgba(20,184,166,.28) !important; }
@@ -1047,26 +1100,105 @@ button, a, [role="button"] {
 .dark [class*="border-teal-900/"] { border-color: rgba(20,184,166,.3) !important; }
 
 /* ==========================================================
-   MODUL INVOICE - kertas & editor (tahap B2)
-   Kertas SELALU terang seperti lembar cetak asli, meski
-   PrintFlow sedang mode gelap (sama seperti app invoice lama).
+   MODUL INVOICE - kertas, isian, dan jendela (tahap B2)
+   ------------------------------------------------------------
+   Semua permukaan modul ini (kertas dokumen, kotak isian,
+   tombol kecil, jendela) membaca warnanya dari variabel
+   --ppi-*, jadi mode gelap cukup SATU blok override di
+   bawah - tidak perlu menyentuh satu per satu elemen.
+
+   Utility Tailwind di dalam kertas (text-slate-*, bg-white,
+   border-slate-200, dst) sudah otomatis mengikuti tema lewat
+   lapisan adaptasi ".dark ..." di atas. Karena itu setiap
+   angka warna di bawah dipilih terhadap LATAR TEMPATnya:
+   nilai gelap hanya dipakai di atas latar gelap, dan seterusnya.
+   Kontras teks utama (tinta di kertas) >= 12:1, teks sekunder
+   >= 4.6:1 - jauh di atas ambang baca 4.5:1.
+
+   Kertas CETAK/PDF selalu versi terang; lihat blok @media
+   print di akhir bagian ini.
    ========================================================== */
+.ppi-paper,
+.ppi-modal,
+.ppi-side {
+  /* Terang (default) */
+  --ppi-bg: #ffffff;
+  --ppi-fg: #0f172a;
+  --ppi-line: #e2e8f0;
+  --ppi-line-soft: #f1f5f9;
+  --ppi-zebra: #fafcfd;
+  --ppi-fill: #f1f5f9;
+  --ppi-fill-hover: #f1f5f9;
+  --ppi-fill-focus: #ffffff;
+  --ppi-btn-bg: #ffffff;
+  --ppi-btn-ink: #0f766e;
+  --ppi-btn-hover: #ecfeff;
+  --ppi-muted: #5b6b7d;
+  --ppi-placeholder: #94a3b8;
+  --ppi-shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
+  --ppi-accent: #0f766e;
+  --ppi-accent-tint: rgba(13, 148, 136, 0.1);
+  --ppi-accent-tint-strong: rgba(13, 148, 136, 0.16);
+  --ppi-dashed: rgba(20, 184, 166, 0.6);
+  --ppi-panel-line: rgba(13, 148, 136, 0.38);
+  --ppi-panel-bg: #f7fafb;
+  /* Ikon sidebar gaya "outline": kotak ikon hanya garis tepi. */
+  --ppi-side-ico-ink: #0f2f3f;
+  --ppi-side-ico-line: rgba(15, 47, 63, 0.26);
+}
+/* Mode gelap. Warna gelap = terang yang mengikuti mode gelap,
+   supaya tinta di kertas tidak pernah hilang di atas kertas
+   yang juga gelap (persis masalah lama: kertas dipaksa putih
+   sementara teksnya sudah di-adaptasi jadi terang). */
+.dark .ppi-paper,
+.dark .ppi-modal,
+.dark .ppi-side {
+  --ppi-bg: #132a38;
+  --ppi-fg: #eef6f4;
+  --ppi-line: #24485a;
+  --ppi-line-soft: #1d394a;
+  --ppi-zebra: rgba(255, 255, 255, 0.028);
+  --ppi-fill: #1a3444;
+  --ppi-fill-hover: #21414f;
+  --ppi-fill-focus: #1e3c4c;
+  --ppi-btn-bg: #1a3444;
+  --ppi-btn-ink: #5eead4;
+  --ppi-btn-hover: rgba(20, 184, 166, 0.2);
+  --ppi-muted: #a7bcba;
+  --ppi-placeholder: #7a959e;
+  --ppi-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --ppi-accent: #2dd4bf;
+  --ppi-accent-tint: rgba(45, 212, 191, 0.12);
+  --ppi-accent-tint-strong: rgba(45, 212, 191, 0.18);
+  --ppi-dashed: rgba(45, 212, 191, 0.45);
+  --ppi-panel-line: rgba(45, 212, 191, 0.35);
+  --ppi-panel-bg: rgba(255, 255, 255, 0.035);
+  /* Mode gelap: kartu sidebar gelap, jadi ikon putih + garis putih
+     terbaca. Di mode terang ikon memakai tinta gelap - kalau tetap
+     putih, ikonnya hilang di atas kartu putih. */
+  --ppi-side-ico-ink: #ffffff;
+  --ppi-side-ico-line: rgba(255, 255, 255, 0.45);
+}
 .ppi-paper {
   position: relative;
   overflow: hidden;
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #1e293b;
-  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--ppi-line);
+  background: var(--ppi-bg);
+  color: var(--ppi-fg);
+  box-shadow: var(--ppi-shadow);
   color-scheme: light;
 }
+/* Kontrol native di dalam kertas (<select>, kalender, scrollbar)
+   harus ikut gelap, kalau tidak daftar terbuka tampil putih. */
+.dark .ppi-paper,
+.dark .ppi-modal { color-scheme: dark; }
 .ppi-paper::before {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
   height: 7px;
-  background: linear-gradient(90deg, #0d9488 0%, #14b8a6 55%, #f5b41b 55%, #f5b41b 70%, transparent 70%);
+  background: linear-gradient(90deg, #0f766e 0%, #14b8a6 55%, #f5b41b 55%, #f5b41b 70%, transparent 70%);
 }
 .ppi-in {
   width: 100%;
@@ -1078,22 +1210,34 @@ button, a, [role="button"] {
   font: inherit;
   font-size: 13px;
   line-height: 1.4;
-  color: #0f172a;
+  color: var(--ppi-fg);
   outline: none;
   resize: none;
 }
-.ppi-in::placeholder { color: #94a3b8; }
-.ppi-in:hover { background: #f1f5f9; }
-.ppi-in:focus { background: #fff; border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16); }
-.ppi-in.boxed { background: #f1f5f9; border-color: #e2e8f0; }
-.ppi-in.boxed:focus { background: #fff; border-color: #14b8a6; }
+.ppi-in::placeholder { color: var(--ppi-placeholder); }
+.ppi-in:hover { background: var(--ppi-fill-hover); }
+.ppi-in:focus { background: var(--ppi-fill-focus); border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16); }
+.ppi-in.boxed { background: var(--ppi-fill); border-color: var(--ppi-line); }
+.ppi-in.boxed:focus { background: var(--ppi-fill-focus); border-color: #14b8a6; }
 .ppi-num { text-align: right; font-variant-numeric: tabular-nums; }
-.ppi-label { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+.ppi-label { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ppi-muted); margin-bottom: 2px; }
+/* Keterangan paling redup di kertas (mis. "(Sebelum Diskon & Pajak)") memakai
+   text-slate-400, yang di atas kertas putih hanya 2.6:1. Satu tangga lebih
+   gelap supaya tetap terbaca. Di mode gelap aturan ".dark .text-slate-400"
+   yang menang (memakai !important), jadi nilai gelapnya tidak berubah. */
+.ppi-paper .text-slate-400,
+.ppi-modal .text-slate-400 { color: #5b6b7d; }
 .ppi-thead {
   display: none;
-  border-radius: 10px;
-  background: #0d9488;
-  color: #fff;
+  /* Bentuk strip header mengikuti gambar acuan: dua sudut ATAS bulat,
+     dua sudut BAWAH tajam (menempel ke baris pertama). */
+  border-radius: 12px 12px 0 0;
+  /* #0f766e (bukan #0d9488): teks putih 10.5px di atasnya jadi 5.5:1,
+     sebelumnya 3.7:1 - di bawah ambang WCAG AA. Garis terang 1px di
+     tepi atas cuma kilau, bukan latar teks. */
+  background: #0f766e;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: #ffffff;
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -1101,37 +1245,293 @@ button, a, [role="button"] {
 }
 .ppi-row { display: grid; gap: 6px 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ppi-row > .ppi-c-wide { grid-column: 1 / -1; }
-.ppi-mlabel { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; }
+.ppi-mlabel { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ppi-muted); }
+
+/* ------------------------------------------------------------------
+   RAPI-KAN TEKS BARIS SEJAJAR DENGAN TEKS HEADER KOLOMNYA
+   ------------------------------------------------------------------
+   Dua hal yang bikin kolom Melenceng, keduanya sudah ditutup di sini:
+
+   1. Jarak antar kolom dulu menumpuk tiga kali (padding .ppi-thead,
+      padding .ppi-row, lalu padding .ppi-in di dalam sel). Sekarang
+      jarak dipegang satu variabel dan dipakai per sel, jadi teks header
+      dan teks isi baris berhenti pada garis yang sama.
+
+   2. .ppi-thead dan .ppi-row adalah DUA grid terpisah. Track `fr` punya
+      min-width: auto, jadi kolom yang isinya tombol hapus (28px + padding)
+      memaksa treknya melebar ke 48px - seluruh kolom lain ikut mengecil
+      dan teks baris tergeser 3-13px dari judul kolomnya. Karena itu
+      --ppi-cols harus ditulis minmax(0, Nfr), bukan Nfr polos; kolom
+      "aksi" juga dilebihkan (7fr) supaya tombolnya tetap muat.
+
+   --ppi-cell-x : jarak teks ke tepi sel (header & baris)
+   --ppi-btn    : lebar tombol kecil di dalam sel
+   --ppi-slot-gap : jarak teks ke tombol
+
+   Kolom yang isinya memakai tombol (M&sup2; bahan, harga satuan) memakai
+   --ppi-btn dan --ppi-slot-gap yang SAMA di header dan di baris: header
+   menambah kotak kosong sebesar tombol (::after), baris memakai tombol
+   sungguhan. Karena keduanya membaca variabel yang sama, jarak teksnya
+   identik tanpa perlu menebak-nebak angka. */
+.ppi-thead,
+.ppi-row { --ppi-cell-x: 10px; --ppi-btn: 26px; --ppi-slot-gap: 4px; }
+.ppi-row > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
+.ppi-head-slot { display: flex; align-items: center; justify-content: flex-end; gap: var(--ppi-slot-gap); }
+/* Kotak kosong setinggi 0: hanya menyisakan LEBAR tombol (tinggi tidak
+   hilang), jadi strip header tetap setinggi satu baris teks. */
+.ppi-head-slot::after { content: ""; flex: none; width: var(--ppi-btn); height: 0; }
+.ppi-cell-slot { display: flex; align-items: center; gap: var(--ppi-slot-gap); }
 @media (min-width: 768px) {
-  .ppi-thead { display: grid; gap: 8px; padding: 9px 8px; grid-template-columns: var(--ppi-cols); align-items: center; }
-  .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 8px; }
+  .ppi-thead { display: grid; gap: 8px; padding: 9px 0; grid-template-columns: var(--ppi-cols); align-items: center; }
+  .ppi-thead > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
+  .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 0; }
   .ppi-row > .ppi-c-wide { grid-column: auto; }
+  /* Isian di dalam sel tidak menambah padding sendiri. Kalau ditambah,
+     teks baris terdorong 8px dari teks header kolomnya. */
+  .ppi-row .ppi-in { padding-left: 0; padding-right: 0; }
   .ppi-mlabel { display: none; }
 }
-.ppi-rowwrap { border-bottom: 1px solid #f1f5f9; }
-.ppi-rowwrap:nth-child(even) { background: #fafcfd; }
+.ppi-rowwrap { border-bottom: 1px solid var(--ppi-line-soft); }
+.ppi-rowwrap:nth-child(even) { background: var(--ppi-zebra); }
 .ppi-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 8px; border: 1px solid #cbd5e1;
-  background: #fff; color: #0f766e; cursor: pointer;
+  /* Lebar diambil dari --ppi-btn yang sama dengan kotak kosong di header,
+     jadi ruang yang disisakan header tidak mungkin meleset. */
+  width: var(--ppi-btn, 26px); height: var(--ppi-btn, 26px); flex: none;
+  border-radius: 8px; border: 1px solid var(--ppi-line);
+  background: var(--ppi-btn-bg); color: var(--ppi-btn-ink); cursor: pointer;
 }
-.ppi-icon-btn:hover { background: #ecfeff; border-color: #14b8a6; }
-.ppi-icon-btn.on { background: #0d9488; border-color: #0d9488; color: #fff; }
+.ppi-icon-btn:hover { background: var(--ppi-btn-hover); border-color: #14b8a6; }
+.ppi-icon-btn.on { background: #0f766e; border-color: #0f766e; color: #fff; }
 .ppi-thead .ppi-icon-btn { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); color: #fff; width: 22px; height: 22px; }
-.ppi-seg { display: inline-flex; border-radius: 9px; background: #f1f5f9; padding: 2px; }
-.ppi-seg button { border-radius: 7px; padding: 4px 10px; font-size: 11px; font-weight: 800; color: #475569; }
-.ppi-seg button.on { background: #0d9488; color: #fff; }
-.ppi-modal-back { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 23, 42, 0.55); }
-.ppi-modal { width: 100%; max-width: 380px; max-height: 90vh; overflow: auto; border-radius: 18px; background: #fff; color: #0f172a; padding: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); color-scheme: light; }
-.ppi-side-btn {
-  display: flex; width: 100%; align-items: center; gap: 10px; border-radius: 12px; padding: 9px 10px;
-  font-size: 12.5px; font-weight: 700; color: var(--pf-ink); text-align: left;
+.ppi-seg { display: inline-flex; border-radius: 9px; background: var(--ppi-fill); padding: 2px; }
+.ppi-seg button { border-radius: 7px; padding: 4px 10px; font-size: 11px; font-weight: 800; color: var(--ppi-muted); }
+.ppi-seg button.on { background: #0f766e; color: #fff; }
+
+/* Tombol aksi berwarna di dalam kertas & jendela (Tambah Baris, Simpan,
+   Sudah dibayar penuh, ...). Class Tailwind-nya dibiarkan apa adanya
+   supaya struktur komponen tidak berubah; hanya warnanya dinaikkan satu
+   tangga supaya teks putih 12px bold kontrasnya 5.5:1, bukan 3.7:1.
+   Berlaku untuk kedua tema supaya tombol tidak melompat warna saat
+   tema diganti. Teks status (kuning/merah/hijau) TIDAK disentuh di
+   sini - itu sudah diurus lapisan adaptasi ".dark ..." di atas. */
+.ppi-paper .bg-teal-600,
+.ppi-modal .bg-teal-600 { background-color: #0f766e; }
+.ppi-paper .bg-teal-600:hover,
+.ppi-modal .bg-teal-600:hover,
+.ppi-paper .hover\:bg-teal-700:hover,
+.ppi-modal .hover\:bg-teal-700:hover { background-color: #115e59; }
+.ppi-paper .bg-emerald-600,
+.ppi-modal .bg-emerald-600 { background-color: #047857; }
+.ppi-paper .bg-emerald-600:hover,
+.ppi-modal .bg-emerald-600:hover { background-color: #065f46; }
+/* Latar gunshot lebih pekat dari aslinya (#0f172a55) supaya jendela
+   tetap terpisah dari isi halaman, baik di atas kertas terang
+   maupun di atas halaman gelap. */
+.ppi-modal-back { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2, 8, 12, 0.68); }
+.ppi-modal {
+  width: 100%; max-width: 380px; max-height: 90vh; overflow: auto; border-radius: 18px;
+  border: 1px solid var(--ppi-line);
+  background: var(--ppi-bg); color: var(--ppi-fg); padding: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+/* ==========================================================
+   KOMPONEN DESAIN HALAMAN INVOICE (gambar acuan)
+   ------------------------------------------------------------
+   Semua blok di bawah memakai token --ppi-* yang sama dengan
+   kertas, jadi satu blok ".dark" di atas sudah cukup untuk
+   seluruh halaman (kertas + sidebar + panel dalam).
+   ========================================================== */
+
+/* Panel: kartu isi di dalam kertas (metode pembayaran, total,
+   syarat & ketentuan). */
+.ppi-panel {
+  border-radius: 16px;
+  border: 1px solid var(--ppi-line);
+  background: var(--ppi-panel-bg);
+  padding: 14px;
+}
+.ppi-panel + .ppi-panel { margin-top: 10px; }
+
+/* Judul kecil teal di atas panel ("Metode pembayaran", "Syarat
+   & ketentuan", "Data customer"). */
+.ppi-kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ppi-accent);
+}
+/* Kata terakhir pada nama usaha (kop + sidebar). */
+.ppi-accent-word { color: var(--ppi-accent); }
+
+/* Kotak garis-putus teal (Catat Pembayaran, Nomor rekening). */
+.ppi-dashed {
+  border-radius: 14px;
+  border: 1px dashed var(--ppi-dashed);
+  background: transparent;
+}
+.ppi-dashed-btn {
+  display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 14px; border: 1px dashed var(--ppi-dashed);
+  padding: 10px 12px;
+  font-size: 12px; font-weight: 700; color: var(--ppi-accent);
   transition: background-color 0.15s ease;
 }
-.ppi-side-btn:hover { background: rgba(13, 148, 136, 0.1); }
-.ppi-side-btn.active { background: rgba(13, 148, 136, 0.14); color: #0f766e; }
+.ppi-dashed-btn:hover { background: var(--ppi-accent-tint); }
+.ppi-dashed-btn[aria-disabled="true"] { color: var(--ppi-muted); border-color: var(--ppi-line); }
+
+/* Baris syarat & ketentuan: lingkaran centang teal + teks. */
+.ppi-term { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: var(--ppi-fg); }
+.ppi-term + .ppi-term { margin-top: 9px; }
+.ppi-term svg { flex: none; margin-top: 1px; color: var(--ppi-accent); }
+
+/* Kolom kop kanan: nomor / tanggal / jatuh tempo. */
+.ppi-meta { border-radius: 16px; border: 1px solid var(--ppi-line); overflow: hidden; }
+.ppi-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; }
+.ppi-meta-row + .ppi-meta-row { border-top: 1px solid var(--ppi-line-soft); }
+.ppi-meta-label { flex: none; font-size: 12px; font-weight: 700; color: var(--ppi-muted); }
+
+/* Kolom tabel (produk / keterangan) adalah textarea yang tumbuh
+   sendiri. Chrome tetap menggambar scrollbar-nya (ticky panah
+   atas-bawah) walau isinya muat - itu yang bikin panah itu
+   muncul di kanan kolom. Baris scrollbar dimatikan; tinggi
+   textarea tetap diatur dari isinya (lihat grow() di editor). */
+.ppi-in { overflow-y: hidden; scrollbar-width: none; }
+.ppi-in::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* Stempel status (LUNAS / DRAFT / BATAL) yang bisa diseret.
+   Sebelum digeser, posisinya masih dari kelas CSS (kanan atas).
+   -ready : kursor "grab" supaya kelihatan bisa dipindah.
+   -drag  : sedang diseret - opacity diturunkan supaya teks di
+            bawahnya tetap terbaca. */
+.ppi-stamp { touch-action: none; }
+.ppi-stamp-ready { cursor: grab; }
+.ppi-stamp-drag { cursor: grabbing; opacity: 0.4; }
+
+/* Sidebar modul. Tanpa max-height / overflow sama sekali: kartu
+   tumbuh mengikuti isinya, jadi tidak pernah muncul bilah
+   gulir di dalam sidebar. */
+.ppi-side {
+  border-radius: 22px;
+  border: 1px solid var(--ppi-line);
+  background: var(--ppi-bg);
+  color: var(--ppi-fg);
+  box-shadow: var(--ppi-shadow);
+}
+.ppi-side-brand { display: flex; align-items: center; gap: 12px; }
+.ppi-side-logo {
+  display: flex; width: 46px; height: 46px; flex: none; align-items: center; justify-content: center;
+  overflow: hidden; border-radius: 14px; border: 1px solid var(--ppi-line); background: var(--ppi-btn-bg);
+}
+.ppi-side-name { font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--ppi-fg); }
+.ppi-side-name em { font-style: normal; color: var(--ppi-accent); }
+.ppi-side-tag {
+  display: block; margin-top: 3px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ppi-muted);
+}
+.ppi-side-hr { height: 1px; border: 0; background: var(--ppi-line-soft); }
+.ppi-side-mode { border-radius: 15px; border: 1px solid var(--ppi-panel-line); background: var(--ppi-accent-tint); padding: 11px 12px; }
+.ppi-side-select {
+  width: 100%; border-radius: 10px; border: 1px solid var(--ppi-line);
+  background: var(--ppi-fill); color: var(--ppi-fg);
+  padding: 7px 10px; font-size: 12.5px; font-weight: 700;
+}
+.ppi-side-select:disabled { opacity: 0.7; }
+.ppi-side-hint { margin-top: 6px; font-size: 10.5px; line-height: 1.4; color: var(--ppi-muted); }
+.ppi-side-status { font-size: 10.5px; font-weight: 600; color: var(--ppi-muted); }
+.ppi-side-dot { display: inline-block; width: 6px; height: 6px; border-radius: 999px; margin-right: 6px; background: var(--ppi-accent); }
+.ppi-side-theme {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+  border-radius: 12px; border: 1px solid var(--ppi-line); background: var(--ppi-fill);
+  padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--ppi-fg);
+  cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.ppi-side-theme:hover { border-color: var(--ppi-accent); background: var(--ppi-accent-tint); }
+.ppi-side-theme-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9px; background: var(--ppi-accent-tint-strong); color: var(--ppi-accent); }
+
+.ppi-side-btn {
+  display: flex; width: 100%; align-items: center; gap: 12px; border-radius: 13px; padding: 9px 10px;
+  font-size: 13px; font-weight: 700; color: var(--pf-ink); text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ppi-side-btn:hover { background: var(--ppi-accent-tint); }
+.ppi-side-btn.active { background: var(--ppi-accent-tint-strong); color: var(--ppi-accent); }
 .ppi-side-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.ppi-side-btn .ppi-ico { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 9px; background: rgba(13, 148, 136, 0.12); color: #0f766e; flex: none; }
-.ppi-side-btn.danger .ppi-ico { background: rgba(225, 29, 72, 0.1); color: #be123c; }
+/* Ikon menu sidebar: gaya OUTLINE - kotak ikon kosong (hanya garis
+   tepi), ikonnya sendiri berwarna --ppi-side-ico-ink (putih di mode
+   gelap, tinta gelap di mode terang supaya tidak hilang). Tombol
+   berbahaya tetap teksnya merah supaya tanda "hapus/batalkan" tidak
+   hilang, walau ikonnya ikut gaya outline yang sama. */
+.ppi-side-btn .ppi-ico {
+  display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;
+  border-radius: 10px; flex: none;
+  background: transparent;
+  border: 1px solid var(--ppi-side-ico-line);
+  color: var(--ppi-side-ico-ink);
+}
+.ppi-side-btn:hover .ppi-ico { background: var(--ppi-accent-tint); }
+.ppi-side-btn.danger:hover .ppi-ico { background: var(--pf-danger-soft); border-color: var(--pf-danger); color: var(--pf-danger); }
 .ppi-side-btn.danger { color: #be123c; }
-@media print { .ppi-screen-only { display: none !important; } }
+.dark .ppi-side-btn.active { color: #5eead4; }
+.dark .ppi-side-btn.danger { color: #fb7185; }
+
+@media print {
+  .ppi-screen-only { display: none !important; }
+  /* Sidebar, tombol, dan panel kendali adalah chrome aplikasi,
+     bukan bagian dokumen - jangan ikut ke kertas. */
+  .ppi-side { display: none !important; }
+
+  /* Kertas yang dicetak SELALU terang, apa pun tema layarnya.
+     Tombol "Cetak" / "Unduh PDF" aman tanpa aturan ini karena
+     keduanya merender kertas di iframe yang tidak punya kelas
+     .dark (lihat src/lib/invoice-output.ts); blok ini menutup
+     jalan.ctrl + P langsung dari halaman.
+
+     Nilai utility Tailwind yang sudah di-override mode gelap
+     dikembalikan ke versi terang DI DALAM kertas saja, dengan
+     spesipisitas lebih tinggi (.dark .ppi-paper X > .dark X)
+     supaya tidak bocor ke bagian halaman lain. */
+  .dark .ppi-paper {
+    --ppi-bg: #ffffff;
+    --ppi-fg: #0f172a;
+    --ppi-line: #e2e8f0;
+    --ppi-line-soft: #f1f5f9;
+    --ppi-zebra: #fafcfd;
+    --ppi-fill: #f1f5f9;
+    --ppi-fill-hover: #f1f5f9;
+    --ppi-fill-focus: #ffffff;
+    --ppi-btn-bg: #ffffff;
+    --ppi-btn-ink: #0f766e;
+    --ppi-btn-hover: #ecfeff;
+    --ppi-muted: #5b6b7d;
+    --ppi-placeholder: #94a3b8;
+    --ppi-shadow: none;
+    --ppi-accent: #0f766e;
+    --ppi-accent-tint: rgba(13, 148, 136, 0.1);
+    --ppi-accent-tint-strong: rgba(13, 148, 136, 0.16);
+    --ppi-dashed: rgba(20, 184, 166, 0.6);
+    --ppi-panel-line: rgba(13, 148, 136, 0.38);
+    --ppi-panel-bg: #f7fafb;
+    color-scheme: light;
+  }
+  .dark .ppi-paper :is(.text-slate-900, .text-slate-800) { color: #0f172a !important; }
+  .dark .ppi-paper .text-slate-700 { color: #334155 !important; }
+  .dark .ppi-paper :is(.text-slate-600, .text-slate-500) { color: #475569 !important; }
+  .dark .ppi-paper .text-slate-400 { color: #5b6b7d !important; }
+  .dark .ppi-paper :is(.text-teal-600, .text-teal-700) { color: #0f766e !important; }
+  .dark .ppi-paper :is(.text-teal-800, .text-teal-900) { color: #115e59 !important; }
+  .dark .ppi-paper :is(.text-rose-600, .text-rose-700) { color: #be123c !important; }
+  .dark .ppi-paper :is(.text-amber-500, .text-amber-600, .text-amber-700) { color: #b45309 !important; }
+  .dark .ppi-paper :is(.text-amber-800, .text-amber-900) { color: #92400e !important; }
+  .dark .ppi-paper :is(.text-emerald-600) { color: #059669 !important; }
+  .dark .ppi-paper :is(.text-emerald-700, .text-emerald-800) { color: #047857 !important; }
+  .dark .ppi-paper :is(.bg-white, .bg-slate-50, .bg-slate-100) { background-color: #ffffff !important; }
+  .dark .ppi-paper :is(.bg-teal-50, .bg-teal-100) { background-color: #f0fdfa !important; }
+  .dark .ppi-paper :is(.border-slate-200, .border-slate-300) { border-color: #e2e8f0 !important; }
+  .dark .ppi-paper :is(.border-teal-200, .border-teal-300) { border-color: #99f6e4 !important; }
+}
+
+@keyframes ppi-flash-kf { 0% { background-color: rgba(20, 184, 166, 0.28); } 100% { background-color: transparent; } }
+.ppi-flash { animation: ppi-flash-kf 1.6s ease-out; }

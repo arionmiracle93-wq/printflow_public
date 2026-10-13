@@ -451,6 +451,28 @@ export type InvoiceItemRow = typeof invoiceItems.$inferSelect;
 export type PaymentRow = typeof payments.$inferSelect;
 export type InvoiceEventRow = typeof invoiceEvents.$inferSelect;
 
+/**
+ * KATALOG PRODUK INVOICE (pengganti katalog + Supabase di app lama)
+ * Satu daftar bersama untuk semua perangkat. Gambar disimpan terpisah (kolom imageData)
+ * dan TIDAK ikut terbaca saat daftar dimuat; layar mengambilnya lewat /api/invoice-products/[id]/image.
+ */
+export const invoiceProducts = pgTable("invoice_products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: integer("price").notNull().default(0),
+  tiers: jsonb("tiers").$type<InvoiceTierConfig>(),
+  category: text("category"),
+  /** Gambar produk sebagai data URL JPEG/PNG/WebP (dikecilkan di perangkat, maks 400px). Null = tanpa gambar. */
+  imageData: text("image_data"),
+  /** Naik tiap gambar diganti; dipakai agar browser tidak memakai gambar lama dari cache. */
+  imageV: integer("image_v").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type InvoiceProduct = typeof invoiceProducts.$inferSelect;
+
 export type Customer = typeof customers.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type NewOrder = typeof orders.$inferInsert;

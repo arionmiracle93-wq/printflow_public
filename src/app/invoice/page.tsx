@@ -6,7 +6,7 @@ import { InvoiceStatusBadge, PayStatusBadge, ProductionMirrorBadge } from "@/com
 import { InvoiceFrame, InvoiceSidebar } from "@/components/InvoiceSidebar";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { safeDb } from "@/lib/dbcheck";
-import { formatDateID, formatRupiah, jakartaDateISO } from "@/lib/domain";
+import { customerLabel, formatDateID, formatRupiah, jakartaDateISO } from "@/lib/domain";
 import { getInvoiceAccess } from "@/lib/invoice-access";
 import { bankMatch, dueStatus, onlyDigits, type BankMatch } from "@/lib/invoice-due";
 import { DOC_MODES, isDocType, type DocType } from "@/lib/invoice-modes";
@@ -207,7 +207,7 @@ export default async function InvoiceListPage({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-[color:var(--pf-ink)]">{row.number ?? `Draft #${row.id}`}</p>
-                        <p className="truncate text-xs text-slate-500">{row.customerName}</p>
+                        <p className="truncate text-xs text-slate-500">{customerLabel(row.customerName)}</p>
                       </div>
                       {rowMode.showTotals ? <p className="shrink-0 text-sm font-bold text-[color:var(--pf-ink)]">{formatRupiah(row.total)}</p> : null}
                     </div>
