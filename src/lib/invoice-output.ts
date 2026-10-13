@@ -60,10 +60,26 @@ async function buildFrame(): Promise<PaperFrame> {
     }
   });
   const extra = doc.createElement("style");
+  // Gaya ini dipakai OLEH DUA jalur sekaligus (Cetak dan Unduh PDF) karena
+  // keduanya lewat buildFrame(). Jaga supaya tetap SATU sumber; kalau salah
+  // satu jalur punya gaya sendiri, tampilan keduanya pasti berbeda.
   extra.textContent = `
     @page { size: A4; margin: 0; }
-    html, body { margin: 0; background: #fff; }
-    #${PAPER_ID} { box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 10mm 11mm 10mm !important; width: 100% !important; }
+    /* PENTING untuk menyamakan Cetak vs PDF.
+       Browser secara bawaan MENGHAPUS warna latar saat mencetak
+       (print-color-adjust: economy), sedangkan PDF dirender lewat
+       html2canvas yang tetap mempertahankan warnanya. Akibatnya hasil
+       cetak kehilangan kepala tabel teal, garis teal di atas kertas, dan
+       panel bewarna - padahal PDF-nya utuh. "exact" membuat keduanya sama. */
+    html, body {
+      margin: 0; background: #fff;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    #${PAPER_ID} {
+      box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
+      padding: 10mm 11mm 10mm !important; width: 100% !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
     #${PAPER_ID} .mt-6 { margin-top: 14px !important; }
     #${PAPER_ID} .mt-5 { margin-top: 12px !important; }
     #${PAPER_ID} .mt-4 { margin-top: 10px !important; }

@@ -1401,6 +1401,15 @@ button, a, [role="button"] {
 .ppi-in { overflow-y: hidden; scrollbar-width: none; }
 .ppi-in::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
+/* Stempel status (LUNAS / DRAFT / BATAL) yang bisa diseret.
+   Sebelum digeser, posisinya masih dari kelas CSS (kanan atas).
+   -ready : kursor "grab" supaya kelihatan bisa dipindah.
+   -drag  : sedang diseret - opacity diturunkan supaya teks di
+            bawahnya tetap terbaca. */
+.ppi-stamp { touch-action: none; }
+.ppi-stamp-ready { cursor: grab; }
+.ppi-stamp-drag { cursor: grabbing; opacity: 0.4; }
+
 /* Sidebar modul. Tanpa max-height / overflow sama sekali: kartu
    tumbuh mengikuti isinya, jadi tidak pernah muncul bilah
    gulir di dalam sidebar. */
