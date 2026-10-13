@@ -1,6 +1,7 @@
 "use client";
 
 import { Select } from "@/components/Select";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { useEffect, useState } from "react";
 import { KeyRound, Pencil, Plus, ReceiptText, Shield, UserCheck, UserX } from "lucide-react";
 import { roleLabel } from "@/lib/auth-client";
@@ -140,19 +141,22 @@ export function UserManagement() {
             </div>
             <p className="mt-3 break-words text-[11px] text-slate-400">Login terakhir: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString("id-ID") : "Belum pernah"}</p>
             {user.role === "karyawan" ? (
-              <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800/40">
-                <input
-                  type="checkbox"
+              /* Izin ini hidup/mati, jadi pakai sakelar - lebih jelas
+                 daripada kotak centang kecil. Bar <div>, bukan <label>,
+                 karena ToggleSwitch me-render <button>. */
+              <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800/40">
+                <ToggleSwitch
                   checked={user.canInvoice}
                   disabled={busy}
-                  onChange={(e) => void patch(user.id, { canInvoice: e.target.checked })}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-teal-600"
+                  onChange={(next) => void patch(user.id, { canInvoice: next })}
+                  label={`Boleh akses Invoice untuk ${user.name}`}
+                  className="mt-0.5 shrink-0"
                 />
                 <span className="min-w-0">
                   <span className="flex items-center gap-1 font-bold text-[color:var(--pf-ink)]"><ReceiptText size={13} /> Boleh akses Invoice</span>
                   <span className="block text-slate-500">Bisa melihat harga, membuat invoice, dan mencatat pembayaran. Kalau mati, menu Invoice tidak muncul untuk akun ini.</span>
                 </span>
-              </label>
+              </div>
             ) : (
               <p className="mt-3 flex items-center gap-1 text-[11px] text-slate-400"><ReceiptText size={12} /> Owner selalu punya akses Invoice.</p>
             )}

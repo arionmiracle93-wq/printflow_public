@@ -3,6 +3,7 @@
 import { TimeFieldID } from "@/components/TimeFieldID";
 import { ComboInput } from "@/components/ComboInput";
 import { Select } from "@/components/Select";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AlertTriangle, Bot, Building2, Camera, ClipboardList, Phone, Plus, Save, Truck, X } from "lucide-react";
@@ -510,12 +511,11 @@ export function NewOrderForm({
 
           <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-3 md:p-4 dark:border-amber-500/25 dark:bg-amber-500/[0.06]">
             {/* Saklar aktif/nonaktif */}
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-white/70 p-3 dark:bg-white/[0.04]">
-              <input
-                type="checkbox"
+            <div className="flex items-start gap-3 rounded-xl bg-white/70 p-3 dark:bg-white/[0.04]">
+              <ToggleSwitch
+                tone="amber"
                 checked={useOutsource}
-                onChange={(e) => {
-                  const on = e.target.checked;
+                onChange={(on) => {
                   setUseOutsource(on);
                   // Kasus paling umum: satu pekerjaan dilempar utuh ke satu mitra.
                   // Mitra pertama yang masih kosong otomatis memegang semua produk.
@@ -525,7 +525,8 @@ export function NewOrderForm({
                     );
                   }
                 }}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-amber-500"
+                label="Lempar pekerjaan ini ke mitra"
+                className="mt-0.5 shrink-0"
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-[color:var(--pf-ink)] dark:text-slate-100">
@@ -536,7 +537,7 @@ export function NewOrderForm({
                   untuk produk yang berbeda.
                 </span>
               </span>
-            </label>
+            </div>
 
             {!useOutsource ? (
               <p className="mt-3 rounded-xl border border-dashed border-amber-300/70 px-3 py-4 text-center text-xs font-medium text-amber-800/70 dark:border-amber-500/30 dark:text-amber-200/70">

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Building2, CheckCircle2, ImagePlus, Landmark, Loader2, Palette, Plus, Save, Trash2, FileText, XCircle } from "lucide-react";
 import { qrisValidate } from "@/lib/qris";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 import type { BankAccount, InvoiceSettings } from "@/lib/invoice-settings";
 
 type Tab = "usaha" | "bayar" | "dokumen" | "tampilan";
@@ -223,20 +224,24 @@ export function InvoiceSettingsForm({ initial }: { initial: InvoiceSettings }) {
               <input value={dueDays} onChange={(e) => setDueDays(e.target.value.replace(/\D/g, ""))} inputMode="numeric" className="input min-w-0 sm:max-w-40" />
               <span className="mt-1 block text-[11px] text-slate-400">0 = tanpa jatuh tempo. Contoh 7: invoice hari ini jatuh tempo minggu depan. Tanggal tetap bisa diubah di tiap dokumen.</span>
             </label>
-            <label className="flex cursor-pointer items-start gap-2.5 sm:col-span-2">
-              <input type="checkbox" checked={askPaidOnSave} onChange={(e) => setAskPaidOnSave(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal-600" />
-              <span>
+            {/* Sakelar, bukan kotak centang: ini pengaturan hidup/mati, dan sakelar
+                lebih jelas menandai statusnya daripada kotak kecil.
+                Barisnya <div>, bukan <label>, karena ToggleSwitch me-render
+                <button> yang tidak bisa diaktifkan lewat <label for>. */}
+            <div className="flex items-start gap-3 sm:col-span-2">
+              <ToggleSwitch checked={askPaidOnSave} onChange={setAskPaidOnSave} label="Tanya saat menerbitkan Invoice" className="mt-0.5 shrink-0" />
+              <span className="min-w-0">
                 <span className="block text-sm font-bold text-[color:var(--pf-ink)]">Tanya saat menerbitkan Invoice</span>
                 <span className="block text-xs text-slate-500">Saat Terbitkan, tanyakan apakah pembayaran sudah diterima. Kalau ya, langsung dicatat LUNAS.</span>
               </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-2.5 sm:col-span-2">
-              <input type="checkbox" checked={uniqueCode} onChange={(e) => setUniqueCode(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal-600" />
-              <span>
+            </div>
+            <div className="flex items-start gap-3 sm:col-span-2">
+              <ToggleSwitch checked={uniqueCode} onChange={setUniqueCode} label="Kode unik transfer" className="mt-0.5 shrink-0" />
+              <span className="min-w-0">
                 <span className="block text-sm font-bold text-[color:var(--pf-ink)]">Kode unik transfer</span>
                 <span className="block text-xs text-slate-500">Menambah 1 sampai 899 rupiah ke nominal transfer (tetap sama untuk satu nomor dokumen), supaya pembayaran mudah dicocokkan di mutasi bank. Hanya untuk metode Transfer.</span>
               </span>
-            </label>
+            </div>
             {askPaidOnSave ? (
               <label className="min-w-0 sm:col-span-2">
                 <span className="label">Batas nilai ditanya (Rp)</span>
@@ -250,27 +255,27 @@ export function InvoiceSettingsForm({ initial }: { initial: InvoiceSettings }) {
 
       {tab === "dokumen" ? (
         <section className="card space-y-3 p-4">
-          <label className="flex cursor-pointer items-start gap-2.5">
-            <input type="checkbox" checked={showCustomerOnPrint} onChange={(e) => setShowCustomerOnPrint(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal-600" />
-            <span>
+          <div className="flex items-start gap-3">
+            <ToggleSwitch checked={showCustomerOnPrint} onChange={setShowCustomerOnPrint} label="Tampilkan data customer di lembar dokumen" className="mt-0.5 shrink-0" />
+            <span className="min-w-0">
               <span className="block text-sm font-bold text-[color:var(--pf-ink)]">Tampilkan data customer di lembar dokumen</span>
               <span className="block text-xs text-slate-500">Kalau mati, nama dan WhatsApp customer hanya terlihat di layar (bar Data Customer) dan tidak ikut tercetak.</span>
             </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-2.5">
-            <input type="checkbox" checked={showPdfButton} onChange={(e) => setShowPdfButton(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal-600" />
-            <span>
+          </div>
+          <div className="flex items-start gap-3">
+            <ToggleSwitch checked={showPdfButton} onChange={setShowPdfButton} label="Tombol Unduh PDF" className="mt-0.5 shrink-0" />
+            <span className="min-w-0">
               <span className="block text-sm font-bold text-[color:var(--pf-ink)]">Tombol Unduh PDF</span>
               <span className="block text-xs text-slate-500">Menampilkan tombol Unduh PDF di halaman dokumen.</span>
             </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-2.5">
-            <input type="checkbox" checked={showWaButton} onChange={(e) => setShowWaButton(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal-600" />
-            <span>
+          </div>
+          <div className="flex items-start gap-3">
+            <ToggleSwitch checked={showWaButton} onChange={setShowWaButton} label="Tombol Kirim WhatsApp" className="mt-0.5 shrink-0" />
+            <span className="min-w-0">
               <span className="block text-sm font-bold text-[color:var(--pf-ink)]">Tombol Kirim WhatsApp</span>
               <span className="block text-xs text-slate-500">Membagikan PDF + teks pesan lewat WhatsApp. Kalau perangkat tidak bisa berbagi file, PDF diunduh dan WhatsApp dibuka ke nomor pelanggan.</span>
             </span>
-          </label>
+          </div>
           <label className="block min-w-0">
             <span className="label">Syarat &amp; ketentuan bawaan (satu per baris)</span>
             <textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={5} className="input min-w-0" />
