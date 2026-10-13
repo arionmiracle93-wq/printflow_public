@@ -1533,5 +1533,63 @@ button, a, [role="button"] {
   .dark .ppi-paper :is(.border-teal-200, .border-teal-300) { border-color: #99f6e4 !important; }
 }
 
+/* ==================================================================
+   CETAK WAJIB SAMA DENGAN UNDUH PDF
+   ==================================================================
+   Dua jalur itu dibangun dari iframe yang sama (src/lib/invoice-output.ts),
+   tapi dirender dengan media yang berbeda:
+
+     Unduh PDF -> html2canvas merender dalam media LAYAR
+     Cetak     -> browser merender dalam media CETAK
+
+   Media layar selalu 794px (A4), jadi @media (min-width: 768px) ikut
+   cocok dan kertas tampil sebagai TABEL. Media cetak tidak: browser
+   menghitung lebar tampilan dari kotak halaman yang bisa terpotong
+   marginCetak, sehingga min-width tidak cocok dan kertas jatuh ke
+   tata letak HP - kepala tabel hilang (display:none), kolom berubah
+   jadi 2 kolom, dan label M2/Qty/Harga muncul di atas nilainya.
+   Itulah sebabnya hasil cetak terlihat berbeda dari PDF.
+
+   Di bawah ini semua aturan yang bergantung lebar DIPAKSA menjadi
+   bentuk LEBAR tanpa syarat lebar. Kalau kebetulan media cetaknya
+   sudah lebar, aturannya sama persis sehingga tidak saling bertabrakan.
+   Yang tidak ikut dicetak (sidebar, tombol) tetap disembunyikan oleh
+   blok @media print di atas. */
+@media print {
+  /* --- Modul invoice: bentuk tabel, bukan susunan kartu --- */
+  .ppi-thead {
+    display: grid;
+    gap: 8px;
+    padding: 9px 0;
+    grid-template-columns: var(--ppi-cols);
+    align-items: center;
+  }
+  .ppi-thead > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
+  .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 0; }
+  .ppi-row > .ppi-c-wide { grid-column: auto; }
+  /* Isian di dalam sel tidak menambah padding sendiri, supaya teks
+     baris berhenti pada garis yang sama dengan teks header kolomnya. */
+  .ppi-row .ppi-in { padding-left: 0; padding-right: 0; }
+  .ppi-mlabel { display: none; }
+
+  /* --- Utilitas responsif Tailwind yang dipakai DI DALAM kertas.
+         Ditulis apa adanya (tanda : dan [ di-escape) supaya tidak
+         perlu menyentuh JSX sama sekali. Daftar ini harus sama dengan
+         kelas sm:/md: yang ada di src/components/InvoicePaper.tsx. --- */
+  .sm\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+  .sm\:flex-row { flex-direction: row; }
+  .sm\:items-start { align-items: flex-start; }
+  .sm\:justify-between { justify-content: space-between; }
+  .sm\:w-\[330px\] { width: 330px; }
+  .sm\:text-right { text-align: right; }
+  .sm\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  .sm\:max-w-\[190px\] { max-width: 190px; }
+  .md\:py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .md\:justify-end { justify-content: flex-end; }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:ml-auto { margin-left: auto; }
+  .md\:w-\[380px\] { width: 380px; }
+}
+
 @keyframes ppi-flash-kf { 0% { background-color: rgba(20, 184, 166, 0.28); } 100% { background-color: transparent; } }
 .ppi-flash { animation: ppi-flash-kf 1.6s ease-out; }
