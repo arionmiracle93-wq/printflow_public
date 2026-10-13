@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   BadgeCheck,
   Banknote,
-  ChevronDown,
   ChevronRight,
   CircleCheck,
   CreditCard,
@@ -29,6 +28,8 @@ import {
 } from "lucide-react";
 import { DateFieldID } from "@/components/DateFieldID";
 import { AccentLastWord } from "@/components/AccentLastWord";
+import { Select } from "@/components/Select";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { CatalogPicker } from "@/components/CatalogPicker";
 import { AskPaidModal, CustomerModal, M2CalcModal, TierModal, fmtDec } from "@/components/InvoiceEditorModals";
 import { PaperLogo } from "@/components/PaperLogo";
@@ -947,13 +948,18 @@ const cols = mode.showPrices
               </p>
             ) : editingIssued ? null : (
               <div className="ppi-screen-only mt-3 rounded-2xl border border-slate-200 p-3">
-                <label className="flex cursor-pointer items-start gap-2.5">
-                  <input type="checkbox" checked={needsProduction} onChange={(e) => setNeedsProduction(e.target.checked)} className="mt-0.5 h-4 w-4 accent-teal-600" />
-                  <span>
-                    <span className="flex items-center gap-1.5 text-sm font-bold text-slate-800"><Factory size={14} className="text-teal-600" /> Perlu monitoring produksi</span>
-                    <span className="block text-[11px] text-slate-500">Saat invoice diterbitkan, pekerjaan otomatis masuk antrian produksi PrintFlow. Tidak dicentang = transaksi langsung (invoice saja).</span>
-                  </span>
-                </label>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-sm font-bold text-slate-800"><Factory size={14} className="text-teal-600" /> Perlu monitoring produksi</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">Saat invoice diterbitkan, pekerjaan otomatis masuk antrian produksi PrintFlow. Mati = transaksi langsung (invoice saja).</p>
+                  </div>
+                  <ToggleSwitch
+                    checked={needsProduction}
+                    onChange={setNeedsProduction}
+                    label="Perlu monitoring produksi"
+                    className="mt-0.5"
+                  />
+                </div>
                 {needsProduction ? (
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <label className="block">
@@ -979,18 +985,26 @@ const cols = mode.showPrices
                   settings={settings}
                   isOwner={isOwner}
                   methodSlot={
-                    <label className="block">
+                    <div>
                       <span className="ppi-kicker">Metode Pembayaran</span>
                       <span className="relative mt-2 block">
                         <CreditCard size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ppi-accent)]" />
-                        <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className="ppi-in boxed !py-2.5 !pl-9 !pr-8 font-bold">
+                        {/* Pakai Select milik aplikasi, bukan <select> bawaan browser:
+                            panel daftarnya digambar sendiri (tema ikut) dan chevron-nya
+                            cuma satu - <select> asli sudah punya panah sendiri, jadi dua-duanya
+                            sempat tampil bareng (panah ganda). */}
+                        <Select
+                          value={payMethod}
+                          onChange={(e) => setPayMethod(e.target.value)}
+                          className="ppi-in boxed !py-2.5 !pl-9 font-bold"
+                          aria-label="Metode pembayaran"
+                        >
                           {PAY_METHODS.map((m) => (
                             <option key={m} value={m}>{m}</option>
                           ))}
-                        </select>
-                        <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--ppi-accent)]" />
+                        </Select>
                       </span>
-                    </label>
+                    </div>
                   }
                 />
               ) : null}

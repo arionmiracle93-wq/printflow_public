@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BarChart3, FilePlus2, History, Package, ReceiptText, Settings } from "lucide-react";
 import { SidebarThemeButton } from "@/components/ThemeToggle";
+import { Select } from "@/components/Select";
 import { AccentLastWord } from "@/components/AccentLastWord";
 import { DOC_MODES, DOC_TYPES, docModeOf, type DocType } from "@/lib/invoice-modes";
 
@@ -52,7 +53,9 @@ export function InvoiceSidebar({
   const select = (
     <div className="relative">
       <ReceiptText size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[color:var(--ppi-side-ico-ink)]" />
-      <select
+      {/* Select (bukan <select> bawaan) supaya panel pilihannya ikut tema
+          dan chevron-nya cuma satu. */}
+      <Select
         value={docType}
         disabled={modeBehavior === "fixed"}
         onChange={(e) => onModeChange(e.target.value)}
@@ -65,7 +68,7 @@ export function InvoiceSidebar({
             {DOC_MODES[t].label}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 
