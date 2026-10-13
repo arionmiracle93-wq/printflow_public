@@ -52,7 +52,20 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
             <PaperLogo />
             <div className="min-w-0 space-y-0.5 text-xs text-slate-600">
               <p className="break-words text-lg font-extrabold text-slate-900"><AccentLastWord text={settings.businessName} /></p>
-              {addressLines.length ? <p className="flex items-start gap-2"><MapPin size={13} className="mt-0.5 shrink-0 text-[color:var(--ppi-accent)]" /><span className="break-words leading-relaxed">{addressLines.join(", ")}</span></p> : null}
+              {addressLines.length ? (
+                /* Setiap baris alamat jadi baris sendiri. Dulu diringkas
+                   jadi satu kalimat dengan join(", ") sehingga hasil Enter
+                   di Pengaturan hilang begitu disimpan. min-w-0 diperlukan
+                   supaya baris yang panjang tetap bisa wrap di dalam flex. */
+                <p className="flex items-start gap-2">
+                  <MapPin size={13} className="mt-0.5 shrink-0 text-[color:var(--ppi-accent)]" />
+                  <span className="min-w-0">
+                    {addressLines.map((line, i) => (
+                      <span key={i} className="block break-words leading-relaxed">{line}</span>
+                    ))}
+                  </span>
+                </p>
+              ) : null}
               {settings.email ? <p className="flex items-center gap-2"><Mail size={13} className="shrink-0 text-[color:var(--ppi-accent)]" /><span className="break-all">{settings.email}</span></p> : null}
               {settings.phone ? <p className="flex items-center gap-2"><MessageCircle size={13} className="shrink-0 text-[color:var(--ppi-accent)]" />{settings.phone}</p> : null}
             </div>
