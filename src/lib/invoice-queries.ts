@@ -15,7 +15,7 @@ import {
   type InvoiceTierConfig,
   type PaymentRow,
 } from "@/db/schema";
-import { MACHINES, estimateHoursForItems, formatRupiah, jakartaDateISO, orderCode } from "@/lib/domain";
+import { MACHINES, customerLabel, estimateHoursForItems, formatRupiah, jakartaDateISO, orderCode } from "@/lib/domain";
 import { bankMatch, onlyDigits } from "@/lib/invoice-due";
 import { DOC_MODES, isDocType, type DocType } from "@/lib/invoice-modes";
 import { computePayInfo } from "@/lib/invoice-pay";
@@ -149,8 +149,11 @@ export function parseInvoiceInput(raw: unknown): InvoiceInput {
   if (!isDocType(docType)) throw new InvoiceError(400, "JENIS_TIDAK_VALID", "Jenis dokumen tidak dikenal.");
   const mode = DOC_MODES[docType];
 
+  // Data customer OPSIONAL. Kolomnya di database tetap NOT NULL, jadi kosong
+  // disimpan sebagai string kosong, bukan null. Pelanggan tanpa nama tidak
+  // dibuatkan di tabel pelanggan (lihat resolveCustomer) supaya daftar
+  // Pelanggan tidak terganggu baris kosong.
   const customerName = text(body.customerName, 200);
-  if (!customerName) throw new InvoiceError(400, "PELANGGAN_KOSONG", "Nama pelanggan wajib diisi.");
 
   const itemsRaw = Array.isArray(body.items) ? body.items : [];
   if (itemsRaw.length > 200) throw new InvoiceError(400, "ITEM_TERLALU_BANYAK", "Maksimal 200 baris item per invoice.");
@@ -346,6 +349,10 @@ async function nextInvoiceNumber(tx: Tx, docType: string): Promise<string> {
 
 /** Cari pelanggan dengan nama sama (tanpa peduli huruf besar/kecil); belum ada → buat baru. */
 async function resolveCustomer(tx: Tx, input: InvoiceInput): Promise<number | null> {
+  // Invoice boleh tanpa data customer. Kalau begitu jangan sentuh tabel
+  // pelanggan sama sekali - customerId dibiarkan null dan tidak muncul
+  // baris kosong di halaman Pelanggan.
+  if (!input.customerName.trim()) return null;
   if (input.customerId) {
     const found = await tx.select({ id: customers.id }).from(customers).where(eq(customers.id, input.customerId)).limit(1);
     if (found[0]) return found[0].id;
@@ -416,7 +423,7 @@ async function createOrderForInvoice(tx: Tx, invoiceId: number, actor: string): 
   }));
   const title =
     items.length === 0
-      ? `Order ${inv.customerName}`
+      ? `Order ${customerLabel(inv.customerName)}`
       : (items.length === 1 ? items[0].productName : `${items[0].productName} +${items.length - 1} lainnya`).slice(0, 120);
 
   const [created] = await tx

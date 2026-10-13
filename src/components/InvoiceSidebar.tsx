@@ -51,7 +51,7 @@ export function InvoiceSidebar({
   const newHref = `/invoice/baru${docType !== "semua" && docType !== "invoice" ? `?m=${docType}` : ""}`;
   const select = (
     <div className="relative">
-      <ReceiptText size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[color:var(--ppi-accent)]" />
+      <ReceiptText size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[color:var(--ppi-side-ico-ink)]" />
       <select
         value={docType}
         disabled={modeBehavior === "fixed"}

@@ -543,7 +543,8 @@ export function InvoicePaperEditor({
   function requestSubmit(kind: "draft" | "terbit" | "simpan") {
     setError(null);
     setConflict(false);
-    if (!customerName.trim()) return setError("Isi Data Customer dulu: klik bar \"Data Customer\" di bawah tabel.");
+    // Data customer OPSIONAL - dokumen tetap bisa terbit tanpa nama.
+    // Yang wajib tetap isi: minimal satu baris item.
     if (filledCount === 0) return setError("Isi minimal satu baris item.");
     if (kind === "terbit" && mode.showTotals && totals.total <= 0) return setError("Total masih Rp 0. Isi harga dulu sebelum menerbitkan.");
     if (docType === "invoice" && dpValue > totals.total) return setError("DP tidak boleh lebih besar dari total.");
@@ -916,11 +917,15 @@ const cols = mode.showPrices
             <User size={18} className="shrink-0 text-[color:var(--ppi-accent)]" />
             <span className="min-w-0 flex-1">
               <span className="ppi-kicker">Data Customer</span>
-              <span className="block truncate text-sm font-bold text-slate-800">
-                {customerName ? `${customerName}${customerPhone ? ` · ${customerPhone}` : ""}` : "Belum diisi — klik untuk mengisi"}
+              <span className={`block truncate text-sm font-bold ${customerName ? "text-slate-800" : "text-slate-500"}`}>
+                {customerName ? `${customerName}${customerPhone ? ` · ${customerPhone}` : ""}` : "Tidak diisi (opsional)"}
               </span>
               <span className="block text-[10.5px] text-slate-500">
-                {settings.showCustomerOnPrint ? "Ikut tercetak di lembar dokumen." : "Tidak ikut tercetak (bisa diubah di Pengaturan > Dokumen)."}
+                {customerName
+                  ? settings.showCustomerOnPrint
+                    ? "Ikut tercetak di lembar dokumen."
+                    : "Tidak ikut tercetak (bisa diubah di Pengaturan > Dokumen)."
+                  : "Boleh dikosongkan. Klik untuk diisi bila perlu."}
               </span>
             </span>
             <Pencil size={16} className="shrink-0 text-[color:var(--ppi-accent)]" />

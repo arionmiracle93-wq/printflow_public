@@ -3,7 +3,7 @@ import { PaperLogo } from "@/components/PaperLogo";
 import { InvoicePayPanel } from "@/components/InvoicePayPanel";
 import { InvoiceSignature } from "@/components/InvoiceSignature";
 import { AccentLastWord } from "@/components/AccentLastWord";
-import { formatDateID, formatRupiah } from "@/lib/domain";
+import { customerLabel, formatDateID, formatRupiah } from "@/lib/domain";
 import { docModeOf } from "@/lib/invoice-modes";
 import { computePayInfo } from "@/lib/invoice-pay";
 import type { InvoiceDetail } from "@/lib/invoice-queries";
@@ -126,11 +126,19 @@ const cols = mode.showPrices
         <User size={18} className="shrink-0 text-[color:var(--ppi-accent)]" />
         <span className="min-w-0 flex-1">
           <span className="ppi-kicker">Data Customer</span>
-          <span className="block truncate text-sm font-bold text-slate-800">{invoice.customerName}{invoice.customerPhone ? ` · ${invoice.customerPhone}` : ""}</span>
-          <span className="block text-[10.5px] text-slate-500">{settings.showCustomerOnPrint ? "Ikut tercetak di lembar dokumen." : "Tidak ikut tercetak (bisa diubah di Pengaturan > Dokumen)."}</span>
+          <span className={`block truncate text-sm font-bold ${invoice.customerName.trim() ? "text-slate-800" : "text-slate-500"}`}>
+            {customerLabel(invoice.customerName)}{invoice.customerPhone ? ` · ${invoice.customerPhone}` : ""}
+          </span>
+          <span className="block text-[10.5px] text-slate-500">
+            {invoice.customerName.trim()
+              ? settings.showCustomerOnPrint
+                ? "Ikut tercetak di lembar dokumen."
+                : "Tidak ikut tercetak (bisa diubah di Pengaturan > Dokumen)."
+              : "Data customer tidak diisi."}
+          </span>
         </span>
       </div>
-      {settings.showCustomerOnPrint ? (
+      {settings.showCustomerOnPrint && invoice.customerName.trim() ? (
         <div className="mt-3 text-xs text-slate-600">
           <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kepada</p>
           <p className="font-bold text-slate-900">{invoice.customerName}</p>
