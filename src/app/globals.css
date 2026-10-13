@@ -328,8 +328,17 @@ body {
      -------------------------------------------------------------
      Warna arc & track diambil dari token --pf-load-arc /
      --pf-load-track supaya tema terang/gelap tertangani di satu
-     tempat. Berhenti saat "kurangi gyrus" dipilih; busurnya tetap
-     kelihatan sebagai busur, jadi tahu sedang memuat tanpa gerak. */
+     tempat.
+
+     PUTARANNYA SENGAJA TIDAK DIKUTI prefers-reduced-motion.
+     Opsi "kurangi gerak" dari sistem operasi ada untuk
+     menghindari gerak yang memicu mual: geseran besar, parallax,
+     zoom. Cincin 56px yang berputar di tengah layar bukan salah
+     satunya - permukaannya minuscule dan tidak ada zoom atau
+     pergeseran. Yang justru merusak justru MENGHENTIKANNYA:
+     lingkaran yang diam tidak memberi tahu apa-apa bahwa ada
+     yang sedang berjalan, sehingga loading terbaca macet.
+     Jadi cincin ini tetap berputar untuk semua pengguna. */
   @keyframes pf-load-spin-kf {
     to {
       transform: rotate(360deg);
@@ -346,28 +355,6 @@ body {
     animation: pf-load-spin-kf 0.85s linear infinite;
     transform-origin: 50% 50%;
     color: var(--pf-load-arc);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    /* PENTING: jangan mematikan animasinya sama sekali. Lingkaran yang
-       diam tidak memberi tahu apa pun bahwa ada yang sedang berjalan -
-       justru membuat loading ini terlihat macet. Yang dihindari opsi
-       "kurangi gerak" adalah gerak besar yang memicu mual (geseran
-       besar, parallax), bukan umpan balik. Jadi putarannya diganti
-       DENYUT opacity: tetap jelas hidup, tapi tidak berputar. */
-    .pf-load-spin {
-      animation: pf-load-pulse-kf 1.25s ease-in-out infinite;
-    }
-  }
-
-  @keyframes pf-load-pulse-kf {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.3;
-    }
   }
 
   /* -------------------------------------------------------------

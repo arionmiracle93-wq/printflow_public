@@ -134,65 +134,6 @@ export function OrdersSkeleton() {
   );
 }
 
-/**
- * Detail pekerjaan: meniru tata letak 3 kolom di layar lebar
- * (navigasi 232px | isi | foto 380px) dan bilah tab di HP/tablet.
- */
-export function OrderDetailSkeleton() {
-  return (
-    <Loading label="Memuat detail pekerjaan">
-      <div className="xl:grid xl:grid-cols-[232px_minmax(0,1fr)_380px] xl:gap-5">
-        {/* Kolom kiri: navigasi (layar lebar) */}
-        <div className="hidden space-y-2 xl:block">
-          <S className="mb-3 h-3 w-20" />
-          {Array.from({ length: 5 }).map((_, i) => (
-            <S key={i} className={`h-11 w-full ${i === 0 ? "opacity-100" : "opacity-70"}`} />
-          ))}
-        </div>
-
-        {/* Kolom tengah */}
-        <div className="min-w-0 space-y-4">
-          <S className="h-3 w-44" />
-          <div className="card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1 space-y-2">
-                <S className="h-3 w-28" />
-                <S className="h-6 w-3/4" />
-                <S className="h-3.5 w-1/3" />
-              </div>
-              <S className="h-8 w-24 shrink-0 rounded-full" />
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-xl bg-[color:var(--pf-surface-2)] p-3">
-                  <S className="h-2.5 w-16" />
-                  <S className="mt-2 h-4 w-20" />
-                </div>
-              ))}
-            </div>
-            <S className="mt-4 h-2 w-full rounded-full" />
-          </div>
-
-          {/* Bilah tab (HP / tablet) */}
-          <div className="grid grid-cols-5 gap-2 xl:hidden">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <S key={i} className="h-12" />
-            ))}
-          </div>
-
-          <CardLines lines={3} />
-          <CardLines lines={4} />
-        </div>
-
-        {/* Kolom kanan: foto (layar lebar) */}
-        <div className="hidden xl:block">
-          <S className="h-[calc(100vh-6.5rem)] min-h-[420px] w-full rounded-[1.5rem]" />
-        </div>
-      </div>
-    </Loading>
-  );
-}
-
 /** Halaman berisi kumpulan kartu (Pelanggan, Serah Terima). */
 export function CardGridSkeleton({ label, stats = false }: { label: string; stats?: boolean }) {
   return (
