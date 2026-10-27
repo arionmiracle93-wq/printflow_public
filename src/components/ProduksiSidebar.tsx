@@ -81,9 +81,9 @@ function SideRow({
       className={`ppi-side-btn ${active ? "active" : ""}`}
     >
       <span className="ppi-ico">
-        <Icon size={15} />
+        <Icon size={18} strokeWidth={1.75} />
       </span>
-      {item.label}
+      <span className="ppi-side-label">{item.label}</span>
       <CountBadge count={shiftCount} />
     </Link>
   );
@@ -99,15 +99,20 @@ export function ProduksiSidebar() {
   };
 
   return (
-    <aside className="ppi-side pf-side-scroll sticky top-20 hidden w-full flex-col self-start p-4 lg:flex">
+    <aside className="ppi-side ppi-side--produksi pf-side-scroll sticky top-20 hidden w-full flex-col self-start lg:flex">
       <span className="ppi-kicker">Modul Produksi</span>
-      <nav aria-label="Menu Produksi" className="mt-2 space-y-0.5">
+      {/* Ilustrasi dekoratif: dipasang lewat CSS background (bukan <img>)
+          supaya hanya versi yang sesuai mode (terang/gelap) yang diunduh
+          browser, dan tidak perlu dibacakan screen reader. Gambarnya
+          diatur di .ppi-side-hero (globals.css). */}
+      <div className="ppi-side-hero" aria-hidden />
+      <nav aria-label="Menu Produksi" className="ppi-side-nav">
         {NAV_LINKS.map((item) => (
           <SideRow key={item.href} item={item} pathname={pathname} pendingCount={pendingCount} onIntent={prefetch} />
         ))}
       </nav>
-      <hr className="ppi-side-hr my-4" />
-      <nav className="space-y-0.5">
+      <hr className="ppi-side-hr" />
+      <nav className="ppi-side-nav">
         <Link
           href="/pengaturan"
           prefetch={false}
@@ -115,9 +120,9 @@ export function ProduksiSidebar() {
           className={`ppi-side-btn ${pathname === "/pengaturan" ? "active" : ""}`}
         >
           <span className="ppi-ico">
-            <Settings2 size={15} />
+            <Settings2 size={18} strokeWidth={1.75} />
           </span>
-          Pengaturan
+          <span className="ppi-side-label">Pengaturan</span>
         </Link>
       </nav>
     </aside>

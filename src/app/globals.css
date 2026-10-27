@@ -2949,6 +2949,81 @@ button.ppi-dashed:hover { background: var(--ppi-accent-tint); }
 .dark .ppi-side-btn.active { color: #5eead4; }
 .dark .ppi-side-btn.danger { color: #fb7185; }
 
+/* ------------------------------------------------------------------
+   SIDEBAR MODUL PRODUKSI - kartu bergaya referensi desain baru
+   ------------------------------------------------------------------
+   Semua aturan di bawah dibatasi ke .ppi-side--produksi, jadi
+   sidebar Invoice dan menu geser (MobileDrawer) yang juga memakai
+   .ppi-side-btn TIDAK berubah tampilannya.
+   Isi kartu: judul teal, ilustrasi percetakan, daftar menu dengan
+   kotak ikon outline besar, menu aktif berupa pil teal.
+   Kembali ke tampilan lama: hapus kelas "ppi-side--produksi" dan
+   blok .ppi-side-hero di ProduksiSidebar.tsx.
+   ------------------------------------------------------------------ */
+.ppi-side--produksi {
+  padding: 22px 14px 14px;
+  border-radius: 28px;
+  border-width: 1.5px;
+}
+.dark .ppi-side--produksi {
+  border-color: rgba(94, 164, 200, 0.32);
+  background:
+    radial-gradient(120% 55% at 50% 0%, rgba(45, 212, 191, 0.1), transparent 62%),
+    linear-gradient(180deg, #14303f 0%, #10242f 100%);
+}
+.ppi-side--produksi .ppi-kicker {
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+.ppi-side-hero {
+  margin: 6px 0 14px;
+  aspect-ratio: 640 / 277;
+  background: url("/images/produksi-sidebar-hero-light.webp") center / contain no-repeat;
+  pointer-events: none;
+  user-select: none;
+}
+.dark .ppi-side-hero { background-image: url("/images/produksi-sidebar-hero.webp"); }
+.ppi-side-nav { display: flex; flex-direction: column; gap: 4px; }
+.ppi-side--produksi .ppi-side-hr { margin: 12px 6px; }
+.ppi-side--produksi .ppi-side-btn {
+  gap: 14px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 18px;
+  font-size: 14px;
+  letter-spacing: -0.005em;
+}
+.ppi-side--produksi .ppi-side-btn .ppi-ico {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  border-width: 1.5px;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.ppi-side--produksi .ppi-side-btn:hover .ppi-ico { border-color: var(--ppi-accent); }
+.ppi-side--produksi .ppi-side-btn.active { background: var(--ppi-accent-tint-strong); }
+.dark .ppi-side--produksi .ppi-side-btn.active { background: rgba(45, 212, 191, 0.22); }
+.ppi-side--produksi .ppi-side-btn.active .ppi-ico {
+  border-color: color-mix(in srgb, var(--ppi-accent) 60%, transparent);
+  color: var(--ppi-accent);
+}
+.ppi-side--produksi .ppi-side-btn:focus-visible {
+  outline: 2px solid var(--ppi-accent);
+  outline-offset: 2px;
+}
+/* Layar pendek (laptop 768px dst): rapatkan supaya seluruh menu tetap
+   terlihat tanpa harus menggulir kartunya. */
+@media (max-height: 800px) {
+  .ppi-side--produksi { padding-top: 16px; }
+  .ppi-side-hero { width: 82%; margin: 4px auto 10px; }
+  .ppi-side--produksi .ppi-side-btn { padding-block: 4px; }
+  .ppi-side--produksi .ppi-side-btn .ppi-ico { width: 36px; height: 36px; }
+  .ppi-side-nav { gap: 2px; }
+  .ppi-side--produksi .ppi-side-hr { margin-block: 8px; }
+}
+
 @media print {
   .ppi-screen-only { display: none !important; }
   /* Sidebar, tombol, dan panel kendali adalah chrome aplikasi,
