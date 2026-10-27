@@ -75,10 +75,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
         </Link>
       </div>
 
-      {/* FILTER */}
+      {/* FILTER — satu baris rapi di layar lebar: tab scope di kiri, lalu
+          kotak cari (sedikit lebih longgar) + status + mesin + tombol Filter.
+          Kontrol diberi lebar fleksibel setara sehingga mengisi satu garis
+          saat muat dan tumpuk rapi baris demi baris saat tidak muat -
+          menggantikan flex-wrap acak yang membuat baris ikut "menggantung". */}
       <div className="card p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-xl bg-slate-100 p-1">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex shrink-0 rounded-xl bg-slate-100 p-1">
             {TABS.map((tab) => (
               <Link
                 key={tab.key}
@@ -91,15 +95,15 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
               </Link>
             ))}
           </div>
-          <form className="flex flex-1 flex-wrap items-center gap-2" action="/pesanan" method="get">
+          <form className="flex min-w-[260px] flex-1 flex-wrap items-center gap-2" action="/pesanan" method="get">
             <input type="hidden" name="scope" value={scope} />
             <input
               name="q"
               defaultValue={q}
               placeholder="Cari kode / nama pekerjaan / pelanggan…"
-              className="input sm:max-w-xs"
+              className="input min-w-[160px] flex-[1.6] sm:max-w-[300px]"
             />
-            <Select name="status" defaultValue={status} className="input sm:max-w-[190px]">
+            <Select name="status" defaultValue={status} className="input min-w-[140px] flex-1 sm:max-w-[190px]">
               <option value="all">Semua status</option>
               {STATUSES.map((s) => (
                 <option key={s.key} value={s.key}>
@@ -107,7 +111,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 </option>
               ))}
             </Select>
-            <Select name="machine" defaultValue={machine} className="input sm:max-w-[200px]">
+            <Select name="machine" defaultValue={machine} className="input min-w-[150px] flex-1 sm:max-w-[200px]">
               <option value="all">Semua mesin</option>
               {MACHINES.map((m) => (
                 <option key={m} value={m}>
@@ -115,7 +119,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 </option>
               ))}
             </Select>
-            <button type="submit" className="btn-ghost inline-flex items-center gap-1.5">
+            <button type="submit" className="btn-ghost inline-flex shrink-0 items-center gap-1.5">
               <Search size={14} /> Filter
             </button>
           </form>

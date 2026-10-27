@@ -16,7 +16,7 @@ export function DashboardSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="pf-kpi relative py-3 pl-4 pr-2 md:pl-6 xl:pl-5">
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 md:gap-x-3.5">
-              <div className="pf-skel row-start-1 h-8 w-8 shrink-0 rounded-lg md:h-9 md:w-9" />
+              <div className="pf-skel row-start-1 h-7 w-7 shrink-0 rounded-lg" />
               <div className="row-start-1">
                 <div className="pf-skel h-2.5 w-16" />
                 <div className="pf-skel mt-2 h-6 w-12" />

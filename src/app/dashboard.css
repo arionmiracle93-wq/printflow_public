@@ -79,21 +79,31 @@
   }
 
   /* Strip 6 segaris milik dashboard produksi (.pf-kpi-strip). Kolom isi
-     menyusut ±248px karena sidebar, jadi huruf label & angka ikut lebar
-     layar mengecil (clamp), dan padding kiri kartu dirapatkan. Kelas strip
-     ini hanya dipasang di /produksi (+ skeleton); modul Invoice memakai
-     grid 4 kolom sendiri dan tidak tersentuh. */
-  @media (min-width: 1024px) and (max-width: 1535.98px) {
+     menyusut ±248px karena sidebar dan TIDAK pulih di layar super lebar
+     (max-width konten 1440 membuat lebar kartu tetap ±180px ke atas),
+     jadi aturan ini berlaku di semua ukuran >=1024 dengan skala pas:
+     huruf label & angka mengecil, padding kiri + jarak kolom dirapatkan,
+     dan ikon dikecilkan sedikit supaya teks tidak menabrak garis pemisah.
+     Kelas strip hanya dipasang di /produksi (+ skeleton); modul Invoice
+     tetap memakai grid 4 kolom sendiri dan tidak tersentuh. */
+  @media (min-width: 1024px) {
     .pf-kpi-strip .pf-kpi {
       padding-left: 0.875rem;
     }
 
-    .pf-kpi-strip .pf-kpi-label {
-      font-size: clamp(9px, 0.72vw, 11px);
+    .pf-kpi-strip .pf-kpi > div:first-child {
+      column-gap: 10px;
     }
-  }
 
-  @media (min-width: 1024px) and (max-width: 1439.98px) {
+    .pf-kpi-strip .pf-kpi svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .pf-kpi-strip .pf-kpi-label {
+      font-size: clamp(8.5px, 0.6vw, 10px);
+    }
+
     .pf-kpi-strip .pf-kpi-value {
       font-size: clamp(12.5px, 1.02vw, 17px);
     }
