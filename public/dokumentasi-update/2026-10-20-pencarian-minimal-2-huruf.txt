@@ -1,0 +1,58 @@
+PRINT FLOW - PENCARIAN KATALOG BARU JALAN SETELAH 2 HURUF
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Mengetik 1 huruf saja (mis. "x") membuat hampir semua produk ikut
+muncul karena huruf itu ada di banyak kata ("flexi", "box", dst).
+Sekarang pencarian baru bekerja setelah minimal 2 huruf diketik.
+
+Dengan 1 huruf:
+- Halaman Katalog dan jendela Katalog di editor: semua produk tetap
+  tampil (belum disaring), dengan petunjuk "Ketik minimal 2 huruf
+  untuk mencari".
+- Saran produk saat mengetik nama produk di baris invoice: belum
+  muncul sampai huruf ke-2.
+
+Mulai 2 huruf ("ba", "a3", "60") semuanya bekerja seperti biasa,
+termasuk sinonim (banner = spanduk) dan ukuran (60x90 = 60 x 90).
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/lib/product-search.ts
+   - Konstanta MIN_SEARCH_CHARS = 2. Kata kunci yang setelah
+     dinormalisasi kurang dari 2 karakter dianggap belum mencari.
+     Untuk mengubah batas, cukup ganti angka ini.
+
+2. src/lib/invoice-catalog-match.ts
+   - Saran produk saat mengetik memakai batas yang sama.
+
+3. src/components/CatalogPicker.tsx dan CatalogManager.tsx
+   - Petunjuk kecil saat baru 1 huruf diketik.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Buka Katalog, ketik "x" -> semua produk tetap tampil + petunjuk.
+2. Ketik "xb" atau "ba" -> daftar menyaring.
+3. Di editor invoice, ketik 1 huruf di kolom Nama produk -> belum ada
+   saran; huruf ke-2 -> saran muncul.
+
+===============================================================
+FILE YANG DIUBAH
+===============================================================
+
+- src/lib/product-search.ts
+- src/lib/invoice-catalog-match.ts
+- src/components/CatalogPicker.tsx
+- src/components/CatalogManager.tsx
+- public/dokumentasi-update/2026-10-20-pencarian-minimal-2-huruf.txt (baru)
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.

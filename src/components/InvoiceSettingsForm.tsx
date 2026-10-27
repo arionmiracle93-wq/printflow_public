@@ -2,35 +2,38 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Building2, CheckCircle2, ImagePlus, Landmark, Loader2, Palette, Plus, Save, Trash2, FileText, XCircle } from "lucide-react";
+import { CheckCircle2, ImagePlus, Loader2, Plus, Save, Trash2, XCircle } from "lucide-react";
 import { qrisValidate } from "@/lib/qris";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
+import { useNavPengaturan, BAGIAN_ITEMS } from "@/components/SettingsNav";
 import type { BankAccount, InvoiceSettings } from "@/lib/invoice-settings";
-
-type Tab = "usaha" | "bayar" | "dokumen" | "tampilan";
-
-const TABS: { key: Tab; label: string; icon: typeof Building2 }[] = [
-  { key: "usaha", label: "Usaha", icon: Building2 },
-  { key: "bayar", label: "Bayar", icon: Landmark },
-  { key: "dokumen", label: "Dokumen", icon: FileText },
-  { key: "tampilan", label: "Tampilan", icon: Palette },
-];
 
 function thousands(raw: string): string {
   const digits = raw.replace(/\D/g, "");
   return digits ? Number(digits).toLocaleString("id-ID") : "";
 }
 
-/** Pengaturan Invoice 4 tab (Usaha, Bayar, Dokumen, Tampilan) seperti app lama. Khusus Owner. */
+/** Pengaturan Invoice 4 bagian (Usaha, Bayar, Dokumen, Tampilan) seperti app lama. Khusus Owner. */
 export function InvoiceSettingsForm({ initial }: { initial: InvoiceSettings }) {
-  const [tab, setTab] = useState<Tab>("usaha");
+  // Bagian aktif datang dari daftar di kiri (SettingsShell), bukan
+  // dari state milik form ini. Empat bagian menulis ke satu row yang
+  // sama dan dipaketkan jadi satu tombol Simpan, jadi formnya harus
+  // tetap satu instance: kalau bagian jadi URL, tiap klik bikin
+  // instance baru dan isian yang belum disimpan ikut hilang.
+  const { bagian: tab } = useNavPengaturan();
+  // Judul isi mengikuti bagian yang aktif di daftar kiri. Dulu
+  // judulnya selalu "Invoice" lalu diikuti deretan tab di
+  // bawahnya; sekarang tidak ada deretan tab, jadi kalau judulnya
+  // tetap "Invoice" orang tidak akan tahu sedang membuka bagian yang
+  // sedang dibuka.
+  const bagianAktif = BAGIAN_ITEMS.find((b) => b.nilai === tab) ?? BAGIAN_ITEMS[0];
+  const IkonBagian = bagianAktif.Ikon;
   const [businessName, setBusinessName] = useState(initial.businessName);
   const [address, setAddress] = useState(initial.address);
   const [email, setEmail] = useState(initial.email);
   const [phone, setPhone] = useState(initial.phone);
   const [banks, setBanks] = useState<BankAccount[]>(initial.banks);
   const [paymentNote, setPaymentNote] = useState(initial.paymentNote);
-  const [dueDays, setDueDays] = useState(String(initial.dueDays));
   const [askPaidOnSave, setAskPaidOnSave] = useState(initial.askPaidOnSave);
   const [askPaidThreshold, setAskPaidThreshold] = useState(initial.askPaidThreshold ? thousands(String(initial.askPaidThreshold)) : "");
   const [qris, setQris] = useState(initial.qris);
@@ -114,7 +117,6 @@ export function InvoiceSettingsForm({ initial }: { initial: InvoiceSettings }) {
           phone,
           banks,
           paymentNote,
-          dueDays: Number(dueDays) || 0,
           askPaidOnSave,
           askPaidThreshold: Number(askPaidThreshold.replace(/\D/g, "")) || 0,
           qris,
@@ -137,21 +139,33 @@ export function InvoiceSettingsForm({ initial }: { initial: InvoiceSettings }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1.5 overflow-x-auto pb-1" role="tablist">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.key}
-            onClick={() => setTab(t.key)}
-            className={`chip shrink-0 gap-1.5 px-3.5 py-2 text-xs font-bold ${
-              tab === t.key ? "border-teal-500 bg-teal-500 text-white" : "border-slate-200 bg-white text-slate-600"
-            }`}
-          >
-            <t.icon size={13} /> {t.label}
-          </button>
-        ))}
+      {/* Pemilih bagian (Usaha / Bayar / Dokumen / Tampilan) tidak
+          digambar di sini. Dia hidup di daftar kiri milik
+          SettingsShell, bersama pemilih area Print Flow / Invoice.
+
+          Yang pernah ada di sini: deretan tab segmented, dengan alasan
+          "di 320px tab Tampilan keluar layar sehingga orang mengira
+          hanya ada tiga tab". Masalahnya memang selesai, tapi
+          pengorbanannya navigasi dua tingkat berubah jadi dua deretan
+          yang bertumpuk dan sama-sama memakan lebar layar penuh,
+          padahal isinya cuma daftar pendek.
+
+          Sekarang jadi satu daftar di kiri: di layar sempit enam
+          butirnya masuk kisi dua kolom tanpa ada yang keluar layar,
+          dan di layar lebar daftar duduk di samping isinya.
+
+          Karena bagian tidak lagi punya state sendiri, form ini
+          juga tidak punya state bagian. Empat bagian tetap satu
+          instance form yang sama, jadi mengetik di Usaha lalu
+          menggeser ke Bayar tidak menghapus apa pun. */}
+
+      <div>
+        <h2 className="section-title flex items-center gap-2">
+          <IkonBagian size={18} strokeWidth={2.2} /> {bagianAktif.label}
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Identitas usaha, rekening, dan aturan dokumen. Berlaku untuk semua jenis dokumen.
+        </p>
       </div>
 
       {tab === "usaha" ? (
@@ -219,11 +233,6 @@ export function InvoiceSettingsForm({ initial }: { initial: InvoiceSettings }) {
           </section>
 
           <section className="card grid gap-3 p-4 sm:grid-cols-2">
-            <label className="min-w-0 sm:col-span-2">
-              <span className="label">Jatuh tempo bawaan (hari sejak tanggal dokumen)</span>
-              <input value={dueDays} onChange={(e) => setDueDays(e.target.value.replace(/\D/g, ""))} inputMode="numeric" className="input min-w-0 sm:max-w-40" />
-              <span className="mt-1 block text-[11px] text-slate-400">0 = tanpa jatuh tempo. Contoh 7: invoice hari ini jatuh tempo minggu depan. Tanggal tetap bisa diubah di tiap dokumen.</span>
-            </label>
             {/* Sakelar, bukan kotak centang: ini pengaturan hidup/mati, dan sakelar
                 lebih jelas menandai statusnya daripada kotak kecil.
                 Barisnya <div>, bukan <label>, karena ToggleSwitch me-render

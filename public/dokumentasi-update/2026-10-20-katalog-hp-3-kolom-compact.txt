@@ -1,0 +1,56 @@
+PRINT FLOW - KATALOG DI HP: 3 PRODUK PER BARIS (COMPACT)
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Di HP, daftar produk di halaman Katalog dan di jendela Katalog
+(editor invoice) sekarang 3 kartu per baris (sebelumnya 2) dengan
+kartu yang lebih ringkas, jadi lebih banyak produk terlihat tanpa
+menggulir.
+
+Di HP kartu menampilkan: gambar, lencana kategori, nama (maks 2
+baris), harga, dan lencana tier. KETERANGAN produk disembunyikan
+di HP supaya kartu tidak sesak; keterangan tetap tampil di tablet
+dan desktop, dan tetap bisa dilihat saat produk dibuka/diubah.
+
+Tablet dan desktop tidak berubah: sm = 3 kolom, lg = 4 kolom,
+xl = 5 kolom (halaman Katalog); jendela Katalog sm = 3, md = 4.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/components/CatalogParts.tsx (ProductCard)
+   - Di HP: sudut, jarak dalam, lencana kategori, centang pilih,
+     nama (11.5px), harga (11.5px), dan lencana tier lebih kecil.
+   - Baris harga + lencana tier boleh turun baris bila sempit.
+   - Keterangan produk disembunyikan di HP (max-sm).
+   - Ukuran sm ke atas sama seperti sebelumnya.
+
+2. src/components/CatalogManager.tsx
+   - Grid: 3 kolom di HP, jarak antar-kartu lebih rapat.
+
+3. src/components/CatalogPicker.tsx
+   - Grid 3 kolom di HP; padding jendela di HP dikecilkan (12px)
+     supaya 3 kartu muat lebih lega.
+
+4. public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Buka Katalog di HP: tiap baris 3 produk; nama dan harga terbaca.
+2. Produk dengan nama panjang: nama terpotong 2 baris, tidak
+   merusak lebar kartu.
+3. Mode Pilih (Owner): centang tampil di pojok kanan atas kartu.
+4. Editor invoice -> tombol Katalog: jendela juga 3 kolom.
+5. Buka di tablet/desktop: tampilan sama seperti sebelumnya.
+
+Jika 3 kolom terasa terlalu rapat di HP kecil, ukuran font ada di
+ProductCard (text-[11.5px]); jumlah kolom ada di grid-cols-3.

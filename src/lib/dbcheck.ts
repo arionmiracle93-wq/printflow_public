@@ -37,6 +37,11 @@ export const REQUIRED_COLUMNS: { table: string; column: string }[] = [
   { table: "users", column: "can_invoice" },
   { table: "invoices", column: "doc_type" },
   { table: "invoices", column: "needs_production" },
+  // Harga fleksibel katalog (pricing_mode + price_presets) ditambahkan lewat /api/setup.
+  { table: "invoice_products", column: "pricing_mode" },
+  { table: "invoice_products", column: "price_presets" },
+  // Teks pengganti gambar kartu (image_text) ditambahkan lewat /api/setup.
+  { table: "invoice_products", column: "image_text" },
 ];
 
 /**

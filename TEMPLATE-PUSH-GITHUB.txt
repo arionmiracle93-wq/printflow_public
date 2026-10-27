@@ -1,0 +1,173 @@
+==========================================================================
+ TEMPLATE SUMMARY PUSH KE GITHUB  -  Print Flow
+==========================================================================
+
+Kegunaan:
+  Setiap kali ada perubahan yang siap di-push, salin bagian "ISI SIAP
+  SALIN" di bawah, ganti tanda kurung siku, lalu tempel ke kolom commit
+  message atau PR description di GitHub Desktop / GitHub.
+
+  Tidak perlu deskripsi panjang. Yang penting: orang lain (atau boss
+  sendiri 3 bulan lagi) bisa memahami KENAPA perubahan ini ada, bukan
+  hanya melihat daftar file berubah.
+
+--------------------------------------------------------------------------
+ ATURAN BENTUK COMMIT MESSAGE
+--------------------------------------------------------------------------
+  - Satu commit = satu tujuan. Kalau ada dua tujuan, buat dua commit.
+  - Judul: maksimal 7 kata, huruf kecil, tanpa titik di akhir.
+    Contoh: "dropdown operator dari daftar karyawan"
+  - Isi commit message: pakai bagian "Isi Commit" di bawah, bukan
+    judul saja. Di GitHub Desktop: centang kotak "Create a new commit
+    message", lalu isi judul, enter, enter, lalu isi.
+
+--------------------------------------------------------------------------
+ ISI SIAP SALIN  (struktur yang dipakai seterusnya)
+--------------------------------------------------------------------------
+
+<C Judul commit, misal: dropdown operator dari daftar karyawan>
+
+<Ringkasan 1-3 baris. Jawab: masalah apa yang diselesaikan, bukan
+file mana yang diubah. Hindari kalimat seperti "menambahkan fitur X".>
+
+Yang berubah:
+  - <perubahan 1, satu baris, boleh mulai dengan kata kerja>
+  - <perubahan 2>
+  - <perubahan 3>
+
+Kenapa begitu:
+  <Alasan singkat di balik keputusan. Kalau ada pilihan lain yang
+  dipertimbangkan lalu ditolak, sebutkan di sini - ini bagian yang
+  paling berharga enam bulan kemudian.>
+
+Cara memverifikasi:
+  - <apa yang diuji, dan apa hasilnya - bukan sekadar "sudah dites">
+  - Bila tidak bisa diuji lokal, tulis JUJUR apa yang belum
+    terverifikasi, bukan menyalin kalimat yang terdengar meyakinkan>
+
+Yang tidak berubah:
+  - <batasan penting: fitur apa yang sengaja tidak ikut, atau
+    perilaku lama yang sengaja dipertahankan>
+  - bila tidak ada, tulis "tidak ada".
+
+Dampak ke pengguna:
+  <apa yang bedanya bagi pemakai dalam keseharian. Satu-dua kalimat.
+  Kalau tidak ada dampak yang dirasakan, tulis "tidak ada".>
+
+Catatan deploy:
+  - <apakah perlu hard refresh, jalankan /api/setup, atau cukup
+    redeploy otomatis>
+  - hapus baris ini kalau tidak ada kebutuhan khusus
+
+==========================================================================
+ CHECKLIST SEBELUM PUSH
+==========================================================================
+  [ ] npm run build
+        -> harus "Compiled successfully"
+  [ ] npm run lint
+        -> harus 14 problems (13 errors, 1 warning)
+           Angka lain berarti ada masalah baru.
+  [ ] git status --short
+        -> tidak ada file uji (.uji-harness) ikut
+  [ ] git diff -- src/proxy.ts src/app/dashboard.css \
+                  src/lib/invoice-access.ts
+        -> kosong. Tiga file itu tidak boleh diubah.
+  [ ] tidak ada karakter aneh (CJK/Siril/Kana) di komentar baru
+  [ ] semua klaim di "Cara memverifikasi" benar-benar dijalankan
+
+==========================================================================
+ CONTOH YANG SUDAH PAKAI
+==========================================================================
+ Judul commit 1: data customer tidak bisa diklik di layar lebar
+
+   Ringkasan:
+     Kotak "Data Customer" di editor invoice adalah <div> biasa, dan
+     satu-satunya cara membuka jendela ubah customer ada tombol pensil
+     di kepala EditRow - yang disembunyikan di lg ke atas. Di desktop
+     kotaknya tampil, tapi isinya tidak punya satu pun elemen yang bisa
+     diklik.
+
+   Yang berubah:
+     - Kotak Data Customer jadi <button> dengan type="button".
+     - Ikon pensil di dalamnya diberi aria-hidden, karena sudah
+       tercakup di aria-label tombolnya.
+     - Aturan scrollbar .ppi-in tidak disentuh.
+
+   Kenapa begitu:
+     Yang terpotong di kepala EditRow adalah bagian yang benar-benar
+     interaktif. Memindahkan seluruh halaman jadi Client Component akan
+     memutus akses database-nya, jadi hanya potongan kecil itu yang
+     dipisah ke komponen sendiri.
+
+   Cara memverifikasi:
+     - InvoicePaperEditor dan EditRow asli dirender di browser pada
+       375 / 700 / 1024 / 1440 px, lalu diukur dengan
+       elementFromPoint (bukan .click(), karena .click() melewati
+       hit-test sehingga tidak membuktikan apa pun).
+     - Sebelum: 700px -> baris lenyap. 1024 dan 1440px -> kotak ada
+       tapi 0 elemen yang bisa diklik.
+     - Sesudah: semua lebar bisa diketuk, modal terbuka, nama
+       tersimpan, modal menutup sendiri.
+     - Temuan bonus: rentang 640-1023px sebelumnya sama sekali tidak
+       menampilkan baris ini, karena kepala disembunyikan mulai 640px
+       sementara isinya baru dibuka permanen oleh kelas lg:block
+       (1024px). Jadi keduanya tersembunyi di antaranya.
+
+   Yang tidak berubah:
+     - Tampilan desktop 1024px ke atas tetap seperti sebelumnya: isi
+       terbuka, kepala tidak terlihat.
+     - src/proxy.ts, dashboard.css, dan invoice-access.ts tidak diubah.
+
+   Dampak ke pengguna:
+     Di desktop, mengetuk "Data Customer" sekarang membuka jendela ubah
+     customer. Di tablet, baris ini tidak lagi lenyap.
+
+--------------------------------------------------------------------------
+ Judul commit 2: pencarian nominal tidak lagi melebar
+
+   Ringkasan:
+     Mengetik "5000" di kotak cari ikut cocok dengan invoice Rp 75.000
+     dan Rp 25.000, karena "75000" memang berakhir dengan "5000".
+     Cullocokan itu melewati titik ribuan, dan tidak ada yang membaca
+     "Rp 75.000" sebagai mengandung "5000".
+
+   Yang berubah:
+     - Pencocokan lewat "akhiran" hanya boleh kalau jumlah digit yang
+       diketik habis dibagi 3.
+     - Dua komentar kode yang masih menyebut aturan lama diperbarui.
+
+   Kenapa begitu:
+     Tiap kelompok ribuan tepat tiga digit, jadi "habis dibagi 3" adalah
+     batas yang tepat. Invoice Rp 5.000 tidak ikut hilang: "5000" tetap
+     menemukannya lewat cabang cocok persis. Yang hilang hanya
+     kecocokan yang muncul karena salah baca kelompok ribuan.
+
+   Cara memverifikasi:
+     - 20 kasus fungsi bankMatch diuji satu per satu (cocok persis,
+       kode unik, akhiran sah, akhiran menyeberangi titik, input
+       kosong).
+     - Semua sesuai harapan.
+
+   Yang tidak berubah:
+     - Pencocokan kode unik 1-3 digit.
+     - Pencocokan lewat nominal transfer (sisa tagihan).
+
+   Dampak ke pengguna:
+     Mengetik nominal hanya menemukan invoice dengan nominal yang
+     benar-benar sama atau berakhiran utuh (500.000, 1.500.000).
+
+==========================================================================
+ CATATAN PENTING SOAL SUMMARY
+==========================================================================
+  1. Jangan menulis klaim yang tidak diuji. Kalau tidak bisa diuji
+     (misalnya tidak ada akses database), tulis itu di bagian "Cara
+     memverifikasi" sebagai kekurangan, bukan disembunyikan.
+  2. Kalau tes pertama gagal, periksa dulu apakah tesnya yang salah
+     sebelum menyentuh kodenya. Sudah berkali-kali kejadian: harness
+     sendiri yang bocor (referensi DOM basi, Request dengan URL
+     relatif, mock Cache API yang tidak konsisten).
+  3. Kalau ada file yang SENGAJA tidak ikut diubah (proxy.ts,
+     dashboard.css, invoice-access.ts), sebutkan di bagian "Yang tidak
+     berubah" supaya tidak ada yang mengira terlewat.
+  4. Angka baseline yang harus tetap: lint 14 problems, build sukses.
+     Keduanya dicek setiap kali, bukan sesekali.

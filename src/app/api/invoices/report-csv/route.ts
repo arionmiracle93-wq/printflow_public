@@ -2,7 +2,7 @@ import { jakartaDateISO } from "@/lib/domain";
 import { requireInvoiceAccess } from "@/lib/invoice-access";
 import { invoiceFailure } from "@/lib/invoice-api";
 import { buildPeriod } from "@/lib/invoice-period";
-import { getExportRows, getReport, periodLabelForCsv, toCsv } from "@/lib/invoice-reports";
+import { getExportRows, getReport, getReportLite, periodLabelForCsv, toCsv } from "@/lib/invoice-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +17,8 @@ export async function GET(request: Request) {
       jakartaDateISO(),
     );
     const [rep, prev, rows] = await Promise.all([
-      getReport(period.from, period.to),
-      getReport(period.prevFrom, period.prevTo),
+      getReport(period.from, period.to, { parts: { methods: false } }),
+      getReportLite(period.prevFrom, period.prevTo),
       getExportRows({ from: period.from, to: period.to }),
     ]);
     if (!rep.count) return Response.json({ ok: false, error: "Tidak ada data pada periode ini." }, { status: 404 });

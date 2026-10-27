@@ -1,0 +1,112 @@
+================================================================
+RIWAYAT INVOICE — FONT LEBIH RINGAN + PILIHAN TAMPILAN
+Tanggal : 24-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Dua perubahan di halaman Riwayat (/invoice):
+
+1. Tulisan yang tadinya terlalu tebal (nomor invoice, nominal
+   total, tanggal, dan kode pekerjaan) diturunkan bobotnya.
+   Sekarang hanya sedikit lebih tebal dari teks biasa.
+
+2. Ada pilihan tampilan Kartu / Padat / Ringkas memakai tombol
+   switch yang sama persis dengan modul Katalog (komponen
+   ExpandingTabs): tab aktif melebar berisi ikon + label, tab
+   lain tinggal ikon. Pilihan diingat di perangkat.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/globals.css — bobot font kartu riwayat:
+   - .ihc-number       : 800 -> 600
+   - .ihc-total        : 800 -> 600
+   - .ihc-row-value    : 700 -> 500
+   Teks lain (nama pelanggan, label baris) tetap 400, jadi
+   selisihnya tipis. Lencana/status tidak diubah.
+
+B) src/app/globals.css — gaya tambahan:
+   - .ihc-dense / .ihc-dense-meta / .ihc-dense-remaining:
+     bentuk kartu untuk mode Padat.
+   - .ihc-list-row / .ihc-doc-ico-sm / .ihc-chip-sm:
+     bentuk baris untuk mode Ringkas.
+
+C) src/components/InvoiceHistoryCard.tsx
+   - Perhitungan status/pay/remaining dipindah ke satu helper
+     `historyMeta()` supaya Kartu, Padat, dan Ringkas selalu
+     memakai angka dan status yang sama.
+   - InvoiceHistoryCard dapat prop `variant="padat"`: hanya
+     kepala kartu + satu baris meta (tanggal, pekerjaan, sisa).
+     Baris detail, deretan lencana, dan tombol Tagih WhatsApp
+     tidak dirender di mode ini.
+   - Komponen baru InvoiceHistoryRow untuk mode Ringkas:
+     nomor, pelanggan, tanggal, pekerjaan, nominal, status.
+
+D) src/components/InvoiceHistoryList.tsx (BARU, client component)
+   - Menyimpan pilihan tampilan di localStorage:
+       kunci  : pf-invoice-riwayat-tampilan
+       bawaan : kartu
+   - Memakai useSyncExternalStore seperti modul Katalog supaya
+     tidak ada peringatan beda tampilan saat hidrasi.
+   - Switch memakai ExpandingTabs dengan ikon/opsi yang sama:
+       Kartu  (LayoutGrid)
+       Padat  (Grid3x3)
+       Ringkas(List)
+   - Susunan:
+       Kartu  : grid 2/3 kolom, kartu lengkap (sama seperti dulu)
+       Padat  : grid 2/3/4 kartu kecil, tanpa baris detail
+       Ringkas: daftar baris, 2 kolom di lg, 3 kolom di 2xl
+
+E) src/app/invoice/page.tsx
+   - Daftar kartu diganti <InvoiceHistoryList ... />.
+   - Query, filter, pagination, dan data yang diambil TIDAK
+     berubah. Yang berubah hanya cara menampilkan baris yang
+     sudah ada.
+
+F) Tidak ada perubahan pada:
+   - Database, API, perhitungan tagihan, atau filter.
+   - Halaman detail invoice.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit   : lolos
+  npm run lint       : lolos (tanpa peringatan)
+  npm run build      : Compiled successfully (Next.js 16.2.6)
+
+  Catatan: halaman /invoice memerlukan DATABASE_URL untuk dibuka
+  di lokal, jadi pengecekan visual dilakukan setelah deploy.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/globals.css
+  src/components/InvoiceHistoryCard.tsx
+  src/app/invoice/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  src/components/InvoiceHistoryList.tsx
+  public/dokumentasi-update/2026-10-24-riwayat-invoice-font-dan-mode-tampilan.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Data yang diambil dari database sama persis; pilihan
+tampilan hanya disimpan di perangkat pengguna.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau bobot 600 masih terasa tebal, turunkan `.ihc-number` dan
+  `.ihc-total` di globals.css menjadi 500.
+- Kalau ingin mode Padat/Ringkas tampil lebih rapat lagi, ubah
+  gap atau jumlah kolom di InvoiceHistoryList.tsx.
+- Kunci localStorage bisa dihapus kalau ingin kembali ke bawaan:
+  pf-invoice-riwayat-tampilan
+
+================================================================

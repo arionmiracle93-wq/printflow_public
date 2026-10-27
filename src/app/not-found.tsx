@@ -11,8 +11,14 @@ export default function NotFound() {
           Alamat yang Anda buka salah ketik, atau pekerjaannya sudah dihapus.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {/* Tombol pertama ke "/", yang sekarang home screen pemilih
+              modul - bukan dashboard produksi seperti ketika tombol ini
+              masih escreverkan "Ke Dashboard". */}
           <Link href="/" className="btn-primary inline-flex items-center gap-1.5">
-            <Gauge size={15} /> Ke Dashboard
+            <Gauge size={15} /> Ke Beranda
+          </Link>
+          <Link href="/produksi" className="btn-ghost inline-flex items-center gap-1.5">
+            <Gauge size={15} /> Dashboard Produksi
           </Link>
           <Link href="/pesanan" className="btn-ghost inline-flex items-center gap-1.5">
             <ClipboardList size={15} /> Daftar Pekerjaan

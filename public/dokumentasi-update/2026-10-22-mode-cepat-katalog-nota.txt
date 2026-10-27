@@ -1,0 +1,249 @@
+PRINT FLOW - MODE CEPAT KATALOG: CETAK NOTA NCR
+Tanggal: 2026-10-22
+Status: selesai di kode; typecheck + ESLint lolos
+
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Halaman Katalog sekarang punya tombol "Mode Cepat" khusus Owner.
+Satu isian singkat bisa membuat:
+
+- 1 kartu induk baru (mis. "Cetak Nota NCR A5"), ATAU memakai induk
+  yang sudah ada (mis. wadah umum "NOTA"),
+- varian otomatis untuk setiap kombinasi rangkap x warna,
+- produk tambahan numerator (per rim),
+- produk tambahan perforasi (per rim),
+- produk setting numerator/perforasi (sekali per order, opsional).
+
+Pilihan "Pakai induk yang ada" terhubung dengan fitur Induk Baru dan
+Sub-induk. Daftar induk diambil dari katalog yang sudah ada. Kalau sudah
+ada induk "NOTA", Mode Cepat langsung memilihnya; kalau di dalam NOTA
+sudah ada sub-induk "NCR A5", sub-induk itulah yang dipilih supaya varian
+masuk ke struktur NOTA > NCR A5 > varian. Pemilik tetap bisa berpindah ke
+"Buat induk baru" atau memilih induk lain.
+
+Semua produk dikirim lewat endpoint impor katalog yang sudah ada
+(POST /api/invoice-products/import, mode merge). Tidak ada perubahan
+struktur database dan tidak ada kolom baru.
+
+Tombol tersedia di toolbar Katalog (desktop) dan di menu tiga garis
+(mobile/tablet). Hanya Owner yang melihat tombol ini; endpoint impor
+juga tetap owner-only.
+
+
+===============================================================
+CARA PAKAI
+===============================================================
+
+1. Buka Invoice > Katalog.
+2. Klik "Mode Cepat".
+3. Tentukan induk tujuan:
+   - "Buat induk baru": isi nama induk, kategori, ukuran, dan bahan;
+   - "Pakai induk yang ada": pilih induk utama (mis. "NOTA") atau
+     sub-induk (mis. "NOTA > NCR A5"). Bila memilih induk utama,
+     isi Label varian bila perlu (mis. "NCR A5"). Label ini menjadi
+     awalan nama varian agar beberapa ukuran/bahan tidak bentrok di
+     dalam induk umum seperti NOTA. Bila memilih sub-induk, label
+     biasanya dikosongkan karena nama sub-induk sudah menjadi konteks.
+4. Centang opsi rangkap dan warna yang dijual.
+5. Isi harga per rim:
+   - bisa satu per satu di tabel, atau
+   - pakai "Isi cepat harga": harga dasar + tambahan per rangkap +
+     tambahan per warna, lalu klik "Isi tabel".
+6. Opsional: isi diskon grosir, mis. "5=5%; 10=10%".
+7. Tentukan hasil per rim:
+   - "Hitung otomatis": (lembar per rim x potong per lembar) /
+     (isi lembar per buku x rangkap),
+   - "Isi manual": mis. 1 rim = 20 buku. Pakai ini kalau NCR sudah
+     collated dan hasil per rim tidak berubah menurut rangkap.
+8. Isi harga numerator/perforasi, atau matikan pilihannya bila tidak
+   dijual. Harga setting boleh dikosongkan.
+9. Periksa pratinjau di kanan (di HP: di bawah form). Nama yang sudah
+   ada di katalog akan ditolak, bukan ditimpa.
+10. Klik "Buat ... Produk". Katalog dimuat ulang dan ringkasan hasil
+    ditampilkan di halaman Katalog.
+
+
+===============================================================
+ATURAN HARGA DAN QTY
+===============================================================
+
+- Semua harga yang diisi di Mode Cepat adalah HARGA PER RIM.
+- Qty di invoice berarti jumlah rim, bukan jumlah buku.
+- Karena invoice tidak punya kolom satuan, teks "per rim" selalu
+  ditulis di keterangan produk (dan di nama produk tambahan).
+- Harga bertingkat memakai qty invoice (rim), mis. "5=5%" menghasilkan
+  tier minimal 5 rim.
+- Diskon grosir dihitung dari harga tiap varian/produk tambahan;
+  harga setting tidak memakai tier.
+- Minimal order ditulis di keterangan (bawaan 1 rim). Mode Cepat belum
+  memblokir qty invoice di bawah angka itu; itu fitur lanjutan.
+
+
+===============================================================
+HASIL PER RIM
+===============================================================
+
+Contoh bawaan F4 2-up A5, 50 lembar/buku:
+
+- 1 rangkap : 1.000 lembar A5 / 50 = 20 buku
+- 2 rangkap : 1.000 / (50 x 2) = 10 buku
+- 3 rangkap : 1.000 / (50 x 3) = 6 buku + 100 lembar
+
+Angka ini hanya keterangan produk, bukan validasi qty. Kalau proses
+cetak Bapak/Ibu memakai NCR collated (1 rim = 500 set), pilih
+"Isi manual" dan tulis hasil buku per rim yang benar. Ini penting
+supaya keterangan tidak mengunci asumsi yang salah.
+
+Keterangan varian juga menyebut bahan, ukuran, potongan per lembar,
+minimal order, dan bahwa finishing dihitung terpisah.
+
+
+===============================================================
+PRODUK YANG DIBUAT
+===============================================================
+
+Contoh saat membuat induk baru, pilihan 2/3 rangkap x 1/2 warna:
+
+- Induk: Cetak Nota NCR A5 (tanpa harga)
+- Varian: 2 Rangkap 1 Warna
+- Varian: 2 Rangkap 2 Warna
+- Varian: 3 Rangkap 1 Warna
+- Varian: 3 Rangkap 2 Warna
+- Tambahan: Cetak Nota NCR A5 - Numerator (per rim)
+- Tambahan: Cetak Nota NCR A5 - Perforasi (per rim)
+- Setting: Cetak Nota NCR A5 - Setting Numerator (per order)
+
+Produk tambahan adalah produk biasa (bukan varian) supaya tidak
+dobel hitung dengan harga rangkap/warna. Kasir menambahkannya sebagai
+baris terpisah saat membuat invoice. Mode Cepat belum otomatis
+memasukkan add-on ke baris invoice.
+
+
+===============================================================
+INDUK UMUM NOTA
+===============================================================
+
+Struktur katalog sekarang dua tingkat:
+
+  NOTA (induk utama)
+    -> NCR A5 (sub-induk)
+         -> 2 Rangkap 1 Warna (varian)
+         -> 2 Rangkap 2 Warna (varian)
+         -> ...
+    -> varian langsung (tetap didukung untuk data lama)
+
+Sub-induk hanya boleh berada langsung di bawah induk utama; tidak ada
+sub-induk di dalam sub-induk. Sub-induk punya keterangan dan gambar
+sendiri, dan varian di dalamnya memakai nama lengkap saat masuk invoice:
+"NOTA NCR A5 2 Rangkap 1 Warna".
+
+Alur yang disarankan:
+
+1. Buat induk "NOTA" lewat fitur Induk Baru (cukup sekali).
+2. Buka kartu NOTA, klik "Sub-induk", buat "NCR A5".
+3. Buka Mode Cepat > "Pakai induk yang ada" > pilih "NOTA > NCR A5".
+   Label varian boleh dikosongkan karena sub-induk sudah menjadi konteks.
+4. Isi harga per rim seperti biasa. Varian yang dibuat menjadi
+   "2 Rangkap 1 Warna" di dalam NCR A5 dan tampil di invoice sebagai
+   "NOTA NCR A5 2 Rangkap 1 Warna".
+5. Untuk ukuran/bahan lain, buat sub-induk lain (mis. NCR A6) di dalam
+   NOTA, lalu ulangi Mode Cepat.
+
+Varian lama yang sudah langsung di bawah NOTA tetap sah. Pindahkan ke
+sub-induk lewat mode Pilih > "Jadikan varian..." bila ingin merapikan.
+Produk tambahan tetap produk biasa (bukan varian), tetapi namanya ikut
+path, mis. "NOTA NCR A5 - Numerator (per rim)", supaya mudah dicari.
+Induk NOTA yang sudah ada tidak diubah keterangannya oleh Mode Cepat;
+Mode Cepat hanya menambah varian/produk baru ke dalam wadah yang dipilih.
+
+
+===============================================================
+PRATINJAU, BENTROK NAMA, DAN CSV
+===============================================================
+
+- Pratinjau menampilkan induk (baru atau "sudah ada"), semua varian,
+  tambahan, harga per rim, hasil per rim, dan harga grosir bila diisi.
+- Nama induk baru yang sudah dipakai produk biasa akan ditolak.
+- Induk yang sudah ada boleh dipakai lagi; varian baru akan digabung.
+  Kalau induk yang dipilih sudah tidak ada (mis. katalog berubah), Mode
+  Cepat meminta katalog dimuat ulang, bukan membuat induk baru diam-diam.
+- Nama varian/tambahan yang sudah ada ditolak agar harga lama tidak
+  tertukar. Mode Cepat bersifat menambah, bukan memperbarui.
+- Saat memakai induk yang ada, Label varian sebaiknya diisi dan
+  menjadi awalan nama varian. Untuk induk umum seperti NOTA, isi label
+  (mis. "NCR A5") supaya "2 Rangkap 1 Warna" milik A5 tidak bentrok
+  dengan A6. Kalau label dikosongkan, Mode Cepat memberi catatan dan
+  nama varian dibuat pendek.
+- Tombol "Unduh CSV" menyimpan daftar yang sedang dipratinjau dengan
+  kolom Nama Produk, Keterangan, Harga, Harga Bertingkat, Kategori,
+  dan Induk. CSV ini bisa diimpor lagi lewat Impor CSV biasa.
+
+
+===============================================================
+BATASAN YANG DISENGAJA
+===============================================================
+
+- Harga disimpan statis. Kalau harga kertas berubah, produk perlu
+  diedit ulang atau dibuat fitur update template terpisah.
+- Opsi dinamis di invoice (satu produk dengan checkbox rangkap/warna
+  dan harga otomatis) belum termasuk. Itu fase lanjutan karena
+  membutuhkan perubahan skema, harga server, editor invoice, dan
+  cetakan.
+- Qty minimum belum diblokir di invoice; baru tertulis di keterangan.
+- Kedalaman katalog maksimal dua tingkat (induk utama > sub-induk > varian).
+  Sub-induk tidak bisa berisi sub-induk.
+- Induk yang sudah ada tidak diedit keterangannya oleh Mode Cepat.
+- Mode Cepat hanya membuat katalog, tidak membuat invoice.
+
+
+===============================================================
+FILE YANG TERKAIT
+===============================================================
+
+- src/lib/catalog-quick-nota.ts
+  Pembentuk produk murni: kombinasi, harga, tier, hasil per rim,
+  deteksi bentrok nama. Tanpa database, bisa diuji terpisah.
+
+- src/components/CatalogQuickCreate.tsx
+  Jendela Mode Cepat: form, isi cepat harga, pratinjau, unduh CSV,
+  dan tombol buat.
+
+- src/components/CatalogManager.tsx
+  Tombol Mode Cepat, pengiriman ke endpoint impor, muat ulang katalog,
+  dan ringkasan hasil.
+
+- src/components/CatalogScreen.tsx
+  Menghubungkan aksi menu mobile ke CatalogManager.
+
+- src/components/CatalogDrawerMenu.tsx
+  Pintasan Mode Cepat di menu tiga garis untuk Owner.
+
+- src/lib/invoice-catalog.ts
+  Endpoint impor lama yang dipakai ulang (mode merge, satu transaksi).
+
+
+===============================================================
+PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- ESLint pada file yang berubah: lolos.
+- Uji kode murni: 4 varian + 3 tambahan terbentuk, hasil 2 rangkap
+  10 buku, 3 rangkap 6 buku + 100 lembar, tier diskon 5%/10% benar,
+  bentrok nama terdeteksi.
+- Uji mode induk yang ada: induk NOTA tidak diduplikasi, 4 varian baru
+  memakai nama "NCR A5 ...", produk tambahan memakai awalan NOTA NCR A5,
+  duplikat varian dan induk yang hilang terdeteksi.
+- Uji sub-induk: path "NOTA > NCR A5" dipakai sebagai kolom Induk, nama
+  varian tampil "NOTA NCR A5 ...", dan pemilihan sub-induk lewat id tidak
+  tertukar dengan sub-induk bernama sama di induk lain.
+- Render awal halaman pratinjau dengan induk NOTA sudah diperiksa
+  (SSR): pilihan induk, label varian, nama varian "NOTA NCR A5 ...",
+  dan pratinjau tampil.
+- Uji visual interaktif di aplikasi nyata (desktop/HP, tema terang dan
+  gelap) masih perlu dilakukan bersamaan dengan review pemilik.
+- Uji impor ke database belum dijalankan karena DATABASE_URL tidak
+  tersedia di lingkungan pengembangan ini.

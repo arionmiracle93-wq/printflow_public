@@ -36,8 +36,12 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
             <button type="button" onClick={reset} className="btn-primary inline-flex items-center gap-1.5">
               <RefreshCw size={15} /> Coba Lagi
             </button>
+            {/* Ke "/", yang sekarang home screen pemilih modul.
+                Labelnya diubah dari "Ke Dashboard" supaya tidak
+                promising orang akan langsung melihat dashboard, padahal
+                yang terbuka adalah halaman pilihan modul. */}
             <Link href="/" className="btn-ghost inline-flex items-center gap-1.5">
-              <Gauge size={15} /> Ke Dashboard
+              <Gauge size={15} /> Ke Beranda
             </Link>
             <Link href="/status" className="btn-ghost inline-flex items-center gap-1.5">
               <Stethoscope size={15} /> Diagnosis

@@ -21,8 +21,6 @@ export type InvoiceSettings = {
   banks: BankAccount[];
   /** Tampil di bawah daftar rekening, mis. "Mohon kirim bukti transfer ke WhatsApp kami." */
   paymentNote: string;
-  /** Jatuh tempo bawaan: hari setelah tanggal invoice. 0 = tanpa jatuh tempo. */
-  dueDays: number;
   /** Saat Terbitkan Invoice, tanyakan apakah pembayaran sudah diterima. */
   askPaidOnSave: boolean;
   /** Invoice di bawah nilai ini tidak ditanya. 0 = semua ditanya. */
@@ -55,12 +53,11 @@ export const DEFAULT_INVOICE_SETTINGS: InvoiceSettings = {
   phone: "",
   banks: [],
   paymentNote: "",
-  dueDays: 7,
   askPaidOnSave: false,
   askPaidThreshold: 0,
   qris: "",
   uniqueCode: false,
-  showCustomerOnPrint: false,
+  showCustomerOnPrint: true,
   showPdfButton: true,
   showWaButton: true,
   signatureV: 0,
@@ -97,16 +94,19 @@ export function sanitizeInvoiceSettings(raw: unknown): InvoiceSettings {
     banks,
     // Data tahap B menyimpan info rekening sebagai satu teks bebas (bankInfo); dipindah jadi catatan pembayaran.
     paymentNote: str(r.paymentNote, 300) || str(r.bankInfo, 300),
-    dueDays: intIn(r.dueDays, 0, 365, DEFAULT_INVOICE_SETTINGS.dueDays),
     askPaidOnSave: r.askPaidOnSave === true,
     askPaidThreshold: intIn(r.askPaidThreshold, 0, 2_000_000_000, 0),
     qris: str(r.qris, 1200),
     uniqueCode: r.uniqueCode === true,
     showPdfButton: r.showPdfButton !== false,
     showWaButton: r.showWaButton !== false,
+    // Sama seperti dua tombol di atas: aktif, kecuali ada yang memang
+    // menyimpannya sebagai false. Ditulis "!== false" (bukan "=== true")
+    // supaya instalasi lama yang belum pernah punya kunci ini ikut dapat
+    // nilai aktif, bukan diam-diam mati.
+    showCustomerOnPrint: r.showCustomerOnPrint !== false,
     signatureV: 0,
     stampV: 0,
-    showCustomerOnPrint: r.showCustomerOnPrint === true,
     defaultTerms: termsRaw.map((t) => str(t, 300)).filter(Boolean).slice(0, 20),
   };
 }

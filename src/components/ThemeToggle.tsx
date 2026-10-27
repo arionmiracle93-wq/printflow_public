@@ -1,7 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "print-flow-theme";
 
@@ -10,16 +10,27 @@ function applyTheme(dark: boolean) {
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }
 
-function useDarkMode() {
-  const [isDark, setIsDark] = useState<boolean | null>(null);
+function subscribe(onStoreChange: () => void) {
+  const observer = new MutationObserver(onStoreChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
 
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
+function getSnapshot() {
+  return document.documentElement.classList.contains("dark");
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
+function useDarkMode() {
+  // class "dark" di <html> adalah sumber kebenaran. MutationObserver membuat
+  // tombol ikut berubah tanpa setState di dalam effect.
+  const isDark = useSyncExternalStore<boolean | null>(subscribe, getSnapshot, getServerSnapshot);
 
   const toggle = () => {
-    const next = !(isDark ?? false);
-    setIsDark(next);
+    const next = !document.documentElement.classList.contains("dark");
     applyTheme(next);
     try {
       window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
@@ -46,7 +57,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? "Pindah ke tema terang" : "Pindah ke tema gelap"}
       title={isDark ? "Tema terang" : "Tema gelap"}
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition-all hover:bg-white/20 md:h-9 md:w-9"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color:var(--pf-line)] bg-[color:var(--pf-surface-2)] text-[color:var(--pf-ink)] transition-all hover:border-[color:var(--pf-accent-line)] hover:bg-[color:var(--pf-accent-soft)] md:h-9 md:w-9"
     >
       {isDark === null ? (
         <span className="block h-[18px] w-[18px]" />

@@ -1,23 +1,9 @@
 "use client";
 
-import { Camera, ClipboardList, Factory, ImagePlus, MessageCircle, MoreHorizontal } from "lucide-react";
+import { ArrowRight, Camera, ClipboardList, Factory, History, MessageCircle, MoreHorizontal } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 type TabKey = "ringkasan" | "mitra" | "komunikasi" | "foto" | "lainnya";
-
-/**
- * Foto khusus per tab untuk kolom ke-3 di layar desktop.
- * Taruh file fotonya di folder `public/images/`, lalu isi path-nya di sini.
- * Tab yang belum diisi (dibiarkan kosong) otomatis tampil placeholder
- * putus-putus seperti biasa - jadi aman diisi belakangan satu-satu.
- */
-const TAB_PHOTOS: Partial<Record<TabKey, string>> = {
-  ringkasan: "/images/pesanan-detail-ringkasan.jpg",
-  mitra: "/images/pesanan-detail-mitra.jpg",
-  komunikasi: "/images/pesanan-detail-komunikasi.jpg",
-  foto: "/images/pesanan-detail-foto.jpg",
-  lainnya: "/images/pesanan-detail-lainnya.jpg",
-};
 
 export function OrderDetailTabs({
   header,
@@ -26,6 +12,8 @@ export function OrderDetailTabs({
   komunikasi,
   foto,
   lainnya,
+  rail,
+  activity,
   mitraActive,
   komunikasiPending,
 }: {
@@ -36,6 +24,10 @@ export function OrderDetailTabs({
   komunikasi: ReactNode;
   foto: ReactNode;
   lainnya: ReactNode;
+  /** Kartu-kartu "sekilas pekerjaan" untuk panel kanan (cuma tampil di >=1280px / xl, semua tab). */
+  rail: ReactNode;
+  /** Isi daftar aktivitas terbaru; dibungkus kartu + tombol "lihat semua" di sini. */
+  activity: ReactNode;
   /** Ada produksi mitra yang masih berjalan (belum "Diterima"). */
   mitraActive: boolean;
   /** Ada serah terima yang belum diterima operator tujuan. */
@@ -71,9 +63,34 @@ export function OrderDetailTabs({
     tab === "ringkasan" ? ringkasan : tab === "mitra" ? mitra : tab === "komunikasi" ? komunikasi : tab === "foto" ? foto : lainnya;
 
   return (
-    <div className="xl:grid xl:grid-cols-[232px_minmax(0,1fr)_380px] xl:gap-5">
+    /* ================================================================
+       BATAS LEBAR HALAMAN - ini kunci supaya konten tidak "melar".
+
+       Dulu kolom tengah memakai minmax(0,1fr) tanpa batas atas, dan
+       lebarnya "dijaga" oleh kolom foto 380px di kanan. Begitu kolom
+       foto dibuang, 1fr itu mengambil SEMUA sisa ruang (di monitor
+       lebar jadi ~1140px) - kartu, grid info, dan form ikut tertarik.
+
+       Sekarang lebar dibatasi langsung di pembungkus, bukan di kolom
+       tetangga, dan kolom kanan diisi panel "sekilas pekerjaan":
+         - < xl (<1280px): satu kolom, maks 880px, rata tengah.
+                           (HP tidak terpengaruh: layarnya < 880px.)
+         - >= xl         : tiga kolom - menu 216px | konten | panel
+                           312px. Konten mengisi sisanya: ~650px di
+                           layar 1280px, mentok ~815px di layar >=1440px
+                           (karena <main> dibatasi 1440px). Jadi konten
+                           tidak pernah melar di monitor selebar apa pun.
+
+       Mau lebih lebar/sempit? Ubah angka di className di bawah:
+         max-w-[880px]   -> lebar konten di bawah xl
+         216px / 312px   -> lebar menu kiri / panel kanan
+         grid-rows-[auto_1fr] -> JANGAN dihapus: tanpa ini panel kanan
+                         (tinggi, span 2 baris) melarkan baris header
+                         dan muncul celah kosong di bawah kartu invoice.
+       ================================================================ */
+    <div className="mx-auto w-full max-w-[880px] xl:grid xl:max-w-[1392px] xl:grid-cols-[216px_minmax(0,1fr)_312px] xl:grid-rows-[auto_1fr] xl:gap-x-6 xl:gap-y-4">
       {/* ============================================================
-          Kolom tengah - header (baris 1) & konten tab aktif (baris 2).
+          Kolom konten - header (baris 1) & konten tab aktif (baris 2).
           Sama persis di HP/tablet maupun desktop, cuma posisinya yang
           dipindah lewat grid di layar xl (>=1280px).
           ============================================================ */}
@@ -111,7 +128,8 @@ export function OrderDetailTabs({
       {/* ============================================================
           Sidebar menu tab vertikal - CUMA desktop (xl, >=1280px).
           Tombol yang sama, cuma tampilannya beda (vertikal, bukan
-          pil horizontal) supaya jadi kolom pertama.
+          pil horizontal) supaya jadi kolom pertama. Menempel (sticky)
+          saat halaman digulir.
           ============================================================ */}
       <div className="hidden xl:col-start-1 xl:row-start-1 xl:row-span-2 xl:block xl:self-start xl:sticky xl:top-20">
         <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[.12em] text-slate-400 dark:text-slate-500">Navigation</p>
@@ -148,40 +166,34 @@ export function OrderDetailTabs({
       </div>
 
       {/* ============================================================
-          Placeholder foto - CUMA desktop (xl), tampil di semua tab.
-          Tinggal diganti manual dengan foto asli kapan pun siap.
+          Panel "sekilas pekerjaan" - CUMA layar >=1280px (xl), tampil di
+          SEMUA tab dan menempel (sticky) saat halaman digulir. Isinya
+          info yang paling sering dicek (sisa waktu, tagihan, detail,
+          aktivitas terakhir) supaya tidak perlu pindah tab dulu.
+          max-h + overflow: di laptop yang layarnya pendek, panel bisa
+          digulir sendiri, jadi kartu paling bawah tidak terpotong.
           ============================================================ */}
-      <div className="hidden xl:col-start-3 xl:row-start-1 xl:row-span-2 xl:block xl:self-start xl:sticky xl:top-20">
-        <OrderPhotoPlaceholder src={TAB_PHOTOS[tab]} />
-      </div>
-    </div>
-  );
-}
-
-function OrderPhotoPlaceholder({ src }: { src?: string }) {
-  if (src) {
-    return (
-      <div
-        key={src}
-        className="hero-fade relative isolate h-[calc(100vh-6.5rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-cover bg-center shadow-[0_18px_50px_rgba(4,20,28,.35)]"
-        style={{ backgroundImage: `url(${src})` }}
-      />
-    );
-  }
-
-  return (
-    <div className="panel-glass relative isolate flex h-[calc(100vh-6.5rem)] flex-col items-center justify-center gap-3 overflow-hidden border-dashed px-6 text-center">
-      <div className="pointer-events-none absolute -left-10 -top-10 -z-10 h-48 w-48 rounded-full bg-teal-400/15 blur-3xl dark:bg-teal-400/10" />
-      <div className="pointer-events-none absolute -bottom-14 -right-10 -z-10 h-52 w-52 rounded-full bg-amber-300/15 blur-3xl dark:bg-amber-300/10" />
-      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-teal-300 text-teal-500 dark:border-white/25 dark:text-teal-300">
-        <ImagePlus size={24} />
-      </span>
-      <div>
-        <p className="text-sm font-semibold text-slate-600 dark:text-slate-200">Placeholder foto</p>
-        <p className="mx-auto mt-1 max-w-[220px] text-xs leading-relaxed text-slate-400 dark:text-slate-400">
-          Ganti area ini dengan foto pekerjaan / percetakan Anda sendiri.
-        </p>
-      </div>
+      <aside
+        aria-label="Sekilas pekerjaan"
+        className="hidden xl:sticky xl:top-20 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:-m-1 xl:block xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:p-1"
+      >
+        <div className="space-y-4">
+          {rail}
+          <div className="card p-4">
+            <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              <History size={12} /> Aktivitas terakhir
+            </p>
+            {activity}
+            <button
+              type="button"
+              onClick={() => setTab("lainnya")}
+              className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline dark:text-teal-300"
+            >
+              Lihat semua riwayat <ArrowRight size={13} />
+            </button>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

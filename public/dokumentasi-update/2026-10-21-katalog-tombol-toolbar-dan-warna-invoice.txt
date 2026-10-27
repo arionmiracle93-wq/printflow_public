@@ -1,0 +1,99 @@
+PRINT FLOW - TOMBOL TOOLBAR KATALOG LEBIH PENDEK & TEKS INVOICE HITAM
+Tanggal: 2026-10-21
+Status: selesai di kode; sudah diukur di browser
+
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Dua penyesuaian kecil setelah halaman Katalog dilihat langsung:
+
+1. Tombol aksi di toolbar Katalog dibuat lebih pendek:
+   Pilih, Impor CSV, Export CSV, Contoh CSV, Muat produk contoh.
+   Tinggi sebelumnya 40 px, sekarang 34 px.
+
+2. Tulisan "Invoice" pada tombol modul aktif di header atas
+   diubah menjadi HITAM penuh. Latar tetap kuning amber; tinggi,
+   padding, dan ukuran huruf tombol TIDAK diubah.
+
+Tidak ada perubahan pada tombol Produk Baru, tombol tampilan
+Kartu/Padat/Ringkas, kolom cari, dropdown kategori, atau tombol
+di halaman lain.
+
+
+===============================================================
+DETAIL PERUBAHAN
+===============================================================
+
+A. Toolbar Katalog (src/components/CatalogManager.tsx)
+   - Kelas tombol: min-h-[34px] px-3 py-1.5 text-xs
+   - Sebelumnya mengandalkan min-height 40px bawaan .btn-secondary /
+     .btn-ghost.
+   - Padding kiri-kanan (px-3) dan ukuran huruf (text-xs) tetap,
+     jadi lebar tombol hampir sama; hanya tingginya yang berkurang.
+   - Ikon dan teks tidak diubah.
+   - Tombol "Pilih" saat mode pilih aktif tetap memakai warna teal
+     seperti sebelumnya.
+
+B. Teks Invoice di header (src/components/ModuleSwitcher.tsx)
+   - Kelas aktif Invoice: bg-amber-400 text-black
+   - Sebelumnya: bg-amber-400 text-[color:var(--pf-ink)]
+     Di mode gelap --pf-ink berubah menjadi hampir putih, sehingga
+     tulisan di atas kuning kurang kontras.
+   - Sekarang hitam murni (rgb 0,0,0) di mode terang maupun gelap.
+   - Tinggi tombol tetap 31 px (px-3 py-1.5 text-[12.5px]); tidak
+     ada perubahan padding atau ukuran huruf.
+
+Tombol "Produksi" yang aktif tetap teal dengan teks putih.
+
+
+===============================================================
+FILE YANG BERUBAH
+===============================================================
+
+- src/components/CatalogManager.tsx
+- src/components/ModuleSwitcher.tsx
+- public/dokumentasi-update/2026-10-21-katalog-tombol-toolbar-dan-warna-invoice.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogManager.tsx
+- src/components/ModuleSwitcher.tsx
+- public/dokumentasi-update/2026-10-21-katalog-tombol-toolbar-dan-warna-invoice.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- npx eslint (CatalogManager, ModuleSwitcher, CatalogParts): lolos.
+- Uji browser (viewport 1000 x 700):
+  * lima tombol toolbar terukur 34 px;
+  * tombol pembanding lama tanpa min-h terukur 40 px;
+  * tombol Invoice di header: warna teks rgb(0, 0, 0),
+    latar amber, tinggi 31 px (tidak berubah).
+- Halaman uji sementara sudah dihapus; tidak tertinggal di repo.
+
+
+===============================================================
+CATATAN
+===============================================================
+
+- Bila 34 px terasa terlalu pendek di layar sentuh, ganti
+  min-h-[34px] menjadi min-h-[36px] pada lima tombol itu.
+- Kalau ingin teks Invoice memakai hitam pekat tetapi tidak
+  benar-benar #000, bisa diganti text-[#0a2f40] (navy tua).

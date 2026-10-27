@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useMounted } from "@/components/useMounted";
 import { Download, ExternalLink, ImageIcon, X } from "lucide-react";
 import { photoKindLabel, type PhotoItem } from "@/lib/photos";
 
@@ -17,14 +18,12 @@ export function PhotoQuickPeek({
   count: number;
   tone?: "indigo" | "slate";
 }) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [open, setOpen] = useState(false);
   const [photos, setPhotos] = useState<PhotoItem[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState<PhotoItem | null>(null);
-
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;

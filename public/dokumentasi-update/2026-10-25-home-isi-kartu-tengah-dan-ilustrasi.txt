@@ -1,0 +1,111 @@
+================================================================
+HOMESCREEN DESKTOP — ISI KARTU DI TENGAH + ILUSTRASI TURUN & LEBIH BESAR
+Tanggal : 25-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+1) Isi kartu Produksi dan Invoice sekarang tepat di tengah kartu.
+   Penyebabnya: padding kiri kartu 2.375rem tapi kanan cuma
+   0.625rem, jadi ikon, deretan fitur, dan tombol terdorong ke
+   kanan (jarak kiri 26,7px vs kanan 7,8px di layar 1358px).
+   Sekarang kiri = kanan.
+2) Gambar printer (kotak kuning) turun sedikit (+1rem) dan
+   diperbesar sedikit (sekitar +5,5% s.d. +8%).
+
+Hanya CSS desktop yang berubah. HP dan tablet TIDAK berubah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+Satu file: src/app/home.css (bagian @media min-width: 1180px).
+
+A) Kartu modul (.pf-module-card)
+   - padding sebelum : 1.625rem 0.625rem 1.6875rem 2.375rem
+   - padding sesudah : 1.4rem 1.75rem 1.75rem
+     (kiri = kanan = 1.75rem)
+   - Atas sengaja 1.4rem (bukan 1.75rem): judul/ikon secara optik
+     mulai +-0.35rem di bawah tepi atas kotaknya, jadi jarak yang
+     TERLIHAT atas dan bawah jadi sama.
+   - Override padding khusus kartu Produksi (padding-top 1.5rem)
+     dan kartu Invoice (padding-top/bottom) dihapus. Kedua kartu
+     sekarang memakai padding yang sama. min-height tiap kartu
+     tidak diubah.
+
+B) Ilustrasi (.pf-home__art)
+   Layar 1180-1699px (ilustrasi ikut alur halaman):
+   - margin-top : 2.5rem -> 3.5rem        (turun 1rem)
+   - width      : 100%   -> calc(100% + 4rem)  (~+8%)
+   - max-width  : 57.5rem -> 61.5rem
+   - sisi kiri tetap, melebar ke kanan; jarak ke kartu masih
+     sekitar 5rem.
+   Layar >= 1700px (ilustrasi posisi absolut):
+   - top   : 12rem   -> 13rem        (turun 1rem)
+   - width : 59.5rem -> 62.75rem     (+5,5%)
+   - left  : -10rem  -> -10.75rem    (digeser sedikit ke kiri
+     supaya sisi kanan gambar tidak mendekati kartu dan sisi
+     bawahnya tidak menyentuh garis footer)
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+Render ulang halaman home di Chromium dengan font Geist +
+Calistoga dan gambar asli. Jarak isi ke tepi kartu (ikon, deretan
+fitur, tombol):
+
+  viewport    sebelum kiri/kanan     sesudah kiri/kanan
+  1358x604    26,7 / 7,8 px          20,0 / 20,0 px
+  1440x900    32,0 / 9,2 px          23,9 / 23,9 px
+  1763x892    39,0 / 11,0 px         29,0 / 29,0 px
+  1920x1080   39,0 / 11,0 px         29,0 / 29,0 px
+
+Jarak atas vs bawah isi kartu sekarang selisih < 1px.
+
+Ilustrasi (bagian gambar yang kelihatan, bukan tepi transparan)
+tidak menyentuh kartu maupun garis footer. Jarak terdekat:
+
+  viewport    ke kartu (sebelum -> sesudah)   ke garis footer
+  1358x604    106 -> 63 px                    56 px
+  1440x900    128 -> 76 px                    241 px
+  1700x850    64  -> 27 px                    16 px
+  1763x892    67  -> 28 px                    17 px
+  1920x1080   67  -> 28 px                    205 px
+
+Tinggi halaman tidak bertambah (tidak muncul scroll baru) di
+1280x720, 1358x604, 1440x900, 1700x850, 1763x892, 1920x1080,
+dan 2560x1440. Di layar >= 1700px kotak gambar (area
+transparan di tepinya) boleh menyentuh garis footer sekitar 2px;
+yang kelihatan tetap berjarak.
+
+Catatan: pengujian memakai replika markup halaman (bukan
+`next build`), karena yang berubah hanya CSS. Mohon cek sekali di
+browser Anda setelah deploy.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/home.css
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-25-home-isi-kartu-tengah-dan-ilustrasi.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau ikon + judul di kepala kartu juga ingin ikut di tengah
+  (bukan rata kiri), ubah .pf-module-card__head jadi
+  justify-content: center.
+- Kalau ilustrasi masih ingin lebih besar/turun, ubah angka
+  width dan top/margin-top di blok .pf-home__art (dua tempat:
+  blok 1180px dan blok 106.25rem).
+
+================================================================

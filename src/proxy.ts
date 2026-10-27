@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const COOKIE = "print_flow_session";
@@ -43,7 +43,10 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (isPublic(pathname) || (pathname === "/api/branding/logo" && request.method === "GET")) {
+  // Logo usaha boleh dibaca tanpa login (GET saja): dipakai halaman lacak
+  // pelanggan, dan /preview dipakai server WhatsApp untuk gambar kartu tautan.
+  const publicBranding = (pathname === "/api/branding/logo" || pathname === "/api/branding/preview") && request.method === "GET";
+  if (isPublic(pathname) || publicBranding) {
     if ((pathname === "/login" || pathname === "/setup-akun") && session) return NextResponse.redirect(new URL("/", request.url));
     // Halaman tautan lacak (dibuka pelanggan): beri tanda supaya layout tidak
     // menampilkan tautan internal (Panduan / Catatan Perubahan) di bagian bawah.
@@ -51,6 +54,13 @@ export async function proxy(request: NextRequest) {
       const publicHeaders = new Headers(request.headers);
       publicHeaders.set("x-print-flow-lacak", "1");
       return NextResponse.next({ request: { headers: publicHeaders } });
+    }
+    // Halaman login & setup-akun: beri tanda supaya layout menyembunyikan
+    // header aplikasi (yang kosong dan tampil sebagai white space saat belum login).
+    if (pathname === "/login" || pathname === "/setup-akun") {
+      const loginHeaders = new Headers(request.headers);
+      loginHeaders.set("x-print-flow-no-shell", "1");
+      return NextResponse.next({ request: { headers: loginHeaders } });
     }
     return NextResponse.next();
   }

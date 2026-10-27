@@ -1,0 +1,147 @@
+PRINT FLOW - REDESIGN HOME SCREEN DUA MODUL
+Tanggal: 2026-10-20
+Status: selesai di kode; pengujian perangkat/APK dilakukan pemilik
+
+================================================================
+RINGKASAN
+================================================================
+
+Halaman Beranda "/" sekarang tampil sesuai gambar referensi pemilik:
+
+- Latar navy-teal gelap dengan pendar warna di sudut-sudutnya.
+- Logo Print Flow dan wordmark di kiri atas.
+- Sapaan besar "Selamat ..." + nama pengguna, lalu satu kalimat
+  ajakan: "Kelola produksi & bisnis printmu dengan mudah."
+- Dua kartu modul yang tetap setara: Produksi (aksen teal) dan
+  Invoice (aksen kuning/amber).
+- Tiap kartu berisi ikon besar, judul, deskripsi, tiga fitur
+  ringkas dengan ikonnya, dan tombol lebar "Buka Produksi" /
+  "Buka Invoice" dengan tanda panah.
+- Kartu Invoice yang belum diizinkan tetap tampil terkunci dengan
+  tombol "Perlu izin Owner" dan penjelasan yang bisa dibuka.
+
+Tidak ada rute yang berubah, tidak ada query data baru, dan tidak
+ada perubahan database. Ini murni tampilan Beranda.
+
+================================================================
+ALASAN PERUBAHAN
+================================================================
+
+Versi pertama Beranda dua modul sudah benar secara alur, tetapi
+tampilannya masih memakai gaya kartu bawaan (putih/abu) sehingga
+belum punya identitas sendiri. Pemilik meminta Beranda dibuat persis
+seperti referensi: gelap, berkarakter, dan kedua modul langsung
+terbaca sebagai pilihan utama. Versi ini melakukan itu tanpa
+mengubah aturan lama:
+
+1. Dua modul tetap setara (ukuran dan bobot kartu sama).
+2. Kartu tanpa izin tetap dikunci, bukan disembunyikan.
+3. Server tetap penjaga izin; Beranda hanya menampilkan status.
+4. Tidak ada hitungan/daftar dari database di Beranda, supaya
+   halaman tetap ringan dan cepat muncul.
+
+================================================================
+APA YANG BERUBAH
+================================================================
+
+1. Latar dan header saat di Beranda
+   - Beranda selalu bergaya gelap (navy-teal) di tema terang maupun
+     gelap. Tema terang tetap dipakai di seluruh halaman modul
+     setelah pengguna memilih kartu.
+   - Header aplikasi (pencarian, tema, menu tiga titik) disembunyikan
+     KHUSUS di Beranda. Tujuannya supaya brand dan sapaan di Beranda
+     menjadi pembuka halaman, bukan tertutup bar aplikasi.
+   - Karena header disembunyikan, padding atas/bawah main dan footer
+     disesuaikan khusus Beranda supaya tidak ada ruang kosong besar.
+   - Footer tetap tampil dan diberi warna gelap agar menyatu.
+
+2. Brand dan sapaan
+   - Logo memakai berkas RESMI Print Flow: public/images/print-flow-logo.png
+     (PNG 300x300, latar transparan), ditampilkan di dalam kotak gelap.
+     Sengaja tidak digambar ulang sebagai SVG supaya kalau logo
+     diperbarui cukup ganti satu berkas.
+   - Berkas ditaruh di public/images/ supaya tidak ikut dijaga proxy
+     login. Aset statis harus selalu bisa diambil browser.
+   - Wordmark "Print Flow" berwarna teal di sebelah logo.
+   - Sapaan memakai komponen jam yang sudah ada (Selamat pagi /
+     siang / sore / malam), diikuti nama pengguna di baris kedua.
+   - Subjudul baru: "Kelola produksi & bisnis printmu dengan mudah."
+
+3. Kartu modul Produksi dan Invoice
+   - Struktur kartu identik, hanya warna aksen yang berbeda.
+   - Isi kartu: ikon besar, judul, deskripsi, garis pemisah, tiga
+     fitur berikon, dan tombol lebar.
+   - Produksi : "Kelola antrean", "Cek status", "Tahapan kerja".
+   - Invoice  : "Buat Invoice", "Cek Pembayaran", "Laporan".
+   - Kartu dihiasi garis lengkung tipis di sudut kanan bawah supaya
+     tidak terasa datar, seperti referensi.
+   - Seluruh kartu bisa diketuk (target besar), bukan hanya tulisan
+     tombolnya. Tautan diberi label aksesibilitas "Buka modul ...".
+
+4. Kartu Invoice terkunci
+   - Untuk akun tanpa izin Invoice, kartu tetap tampil tetapi warna
+     aksennya diredupkan.
+   - Ikon diberi lencana gembok kecil.
+   - Tombolnya "Perlu izin Owner" dan tidak mengarahkan ke mana pun.
+   - Kartu bisa diketuk untuk membuka penjelasan singkat di dalam
+     kartu (aria-expanded), bukan lewat dialog.
+
+5. Responsif
+   - HP: satu kolom, kartu bertumpuk, jarak dan ukuran mengikuti
+     lebar layar (uji sampai 360px).
+   - Layar >= 900px: dua kartu berdampingan dengan lebar sama.
+   - Footer tidak lagi menggantung di tengah layar tinggi; area
+     konten diberi tinggi minimum supaya footer terdorong ke bawah.
+   - Fitur di dalam kartu dibuat satu baris di lebar HP umum
+     (390px), termasuk "Cek Pembayaran".
+
+6. Berkas yang diubah/ditambah
+   - src/components/ModuleHome.tsx : struktur dan isi Beranda baru.
+   - src/app/home.css             : seluruh gaya Beranda (baru).
+   - src/app/globals.css          : impor home.css.
+   - public/images/print-flow-logo.png : logo resmi Print Flow (baru).
+   - Tidak ada perubahan di src/app/page.tsx, layout, atau proxy.
+
+================================================================
+CARA UJI MANUAL
+================================================================
+
+1. Buka "/" (Beranda).
+   - Pastikan header aplikasi tidak tampil.
+   - Pastikan brand, sapaan, dan subjudul tampil.
+   - Pastikan latar gelap di tema terang maupun gelap.
+
+2. Kartu Produksi.
+   - Ketuk mana pun di kartu: harus membuka /produksi.
+   - Tombol "Buka Produksi" terlihat utuh dengan tanda panah.
+
+3. Kartu Invoice dengan izin.
+   - Ketuk kartu: harus membuka /invoice.
+   - Tombol "Buka Invoice" berwarna kuning penuh.
+
+4. Kartu Invoice tanpa izin (uji dengan akun karyawan yang izin
+   Invoice-nya dimatikan).
+   - Kartu tampil redup dengan gembok dan tombol "Perlu izin Owner".
+   - Ketuk kartu: muncul penjelasan di dalam kartu.
+   - Tidak ada navigasi yang terjadi.
+
+5. Ukuran layar.
+   - HP 360px dan 390px: kartu satu kolom, label fitur tetap
+     terbaca, tidak ada yang melebar ke samping.
+   - Desktop >= 900px: dua kartu berdampingan dan sama tinggi.
+   - Footer ada di bawah, tidak menggantung di tengah layar.
+
+6. Setelah memilih modul.
+   - Header aplikasi muncul kembali seperti biasa.
+   - Tema terang/gelap kembali mengikuti pengaturan pengguna.
+
+================================================================
+CATATAN
+================================================================
+
+- Nama pendek manifest tetap "Print Flow" (dengan spasi). Tidak ada
+  perubahan manifest, service worker, atau rute di update ini.
+- Karena header disembunyikan di Beranda, tombol tema dan menu tiga
+  titik baru bisa diakses setelah masuk ke salah satu modul. Ini
+  mengikuti referensi yang memang bersih tanpa bar atas.
+- Saklar izin Invoice tetap diatur Owner lewat halaman Pengguna.

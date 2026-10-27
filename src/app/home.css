@@ -1,0 +1,830 @@
+/* =====================================================================
+   HOME SCREEN - PEMILIH MODUL
+   =====================================================================
+   Halaman "/" punya bahasa visual sendiri seperti gambar referensi:
+   latar navy-teal gelap, brand di kiri atas, sapaan besar, lalu dua
+   kartu modul dengan aksen teal (Produksi) dan amber (Invoice).
+
+   Kenapa gelap di kedua tema?
+   Referensi owner memang gelap, dan header aplikasi juga selalu navy.
+   Membuat home selalu gelap membuat transisi dari header ke konten
+   terasa menyatu. Tema terang tetap dipakai di seluruh halaman modul
+   setelah pengguna memilih salah satu kartu.
+
+   Header aplikasi disembunyikan HANYA saat home terbuka. Tanpa ini,
+   bar pencarian/tema/menu akan muncul di atas brand dan merusak
+   komposisi referensi. Navigasi ke modul tetap lewat dua kartu besar.
+   ===================================================================== */
+
+html body:has(.pf-home) {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background:
+    radial-gradient(58rem 34rem at 4% -8%, rgba(12, 175, 160, 0.23), transparent 62%),
+    radial-gradient(46rem 32rem at 100% 8%, rgba(13, 148, 136, 0.18), transparent 64%),
+    radial-gradient(38rem 26rem at 50% 105%, rgba(251, 191, 36, 0.05), transparent 60%),
+    #03191f;
+  color: #eaf5f3;
+}
+
+body:has(.pf-home) .app-header {
+  display: none;
+}
+
+/* Header home tidak ada. Main dibuat lentur supaya footer tetap menempel
+   di bawah layar saat isi beranda lebih pendek dari viewport. */
+html body:has(.pf-home) .app-main {
+  flex: 1 0 auto;
+  min-height: 0;
+  padding-top: 1.25rem !important;
+  padding-bottom: 2rem !important;
+}
+
+html body:has(.pf-home) footer {
+  flex: 0 0 auto;
+  padding-bottom: 1.75rem;
+  color: #7f9ca4;
+}
+
+html body:has(.pf-home) footer > div {
+  border-color: rgba(94, 234, 212, 0.14);
+}
+
+html body:has(.pf-home) footer a {
+  color: #5eead4;
+}
+
+.pf-home {
+  width: 100%;
+  max-width: 68rem;
+  margin-inline: auto;
+  padding: 1.35rem 0 0.5rem;
+  color: #eefaf8;
+}
+
+.pf-home__shell,
+.pf-home__left {
+  min-width: 0;
+}
+
+/* Ilustrasi hanya dipakai pada tata letak desktop. */
+.pf-home__art {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------
+   BRAND
+   --------------------------------------------------------------------- */
+.pf-home__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.pf-home__logo {
+  display: grid;
+  width: 3.75rem;
+  height: 3.75rem;
+  place-items: center;
+  border: 1px solid rgba(45, 212, 191, 0.26);
+  border-radius: 1.15rem;
+  background: linear-gradient(145deg, #0a2a30, #05181d);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.pf-home__logo-img {
+  width: 2.6rem;
+  height: 2.6rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  user-select: none;
+}
+
+.pf-home__wordmark {
+  color: #2dd4bf;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* ---------------------------------------------------------------------
+   SAPAAN
+   --------------------------------------------------------------------- */
+.pf-home__intro {
+  margin-top: clamp(2.2rem, 8vw, 3.5rem);
+}
+
+.pf-home__hello {
+  margin: 0;
+  color: #f7fdfc;
+  /* Dikecilkan dua kali atas permintaan owner. Semula
+     clamp(2.05rem, 7vw, 3.35rem), lalu clamp(1.8rem, 5.6vw, 2.7rem),
+     sekarang clamp(1.5rem, 4.4vw, 2.05rem).
+
+     Di layar lebar sapaan dulu setinggi 43px - jauh lebih besar
+     dari isi kartu modul di bawahnya, jadi beranda terasa seperti
+     judul dokumen, bukan pembuka. Sekarang maksimumnya 33px, masih
+     jelas jadi sapaan utama, tapi tidak lagi mendominasi layar dan
+     subjudul "Kelola produksi & bisnis printmu dengan mudah"
+     kembali seimbang jaraknya. Di HP (29px -> 24px) sapaan juga
+     tidak lagi memakan terlalu banyak tinggi layar. */
+  font-size: clamp(1.5rem, 4.4vw, 2.05rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.pf-home__hello-line,
+.pf-home__hello-name {
+  display: block;
+}
+
+.pf-home__sub {
+  margin-top: 0.85rem;
+  color: #8fa9b1;
+  font-size: clamp(0.95rem, 3.1vw, 1.08rem);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------
+   DAFTAR KARTU
+   --------------------------------------------------------------------- */
+.pf-home__cards {
+  display: grid;
+  gap: clamp(1.15rem, 4vw, 1.6rem);
+  margin-top: clamp(1.8rem, 5vw, 2.5rem);
+}
+
+@media (min-width: 900px) {
+  .pf-home__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------------
+   KARTU MODUL
+   --------------------------------------------------------------------- */
+.pf-module-card {
+  --card-line: rgba(255, 255, 255, 0.1);
+
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.15rem;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(1rem, 4.5vw, 1.6rem);
+  border: 1px solid var(--card-border);
+  border-radius: clamp(1.55rem, 5.5vw, 2rem);
+  background:
+    radial-gradient(115% 72% at 14% 0%, var(--card-glow), transparent 60%),
+    linear-gradient(152deg, var(--card-bg-1), var(--card-bg-2));
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  color: #edf8f6;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.25s var(--pf-ease),
+    border-color 0.25s var(--pf-ease),
+    box-shadow 0.25s var(--pf-ease);
+}
+
+button.pf-module-card {
+  width: 100%;
+  cursor: pointer;
+}
+
+.pf-module-card--produksi {
+  --card-border: rgba(45, 212, 191, 0.22);
+  --card-border-hover: rgba(45, 212, 191, 0.5);
+  --card-glow: rgba(13, 148, 136, 0.3);
+  --card-bg-1: #083a3a;
+  --card-bg-2: #052a2d;
+  --card-accent: #2dd4bf;
+  --card-accent-soft: rgba(45, 212, 191, 0.12);
+  --card-accent-line: rgba(45, 212, 191, 0.22);
+  --card-button-1: #0d9488;
+  --card-button-2: #0f766e;
+  --card-button-ink: #f0fdfa;
+  --card-button-shadow: rgba(13, 148, 136, 0.28);
+}
+
+.pf-module-card--invoice {
+  --card-border: rgba(251, 191, 36, 0.22);
+  --card-border-hover: rgba(251, 191, 36, 0.52);
+  --card-glow: rgba(245, 158, 11, 0.18);
+  --card-bg-1: #2b2814;
+  --card-bg-2: #171b12;
+  --card-accent: #fbbf24;
+  --card-accent-soft: rgba(251, 191, 36, 0.1);
+  --card-accent-line: rgba(251, 191, 36, 0.24);
+  --card-button-1: #fbbf24;
+  --card-button-2: #f59e0b;
+  --card-button-ink: #2b1d04;
+  --card-button-shadow: rgba(245, 158, 11, 0.24);
+}
+
+.pf-module-card--locked {
+  --card-border: rgba(251, 191, 36, 0.12);
+  --card-border-hover: rgba(251, 191, 36, 0.2);
+  --card-glow: rgba(148, 163, 184, 0.06);
+  --card-bg-1: #23241b;
+  --card-bg-2: #151a15;
+  --card-accent: #c9a85a;
+  --card-accent-soft: rgba(201, 168, 90, 0.08);
+  --card-accent-line: rgba(201, 168, 90, 0.16);
+  --card-edge-top: rgba(201, 168, 90, 0.16);
+  --card-edge-bottom: rgba(201, 168, 90, 0.06);
+  --card-button-ink: #d7cba7;
+  cursor: pointer;
+}
+
+.pf-module-card--locked .pf-module-card__features {
+  opacity: 0.55;
+}
+
+@media (hover: hover) {
+  a.pf-module-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--card-border-hover);
+    box-shadow:
+      0 30px 70px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  a.pf-module-card:hover .pf-module-card__btn {
+    filter: brightness(1.05);
+  }
+}
+
+.pf-module-card:focus-visible {
+  outline: 2px solid var(--card-accent);
+  outline-offset: 4px;
+}
+
+.pf-module-card__wave {
+  position: absolute;
+  right: -8%;
+  bottom: 9%;
+  z-index: 0;
+  width: 82%;
+  height: auto;
+  color: var(--card-accent);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.pf-module-card__wave svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------------------------------------------------------------------
+   KEPALA KARTU: ikon + judul + deskripsi
+   --------------------------------------------------------------------- */
+.pf-module-card__head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.85rem, 3.5vw, 1.25rem);
+}
+
+.pf-module-card__icon {
+  position: relative;
+  display: grid;
+  width: clamp(4.15rem, 18vw, 5.1rem);
+  height: clamp(4.15rem, 18vw, 5.1rem);
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--card-accent-line);
+  border-radius: clamp(1.15rem, 4.8vw, 1.55rem);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08), transparent 60%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.18));
+  color: var(--card-accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+.pf-module-card__icon > svg {
+  width: 48%;
+  height: 48%;
+  stroke-width: 1.9;
+}
+
+.pf-module-card__lock {
+  position: absolute;
+  right: -0.3rem;
+  bottom: -0.3rem;
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border: 1px solid var(--card-accent-line);
+  border-radius: 999px;
+  background: #0a2328;
+  color: var(--card-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.pf-module-card__lock svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.pf-module-card__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.pf-module-card__title {
+  color: var(--card-accent);
+  font-size: clamp(1.45rem, 5vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.pf-module-card__desc {
+  max-width: 18ch;
+  margin-top: 0.55rem;
+  color: #bed0d2;
+  font-size: clamp(0.9rem, 3.2vw, 1rem);
+  line-height: 1.5;
+}
+
+.pf-module-card--invoice .pf-module-card__desc {
+  max-width: 17ch;
+}
+
+/* ---------------------------------------------------------------------
+   DERETAN FITUR
+   --------------------------------------------------------------------- */
+.pf-module-card__features {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--card-line);
+}
+
+.pf-module-feature {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0 0.2rem;
+}
+
+.pf-module-feature + .pf-module-feature {
+  border-left: 1px solid var(--card-line);
+}
+
+.pf-module-feature__icon {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--card-accent-line);
+  border-radius: 0.5rem;
+  background: var(--card-accent-soft);
+  color: var(--card-accent);
+}
+
+.pf-module-feature__icon svg {
+  width: 0.78rem;
+  height: 0.78rem;
+  stroke-width: 2.1;
+}
+
+.pf-module-feature__label {
+  min-width: 0;
+  color: #d0dfdd;
+  font-size: clamp(0.62rem, 2.5vw, 0.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+/* ---------------------------------------------------------------------
+   TOMBOL AKSI
+   --------------------------------------------------------------------- */
+.pf-module-card__btn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  min-height: clamp(2.8rem, 9.5vw, 3.15rem);
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 2.4rem;
+  border-radius: clamp(0.9rem, 3.6vw, 1.15rem);
+  background: linear-gradient(135deg, var(--card-button-1), var(--card-button-2));
+  box-shadow:
+    0 12px 26px var(--card-button-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  color: var(--card-button-ink);
+  font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: filter 0.2s var(--pf-ease);
+}
+
+.pf-module-card--locked .pf-module-card__btn {
+  border: 1px solid var(--card-accent-line);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.03));
+  box-shadow: none;
+}
+
+.pf-module-card__chevron {
+  position: absolute;
+  right: 1rem;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.pf-module-card__cta-lock {
+  margin-right: 0.45rem;
+}
+
+.pf-module-card__note {
+  position: relative;
+  z-index: 1;
+  margin-top: -0.2rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--card-accent-line);
+  border-radius: 0.9rem;
+  background: rgba(0, 0, 0, 0.18);
+  color: #c4d4d5;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* =====================================================================
+   BERANDA DESKTOP
+   =====================================================================
+   Mulai 1180px beranda mengikuti komposisi gambar acuan owner:
+   brand + sapaan + ilustrasi mesin cetak di kolom kiri, dua kartu modul
+   bertumpuk di kolom kanan, lalu footer tipis selebar layar.
+
+   Angka jarak di bawah dihitung pada kanvas acuan 1763x892 lalu diskalakan
+   dengan clamp/rem supaya proporsinya tetap terjaga di laptop dan monitor
+   lebar. Di bawah 1180px tata letak lama (bertumpuk) tetap dipakai.
+   ===================================================================== */
+@media (min-width: 1180px) {
+  /* Seluruh ukuran desktop memakai rem. Akar font diskalakan dari kanvas
+     acuan 1763x892: pakai sisi yang paling sempit supaya komposisi tetap
+     utuh saat browser tidak di-zoom, termasuk di layar 12,5" yang pendek.
+     Di 1763x892 nilainya tepat 16px (1:1 dengan referensi); di layar lebih
+     besar tetap dibatasi 16px agar teks tidak membesar berlebihan. */
+  html:has(.pf-home) {
+    font-size: clamp(10px, 0.907544vw, 16px);
+    font-size: clamp(10px, min(0.907544vw, 1.793722vh), 16px);
+  }
+
+  html body:has(.pf-home) {
+    background:
+      radial-gradient(64rem 46rem at 0% 0%, rgba(15, 180, 162, 0.20), transparent 64%),
+      radial-gradient(78rem 56rem at 35% 77%, rgba(0, 103, 94, 0.25), transparent 65%),
+      radial-gradient(54rem 40rem at 100% 8%, rgba(5, 145, 136, 0.17), transparent 68%),
+      linear-gradient(126deg, #031b20 0%, #02171d 48%, #041a20 100%);
+  }
+
+  html body:has(.pf-home) .app-main {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  .pf-home {
+    max-width: none;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+
+  .pf-home__shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(32rem, 32.2vw, 35.5rem);
+    column-gap: 4rem;
+    width: min(90rem, calc(100vw - 2rem));
+    margin-inline: auto;
+    padding: 3.25rem 1.75rem 0 0;
+  }
+
+  .pf-home__left {
+    position: relative;
+    min-width: 0;
+  }
+
+  /* ---------------------------- brand ---------------------------- */
+  .pf-home__brand {
+    gap: 2.625rem;
+    margin-left: -0.25rem;
+  }
+
+  .pf-home__logo {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1.35rem;
+  }
+
+  .pf-home__logo-img {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .pf-home__wordmark {
+    position: relative;
+    top: 3px;
+    color: #2dd4bf;
+    font-size: 1.6875rem;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+
+  /* ---------------------------- sapaan --------------------------- */
+  .pf-home__intro {
+    margin-top: 1.6875rem;
+    padding-left: 0.875rem;
+  }
+
+  .pf-home__hello {
+    color: #ffffff;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 2.2vw, 2.3rem);
+    font-weight: 400;
+    letter-spacing: -0.012em;
+    line-height: 1.08;
+    text-shadow: none;
+  }
+
+  .pf-home__hello-line,
+  .pf-home__hello-name {
+    display: inline;
+  }
+
+  .pf-home__hello-line {
+    text-transform: capitalize;
+  }
+
+  .pf-home__hello-name {
+    color: #ffc80a;
+  }
+
+  .pf-home__sub {
+    margin-top: 0.1875rem;
+    color: #adc0c4;
+    font-size: 1.375rem;
+    font-weight: 500;
+    letter-spacing: -0.016em;
+    line-height: 1.35;
+  }
+
+  /* ------------------------- ilustrasi --------------------------- */
+  /* Revisi: ilustrasi turun 1rem (margin-top 2.5 -> 3.5rem) dan diperbesar
+     +4rem (~8%). Sisi kiri tetap di tempat (margin-left -5rem), jadi
+     pelebarannya ke kanan; jarak ke kartu modul masih sekitar 5rem. */
+  .pf-home__art {
+    display: block;
+    width: calc(100% + 4rem);
+    max-width: 61.5rem;
+    margin-top: 3.5rem;
+    margin-left: -5rem;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .pf-home__art-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* --------------------------- kartu ----------------------------- */
+  .pf-home__cards {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    width: calc(100% + 2px);
+    flex-direction: column;
+    gap: 4.3125rem;
+    align-self: start;
+    margin-top: 3rem;
+  }
+
+  .pf-module-card {
+    --card-edge-top: rgba(255, 255, 255, 0.08);
+    --card-edge-bottom: rgba(255, 255, 255, 0.02);
+
+    /* Padding kiri-kanan SAMA (1.75rem) supaya isi kartu (ikon, deretan
+       fitur, tombol) tepat di tengah kartu. Sebelumnya kiri 2.375rem dan
+       kanan cuma 0.625rem, jadi semua isi terdorong ke kanan. Atas dibuat
+       sedikit lebih tipis dari bawah (1.4 vs 1.75rem) karena judul/ikon
+       secara optik mulai ~0.35rem di bawah tepi atas kotaknya. */
+    min-height: 18.125rem;
+    gap: 0;
+    padding: 1.4rem 1.75rem 1.75rem;
+    border-color: transparent;
+    border-radius: 1.875rem;
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.34),
+      inset 0 1px 0 var(--card-edge-top),
+      inset 0 -1px 0 var(--card-edge-bottom);
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+
+  .pf-module-card--produksi {
+    --card-glow: rgba(0, 150, 138, 0.28);
+    --card-bg-1: #073e3d;
+    --card-bg-2: #033032;
+    --card-accent: #14ddca;
+    --card-accent-soft: rgba(20, 221, 202, 0.12);
+    --card-accent-line: rgba(20, 221, 202, 0.22);
+    --card-edge-top: rgba(45, 212, 191, 0.24);
+    --card-edge-bottom: rgba(45, 212, 191, 0.10);
+    --card-button-1: #0a9588;
+    --card-button-2: #08786e;
+
+    min-height: 18rem;
+    margin-top: 2px;
+  }
+
+  .pf-module-card--invoice {
+    --card-glow: rgba(245, 158, 11, 0.227);
+    --card-bg-1: #312c10;
+    --card-bg-2: #181a0f;
+    --card-accent: #feb710;
+    --card-accent-soft: rgba(254, 183, 16, 0.10);
+    --card-accent-line: rgba(254, 183, 16, 0.24);
+    --card-edge-top: rgba(251, 191, 36, 0.24);
+    --card-edge-bottom: rgba(251, 191, 36, 0.10);
+    --card-button-1: #feb31a;
+    --card-button-2: #f59e0b;
+  }
+
+  .pf-module-card__wave {
+    right: -7%;
+    bottom: 6%;
+    width: 92%;
+    opacity: 0.14;
+  }
+
+  .pf-module-card__head {
+    gap: 1.875rem;
+  }
+
+  .pf-module-card__icon {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 1.5rem;
+  }
+
+  .pf-module-card__icon > svg {
+    width: 50%;
+    height: 50%;
+    stroke-width: 1.8;
+  }
+
+  .pf-module-card__title {
+    color: var(--card-accent);
+    font-size: 2.125rem;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  .pf-module-card__copy {
+    padding-top: 0.125rem;
+  }
+
+  .pf-module-card__desc {
+    max-width: 11rem;
+    margin-top: 0.5625rem;
+    color: #d3e1e2;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.35;
+  }
+
+  .pf-module-card__features {
+    margin-top: auto;
+    padding-top: 1.375rem;
+  }
+
+  .pf-module-feature {
+    min-height: 0;
+    gap: 0.4rem;
+    padding: 0 0.25rem;
+  }
+
+  .pf-module-feature__icon {
+    width: 1.375rem;
+    height: 1.375rem;
+    border-radius: 0.45rem;
+  }
+
+  .pf-module-feature__icon svg {
+    width: 0.82rem;
+    height: 0.82rem;
+  }
+
+  .pf-module-feature__label {
+    color: #d7e4e3;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+  }
+
+  .pf-module-card__btn {
+    min-height: 3.4375rem;
+    margin-top: 1.375rem;
+    padding: 0.7rem 2.5rem;
+    border-radius: 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+
+  .pf-module-card__chevron {
+    right: 1.1rem;
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  /* --------------------------- footer ---------------------------- */
+  html body:has(.pf-home) footer {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 6px 0.8125rem 1.4375rem 1.375rem;
+    color: #88a7a8;
+    font-family: var(--font-sans);
+    font-size: 1.01rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  html body:has(.pf-home) footer a {
+    color: #5eead4;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  html body:has(.pf-home) footer > div {
+    max-width: none;
+    margin: 0;
+    padding-top: 1.5625rem;
+    border-color: rgba(120, 140, 160, 0.30);
+  }
+
+  html body:has(.pf-home) footer a[href="/catatan-perubahan"] {
+    font-size: 1.03rem;
+  }
+
+  html body:has(.pf-home) footer a[href="/catatan-perubahan"] svg {
+    width: 1.0625rem;
+    height: 1.0625rem;
+  }
+}
+
+/* Di layar yang mendekati kanvas acuan (1763px), ilustrasi digeser sedikit
+   ke kiri supaya tanaman dan mesin cetak duduk tepat di bawah sapaan.
+   Di layar lebih sempit gambar tetap di dalam kolom agar tidak terpotong. */
+@media (min-width: 106.25rem) {
+  .pf-home__left {
+    min-height: 47.375rem;
+  }
+
+  /* Revisi: top 12 -> 13rem (turun), width 59.5 -> 62.75rem (+5,5%),
+     left -10 -> -10.75rem supaya sisi kanan ilustrasi tidak merapat ke
+     kartu modul dan sisi bawahnya tidak menyentuh garis footer. */
+  .pf-home__art {
+    position: absolute;
+    top: 13rem;
+    left: -10.75rem;
+    width: 62.75rem;
+    max-width: none;
+    margin: 0;
+  }
+}

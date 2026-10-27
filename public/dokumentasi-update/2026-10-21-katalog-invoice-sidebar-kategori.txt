@@ -1,0 +1,80 @@
+PRINT FLOW - KATEGORI POP UP KATALOG JADI SIDEBAR
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Di pop up "Katalog Produk" pada editor invoice, deretan tab kategori
+mendatar di atas daftar produk sekarang menjadi SIDEBAR di kiri.
+
+- Daftar kategori tampil vertikal, lengkap dengan jumlah produk.
+- Satu kategori aktif ditandai isian teal (bukan garis bawah).
+- Daftar produk di kanan tetap bisa digulir sendiri; sidebar juga
+  punya gulir sendiri bila kategorinya banyak.
+- Di layar lebar daftar produk dibuat 3 kolom (sebelumnya 4) supaya
+  ukuran kartu tetap nyaman setelah lebar sidebar terpakai.
+- Di HP (di bawah 768px) bentuknya TIDAK diubah: tetap tab kategori
+  mendatar, karena sidebar akan menghabiskan lebar kartu produk.
+
+Halaman Katalog (kelola produk) tidak berubah: tab kategori mendatar
+tetap dipakai di sana.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/components/CatalogParts.tsx
+   - Hitungan kategori dipusatkan di categoryRows() (sekali jalan),
+     dipakai oleh tab maupun sidebar.
+   - Komponen baru CategorySidebar: daftar kategori vertikal dengan
+     jumlah produk dan keadaan aktif.
+
+2. src/components/CatalogPicker.tsx
+   - Sidebar kategori di kiri (mulai lebar 768px).
+   - Tab kategori lama tetap dipakai di HP lewat pembungkus md:hidden.
+   - Grid kartu produk di layar lebar menjadi 3 kolom agar kartu tidak
+     menyempit.
+
+Yang TIDAK berubah: pencarian, pemilihan produk (klik = masuk invoice
+lalu pop up tertutup), pilihan tampilan Kartu/Ringkas, isi katalog,
+halaman Katalog, database, dan API.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogPicker.tsx
+- src/components/CatalogParts.tsx
+- public/dokumentasi-update/2026-10-21-katalog-invoice-sidebar-kategori.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- npx eslint (dua file yang diubah): lolos.
+- Uji render di browser (lebar 800px):
+  - sidebar tampil 160px di kiri, daftar produk 548px di kanan;
+  - kategori "Semua" aktif dan 14 produk tampil;
+  - klik "CETAK FOTO" menyaring menjadi 1 produk;
+  - mode gelap: latar sidebar, teks, dan kategori aktif terbaca.
+- Tampilan di HP belum diuji di perangkat; bagian itu memakai tab
+  kategori lama tanpa perubahan kode.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+- Bila kategori sering lebih dari 12, sidebar sudah bisa digulir;
+  tidak perlu perubahan lain.
+- Bila di laptop kecil sidebar terasa sempit, lebarnya bisa
+  dinaikkan dari w-40 menjadi w-48 di CatalogPicker.tsx.

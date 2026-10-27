@@ -22,20 +22,22 @@ export function UserMenu({ name, role }: { name: string; role: UserRole }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-label={`Akun ${name}`}
-        className={`flex h-10 min-w-0 max-w-[calc(100vw-11rem)] items-center gap-2 rounded-xl border px-2.5 text-white transition md:h-9 md:max-w-none ${
-          open ? "border-teal-300/50 bg-white/20" : "border-white/15 bg-white/10 hover:bg-white/15"
+        className={`flex h-10 min-w-0 max-w-[calc(100vw-11rem)] items-center gap-2 rounded-xl border px-2.5 text-[color:var(--pf-ink)] transition md:h-9 md:max-w-none ${
+          open
+            ? "border-[color:var(--pf-accent-line)] bg-[color:var(--pf-accent-soft)]"
+            : "border-[color:var(--pf-line)] bg-[color:var(--pf-surface-2)] hover:border-[color:var(--pf-accent-line)] hover:bg-[color:var(--pf-accent-soft)]"
         }`}
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-[10px] font-bold text-[color:var(--pf-ink)]">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-[10px] font-bold text-black">
           {name.slice(0, 1).toUpperCase()}
         </span>
         <span className="block min-w-0 overflow-hidden whitespace-nowrap text-left md:hidden xl:block">
           <span className="block truncate text-[11px] font-bold leading-none" title={name}>{name}</span>
-          <span className="mt-0.5 block text-[9px] text-cyan-100/60">{roleLabel(role)}</span>
+          <span className="mt-0.5 block text-[9px] text-[color:var(--pf-ink-2)]">{roleLabel(role)}</span>
         </span>
         <ChevronDown
           size={13}
-          className={`shrink-0 text-cyan-100/60 transition-transform md:hidden xl:block ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 text-[color:var(--pf-ink-3)] transition-transform md:hidden xl:block ${open ? "rotate-180" : ""}`}
         />
       </button>
 

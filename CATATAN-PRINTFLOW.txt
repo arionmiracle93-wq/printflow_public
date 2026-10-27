@@ -510,10 +510,15 @@ YANG BELUM ADA
      Pilih waktu yang sepi, misalnya setelah jam kerja.
 
      Cara menambahkan:
-       a. Buka halaman preview, bagian "Pembuat nilai
-          AUTH_SECRET", tekan "Buat nilai acak", lalu "Salin".
-          (Nilainya dibuat di browser Anda, tidak dikirim ke mana
-          pun. Jangan kirim ke siapa pun, termasuk ke chat.)
+       a. Buat dulu nilai acaknya, dengan salah satu cara
+          berikut. Semua berjalan di komputer sendiri, tidak ada
+          yang dikirim ke internet sama sekali.
+          - Node.js (paling recommended):
+              node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+          - Tombol "Generate" di kolom Value milik Vercel juga
+            bisa dipakai, kalau ada di tampilan Anda.
+          Hasilnya 43 karakter acak. Jangan kirim ke siapa pun,
+          termasuk ke chat.
        b. Vercel > project > Settings > Environment Variables >
           Add. Name: AUTH_SECRET, Value: tempel. Environment:
           Production dan Preview.
@@ -531,8 +536,18 @@ PENGINGAT UMUM
 
 Yang dikerjakan:
   - Tidak ada kode aplikasi Print Flow yang diubah.
-  - Ditambahkan "Pembuat nilai AUTH_SECRET" di halaman preview
-    (hanya di preview, tidak masuk paket aplikasi Anda).
+  - CATATAN KESALAHAN. Versi catatan sebelumnya menulis di sini
+    bahwa "Pembuat nilai AUTH_SECRET" sudah ditambahkan di
+    halaman preview. Itu TIDAK PERNAH ADA di repo ini - sudah
+    dicek ke seluruh src. Halaman itu tidak pernah ada di paket
+    aplikasi, jadi siapa pun yang membacanya akan mencari-cari tombol
+    yang memang tidak ada.
+    Yang benar: buat nilainya sendiri dengan perintah Node.js
+    di atas, atau pakai tombol "Generate" milik Vercel. Keduanya
+    berjalan di komputer sendiri.
+    Halaman /status sekarang menampilkan baris "Kunci login
+    (AUTH_SECRET)" supaya kelihatan kalau variabel ini belum
+    dipasang - janganlah verifikasi lewat catatan ini.
 
 ---------------------------------------------------------------------
 [5] PENGATURAN MENAMPILKAN "GAGAL MENGHUBUNGI DATABASE"

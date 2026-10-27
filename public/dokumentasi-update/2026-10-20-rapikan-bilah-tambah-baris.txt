@@ -1,0 +1,31 @@
+PRINT FLOW - BILAH "TAMBAH BARIS / KATALOG / JUMLAH ITEM" DIRAPIKAN
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Di editor invoice (HP), di bawah tabel item, tombol "Tambah Baris"
+dan "Katalog" bertumpuk dengan lebar berbeda, sementara "2 item" dan
+subtotal melayang di sisi kanan. Susunannya sekarang:
+
+HP:
+  [ + Tambah Baris ]  [ Katalog ]     <- dua tombol sama lebar & tinggi
+  2 item                 Rp 127.000   <- ringkasan satu baris di bawahnya
+
+Layar lebar (sm ke atas): satu baris, tombol di kiri, ringkasan
+(jumlah item + subtotal) di kanan.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+- src/components/InvoicePaperEditor.tsx
+  Hanya susunan (class) bilah di bawah tabel item. Fungsi tombol,
+  jumlah item, dan subtotal tidak berubah. Tombol Katalog tetap
+  tersembunyi saat cetak. Bila mode dokumen tidak menampilkan total,
+  hanya jumlah item yang tampil.
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.

@@ -1,0 +1,337 @@
+PRINT FLOW - BERANDA DUA MODUL & NAVIGASI PRODUKSI/INVOICE
+Tanggal: 2026-10-19
+Status: selesai di kode; pengujian perangkat/APK dilakukan pemilik
+
+================================================================
+RINGKASAN
+================================================================
+
+Mulai sekarang halaman "/" adalah Beranda pemilih modul, bukan
+dashboard Produksi. Pengguna melihat dua kartu setara:
+
+- Produksi  -> /produksi
+- Invoice   -> /invoice
+
+Dashboard Produksi dipindah ke /produksi. Modul Invoice tetap di
+/invoice. Setelah memilih modul, pengguna masuk ke dashboard modul
+itu. Deep link (misalnya tautan notifikasi atau parameter "next"
+setelah login) tetap didahulukan di atas Beranda.
+
+Perubahan ini juga merapikan navigasi supaya Invoice tidak lagi
+terasa sebagai submenu Produksi.
+
+================================================================
+ALASAN PERUBAHAN
+================================================================
+
+Sebelumnya dashboard Produksi berada di "/" dan Invoice hanya satu
+tab di menu utama, termasuk bottom nav HP. Akibatnya Invoice terlihat
+seperti fitur tambahan Produksi, padahal Invoice sudah punya
+dashboard, sidebar, dan frame sendiri di /invoice.
+
+Masalah utamanya bukan tampilan dashboard Invoice, tetapi titik masuk
+dan navigasi yang dipakai bersama. Karena itu yang diubah:
+
+1. Halaman masuk dibuat netral (Beranda dua kartu).
+2. Navigasi Produksi dipisahkan dari navigasi Invoice.
+3. Label, judul halaman, dan metadata tidak lagi hanya menyebut
+   "Monitoring Produksi".
+
+================================================================
+APA YANG BERUBAH
+================================================================
+
+1. Beranda "/" (v1.0)
+   - Dua kartu modul dengan ukuran dan bobot visual sama.
+   - Produksi memakai aksen teal, Invoice memakai aksen kuning.
+   - Kartu Invoice tampil TERKUNCI (bukan disembunyikan) untuk akun
+     yang belum punya izin. Teksnya "Perlu izin Owner".
+   - Kartu terkunci tetap bisa difokus dan diketuk, lalu menampilkan
+     penjelasan singkat.
+   - Beranda tidak memuat data dashboard. Hanya nama pengguna dan
+     status izin modul.
+   - Logo dan sapaan nama pengguna tetap tampil.
+
+2. Rute Produksi (v1.0)
+   - Dashboard Produksi pindah dari "/" ke "/produksi".
+   - Rute /pesanan, /pesanan/[id], /mitra, dan /serah-terima TIDAK
+     dipindah. Ini sengaja supaya URL push notification yang sudah
+     terkirim ke HP operator tidak rusak.
+   - Seluruh tautan lama yang mengarah ke "/" sebagai dashboard sudah
+     diarahkan ke "/produksi" (menu, error, not-found, status).
+
+3. Hak akses Invoice (v1.0)
+   - Owner selalu bisa.
+   - Karyawan bisa jika saklar izin Invoice aktif.
+   - Server tetap penjaga utama lewat getInvoiceAccess().
+   - Halaman Invoice yang dibuka langsung tanpa izin diarahkan ke
+     /tidak-diizinkan?dari=invoice.
+
+4. Navigasi Produksi vs Invoice (v1.1)
+   - MainNav sekarang hanya tampil di konteks Produksi dan halaman
+     bersama. MainNav TIDAK tampil di:
+       - "/" (Beranda)
+       - /invoice dan seluruh turunannya
+       - /pengaturan/invoice
+       - /tidak-diizinkan
+   - Artinya bottom nav Produksi (Dashboard, Kerjaan, Baru,
+     Pelanggan) tidak lagi muncul di dalam modul Invoice.
+   - Modul Invoice memakai InvoiceSidebar yang sudah ada.
+   - Switcher Produksi | Invoice tetap terlihat di header pada layar
+     md ke atas, termasuk di halaman bersama.
+   - Di halaman bersama (/pelanggan, /notifikasi, /pengaturan, dan
+     halaman utilitas lain), switcher menyorot modul terakhir yang
+     dibuka. Sorotan itu hanya penanda; tidak mengubah tujuan navigasi.
+   - Di HP, pilihan Produksi dan Invoice ditambahkan ke menu tiga
+     titik (MoreMenu), khusus layar kecil. Tombol Beranda tetap ada
+     di menu yang sama.
+   - Menu Invoice di MoreMenu otomatis disembunyikan untuk akun yang
+     tidak punya izin Invoice.
+
+5. Label dan metadata (v1.1)
+   - Judul aplikasi menjadi "Print Flow - Produksi & Invoice".
+   - Subjudul header menjadi "Produksi & Invoice".
+   - Halaman /produksi punya judul "Produksi - Print Flow".
+   - Tombol di halaman Status yang sebelumnya "Dashboard" menjadi
+     "Beranda".
+   - Tagline footer disesuaikan menjadi "Produksi terpantau, tagihan
+     terkendali."
+
+6. PWA, cache, dan Back (v1.0)
+   - id manifest tetap "/" dan start_url tetap "/", jadi aplikasi yang
+     sudah terpasang tidak dianggap aplikasi baru.
+   - Shortcut "Dashboard Produksi" dan "Invoice" ditambahkan.
+   - Nama pendek manifest TETAP "Print Flow" (memakai spasi), sesuai
+     keputusan pemilik. PRD yang menulis "PrintFlow" tidak dipakai.
+   - Service worker menyimpan salinan Beranda "/" untuk mode offline.
+   - Cache halaman naik ke print-flow-pages-v3 supaya perangkat lama
+     membuang salinan "/" yang masih berisi dashboard Produksi.
+   - Tombol Back di akar modul /produksi dan /invoice kembali ke
+     Beranda; di Beranda berlaku konfirmasi tekan Back dua kali.
+
+7. Penamaan modul di Pengaturan
+   - Tab area pertama di /pengaturan berlabel "Produksi", bukan
+     "Print Flow", supaya konsisten dengan nama modul.
+   - Nilai URL "printflow" tidak diubah agar bookmark lama tetap
+     berfungsi.
+
+8. Cookie modul terakhir (P2)
+   - Cookie "print-flow-module" ditulis saat pengguna berada di dalam
+     modul Produksi atau Invoice.
+   - Cookie dibaca di layout server, divalidasi, lalu diteruskan ke
+     ModuleSwitcher untuk menyorot segmen yang terakhir dipakai.
+   - Cookie TIDAK PERNAH dipakai untuk redirect. Ini mengikuti aturan
+     D-03 di PRD: cookie hanya boleh menyorot navigasi di halaman
+     bersama.
+   - Kalau cookie belum ada, kedua segmen tampil netral (tidak ada
+     sorotan). Halaman bersama tidak memaksa pengguna ke modul mana pun.
+
+9. Pengamanan parameter "next" setelah login (P2)
+   - Hanya path internal yang diterima.
+   - "//domain-lain" dan path yang mengandung backslash ditolak,
+     karena browser bisa menafsirkannya sebagai alamat host lain.
+   - URL dinormalisasi lebih dulu, lalu dicek origin-nya, supaya
+     redirect setelah login tetap berada di aplikasi.
+
+10. Shift di bottom navigation mobile (follow-up)
+   - Bottom navigation Produksi di HP sekarang berisi lima item:
+     Dashboard, Kerjaan, Baru, Pelanggan, Shift.
+   - Tombol "Baru" berada di slot ketiga - tepat di tengah dari lima
+     item - dan tetap menonjol sebagai tombol utama.
+   - Shift dihapus dari menu tiga titik (MoreMenu) supaya tidak muncul
+     dua kali di layar kecil.
+   - Badge jumlah serah terima yang menunggu tetap tampil di ikon
+     Shift, baik di bar atas maupun di bottom navigation.
+   - Pada lebar md ke atas, Shift tetap tampil di bar atas seperti
+     sebelumnya.
+
+11. Ringkasan Invoice desktop (follow-up)
+   - Empat kartu ringkasan di dashboard Invoice sekarang memakai item
+     dan gaya yang sama dengan versi HP:
+     Belum dibayar, Lewat tempo, Belum jatuh tempo, Sudah dibayar.
+   - Di desktop keempat kartu duduk sejajar dalam satu baris (4 kolom);
+     di tablet tetap 2x2, di HP tetap 2x2.
+   - Ikon, label, nominal, hint, dan garis progres memakai KpiCard yang
+     sama, jadi tidak ada lagi versi kartu kotak terpisah untuk desktop.
+   - "Lewat tempo" tetap bisa diklik untuk membuka filter terkait.
+
+12. Bottom navigation Invoice mobile (follow-up)
+   - Deretan tab di atas judul (Status, Riwayat, Katalog, Laporan,
+     Pengaturan) dipindahkan menjadi bottom navigation tetap di HP
+     dan tablet, mengikuti pola bottom nav Produksi.
+   - Susunannya: Status/Menu, Riwayat, Baru, Katalog, Laporan.
+     "Baru" berada di slot ketiga - tepat di tengah dari lima item -
+     dengan ikon + dan gaya tombol utama.
+   - "Pengaturan" dihapus dari deretan mobile karena sudah tersedia di
+     menu tiga titik header (MoreMenu). Di sidebar desktop, tautan
+     Pengaturan tetap ada.
+   - "Export CSV" di halaman daftar Invoice dan Laporan pindah ke drawer
+     tiga garis pada HP/tablet. Di desktop tombolnya tetap di kanan
+     judul. Drawer daftar Invoice tetap berisi filter status, sekarang
+     ditambah tautan Export CSV.
+   - Tombol "Invoice Baru" di kanan judul disembunyikan di HP/tablet
+     supaya tidak ada dua pintu ke halaman yang sama; di desktop tombol
+     itu tetap tampil.
+   - Drawer tiga garis menutup sendiri setelah salah satu tautannya
+     diklik, jadi filter status tidak meninggalkan panel terbuka di
+     halaman tujuan.
+   - Slot menu kini selalu ada di semua halaman modul Invoice,
+     termasuk Katalog. Katalog mengirim satu aksi ke drawer (Export
+     CSV produk), dan tombol Export CSV di badan halaman disembunyikan
+     di layar kecil supaya tidak ada dua pintu ke fungsi yang sama.
+
+================================================================
+YANG TIDAK BERUBAH
+================================================================
+
+- Skema database dan migrasi. Tidak perlu menjalankan /api/setup.
+- Logika produksi: KPI, antrean, status, tahapan, risiko, Insight AI.
+- Logika invoice: harga, pembayaran, katalog, laporan, pengaturan.
+- Sistem login, sesi, dan otorisasi yang sudah ada.
+- Rute /lacak/[token] untuk pelanggan.
+- Alur pencatatan pembayaran online maupun offline.
+
+================================================================
+LANGKAH WAJIB PEMILIK
+================================================================
+
+1. Tidak ada migrasi database dan tidak perlu /api/setup.
+2. Upload/deploy kode seperti biasa.
+3. Setelah deploy, buka aplikasi dan lakukan refresh penuh sekali.
+   Service worker akan mengganti cache lama dengan versi v13/v3.
+4. Untuk aplikasi Android yang sudah terpasang:
+   - tutup lalu buka ulang aplikasi;
+   - uji tombol Back dari /produksi dan /invoice;
+   - uji klik notifikasi;
+   - uji mode offline untuk Beranda dan Invoice.
+5. Pastikan akun karyawan yang berhak sudah punya izin Invoice di
+   halaman Pengguna. Kartu Invoice akan terbuka setelah refresh,
+   tanpa perlu login ulang.
+
+================================================================
+FILE YANG HARUS DIUPLOAD
+================================================================
+
+Inti perubahan:
+- src/app/page.tsx
+- src/app/produksi/page.tsx
+- src/components/ModuleHome.tsx
+- src/components/ModuleSwitcher.tsx
+- src/components/MainNav.tsx
+- src/components/MoreMenu.tsx
+- src/components/ExitOnBackConfirm.tsx
+- src/app/layout.tsx
+
+Pendukung:
+- src/app/api/pwa/manifest/route.ts
+- public/sw.js
+- src/app/error.tsx
+- src/app/not-found.tsx
+- src/app/tidak-diizinkan/page.tsx
+- src/app/status/page.tsx
+- src/app/invoice/page.tsx
+- src/app/globals.css
+- src/app/invoice/[id]/page.tsx
+- src/app/invoice/[id]/edit/page.tsx
+- src/app/invoice/baru/page.tsx
+- src/app/invoice/katalog/page.tsx
+- src/app/invoice/laporan/page.tsx
+- src/components/CatalogManager.tsx
+- src/app/pengaturan/invoice/page.tsx
+- src/components/InvoiceSidebar.tsx
+- src/components/InvoiceBottomNav.tsx (baru)
+- src/components/MobileDrawer.tsx
+- src/components/SettingsNav.tsx
+- src/components/useMounted.ts (hook baru)
+- src/components/usePendingHandoverCount.ts (komentar badge Shift)
+
+Perapian lint (P2):
+- src/app/pesanan/[id]/page.tsx
+- src/components/Greeting.tsx
+- src/components/LogoSettings.tsx
+- src/components/MainNav.tsx
+- src/components/MoreMenu.tsx
+- src/components/NavigationFeedback.tsx
+- src/components/PhotoQuickPeek.tsx
+- src/components/PushNotificationSettings.tsx
+- src/components/ThemeToggle.tsx
+- src/components/UserManagement.tsx
+- src/components/dashboard/HeroSlideshow.tsx
+- src/components/dashboard/Panels.tsx
+- src/components/LoginForm.tsx (pengamanan "next")
+
+Dokumentasi:
+- public/dokumentasi-update/2026-10-19-beranda-dua-modul-dan-navigasi-produksi-invoice.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+================================================================
+HASIL PENGUJIAN
+================================================================
+
+Yang sudah lulus:
+- npm run build
+- npm run typecheck
+- npm run lint (0 error, 0 warning)
+- Pengujian perangkat/APK dilakukan pemilik. Cakupan yang diminta:
+  Back, notifikasi, shortcut ikon, mode offline, dan tampilan bottom
+  nav di tiap modul.
+
+Catatan pengujian manual yang disarankan:
+1. Owner:
+   - login -> Beranda -> Produksi -> Invoice -> Produksi.
+   - pastikan tidak ada menu Produksi di dalam Invoice.
+2. Karyawan berizin Invoice:
+   - kartu Invoice terbuka; bottom nav Produksi tidak muncul di
+     Invoice; menu tiga titik punya Produksi dan Invoice.
+3. Karyawan tanpa izin Invoice:
+   - kartu Invoice terkunci; menu Invoice tidak muncul di MoreMenu;
+   - buka /invoice langsung -> halaman tidak diizinkan.
+4. Deep link:
+   - buka /pesanan/[id] saat belum login, login, lalu pastikan
+     kembali ke halaman itu (bukan Beranda).
+5. PWA/APK:
+   - aplikasi lama tetap terbuka normal (bukan aplikasi baru);
+   - ikon aplikasi membuka Beranda;
+   - shortcut Dashboard Produksi dan Invoice berfungsi;
+   - Back dari /produksi dan /invoice kembali ke Beranda.
+6. Bottom navigation HP:
+   - lima item tampil rapi di layar sempit;
+   - tombol Baru tepat di tengah;
+   - Shift membuka /serah-terima dan badge menunggu tetap terlihat;
+   - menu tiga titik tidak lagi menampilkan Shift.
+7. Ringkasan Invoice:
+   - di HP empat kartu tetap 2x2;
+   - di desktop empat kartu sejajar satu baris;
+   - nominal panjang dan hint tidak saling menabrak di layar 1024px;
+   - kartu "Lewat tempo" membuka filter lewat tempo.
+8. Bottom navigation Invoice (HP/tablet):
+   - lima item tampil: Status, Riwayat, Baru, Katalog, Laporan;
+   - tombol Baru dengan ikon + tepat di tengah dan menonjol;
+   - Status membuka drawer filter status + Export CSV;
+   - Export CSV tidak lagi tampil sebagai tombol terpisah di HP;
+   - Pengaturan hanya ada di menu tiga titik header;
+   - menu tiga garis menutup setelah tautan dipilih;
+   - di halaman Katalog, menu tiga garis tetap tampil dan berisi
+     Export CSV produk;
+   - di desktop sidebar dan tombol Export/Invoice Baru tetap seperti biasa.
+
+================================================================
+DAMPAK KUOTA / BIAYA
+================================================================
+
+Tidak ada tambahan biaya server atau database. Beranda sengaja tidak
+memuat data dashboard, jadi tidak menambah query bisnis. Pemeriksaan
+sesi dan izin memakai hasil yang sudah dihitung di layout.
+
+================================================================
+SARAN LANGKAH BERIKUTNYA
+================================================================
+
+1. Uji regresi singkat setelah deploy, terutama Back dan cache
+   service worker pada perangkat yang sudah memasang aplikasi lama.
+2. Pertimbangkan mempertahankan deep link saat sesi berakhir.
+   Saat ini pengguna tetap diberi alasan "sesi berakhir", tetapi
+   halaman yang sedang dibuka belum otomatis dipulihkan setelah login.
+3. Tahap 2: tambahkan counter ringkas di kartu Beranda (pekerjaan
+   aktif dan invoice belum lunas) lewat streaming terpisah, supaya
+   tidak menahan tampilan Beranda.

@@ -68,14 +68,30 @@ export function buildWhatsAppMessage(order: ShareOrder, url: string): string {
   return lines.filter((l) => l !== undefined).join("\n");
 }
 
+/**
+ * Versi tampilan tautan lacak.
+ *
+ * WhatsApp menyimpan pratinjau (judul, deskripsi, ikon) per URL. Kalau
+ * branding halaman /lacak diubah tetapi URL-nya tetap sama, tautan yang
+ * dibagikan berikutnya masih bisa memakai pratinjau lama. Naikkan angka ini
+ * setiap kali branding pratinjau berubah supaya tautan baru memakai URL baru
+ * dan WhatsApp mengambil metadata terbaru.
+ */
+export const TRACKING_LINK_VERSION = "4";
+
+/** URL publik halaman lacak + versi pratinjau WhatsApp. */
+export function buildTrackingUrl(origin: string, token: string): string {
+  return `${origin}/lacak/${token}?v=${TRACKING_LINK_VERSION}`;
+}
+
 /** Minta (atau ambil) token lacak lewat endpoint idempoten, lalu susun URL publiknya. */
 export async function ensureTrackingUrl(orderId: number, existingToken: string | null): Promise<{ token: string; url: string } | null> {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  if (existingToken) return { token: existingToken, url: `${origin}/lacak/${existingToken}` };
+  if (existingToken) return { token: existingToken, url: buildTrackingUrl(origin, existingToken) };
   const res = await fetch(`/api/orders/${orderId}/share`, { method: "POST" });
   const json = (await res.json()) as { ok: boolean; token?: string; error?: string };
   if (!json.ok || !json.token) return null;
-  return { token: json.token, url: `${origin}/lacak/${json.token}` };
+  return { token: json.token, url: buildTrackingUrl(origin, json.token) };
 }
 
 /**

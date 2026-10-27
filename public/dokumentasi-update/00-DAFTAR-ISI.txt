@@ -18,6 +18,189 @@ Anda bisa membacanya dengan 2 cara:
 DAFTAR FILE
 ================================================================
 
+[106] 2026-10-26-pembayaran-no-referensi-dan-perbaikan-qris.txt
+    Catat Pembayaran: kolom No. referensi (RRN / ID transaksi QRIS),
+    peringatan referensi kembar, tampil di riwayat dan jejak aktivitas.
+    Plus perbaikan audit QRIS: teks "tertera di atas" hanya bila QR
+    tampil (T2) dan CRC "6304" tidak lagi ditolak (T3). Kolom baru
+    dibuat otomatis, tidak perlu /api/setup.
+
+[105] 2026-10-25-riwayat-invoice-filter-status-dropdown.txt
+    Riwayat Dokumen (desktop): tujuh tombol filter status di sidebar
+    jadi dropdown, tertutup bawaan; tombol menampilkan filter aktif.
+    HP/tablet (menu geser Status) tidak berubah. Berkas baru
+    StatusFilterDropdown.tsx; invoice/page.tsx diubah.
+
+[104] 2026-10-25-dashboard-aksi-rata-tengah.txt
+    Dashboard produksi (desktop): judul kolom "Aksi" di Antrean
+    prioritas dirata-tengahkan dengan empat ikon tombol di bawahnya.
+    Hanya JobQueue.tsx; HP/tablet tidak berubah.
+
+[103] 2026-10-25-home-isi-kartu-tengah-dan-ilustrasi.txt
+    Homescreen desktop: isi kartu Produksi & Invoice dirata-tengahkan
+    (padding kiri = kanan, sebelumnya terdorong ke kanan). Ilustrasi
+    printer turun 1rem dan diperbesar sekitar 5,5%-8%. Hanya
+    src/app/home.css; HP/tablet tidak berubah.
+
+[102] 2026-10-25-logo-pojok-kanan-dan-kartu-wa.txt
+    Logo + nama usaha dipindah ke pojok kanan atas kartu status halaman
+    lacak. Kartu pratinjau WhatsApp: judul = nama usaha, gambar = logo
+    usaha (bukan lagi alamat domain). Gambar kecil 200 px (thumbnail di samping teks). Tautan baru ?v=4. Alamat domain
+    kecil di bawah kartu tetap tampil (butuh custom domain).
+
+[101] 2026-10-25-branding-preview-whatsapp.txt
+    Pratinjau WhatsApp halaman lacak memakai nama + logo usaha dari
+    Pengaturan, bukan "Print Flow"/ikon printer. Header/footer aplikasi
+    disembunyikan di halaman lacak. Tautan baru diberi ?v=2 agar cache
+    WhatsApp tidak memakai pratinjau lama. Domain tetap butuh custom
+    domain kalau ingin diganti.
+
+[100] 2026-10-24-riwayat-invoice-font-dan-mode-tampilan.txt
+    Riwayat invoice: nomor, nominal, tanggal, dan pekerjaan tidak lagi
+    terlalu tebal; pilihan tampilan Kartu / Padat / Ringkas dengan
+    switch yang sama seperti modul Katalog, pilihan diingat.
+
+[99] 2026-10-24-invoice-panel-bawah-2-kolom.txt
+    Invoice: area di bawah kertas (Pembayaran, Tambah item, Produksi,
+    Riwayat aktivitas) disusun 2 kolom mulai 768px agar tidak melar
+    selebar kertas; HP tetap 1 kolom.
+
+[98] 2026-10-24-login-kartu-tengah-layar.txt
+    Login desktop: kartu kini rata tengah vertikal layar (wadah dari
+    80vh jadi 100svh mulai tablet); sebelumnya selalu terlihat naik
+    karena di-center di 80% atas layar. Tampilan HP tidak berubah.
+
+[97] 2026-10-24-gaya-tombol-katalog.txt
+    Katalog: tombol aksi (Produk Baru/Induk Baru/Mode Cepat dan Sub-induk/
+    Varian/Ubah induk) jadi grup segmen seperti Kartu/Padat/Ringkas +
+    border tipis; tombol utilitas (Pilih, Impor/Export CSV, Contoh CSV,
+    Muat produk contoh) jadi outline polos. Hanya tampilan.
+
+[96] 2026-10-22-sub-induk-katalog-nota.txt
+    Katalog: hierarki dua tingkat NOTA > NCR A5 > varian. Sub-induk
+    berupa kartu sungguhan, varian lama bisa dipindah, nama invoice
+    memakai path lengkap, impor/export CSV memakai Induk "NOTA > NCR A5".
+    Mode Cepat bisa memilih sub-induk. Tanpa kolom database baru.
+
+[95] 2026-10-22-mode-cepat-katalog-nota.txt
+    Katalog: tombol Mode Cepat (Owner) membuat induk + varian rangkap x
+    warna + numerator/perforasi otomatis. Harga per rim, diskon grosir,
+    hasil per rim otomatis/manual, pratinjau bentrok nama, unduh CSV.
+    Tanpa perubahan database; memakai impor katalog mode merge.
+
+[94] 2026-10-21-katalog-varian-sub-kategori.txt
+    Katalog: kartu INDUK (mis. "Print HVS") berisi VARIAN (A4 Warna, A4
+    Hitam Putih, dst) yang tiap varian punya harga + tier sendiri. Tombol
+    "+ Varian", "Jadikan varian..." (pindah massal), picker invoice
+    ketuk-induk-lalu-pilih-varian, pencarian "hvs warna" langsung ke varian,
+    kolom Induk di CSV, hapus induk dengan pilihan nasib varian.
+
+[93] 2026-10-21-header-tema-terang.txt
+    Header aplikasi mengikuti tema: putih lembut saat tema terang
+    (bukan navy lagi), tetap navy saat tema gelap. Teks, ikon, dan
+    tombol disesuaikan agar kontras di kedua tema.
+
+[92] 2026-10-21-katalog-tombol-toolbar-dan-warna-invoice.txt
+    Toolbar Katalog: lima tombol aksi (Pilih, Impor CSV, Export CSV,
+    Contoh CSV, Muat produk contoh) dari 40 px menjadi 34 px. Teks
+    "Invoice" di header jadi hitam di atas kuning; tinggi tetap.
+
+[91] 2026-10-21-katalog-filter-kategori-dropdown.txt
+    Halaman Katalog (kelola produk): tab kategori mendatar diganti
+    dropdown di samping kolom cari (daftar kategori + jumlah, bisa
+    dicari, ada Kelola kategori). Di HP/tablet tetap menu bawah.
+
+[90] 2026-10-21-katalog-kelola-produk-tampilan-padat.txt
+    Halaman Katalog (kelola produk): pilihan tampilan Kartu / Padat /
+    Ringkas; bawaan Padat (kartu kecil 3-8 kolom). Mode Pilih tetap
+    berfungsi di semua tampilan.
+
+[89] 2026-10-21-katalog-invoice-tampilan-padat.txt
+    Pop up Katalog di invoice: pilihan tampilan baru "Padat" berupa
+    kartu kecil (gambar persegi, 3-5 kolom, lebih banyak produk terlihat).
+
+[88] 2026-10-21-katalog-invoice-sidebar-kategori.txt
+    Pop up Katalog di invoice: tab kategori mendatar menjadi sidebar
+    di kiri (dengan jumlah produk); di HP tetap tab mendatar.
+
+[87] 2026-10-21-perbaikan-pilih-kategori-di-form-produk.txt
+    Form Ubah Produk: semua kategori tampil sebagai chip yang bisa diklik
+    (sebelumnya daftar browser hanya menampilkan kategori yang cocok teks).
+
+[86] 2026-10-21-katalog-invoice-tampilan-ringkas.txt
+    Pop up Katalog di invoice punya pilihan tampilan Kartu / Ringkas
+    (daftar baris kecil, lebih muat di laptop kecil); pilihan diingat.
+
+[85] 2026-10-21-katalog-invoice-tutup-otomatis.txt
+    Pop up Katalog di editor invoice otomatis tertutup begitu sebuah
+    produk diklik dan masuk ke kertas invoice.
+
+[84] 2026-10-21-nama-produk-boleh-kembar-dan-saran-invoice.txt
+    Nama produk boleh sama asal isi kolom Keterangan beda (indeks lama
+    diganti otomatis); saran produk invoice disamakan dengan pencarian Katalog.
+
+[83] 2026-10-21-pencarian-dari-awal-kata.txt
+    Pencarian Katalog hanya cocok dari awal kata: "ro" menemukan Roll
+    Banner, tidak lagi X banner albatros. Pencarian ukuran (90) tetap jalan.
+
+[82] 2026-10-21-hapus-badge-kategori-kartu-produk.txt
+    Badge nama kategori di pojok kiri atas gambar kartu produk dihapus
+    (Katalog dan pemilih produk invoice); kategori tetap lewat tab filter.
+
+[81] 2026-10-21-perbaikan-lag-animasi-tutup-menu-geser.txt
+    Menutup menu geser (drawer) di HP kini sehalus membukanya: animasi
+    hanya transform/opacity, panel dilepas tepat saat animasi selesai.
+
+[80] 2026-10-20-animasi-menu-geser-smooth.txt
+    Menu geser (drawer) di HP: meluncur dari kiri dengan kurva halus,
+    ada animasi keluar; berlaku untuk semua menu geser di aplikasi.
+
+[79] 2026-10-20-katalog-drawer-kategori-teratas.txt
+    Menu tiga garis Katalog: baris Kategori dipindah ke urutan paling
+    atas, di atas Import CSV / Contoh CSV / Muat produk contoh.
+
+[78] 2026-10-20-katalog-hp-tanpa-mode-dokumen.txt
+    Katalog di HP: dropdown "Semua dokumen" (Mode Dokumen) disembunyikan
+    karena tidak berkaitan dengan katalog; halaman lain tidak berubah.
+
+[77] 2026-10-20-katalog-hp-3-kolom-compact.txt
+    Katalog di HP: 3 produk per baris dengan kartu lebih ringkas
+    (keterangan disembunyikan di HP); tablet/desktop tidak berubah.
+
+[76] 2026-10-20-rapikan-bilah-tambah-baris.txt
+    Editor invoice: tombol Tambah Baris dan Katalog sama lebar dalam satu
+    baris, ringkasan jumlah item + subtotal rapi di bawahnya (HP).
+
+[75] 2026-10-20-pencarian-minimal-2-huruf.txt
+    Pencarian katalog baru menyaring setelah minimal 2 huruf; 1 huruf
+    menampilkan semua produk (dengan petunjuk). Berlaku juga untuk saran
+    produk di editor invoice.
+
+[74] 2026-10-20-pencarian-ukuran-60x90.txt
+    Pencarian produk menganggap ukuran rapat dan renggang sama:
+    "60x90" = "60 x 90" = "60X90" = "60×90".
+
+[73] 2026-10-20-perbaikan-pencarian-katalog.txt
+    Pencarian katalog tidak lagi literal: "banner" menemukan
+    "Spanduk" lewat sinonim; normalisasi huruf/tanda baca; katalog
+    dimuat ulang saat dibuka; service worker dimatikan di development.
+
+[72] 2026-10-20-menu-katalog-mobile-dan-sapaan.txt
+    Tombol impor/contoh katalog dan filter kategori pindah ke menu
+    tiga garis di HP/tablet; kategori memakai dropdown. Sapaan
+    Beranda diperkecil.
+
+[71] 2026-10-20-redesign-home-screen-dua-modul.txt
+    Beranda "/" dibuat ulang sesuai gambar referensi: latar gelap,
+    brand + sapaan besar, logo resmi Print Flow, dua kartu modul
+    setara dengan ikon, tiga fitur, tombol lebar, dan kartu Invoice
+    terkunci yang tetap tampil.
+
+[70] 2026-10-19-beranda-dua-modul-dan-navigasi-produksi-invoice.txt
+    Beranda dua modul setara, dashboard Produksi pindah ke
+    /produksi, kartu Invoice terkunci, switcher modul, serta
+    pemisahan navigasi Produksi dan Invoice.
+
 [69] 2026-10-12-invoice-f-offline-pembayaran-dan-auto-refresh.txt
     Modul Invoice tahap F: Catat Pembayaran dan Tandai Lunas bisa
     offline (antrean di perangkat, terkirim otomatis, anti-dobel),

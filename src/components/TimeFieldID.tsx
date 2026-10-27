@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { Clock } from "lucide-react";
+import { PopoverPanel } from "@/components/PopoverPanel";
+import { TimePicker } from "@/components/TimePicker";
 
 /**
  * Input jam yang SELALU tampil format 24 jam hh:mm.
@@ -11,9 +13,22 @@ import { Clock } from "lucide-react";
  * muncul AM/PM), dan tidak bisa diatur dari CSS. Komponen ini sepasang
  * dengan DateFieldID, jadi field tanggal dan jam tampil seragam.
  *
+ * Popup-nya sekarang milik aplikasi juga, lewat TimePicker + PopoverPanel
+ * yang sama dengan kalender.
+ *
+ * SEBELUMNYA popup jam masih milik browser. Waktu itu tombol ikon
+ * memanggil `showPicker()` pada <input type="time"> yang disembunyikan,
+ * sehingga yang muncul adalah panel abu-abu milik sistem operasi:
+ * warnanya tidak ikut tema, font dan jaraknya tidak bisa diatur, dan di
+ * aplikasi gelap ia menimpa isian-isian lain dengan gaya yang sama sekali
+ * berbeda. Satu-satunya popup di aplikasi ini yang tidak seragam - dan
+ * sekarang tidak ada lagi.
+ *
  * - Boleh diketik manual (angka otomatis diberi ":" setelah 2 digit).
- * - Ada tombol ikon jam yang memicu pemilih jam bawaan perangkat; hasil
- *   pilihannya otomatis ditulis ulang jadi hh:mm.
+ * - Ikon jam membuka panel milik aplikasi; hasil pilihannya ditulis
+ *   ulang jadi hh:mm.
+ * - Menit yang tidak ada di daftar (mis. 07) tetap bisa diketik manual -
+ *   panel hanya menawarkan kelipatan 5, bukan membatasi input.
  * - Value yang dikirim ke parent (onChange) tetap "HH:mm" atau "" -
  *   kompatibel dengan state & body API yang sudah ada.
  * - Kalau ketikan belum lengkap/tidak valid lalu field ditinggalkan, teks
@@ -40,7 +55,19 @@ export function TimeFieldID({
     setSyncedValue(value);
     setText(value);
   }
-  const nativeRef = useRef<HTMLInputElement>(null);
+  const [buka, setBuka] = useState(false);
+  const tombolRef = useRef<HTMLButtonElement>(null);
+
+  /* TIDAK ada efek "klik di luar" di sini.
+
+     Waktu itu efeknya ada di komponen ini dengan bungkusRef yang
+     ditempelkan pada div isian. Panel popup - yang sudah dipindahkan ke
+     document.body - adalah SAUDARA div itu, bukan anaknya, sehingga
+     setiap ketukan di dalam panel terbaca sebagai klik di luar: popup
+     menutup pada mousedown dan click-nya tidak pernah sampai ke tombol.
+
+     Sekarang keduanya ditangani di dalam PopoverPanel, yang menguji
+     "di dalam" ke isian DAN panel sekaligus. */
 
   function handleTextChange(raw: string) {
     const digits = raw.replace(/\D/g, "").slice(0, 4);
@@ -68,23 +95,8 @@ export function TimeFieldID({
     if (text !== value) setText(value);
   }
 
-  function openPicker() {
-    const el = nativeRef.current;
-    if (!el || disabled) return;
-    if (typeof el.showPicker === "function") {
-      try {
-        el.showPicker();
-        return;
-      } catch {
-        // Sebagian browser menolak showPicker() di kondisi tertentu - lanjut fallback.
-      }
-    }
-    el.focus();
-    el.click();
-  }
-
-  return (
-    <div className="relative">
+  const pemicu = (
+    <>
       <input
         id={id}
         type="text"
@@ -99,32 +111,41 @@ export function TimeFieldID({
         className={`${className} pr-10`}
       />
       <button
+        ref={tombolRef}
         type="button"
-        onClick={openPicker}
+        onClick={() => setBuka((v) => !v)}
         disabled={disabled}
-        tabIndex={-1}
-        title="Pilih jam"
+        aria-expanded={buka}
+        aria-haspopup="dialog"
         aria-label="Pilih jam"
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400 hover:text-teal-600 disabled:cursor-not-allowed"
+        title="Pilih jam dari panel"
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400 transition-colors hover:text-[color:var(--pf-accent-strong)] disabled:cursor-not-allowed"
       >
         <Clock size={16} />
       </button>
-      {/* Native time input disembunyikan visual - cuma dipakai untuk memicu
-          pemilih jam bawaan perangkat. Ukuran 1px (bukan 0) supaya
-          showPicker() tetap diizinkan oleh browser. */}
-      <input
-        ref={nativeRef}
-        type="time"
-        value={value}
-        onChange={(e) => {
-          setSyncedValue(e.target.value);
-          onChange(e.target.value);
-          setText(e.target.value);
-        }}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0"
-      />
-    </div>
+    </>
+  );
+
+  return buka ? (
+    <PopoverPanel
+      label="Pilih jam"
+      onTutup={() => setBuka(false)}
+      isi={
+        <TimePicker
+          nilai={value}
+          onPilih={(v) => {
+            setSyncedValue(v);
+            setText(v);
+            onChange(v);
+            setBuka(false);
+            tombolRef.current?.focus();
+          }}
+        />
+      }
+    >
+      {pemicu}
+    </PopoverPanel>
+  ) : (
+    <div className="relative">{pemicu}</div>
   );
 }

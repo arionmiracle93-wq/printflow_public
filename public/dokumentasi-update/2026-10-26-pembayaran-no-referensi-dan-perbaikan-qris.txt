@@ -1,0 +1,155 @@
+================================================================
+PEMBAYARAN — KOLOM NO. REFERENSI + PERBAIKAN QRIS (T2 & T3)
+Tanggal : 26-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Tiga hal dari hasil audit QRIS:
+
+1) KOLOM "No. referensi" (opsional) di panel Catat Pembayaran.
+   Isi dengan ID transaksi QRIS / RRN transfer yang disalin dari
+   aplikasi merchant atau m-banking. Tampil di riwayat pembayaran
+   ("Ref: ...") dan di jejak aktivitas invoice. Untuk metode Cash
+   kolomnya otomatis disembunyikan.
+2) PERINGATAN REFERENSI KEMBAR. Kalau nomor referensi yang sama
+   sudah tercatat (di invoice ini ataupun invoice lain), sistem
+   berhenti dan menanyakan dulu, supaya satu transaksi tidak
+   tercatat dua kali. Satu transfer memang boleh melunasi beberapa
+   invoice, jadi ini peringatan yang bisa dikonfirmasi, bukan
+   larangan. Pembayaran yang sudah dibatalkan tidak dihitung.
+3) PERBAIKAN T2 dan T3 dari audit:
+   T2: kalimat "Nominal sudah tertera pada QRIS di atas" di
+       cetak/PDF sekarang hanya muncul kalau QR-nya benar tampil.
+   T3: QRIS statis yang kode CRC-nya kebetulan "6304" tidak lagi
+       ditolak sebagai rusak.
+
+PENTING SAAT UPGRADE: TIDAK perlu membuka /api/setup. Kolom baru
+dibuat otomatis oleh sistem saat pertama kali dibutuhkan (invoice
+dibuka, dibuat, atau pembayaran dicatat). Perintah yang sama juga
+ditambahkan ke /api/setup untuk instalasi baru; aman dijalankan
+berulang.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) Database
+   - src/db/schema.ts : kolom baru payments.reference (teks, boleh
+     kosong).
+   - src/lib/payment-schema.ts (BARU) : ensurePaymentSchema().
+     Menjalankan ALTER TABLE payments ADD COLUMN IF NOT EXISTS
+     reference text + indeks pencarian (huruf besar/kecil diabaikan).
+     Hasilnya disimpan di memori, jadi hanya jalan sekali per
+     proses server. Dipanggil sebelum query pembayaran di:
+     getInvoiceDetail, createInvoice, addPayment, voidPayment.
+   - src/app/api/setup/route.ts : dua perintah yang sama untuk
+     instalasi baru.
+
+B) Server (src/lib/invoice-queries.ts)
+   - PaymentInput punya reference dan confirmDuplicateReference.
+   - parsePaymentInput merapikan referensi: spasi berlebih dibuang,
+     maksimal 60 karakter. Kosong disimpan sebagai kosong (null).
+   - addPaymentInTx: sebelum cek kelebihan bayar, cek apakah
+     referensi sudah dipakai oleh pembayaran aktif. Kalau ya dan
+     belum dikonfirmasi: ditolak 409 kode REFERENSI_KEMBAR dengan
+     pesan yang menyebut nomor invoice yang sudah memakainya.
+     Urutan cek: referensi kembar dulu, baru kelebihan bayar.
+   - Jejak aktivitas: "Pembayaran Rp 200.000 via QRIS (ref ...)".
+   - Route API tidak berubah (sudah memakai parsePaymentInput).
+
+C) Antrean offline (src/lib/payment-queue.ts)
+   - Pembayaran yang mengantre membawa reference dan
+     confirmDuplicateReference. Item lama di antrean (sebelum
+     update) tetap jalan tanpa referensi.
+   - Kalau saat terkirim nanti ternyata referensinya kembar,
+     item ditandai "perlu ditinjau", sama seperti kelebihan bayar.
+
+D) Tampilan
+   - src/components/InvoicePaymentPanel.tsx : kolom "No. referensi
+     (opsional)" di form (disembunyikan untuk Cash), baris
+     "Ref: ..." di riwayat, dan dialog konfirmasi berurutan:
+     referensi kembar dulu, lalu kelebihan bayar. Kode percobaan
+     (clientRef) tetap sama selama konfirmasi, jadi tidak ada
+     risiko tercatat dobel.
+   - src/app/invoice/[id]/page.tsx : meneruskan reference ke panel.
+
+E) QRIS
+   - src/components/InvoicePayPanel.tsx (T2) : kalimat "Nominal
+     sudah tertera pada QRIS di atas" hanya tampil bila QRIS valid.
+   - src/lib/qris.ts (T3) : penanda CRC dicari dari 8 karakter
+     terakhir payload, bukan dengan lastIndexOf("6304"). Sebelumnya
+     payload valid yang CRC-nya "6304" (peluang 1 : 65.536) ditolak.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+1) Server, memakai KODE ASLI di database PostgreSQL sungguhan
+   (PGlite, versi WASM), mulai dari skema LAMA tanpa kolom baru:
+   21 pemeriksaan, semua lulus. Antara lain:
+   - kolom referensi terbentuk otomatis saat invoice pertama dibuat
+   - referensi dirapikan, dipotong 60 karakter, kosong -> null
+   - kirim ulang clientRef yang sama -> tidak dobel
+   - referensi kembar (beda huruf besar/kecil) ditolak di invoice
+     yang sama dan di invoice lain; pesan menyebut nomor invoice
+   - setelah pembayaran lama dibatalkan, referensi boleh dipakai lagi
+   - urutan: kembar -> kelebihan bayar; keduanya perlu konfirmasi
+   - tunai tanpa referensi tetap bekerja dan melunasi invoice
+   - perintah /api/setup aman dijalankan ulang
+2) Tampilan, di browser (Chromium): kolom muncul untuk QRIS dan
+   hilang untuk Cash; riwayat menampilkan "Ref:"; pada referensi
+   kembar muncul dialog, lalu permintaan kedua membawa konfirmasi
+   dengan clientRef yang sama; form dikosongkan setelah sukses.
+3) QRIS (T3): payload ber-CRC "6304" yang sebelumnya ditolak kini
+   valid; 13 skenario lama lainnya hasilnya tidak berubah.
+4) tsc --noEmit lulus tanpa error.
+
+BELUM DIUJI: database Neon/Vercel yang sebenarnya (uji memakai
+Postgres lokal), tema gelap, dan ekspor CSV. Mohon cek sekali
+setelah deploy: catat satu pembayaran QRIS dengan referensi, lalu
+coba catat referensi yang sama di invoice lain.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/db/schema.ts
+  src/lib/invoice-queries.ts
+  src/lib/payment-queue.ts
+  src/lib/qris.ts
+  src/app/api/setup/route.ts
+  src/app/invoice/[id]/page.tsx
+  src/components/InvoicePaymentPanel.tsx
+  src/components/InvoicePayPanel.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  src/lib/payment-schema.ts
+  public/dokumentasi-update/2026-10-26-pembayaran-no-referensi-dan-perbaikan-qris.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada biaya baru. Satu kali ALTER TABLE ringan per proses
+server, dan satu query pencarian referensi per pembayaran yang
+membawa referensi (memakai indeks).
+
+
+YANG SENGAJA BELUM DIKERJAKAN
+----------------------------------------------------------------
+- Ekspor CSV / laporan belum memuat nomor referensi.
+- Pembayaran DP yang dicatat dari editor saat membuat invoice
+  belum punya kolom referensi (bisa diisi nanti lewat Catat
+  Pembayaran berikutnya).
+- Referensi tidak divalidasi formatnya (setiap penyedia beda
+  format), hanya dirapikan dan dibatasi panjangnya.
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Tambah kolom referensi ke ekspor CSV untuk rekonsiliasi dengan
+  laporan settlement penyedia QRIS.
+- Kalau volume QRIS sudah ramai: integrasi Midtrans agar status
+  pembayaran terverifikasi otomatis lewat webhook.
+
+================================================================

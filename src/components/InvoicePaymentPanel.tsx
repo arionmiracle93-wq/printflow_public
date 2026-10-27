@@ -16,6 +16,8 @@ export type PanelPayment = {
   method: string;
   paidAt: string;
   note: string | null;
+  /** No. referensi transaksi (RRN / ID transaksi QRIS atau bank); kosong bila tidak diisi. */
+  reference: string | null;
   createdBy: string;
   voidedAt: string | null;
   voidedBy: string | null;
@@ -66,6 +68,7 @@ export function InvoicePaymentPanel({
   const [method, setMethod] = useState(PAY_METHODS.includes(defaultMethod as (typeof PAY_METHODS)[number]) ? defaultMethod : "Transfer");
   const [date, setDate] = useState(today);
   const [note, setNote] = useState("");
+  const [reference, setReference] = useState("");
   const [busy, setBusy] = useState(false);
   const [voiding, setVoiding] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,11 +89,28 @@ export function InvoicePaymentPanel({
     try {
       // Waktu pembayaran dicatat dari perangkat saat tombol ditekan (penting bila nanti terkirim belakangan lewat antrean offline).
       const paidAt = date && date !== today ? `${date}T12:00:00+07:00` : new Date().toISOString();
-      const base = { invoiceId, label, amount: value, method, note, paidAt, ref: clientRef.current };
-      let r = await submitPaymentOrQueue(base);
+      // Tunai tidak punya nomor referensi bank/QRIS, jadi isian referensi diabaikan.
+      let payload = {
+        invoiceId,
+        label,
+        amount: value,
+        method,
+        note,
+        reference: method === "Cash" ? "" : reference.trim(),
+        paidAt,
+        ref: clientRef.current,
+      };
+      let r = await submitPaymentOrQueue(payload);
+      // Dua konfirmasi berurutan: referensi kembar dulu, baru kelebihan bayar (urutan cek di server).
+      if (r.kind === "rejected" && r.code === "REFERENSI_KEMBAR") {
+        if (!confirm(`${r.error}\n\nTetap catat pembayaran ini?`)) return;
+        payload = { ...payload, confirmDuplicateReference: true } as typeof payload;
+        r = await submitPaymentOrQueue(payload);
+      }
       if (r.kind === "rejected" && r.code === "KELEBIHAN_BAYAR") {
         if (!confirm(`${r.error}\n\nTetap catat sebagai kelebihan bayar?`)) return;
-        r = await submitPaymentOrQueue({ ...base, confirmOverpay: true });
+        payload = { ...payload, confirmOverpay: true } as typeof payload;
+        r = await submitPaymentOrQueue(payload);
       }
       if (r.kind === "rejected") {
         setError(r.error || "Gagal mencatat pembayaran. Coba lagi.");
@@ -108,6 +128,7 @@ export function InvoicePaymentPanel({
       }
       setAmount("");
       setNote("");
+      setReference("");
       setDate(today);
       clientRef.current = uuid();
     } catch {
@@ -173,6 +194,7 @@ export function InvoicePaymentPanel({
                   {p.kind === "dp" ? "DP" : "Bayar"} · {formatRupiah(p.amount)} · {p.method}
                 </p>
                 <p className="text-slate-500">{formatDateTimeID(p.paidAt)} · dicatat {p.createdBy}</p>
+                {p.reference ? <p className="break-all text-slate-500">Ref: <span className="font-mono font-semibold">{p.reference}</span></p> : null}
                 {p.note ? <p className="break-words text-slate-500">{p.note}</p> : null}
                 {p.voidedAt ? <p className="break-words font-semibold text-rose-600">Dibatalkan {p.voidedBy ? `oleh ${p.voidedBy}` : ""}: {p.voidReason}</p> : null}
               </div>
@@ -212,10 +234,14 @@ export function InvoicePaymentPanel({
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="min-w-0 sm:col-span-2">
               <span className="label">Nominal (Rp)</span>
-              <div className="flex gap-2">
+              {/* HP: tombol "Lunasi sisa" pindah ke baris sendiri di bawah
+                  input. Semuanya berdempet di 360px membuat kolom angka
+                  hanya tersisa ~150px - sempit dan rawan salah ketik, dan
+                  ikut mengecil. sm: ke atas kembali berdampingan. */}
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="input min-w-0 flex-1" placeholder="0" />
                 {remaining > 0 ? (
-                  <button type="button" onClick={() => setAmount(String(remaining))} className="btn-secondary shrink-0 px-3 text-xs">
+                  <button type="button" onClick={() => setAmount(String(remaining))} className="btn-secondary min-h-11 shrink-0 px-3 text-xs sm:min-h-0">
                     Lunasi sisa
                   </button>
                 ) : null}
@@ -236,6 +262,22 @@ export function InvoicePaymentPanel({
               <span className="label">Tanggal bayar</span>
               <DateFieldID value={date} onChange={setDate} className="input min-w-0" />
             </label>
+            {method !== "Cash" ? (
+              <label className="min-w-0 sm:col-span-2">
+                <span className="label">No. referensi (opsional)</span>
+                <input
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  maxLength={60}
+                  autoComplete="off"
+                  className="input min-w-0 font-mono"
+                  placeholder="mis. ID transaksi QRIS atau RRN transfer"
+                />
+                <span className="mt-1 block text-[11px] text-slate-400">
+                  Salin dari aplikasi merchant / m-banking. Dipakai untuk mencocokkan mutasi dan mencegah satu transaksi tercatat dua kali.
+                </span>
+              </label>
+            ) : null}
             <label className="min-w-0 sm:col-span-2">
               <span className="label">Catatan (opsional)</span>
               <input value={note} onChange={(e) => setNote(e.target.value)} className="input min-w-0" placeholder="mis. cicilan ke-2, transfer BCA" />

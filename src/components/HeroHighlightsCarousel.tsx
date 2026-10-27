@@ -72,7 +72,7 @@ export function HeroHighlightsCarousel({ items }: { items: string[] }) {
             key={i}
             aria-hidden={i !== safeIndex}
             data-active={i === safeIndex ? "" : undefined}
-            className="pf-hl-item text-[11px] leading-relaxed text-white/85 [grid-area:1/1] md:text-xs"
+            className="pf-hl-item text-[11px] leading-relaxed text-[#1e4654] [grid-area:1/1] dark:text-white/85 md:text-xs"
           >
             {text}
           </p>
@@ -87,7 +87,7 @@ export function HeroHighlightsCarousel({ items }: { items: string[] }) {
               aria-label={`Lihat sorotan ${i + 1} dari ${items.length}`}
               onClick={() => setIndex(i)}
               className={`h-1.5 rounded-full transition-all ${
-                i === safeIndex ? "w-5 bg-amber-300" : "w-1.5 bg-white/30 hover:bg-white/50"
+                i === safeIndex ? "w-5 bg-amber-700 dark:bg-amber-300" : "w-1.5 bg-[#07384f]/30 hover:bg-[#07384f]/50 dark:bg-white/30 dark:hover:bg-white/50"
               }`}
             />
           ))}

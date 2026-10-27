@@ -1,0 +1,160 @@
+PRINT FLOW - SUB-INDUK KATALOG: NOTA > NCR A5 > VARIAN
+Tanggal: 2026-10-22
+Status: selesai di kode; typecheck + ESLint lolos; uji database menunggu DATABASE_URL
+
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Katalog sekarang mendukung hierarki dua tingkat yang asli:
+
+  NOTA (induk utama)
+    -> NCR A5 (sub-induk)
+         -> 2 Rangkap 1 Warna (varian)
+         -> 2 Rangkap 2 Warna (varian)
+    -> 3 Rangkap 2 Warna (varian langsung, data lama tetap sah)
+
+Sub-induk adalah kartu sungguhan: punya nama, keterangan, kategori
+(mengikuti induk utama), dan gambar sendiri. Varian di dalam sub-induk
+memakai harga dan harga bertingkat sendiri, sama seperti varian biasa.
+
+Yang TIDAK berubah:
+- Tidak ada kolom database baru. Relasi memakai parent_id + is_group
+  yang sudah ada.
+- Induk utama tetap boleh menampung varian langsung.
+- Add-on numerator/perforasi tetap produk terpisah, bukan varian.
+- Harga dan qty invoice tetap berbasis per rim untuk produk nota.
+- Header terang/gelap dan tinggi tombol tidak diubah.
+
+
+===============================================================
+ATURAN STRUKTUR
+===============================================================
+
+- Maksimal dua tingkat: induk utama > sub-induk > varian.
+- Sub-induk hanya boleh berada langsung di bawah induk utama.
+- Sub-induk tidak boleh berisi sub-induk lagi.
+- Varian boleh berada langsung di induk utama ATAU di sub-induk.
+- Nama + keterangan unik per induk. Nama sub-induk yang sama boleh
+  dipakai di induk utama yang berbeda (mis. NOTA > NCR A5 dan
+  Kwitansi > NCR A5).
+- Kategori sub-induk dan varian selalu mengikuti induk utama.
+- Gambar kosong memakai gambar induk terdekat, lalu naik ke induk utama.
+- Nama lengkap di invoice dan pencarian menggabungkan seluruh path,
+  mis. "NOTA NCR A5 2 Rangkap 1 Warna".
+
+
+===============================================================
+TAMPILAN KELOLA KATALOG
+===============================================================
+
+- Klik kartu induk utama (NOTA) untuk masuk ke isinya.
+- Di dalam induk utama, tombol "+ Sub-induk" membuat sub-induk
+  (mis. NCR A5). Tombol "+ Varian" tetap ada untuk varian langsung.
+- Klik kartu sub-induk untuk melihat variannya. Tombol kembali
+  mengarah ke induk utama, lengkap dengan breadcrumb path.
+- Pencarian di luar induk menampilkan hasil datar dengan nama lengkap.
+- Pencarian di dalam induk menampilkan varian yang cocok dari seluruh
+  cabang (termasuk sub-induk), juga dengan nama lengkap.
+- Mode Pilih > "Jadikan varian..." bisa memindahkan varian lama dari
+  NOTA ke sub-induk NCR A5, atau dari sub-induk ke induk lain. Awalan
+  nama sub-induk yang sudah ada di nama varian dibuang otomatis supaya
+  nama invoice tidak menjadi "NOTA NCR A5 NCR A5 ...".
+- Hapus sub-induk: variannya dipindah ke induk utama dengan awalan
+  nama sub-induk, atau ikut dihapus bila dipilih.
+- Hapus induk utama yang masih punya sub-induk ditolak. Hapus/rapikan
+  sub-induknya dulu supaya tidak ada isi yang berpindah tanpa disadari.
+
+
+===============================================================
+PEMILIH KATALOG DI INVOICE
+===============================================================
+
+- Klik induk utama -> daftar sub-induk + varian langsung.
+- Klik sub-induk -> daftar variannya.
+- Varian yang dipilih masuk invoice dengan nama lengkap path.
+- Pencarian "nota ncr a5" atau "2 rangkap" langsung menemukan varian
+  di dalam sub-induk tanpa harus membuka kartu satu per satu.
+- Saran saat mengetik nama produk juga memakai daftar daun dengan nama
+  lengkap, jadi varian bersarang tetap bisa ditemukan.
+
+
+===============================================================
+IMPOR / EXPORT CSV
+===============================================================
+
+Kolom Induk sekarang memakai path:
+
+- "*"             = baris ini induk utama
+- "*NOTA"         = baris ini sub-induk di dalam NOTA
+- "NOTA"          = varian langsung di bawah induk utama NOTA
+- "NOTA > NCR A5" = varian di dalam sub-induk NCR A5
+
+Contoh:
+
+  Nama Produk;Keterangan;Harga;Harga Bertingkat;Kategori;Induk
+  NOTA;Wadah nota;;;;*
+  NCR A5;Nota NCR ukuran A5;;;Nota;*NOTA
+  2 Rangkap 1 Warna;Harga per rim;10000;;Nota;NOTA > NCR A5
+
+Baris induk/sub-induk dibuat otomatis bila belum ada. Impor lama yang
+hanya memakai nama induk (satu tingkat) tetap berjalan. Path dengan
+lebih dari dua tingkat ditolak/dilewati. Export CSV menulis path yang
+sama, jadi hasil export bisa diimpor ulang tanpa kehilangan hierarki.
+
+
+===============================================================
+MODE CEPAT
+===============================================================
+
+- Pemilih induk menampilkan induk utama dan sub-induk dengan path.
+- Bila NOTA sudah punya sub-induk NCR A5, Mode Cepat langsung memilih
+  NOTA > NCR A5.
+- Bila yang dipilih sub-induk, Label varian boleh dikosongkan; nama
+  sub-induk sudah menjadi konteks.
+- Bila yang dipilih induk utama, Label varian (mis. NCR A5) tetap
+  dipakai sebagai awalan varian satu tingkat. Untuk struktur dua
+  tingkat, buat sub-induk dulu lalu pilih sub-induk itu.
+- Produk tambahan numerator/perforasi tetap produk biasa dengan nama
+  path lengkap, mis. "NOTA NCR A5 - Numerator (per rim)".
+
+
+===============================================================
+FILE YANG TERKAIT
+===============================================================
+
+- src/lib/catalog-variants.ts
+  Helper murni: path, nama lengkap, keturunan, ringkasan induk, daun.
+- src/lib/invoice-catalog.ts
+  Validasi kedalaman, create/update, gambar efektif, impor/export path,
+  pindah, hapus sub-induk, dan pelepasan varian.
+- src/components/CatalogManager.tsx
+  Drill-down Katalog > NOTA > NCR A5, breadcrumb, sub-induk baru,
+  pemindahan varian, dan pengamanan hapus.
+- src/components/CatalogParts.tsx
+  Pencarian memakai nama path lengkap dan induk dengan keturunan.
+- src/components/CatalogPicker.tsx
+  Pemilih invoice dua tingkat, nama lengkap saat memilih.
+- src/lib/catalog-quick-nota.ts + CatalogQuickCreate.tsx
+  Mode Cepat memilih sub-induk lewat id/path dan mengirim path impor.
+- src/lib/invoice-catalog-match.ts + InvoicePaperEditor.tsx
+  Saran saat mengetik memakai leafItems() dengan nama path lengkap.
+- src/app/api/invoice-products/import|export|move|bulk-delete
+  Endpoint yang mengikuti aturan hierarki baru.
+
+
+===============================================================
+PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- ESLint file yang berubah: lolos.
+- Uji kode murni: path "NOTA > NCR A5", nama lengkap varian, hitungan
+  induk (termasuk sub-induk), daftar daun, dan Mode Cepat dengan induk
+  sub-induk lolos.
+- Uji impor end-to-end ke database belum dijalankan karena DATABASE_URL
+  tidak tersedia di lingkungan ini. Jalankan /api/setup dan uji impor
+  CSV path sebelum dipakai produksi.
+- Uji visual interaktif desktop/HP, tema terang dan gelap, masih perlu
+  dilakukan bersama pemilik.

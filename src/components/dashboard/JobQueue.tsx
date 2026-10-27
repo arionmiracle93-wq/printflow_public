@@ -141,7 +141,7 @@ function JobRow({
         {Math.round(insight.riskScore)}
       </div>
 
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-center gap-1">
         <QuickStatusPopup
           orderId={insight.orderId}
           orderCode={insight.code}
@@ -288,7 +288,7 @@ export function JobQueue({
           <span>Tahap</span>
           <span>PIC dan tenggat</span>
           <span className="text-center">Skor</span>
-          <span className="text-right">Aksi</span>
+          <span className="text-center">Aksi</span>
         </div>
         {jobs.map((job, i) => (
           <JobRow

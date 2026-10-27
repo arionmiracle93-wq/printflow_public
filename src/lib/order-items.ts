@@ -21,6 +21,11 @@ export type OrderItem = {
   unit: string;
   /** Status produk sendiri. null / kosong = ikut status pekerjaan. */
   status?: string | null;
+  /** Deadline khusus produk ini. null / kosong = ikut deadline pekerjaan. */
+  dueDate?: string | null;
+  dueTime?: string | null;
+  /** Kunci baris invoice asal; null untuk item yang ditambahkan manual. */
+  sourceLineKey?: string | null;
   /** Mitra yang mengerjakan produk ini. null = dikerjakan sendiri. */
   outsourceJobId?: number | null;
 };
@@ -82,19 +87,4 @@ export function summarizeItems(items: OrderItemInput[], max = 2): string {
   const shown = items.slice(0, max).map(formatItem).join(" + ");
   const rest = items.length - max;
   return rest > 0 ? `${shown} +${rest} lainnya` : shown;
-}
-
-/** Daftar item jadi beberapa baris teks — dipakai di pesan WhatsApp. */
-export function itemLines(items: OrderItemInput[], bullet = "   - "): string[] {
-  return items.map((item) => `${bullet}${formatItem(item)}`);
-}
-
-/** Total kuantitas semua item (hanya berarti bila satuannya sejenis). */
-export function totalQuantity(items: OrderItemInput[]): number {
-  return items.reduce((sum, item) => sum + (item.quantity || 0), 0);
-}
-
-/** Daftar jenis produk unik dalam satu pekerjaan (untuk filter & statistik). */
-export function uniqueProductTypes(items: OrderItemInput[]): string[] {
-  return [...new Set(items.map((item) => item.productType))];
 }

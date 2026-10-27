@@ -44,11 +44,22 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
 
   return (
     <>
-      <article id="ppi-paper" className="ppi-paper px-5 pb-8 pt-8 sm:px-8">
+      {/* Padding HP lebih rapat (16px / 20px / 24px). Kertas ini duduk di
+          dalam main yang sudah punya padding sendiri, jadi di 360px
+          tambah 32px per sisi membuat area isinya cuma ~296px.
+          sm: mengembalikan nilai yang lebih longgar di layar lebar.
+          CETAK/PDF tidak terpengaruh: iframe cetak memaksa padding
+          10mm/11mm dengan !important (lihat invoice-output.ts). */}
+      <article id="ppi-paper" className="ppi-paper px-4 pb-6 pt-5 sm:px-8 sm:pb-8 sm:pt-8">
         {stamp ? <DraggableStamp text={stamp.t} className={`right-6 top-24 ${stamp.c}`} /> : null}
 
         <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 gap-3">
+          {/* Kop perusahaan (logo + nama + alamat + kontak). Di layar HP
+              disembunyikan supaya kertasnya terbaca sebagai form isian,
+              bukan dokumen - lihat blok "@media screen and (max-width:639px)"
+              di globals.css. Saat CETAK/PDF blok itu tidak berlaku, jadi
+              kop ini tetap ikut ke dokumen. */}
+          <div className="ppi-brand flex min-w-0 gap-3">
             <PaperLogo />
             <div className="min-w-0 space-y-0.5 text-xs text-slate-600">
               <p className="break-words text-lg font-extrabold text-slate-900"><AccentLastWord text={settings.businessName} /></p>
@@ -71,7 +82,12 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
             </div>
           </div>
           <div className="sm:w-[330px] sm:text-right">
-            <p className="text-3xl font-black tracking-[0.12em] text-[color:var(--ppi-accent)] sm:text-4xl">{mode.title}</p>
+            {/* Judul jenis dokumen ("INVOICE"). Di HP sudah tampil di
+                ringkasan sticky di atas, jadi di sini disembunyikan agar
+                tidak ter thrice. sm: ke atas dan cetakan tetap tampil. */}
+            {/* Judul jenis dokumen ("INVOICE"). Di HP sudah tampil di
+                ringkasan sticky di atas, jadi di sini disembunyikan agar
+                tidak terulang tiga kali. sm: ke atas dan cetakan tetap tampil. */}
             <div className="ppi-meta mt-3 text-xs">
               <div className="ppi-meta-row">
                 <span className="ppi-meta-label">No. {mode.label.split(" ")[0]}</span>
@@ -117,7 +133,17 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
                         {formatRupiah(Math.round(it.unitPrice))}
                         {p.hasTier && p.tier ? <span className="block text-[10px] font-semibold text-teal-700">{p.label}</span> : null}
                       </div>
-                      <div className="flex justify-between py-1.5 text-[13px] font-extrabold text-slate-900 md:justify-end"><span className="ppi-mlabel">Jumlah</span>{formatRupiah(it.amount)}</div>
+                      {/* Sel "Jumlah" di HP jadi baris tersendiri yang
+                          melebar penuh: label di kiri, nominal besar di
+                          kanan, dipisah garis putus. Di desktop kelas
+                          ppi-c-total dikembalikan jadi sel biasa oleh
+                          blok @media (min-width:768px) DAN oleh blok
+                          @media print di globals.css - kalau salah satu
+                          lupa, hasil cetak ikut berubah jadi satu baris. */}
+                      <div className="ppi-c-total text-[13px] font-extrabold text-slate-900">
+                        <span className="ppi-mlabel">Jumlah</span>
+                        <span>{formatRupiah(it.amount)}</span>
+                      </div>
                     </>
                   ) : null}
                 </div>
@@ -125,7 +151,7 @@ export function InvoicePaper({ detail, settings, isOwner = false }: { detail: In
             );
           })}
           {mode.showTotals ? (
-            <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-2 pt-3 text-xs text-slate-500">
+            <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-3 pt-3 text-xs text-slate-500">
               <span>{items.length} item</span>
               <span className="text-base font-extrabold text-slate-900">{formatRupiah(invoice.subtotal)}</span>
             </div>

@@ -26,3 +26,15 @@ export const SAMPLE_CATALOG: { name: string; description: string; price: number;
   { name: "Laminating A4 Panas", description: "Plastik 100 micron", price: 6000, tiers: "10=5000;50=4000", category: "Jasa Kantor" },
   { name: "Print Foto 4R Glossy", description: "Kertas foto premium", price: 3500, tiers: "20=3000;100=2500;500=2000", category: "Jasa Kantor" },
 ];
+
+/**
+ * Contoh VARIAN untuk file "Contoh CSV": kolom Induk berisi nama induk untuk
+ * varian langsung, "*" untuk induk utama, dan "*NOTA" untuk sub-induk. Induk dibuat otomatis bila belum ada;
+ * kategori isi mengikuti induknya. Contoh di sini sengaja satu tingkat supaya tetap ringkas.
+ */
+export const SAMPLE_VARIANTS: { name: string; description: string; price: number; tiers: string; category: string; parent: string }[] = [
+  { name: "Print HVS", description: "Kertas HVS 70gr - pilih varian di bawah", price: 0, tiers: "", category: "Jasa Kantor", parent: "*" },
+  { name: "A4 Warna", description: "Full color 1 sisi", price: 2000, tiers: "10=1800;50=1500;100=1200", category: "Jasa Kantor", parent: "Print HVS" },
+  { name: "A4 Hitam Putih", description: "Hitam putih 1 sisi", price: 500, tiers: "10=450;50=400;100=350", category: "Jasa Kantor", parent: "Print HVS" },
+  { name: "F4 Hitam Putih", description: "Hitam putih 1 sisi", price: 600, tiers: "", category: "Jasa Kantor", parent: "Print HVS" },
+];

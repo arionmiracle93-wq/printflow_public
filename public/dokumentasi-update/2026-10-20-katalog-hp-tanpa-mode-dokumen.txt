@@ -1,0 +1,40 @@
+PRINT FLOW - KATALOG DI HP: DROPDOWN "SEMUA DOKUMEN" DIHAPUS
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Di HP, bagian paling atas halaman Katalog Produk menampilkan
+dropdown "Mode Dokumen: Semua dokumen". Dropdown itu milik halaman
+Riwayat/Editor Invoice (memilih jenis dokumen) dan tidak berkaitan
+dengan katalog produk, jadi di Katalog sekarang disembunyikan di HP.
+
+Yang TIDAK berubah:
+- Halaman Riwayat dan Editor Invoice: dropdown Mode Dokumen tetap
+  ada di HP.
+- Desktop/layar lebar: sidebar Katalog tetap seperti sebelumnya
+  (blok "Mode Dokumen" di sidebar kiri masih tampil).
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/components/InvoiceSidebar.tsx
+   - Prop baru hideModeOnMobile (bawaan false). Bila true, pemilih
+     Mode Dokumen versi HP tidak dirender.
+2. src/components/CatalogScreen.tsx
+   - Memakai hideModeOnMobile.
+3. public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Buka Katalog di HP: bagian atas langsung judul "Katalog Produk";
+   tidak ada dropdown "Semua dokumen".
+2. Buka Riwayat Dokumen dan Buat Baru di HP: dropdown Mode Dokumen
+   masih ada.

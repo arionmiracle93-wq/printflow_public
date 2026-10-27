@@ -1,38 +1,53 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const EXIT_WINDOW_MS = 2000;
 const MARK = "printFlowExitGuard";
 
+/** Halaman akar tiap modul. Dari sini tombol Back leading ke home. */
+const AKAR_MODUL = ["/produksi", "/invoice"];
+
 /**
- * "Tekan/swipe back 2x untuk keluar" - hanya aktif di halaman utama ("/").
+ * PERILAKU TOMBOL BACK DI APLIKASI TERPASANG (D-04)
+ * ===================================================================
+ * Dua aturan berbeda, dan sengaja dipisah karena gejalanya berlawanan:
  *
- * Kenapa cuma di halaman utama: ini pola standar yang dipakai hampir semua
- * aplikasi Android (WhatsApp, Gojek, Shopee, dll) - di halaman lain, tombol
- * back tetap jalan normal (kembali ke layar sebelumnya). Di halaman utama,
- * back pertama menampilkan "tekan lagi untuk keluar"; back kedua dalam 2
- * detik benar-benar menutup aplikasi.
+ * 1. DI HOME ("/") - "tekan sekali lagi untuk keluar".
+ *    Pola standar aplikasi Android. Kita selipkan satu entri
+ *    "penyangga" di riwayat; back pertama menghabiskan penyangga itu -
+ *    kita cegat, tampilkan toast, lalu pasang penyangga baru (posisi
+ *    terasa tidak berubah). Back kedua dalam 2 detik tidak kita cegat
+ *    lagi, dan kita coba window.close(). Kalau perangkat tidak
+ *    mengizinkan penutupan lewat script, Android sendiri yang menutup
+ *    aplikasi begitu back ditekan sekali lagi, karena riwayatnya
+ *    memang sudah habis.
  *
- * Cara kerja: kita selipkan satu entri "penyangga" di riwayat browser saat
- * berada di halaman utama. Tekan back pertama menghabiskan penyangga itu -
- * kita cegat, tampilkan toast, lalu pasang penyangga baru (posisi terasa
- * tidak berubah). Tekan back kedua (dalam 2 detik) tidak kita cegat lagi,
- * dan kita coba window.close() - berhasil di banyak kasus karena saat itu
- * kita sudah berada persis di entri riwayat paling akhir. Kalau perangkat
- * tertentu tidak mengizinkan penutupan lewat script, Android sendiri yang
- * akan menutup aplikasi begitu tombol back ditekan sekali lagi (karena
- * riwayatnya memang sudah habis).
+ * 2. DI AKAR MODUL ("/produksi", "/invoice") - KEMBALI KE HOME.
+ *    Tanpa aturan ini, orang yang membuka aplikasi lewat notifikasi
+ *    (yang membawa "/pesanan/{id}") lalu mengetuk shortcut "/produksi"
+ *    akan punya riwayat yang tidak memuat home sama sekali. Satu
+ *    ketukan Back - satu-satunya jalan keluar dari halaman yang salah -
+ *    lalu aplikasinya langsung tertutup. Padahal belum ada yang salah.
+ *
+ *    Perhatikan ini TIDAK berlaku untuk "/pesanan/{id}" dan seluruh
+ *    halaman dalam modul. Di sana tombol Back harus tetap mengikuti
+ *    riwayat browser biasa; memaksa semua back ke home akan membuat
+ *    orang kehilangan jalan kembali ke daftar yang sedang dibaca.
  */
 export function ExitOnBackConfirm() {
   const pathname = usePathname();
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const armedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
 
+  const diAkarModul = AKAR_MODUL.includes(pathname);
+
   useEffect(() => {
-    if (pathname !== "/") return;
+    const diHome = pathname === "/";
+    if (!diHome && !diAkarModul) return;
 
     const current = window.history.state as Record<string, unknown> | null;
     if (!current || current[MARK] !== true) {
@@ -40,6 +55,12 @@ export function ExitOnBackConfirm() {
     }
 
     function handlePop() {
+      /* Akar modul: satu Back sudah cukup untuk pulang ke home.
+         Tidak ada konfirmasi, tidak ada jendela keluar. */
+      if (diAkarModul) {
+        router.replace("/");
+        return;
+      }
       if (armedRef.current) {
         window.close();
         return;
@@ -61,7 +82,7 @@ export function ExitOnBackConfirm() {
       armedRef.current = false;
       setVisible(false);
     };
-  }, [pathname]);
+  }, [pathname, diAkarModul, router]);
 
   if (!visible) return null;
   return (

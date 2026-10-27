@@ -1,0 +1,60 @@
+================================================================
+DASHBOARD PRODUKSI — TEKS "AKSI" RATA TENGAH DENGAN IKON TOMBOL
+Tanggal : 25-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Judul kolom "Aksi" di kartu Antrean prioritas (desktop) sekarang
+tepat di tengah-tengah empat ikon tombol di bawahnya. Sebelumnya
+"Aksi" rata kanan di kolomnya, sedangkan ikon menumpuk di sisi
+kanan juga tapi lebarnya beda, jadi tidak sejajar.
+
+Hanya tampilan desktop (layar lebar). Kartu HP/tablet tidak
+berubah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+src/components/dashboard/JobQueue.tsx
+
+  1) Judul kolom (baris header)
+       sebelum : <span className="text-right">Aksi</span>
+       sesudah : <span className="text-center">Aksi</span>
+
+  2) Wadah empat tombol ikon di tiap baris (JobRow)
+       sebelum : flex items-center justify-end gap-1
+       sesudah : flex items-center justify-center gap-1
+
+  Header dan baris memakai kolom grid yang sama (9.25rem), jadi
+  kalau keduanya rata tengah, titik tengahnya otomatis sama.
+  Ikon bergeser sekitar 4px ke kiri dari posisi lama; ukuran
+  tombol dan jarak antar tombol tidak berubah.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+Dicek di Chromium dengan aturan grid asli (dashboard.css):
+  selisih titik tengah teks "Aksi" vs titik tengah 4 ikon
+    sebelum : 58,4 px
+    sesudah : 0,0 px
+Tidak ada perubahan CSS, jadi tidak ada efek ke halaman lain.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/components/dashboard/JobQueue.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-25-dashboard-aksi-rata-tengah.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada.
+
+================================================================

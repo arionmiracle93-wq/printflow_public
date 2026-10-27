@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { AlertTriangle, Bot, Factory, History, Image as ImageIcon, Package, PackageCheck, StickyNote, UserRound } from "lucide-react";
+import { AlertTriangle, Bot, Clock, Factory, History, Image as ImageIcon, Package, PackageCheck, StickyNote, UserRound, Wallet } from "lucide-react";
 import { OrderQuickEdit, OrderStatusControls } from "@/components/OrderControls";
 import { OrderDetailTabs } from "@/components/OrderDetailTabs";
 import { OrderItemsManager } from "@/components/OrderItemsManager";
@@ -33,9 +33,15 @@ import {
   humanDuration,
   statusMeta,
 } from "@/lib/domain";
-import { getAiNotes, getOrderById, getOrderEvents } from "@/lib/queries";
+import { getAiNotes, getOrderById, getOrderEvents, listCustomers } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
+
+/** Sisa jam dihitung di helper, bukan langsung di body komponen. */
+function sisaJam(order: AiOrder) {
+  const deadline = deadlineOf(order.dueDate, order.dueTime);
+  return (deadline.getTime() - Date.now()) / 3_600_000;
+}
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -45,7 +51,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const loaded = await safeDb(async () => {
     const [order, sessionUser] = await Promise.all([getOrderById(orderId), getCurrentUser()]);
     if (!order) return null;
-    const [events, notes, photos, outsource, partners, handovers, employees] = await Promise.all([
+    const [events, notes, photos, outsource, partners, handovers, employees, customers] = await Promise.all([
       getOrderEvents(orderId),
       getAiNotes(orderId),
       listPhotos(orderId),
@@ -53,8 +59,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       listPartners(),
       listHandovers(orderId),
       listActiveEmployees(sessionUser?.role === "karyawan" ? sessionUser.id : undefined),
+      listCustomers(),
     ]);
-    return { order, events, notes, photos, outsource, partners, handovers, sessionUser, employees };
+    return { order, events, notes, photos, outsource, partners, handovers, sessionUser, employees, customers };
   });
   if (!loaded.ok) {
     // Tabel foto mungkin belum ada (deploy lama). Coba tanpa foto agar halaman tetap terbuka.
@@ -95,6 +102,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       handovers={loaded.data.handovers}
       sessionUser={loaded.data.sessionUser}
       employees={loaded.data.employees}
+      customers={loaded.data.customers}
     />
   );
 }
@@ -159,6 +167,7 @@ function DetailBody({
   handovers,
   sessionUser,
   employees,
+  customers,
 }: {
   order: AiOrder;
   events: Awaited<ReturnType<typeof getOrderEvents>>;
@@ -172,9 +181,9 @@ function DetailBody({
   handovers: HandoverRecord[];
   sessionUser: Awaited<ReturnType<typeof getCurrentUser>>;
   employees: Awaited<ReturnType<typeof listActiveEmployees>>;
+  customers: Awaited<ReturnType<typeof listCustomers>>;
 }) {
-  const deadline = deadlineOf(order.dueDate, order.dueTime);
-  const hoursLeft = (deadline.getTime() - Date.now()) / 3_600_000;
+  const hoursLeft = sisaJam(order);
   const outstanding = Math.max(0, order.price - order.paidAmount);
   // Untuk jaring pengaman "tandai Selesai": ambil mitra yang belum
   // diterima (kalau ada), supaya peringatannya tetap muncul.
@@ -184,10 +193,129 @@ function DetailBody({
   const mitraActive = outsource.some((j) => j.status !== "diterima");
   const komunikasiPending = handovers.some((h) => !h.acceptedAt);
 
+  // ------------------------------------------------------------------
+  // Panel samping kanan (desktop lebar, >=1280px) - "sekilas pekerjaan".
+  // Tampil di SEMUA tab, jadi info terpenting tetap kelihatan walau
+  // operator sedang di tab Foto/Mitra/Komunikasi. Murni dari data yang
+  // sudah dimuat di atas: tidak ada query baru.
+  // ------------------------------------------------------------------
+  const isLate = hoursLeft < 0 && !meta.done && order.status !== "siap";
+  const timeTone = order.status === "siap" || meta.done ? "text-emerald-600" : isLate ? "text-rose-600" : "text-slate-900";
+  const timeText =
+    order.status === "siap" ? "Siap diambil" : meta.done ? "Selesai" : isLate ? `Terlambat ${humanDuration(hoursLeft)}` : humanDuration(hoursLeft);
+  const paidPct = order.price > 0 ? Math.min(100, Math.round((order.paidAmount / order.price) * 100)) : 0;
+  const lunas = outstanding <= 0;
+
+  const railContent = (
+    <>
+      <div className="card p-4">
+        <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+          <Clock size={12} /> Sisa waktu
+        </p>
+        <p className={`mt-1 flex items-center gap-1.5 text-2xl font-bold leading-tight ${timeTone}`}>
+          {isLate ? <AlertTriangle size={20} className="shrink-0" /> : order.status === "siap" ? <PackageCheck size={20} className="shrink-0" /> : null}
+          {timeText}
+        </p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Deadline {formatDateID(order.dueDate)} · {order.dueTime}
+        </p>
+        <div className="mt-3">
+          <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+            <span>{meta.short}</span>
+            <span>{meta.progress}%</span>
+          </div>
+          <ProgressBar value={meta.progress} tone={meta.bar} />
+        </div>
+      </div>
+
+      <div className="card p-4">
+        <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+          <Wallet size={12} /> Pembayaran
+        </p>
+        <p className={`mt-1 text-2xl font-bold leading-tight ${lunas ? "text-emerald-600" : "text-rose-600"}`}>
+          {lunas ? "Lunas" : formatRupiah(outstanding)}
+        </p>
+        <p className="mt-0.5 text-xs text-slate-500">{lunas ? "Tidak ada sisa tagihan" : "Sisa tagihan"}</p>
+        <div className="mt-3">
+          <ProgressBar value={paidPct} tone={lunas ? "bg-emerald-500" : "bg-teal-500"} />
+        </div>
+        <dl className="mt-3 space-y-1 text-xs">
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-slate-500">Total harga</dt>
+            <dd className="font-semibold text-slate-800">{formatRupiah(order.price)}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-slate-500">Sudah dibayar</dt>
+            <dd className="font-semibold text-slate-800">{formatRupiah(order.paidAmount)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="card p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Detail pekerjaan</p>
+        <dl className="mt-2 space-y-2.5 text-xs">
+          <div>
+            <dt className="text-slate-500">Isi pesanan ({order.items.length} produk)</dt>
+            <dd className="mt-0.5 text-[13px] font-semibold leading-snug text-slate-800">{summarizeItems(order.items, 3)}</dd>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <dt className="text-slate-500">Mesin</dt>
+              <dd className="mt-0.5 text-[13px] font-semibold text-slate-800">{order.machine}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Operator</dt>
+              <dd className="mt-0.5 text-[13px] font-semibold text-slate-800">{order.operator || "-"}</dd>
+            </div>
+          </div>
+          <div>
+            <dt className="text-slate-500">Estimasi kerja (AI)</dt>
+            <dd className="mt-0.5 text-[13px] font-semibold text-slate-800">± {order.estHours} jam</dd>
+          </div>
+        </dl>
+      </div>
+    </>
+  );
+
+  // Aktivitas terbaru (3 terakhir). Dibungkus kartu + tombol "lihat semua"
+  // oleh OrderDetailTabs, karena tombolnya perlu pindah tab.
+  const activityContent = (
+    <ol className="space-y-2.5 border-l-2 border-slate-100 pl-3.5">
+      {events.length === 0 ? (
+        <li className="text-xs text-slate-500">Belum ada riwayat.</li>
+      ) : (
+        events.slice(0, 3).map((event) => (
+          <li key={event.id} className="relative">
+            <span className="absolute -left-[19px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-teal-500" />
+            <p className="text-xs font-semibold leading-snug text-slate-800">{eventStatusLabel(event.toStatus)}</p>
+            <p className="text-[11px] text-slate-500">
+              {formatDateTimeID(event.createdAt)} · {event.actor}
+            </p>
+          </li>
+        ))
+      )}
+    </ol>
+  );
+
   const ringkasanContent = (
     <>
       <div className="card p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Delapan kartu info (Isi pesanan, Mesin, Deadline, Sisa waktu,
+            Total, Dibayar, Sisa tagihan, Estimasi AI).
+
+            Di HP ini dulu satu kolom: perlu ~460px hanya untuk membaca
+            ringkasan, sementara progres produksi - yang paling sering
+            dicek - ada di bawahnya.
+
+            Sekarang dua kolom di HP, jadi ~230px. Aman berbeda dari kolom
+            isian di editor invoice yang juga saya ubah ke satu kolom:
+            kartu ini tidak diketik, isinya cuma label dan nilai, jadi
+            160px sudah cukup. sm: ke atas tetap 2 kolom, lg: ke atas 4. */}
+        {/* Di layar >=1280px kedelapan info ini pindah ke panel samping
+            kanan (railContent) supaya tidak tampil dobel - makanya grid
+            ini disembunyikan di sana. Di bawah itu tetap tampil seperti
+            biasa. */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:hidden">
           <Info
             label={`Isi pesanan (${order.items.length} produk)`}
             value={summarizeItems(order.items, 3)}
@@ -219,7 +347,7 @@ function DetailBody({
           <Info label="Estimasi kerja (AI)" value={`± ${order.estHours} jam`} />
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 xl:mt-0">
           <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-500">
             <span>Progres produksi</span>
             <span>{meta.progress}%</span>
@@ -251,6 +379,8 @@ function DetailBody({
         orderId={order.id}
         initialItems={order.items}
         orderStatus={order.status}
+        orderDueDate={order.dueDate}
+        orderDueTime={order.dueTime}
         jobs={outsource.map((j) => ({ id: j.id, partnerName: j.partnerName }))}
       />
 
@@ -349,6 +479,11 @@ function DetailBody({
           paidAmount: order.paidAmount,
           notes: order.notes,
         }}
+        customers={customers}
+        /* Nama karyawan terdaftar, sama seperti di halaman "Pekerjaan
+           Baru". Datanya sudah diambil lebih dulu di atas (dipakai
+           juga oleh kartu shift), jadi ini tidak menambah kueri. */
+        operatorSuggestions={employees.map((e) => e.name)}
       />
       <div className="card p-4">
         <h3 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
@@ -398,6 +533,8 @@ function DetailBody({
       komunikasi={komunikasiContent}
       foto={fotoContent}
       lainnya={lainnyaContent}
+      rail={railContent}
+      activity={activityContent}
       mitraActive={mitraActive}
       komunikasiPending={komunikasiPending}
     />
@@ -418,8 +555,7 @@ function FallbackDetailBody({
   insight: ReturnType<typeof analyzeOrder>;
   meta: ReturnType<typeof statusMeta>;
 }) {
-  const deadline = deadlineOf(order.dueDate, order.dueTime);
-  const hoursLeft = (deadline.getTime() - Date.now()) / 3_600_000;
+  const hoursLeft = sisaJam(order);
   const outstanding = Math.max(0, order.price - order.paidAmount);
 
   return (
@@ -444,7 +580,7 @@ function FallbackDetailBody({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Info
             label={`Isi pesanan (${order.items.length} produk)`}
             value={summarizeItems(order.items, 3)}

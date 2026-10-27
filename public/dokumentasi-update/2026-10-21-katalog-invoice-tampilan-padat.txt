@@ -1,0 +1,83 @@
+PRINT FLOW - TAMPILAN "PADAT" (KARTU KECIL) DI POP UP KATALOG
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Pop up Katalog di editor invoice sekarang punya TIGA pilihan
+tampilan, tombolnya di kanan kolom pencarian:
+
+- Kartu   : seperti sebelumnya (gambar besar, 3 kolom di layar lebar).
+- Padat   : BARU. Kartu kecil dengan gambar persegi, nama, dan harga.
+             Di layar lebar 5 kolom, jadi jauh lebih banyak produk
+             terlihat sekaligus dan bentuknya tetap kartu.
+- Ringkas : daftar baris kecil seperti sebelumnya (2 kolom di layar
+             lebar).
+
+Ukuran kartu "Padat" kira-kira 114 x 175 px di jendela 800-1000 px,
+dibanding kartu biasa 192 x 228 px. Dalam satu layar terlihat sekitar
+10 produk (kartu biasa sekitar 6).
+
+Keterangan produk hanya ditampilkan pada kartu "Padat" bila ada
+produk lain dengan nama sama, supaya produk kembar tetap bisa
+dibedakan tanpa memakan tinggi kartu.
+
+Pilihan tampilan diingat di perangkat itu (tersimpan di browser),
+termasuk pilihan "Padat".
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+- src/components/CatalogParts.tsx  : komponen baru ProductMiniCard
+  (kartu kecil: gambar persegi, nama 2 baris, harga, label tier).
+- src/components/CatalogPicker.tsx : pilihan tampilan menjadi
+  Kartu / Padat / Ringkas; pilihan "padat" ikut diingat; grid Padat
+  3 kolom di HP, 4 kolom di tablet, 5 kolom mulai layar 768 px.
+
+Yang TIDAK berubah: pencarian, sidebar kategori, klik produk = masuk
+invoice lalu pop up tertutup, tampilan Kartu dan Ringkas, halaman
+Katalog (kelola produk), database, dan API.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogPicker.tsx
+- src/components/CatalogParts.tsx
+- public/dokumentasi-update/2026-10-21-katalog-invoice-tampilan-padat.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- npx eslint (dua file yang diubah): lolos.
+- Uji render di browser (lebar 1000 px):
+  - tombol Kartu / Padat / Ringkas tampil dan bisa dipilih;
+  - tampilan Padat menghasilkan 5 kolom, kartu ~114 x 175 px;
+  - nama panjang terpotong 2 baris, harga tetap terlihat;
+  - keterangan produk kembar (PRINT HVS A4/F4) tampil;
+  - pilihan "padat" tersimpan di localStorage.
+- Tampilan di HP belum diuji di perangkat; grid HP memakai 3 kolom
+  seperti tampilan kartu biasa.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+- Bila ingin lebih padat lagi, jumlah kolom Padat bisa dinaikkan
+  menjadi 6 (maksimal) dengan mengubah md:grid-cols-5 di
+  CatalogPicker.tsx, tetapi harga produk di atas Rp 1.000.000 akan
+  mulai terpotong.
+- Bila tampilan Padat disukai, tampilan yang sama bisa ditambahkan
+  ke halaman Katalog (kelola produk).

@@ -2,6 +2,8 @@
 
 import { TimeFieldID } from "@/components/TimeFieldID";
 import { Select } from "@/components/Select";
+import { SavedCustomerSelect, type SavedCustomerOption } from "@/components/SavedCustomerSelect";
+import { ComboInput } from "@/components/ComboInput";
 import { ArrowRight, CheckCircle2, Pencil, RefreshCw, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -136,6 +138,8 @@ export function OrderStatusControls({
 
 export function OrderQuickEdit({
   order,
+  customers = [],
+  operatorSuggestions = [],
 }: {
   order: {
     id: number;
@@ -149,6 +153,18 @@ export function OrderQuickEdit({
     paidAmount: number;
     notes: string | null;
   };
+  /**
+   * Daftar pelanggan tersimpan. Kalau kosong (mis. pemanggil lama belum
+   * mengirim data), field nama tetap bisa diketik manual seperti biasa.
+   */
+  customers?: readonly SavedCustomerOption[];
+  /**
+   * Nama yang boleh dipilih sebagai operator, yaitu karyawan yang sudah
+   * terdaftar di aplikasi. Dibiarkan opsional supaya komponen ini
+   * tidak ikut gagal kalau pemanggil belum menyalakannya - fieldnya
+   * tetap bisa diketik bebas, hanya sarannya yang kosong.
+   */
+  operatorSuggestions?: readonly string[];
 }) {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -162,9 +178,19 @@ export function OrderQuickEdit({
     paidAmount: String(order.paidAmount),
     notes: order.notes ?? "",
   });
+  const [pickedCustomerId, setPickedCustomerId] = useState(() => {
+    const match = customers.find((c) => c.name.trim().toLowerCase() === order.customerName.trim().toLowerCase());
+    return match ? String(match.id) : "";
+  });
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function chooseSavedCustomer(id: string) {
+    setPickedCustomerId(id);
+    const customer = customers.find((c) => String(c.id) === id);
+    if (customer) setForm((prev) => ({ ...prev, customerName: customer.name }));
+  }
 
   async function save() {
     const customerName = form.customerName.trim();
@@ -213,11 +239,28 @@ export function OrderQuickEdit({
         <Pencil size={16} /> Ubah Data Pekerjaan
       </h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {customers.length ? (
+          <div className="sm:col-span-2">
+            <label className="label">Ambil dari pelanggan tersimpan</label>
+            <SavedCustomerSelect
+              customers={customers}
+              value={pickedCustomerId}
+              onChange={chooseSavedCustomer}
+              className="input"
+            />
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              Pilih untuk mengisi nama otomatis, atau ketik nama baru di bawah.
+            </p>
+          </div>
+        ) : null}
         <div className="sm:col-span-2">
           <label className="label">Nama pelanggan</label>
           <input
             value={form.customerName}
-            onChange={(e) => setForm({ ...form, customerName: e.target.value })}
+            onChange={(e) => {
+              setPickedCustomerId("");
+              setForm({ ...form, customerName: e.target.value });
+            }}
             placeholder="Nama pelanggan"
             className="input"
           />
@@ -253,9 +296,18 @@ export function OrderQuickEdit({
         </div>
         <div>
           <label className="label">Operator</label>
-          <input
+          {/* Dulu <input> polos, jadi orang harus mengetik nama dari
+              awal tiap kali. Sekarang ComboInput: daftar karyawan yang
+              terdaftar muncul sebagai saran (bisa diketik untuk menyaring,
+              ikon panah membuka seluruh daftar), tapi TIDAK terkunci -
+              operator yang tidak ada di daftar tetap bisa diketik, karena
+              nama di bawah ini bisa saja orang luar yang pernah bekerja
+              di sini dan masih tercatat di pekerjaan lamanya. */}
+          <ComboInput
             value={form.operator}
-            onChange={(e) => setForm({ ...form, operator: e.target.value })}
+            onChange={(v) => setForm({ ...form, operator: v })}
+            options={operatorSuggestions}
+            placeholder="Boleh dikosongkan"
             className="input"
           />
         </div>

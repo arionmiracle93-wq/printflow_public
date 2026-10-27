@@ -1,0 +1,142 @@
+PRINT FLOW - FILTER KATEGORI KATALOG JADI DROPDOWN
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu dilihat langsung di layar lebar
+
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Deretan tab kategori mendatar di halaman Invoice > Katalog (kelola
+produk) diganti dengan SATU tombol dropdown di samping kolom cari.
+
+Sebelumnya:
+  [ Semua 14 | Tanpa Kategori 1 | CETAK FOTO 1 | CUTTING 1 | ... ]
+  (bisa digulir mendatar, kategori di kanan tidak terlihat)
+
+Sekarang:
+  [ Cari nama, keterangan, kategori... ] [ Semua Kategori 14 v ]
+  [ Pilih ] [ Impor CSV ] [ Export CSV ] ...
+
+Tombol dibuka menjadi panel berisi:
+  - kotak "Cari kategori"
+  - Semua + jumlah produk
+  - Tanpa Kategori (kalau ada)
+  - daftar kategori + jumlah masing-masing
+  - tanda centang pada kategori aktif
+  - "Kelola kategori" untuk Owner
+
+Klik kategori langsung menyaring produk dan panel menutup. Tidak ada
+lagi bilah gulir tab, tidak ada baris tambahan tombol "Kategori".
+
+Di HP/tablet (di bawah 1024 px) TIDAK berubah: filter kategori tetap
+lewat menu bawah (bottom navigation) seperti sebelumnya, karena di
+layar sempit tombol dropdown akan memakan tempat kolom cari.
+
+
+===============================================================
+DETAIL PERILAKU
+===============================================================
+
+- Tombol menampilkan kategori aktif + jumlah produk di kategori itu.
+  Contoh: "Semua Kategori 14", "OUTDOOR 3", "Tanpa Kategori 1".
+- Saat filter aktif (bukan "Semua"), tombol diberi warna teal supaya
+  kelihatan bahwa katalog sedang disaring.
+- Panel bisa dicari: mengetik "print" hanya menampilkan PRINT A3+ dan
+  PRINT A4. Kalau tidak ada yang cocok: "Kategori tidak ditemukan."
+- Panel menutup saat:
+  * memilih kategori,
+  * klik di luar panel,
+  * menekan Escape.
+- Saat dibuka, fokus langsung ke kotak cari kategori. Setelah memilih
+  atau menutup dengan Escape, fokus kembali ke tombol.
+- Panel selebar 320 px, tombol 214 px. Posisi panel otomatis:
+  * tombol di kiri layar -> panel dibuka ke kanan;
+  * tombol di kanan layar -> panel dibuka ke kiri.
+  Jadi panel tidak keluar dari layar.
+- "Kelola kategori" hanya muncul untuk Owner. Setelah diklik, panel
+  menutup dan formulir Kelola Kategori terbuka.
+- Jumlah produk di panel dihitung dari SEMUA produk, bukan hasil
+  pencarian nama produk. Jadi angka tetap benar saat kolom cari
+  halaman sedang berisi teks.
+
+
+===============================================================
+FILE YANG BERUBAH
+===============================================================
+
+- src/components/CatalogParts.tsx
+  - Komponen baru CategoryDropdown.
+  - CategoryChips dan TabBar TETAP ADA karena masih dipakai pop up
+    Katalog di editor invoice (tampilan HP).
+
+- src/components/CatalogManager.tsx
+  - CategoryChips di halaman Katalog diganti CategoryDropdown.
+  - Baris tambahan tombol "Kategori" di bawah tab dihapus; aksinya
+    pindah ke footer dropdown.
+  - Pencarian, mode Pilih, impor/ekspor, muat contoh, tambah/ubah/
+    hapus produk, dan form produk tidak berubah.
+
+- public/dokumentasi-update/2026-10-21-katalog-filter-kategori-dropdown.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau file server.
+
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogParts.tsx
+- src/components/CatalogManager.tsx
+- public/dokumentasi-update/2026-10-21-katalog-filter-kategori-dropdown.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- npx eslint (CatalogManager, CatalogParts, CatalogPicker): lolos.
+- Uji browser dengan halaman Katalog asli (CatalogScreen + sidebar)
+  di dalam iframe 1040 x 900, sehingga breakpoint lg aktif:
+  * tidak ada lagi role="tablist" di halaman Katalog;
+  * tombol "Semua Kategori 14" tampil di samping kolom cari;
+  * baris pertama: kolom cari 294 px, dropdown 214 px, Pilih 73 px;
+    tombol Impor/Export/Contoh/Muat contoh turun ke baris kedua;
+  * panel 320 x 360 px, seluruhnya di dalam layar (kanan 808 px,
+    bawah 612 px), fokus otomatis ke "Cari kategori";
+  * daftar berisi 13 baris: Semua, Tanpa Kategori, 10 kategori,
+    Kelola kategori;
+  * cari "print" -> tinggal PRINT A3+ dan PRINT A4;
+  * pilih OUTDOOR -> tombol jadi "OUTDOOR 3", jumlah produk
+    "3 dari 14 produk", grid menampilkan 3 kartu;
+  * tampilan Padat di lebar ini memakai 6 kolom, kartu 112 x 172 px;
+  * "Kelola kategori" membuka form Kelola Kategori dan panel menutup.
+- Uji komponen terpisah: klik di luar menutup panel, Escape menutup
+  dan mengembalikan fokus ke tombol, pencarian kategori berfungsi.
+- Tampilan HP/tablet tidak diubah; belum diuji ulang karena tidak ada
+  perubahan pada jalur menu bawah.
+- Tangkapan layar otomatis tidak tersedia di lingkungan uji; verifikasi
+  memakai ukuran dan interaksi DOM.
+
+
+===============================================================
+CATATAN / SARAN
+===============================================================
+
+- Kalau kategori nanti sangat banyak (lebih dari ~30), kotak "Cari
+  kategori" di panel sudah cukup; daftar bisa digulir sendiri.
+- Kalau lebih suka panel kategori selalu terlihat (bukan dropdown),
+  versi sidebar seperti di pop up invoice bisa dipakai; tinggal bilang.
+- Filter kategori di halaman Katalog dan di pop up invoice sengaja
+  dipisah: halaman Katalog memakai dropdown, pop up invoice memakai
+  sidebar di layar lebar dan tab di HP.

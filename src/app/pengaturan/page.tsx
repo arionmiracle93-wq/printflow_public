@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Activity, AppWindow, BookOpen, Database, FileClock, Gauge, Microscope, Smartphone } from "lucide-react";
+import { Activity, AppWindow, Database, FileClock, Gauge, Microscope, Smartphone } from "lucide-react";
 import { AdminActions } from "@/components/AdminActions";
+import { BackupDownloads } from "@/components/BackupDownloads";
 import { LogoSettings } from "@/components/LogoSettings";
 import { PushNotificationSettings } from "@/components/PushNotificationSettings";
 import { ProblemScreen } from "@/components/ProblemScreen";
@@ -37,12 +38,31 @@ export default async function PengaturanPage() {
   const aiName = process.env.OPENAI_API_KEY ? "OpenAI (GPT)" : process.env.ANTHROPIC_API_KEY ? "Anthropic (Claude)" : null;
 
   return (
-    <div className="settings-page min-w-0 max-w-full space-y-4 overflow-x-clip">
-      <div>
-        <h1 className="page-title">Pengaturan &amp; Perawatan</h1>
-        <p className="mt-1 text-sm text-slate-500">Kelola identitas usaha, data, cadangan, dan kondisi sistem.</p>
-      </div>
+    <div className="min-w-0 space-y-4">
+      {/* Judul "Pengaturan" dan daftar navigasi di kiri sudah ada di
+          layout /pengaturan (src/app/pengaturan/layout.tsx), supaya
+          kedua area pengaturan punya kepala yang sama persis. Yang di
+          sini hanya isi area Print Flow: identitas usaha, push, data,
+          cadangan, dan kondisi sistem.
 
+          Kartu "Pasang di HP & buat APK" DIHAPUS dari sini atas
+          permintaan pemilik. Halaman /panduan tidak ikut hilang dan
+          masih bisa dibuka dari lima tempat lain: footer di layout
+          utama, menu tiga titik, halaman Mulai, Catatan Perubahan,
+          dan ProblemScreen. Jadi tidak ada yang jadi tidak terjangkau
+          setelah kartunya dihapus.
+
+          Ikon BookOpen sudah tidak dipakai di file ini setelah
+          penghapusan itu, jadi impornya ikut dibuang. Smartphone
+          masih dipakai - tombol "Cek APK & Push" di kartu Kondisi
+          sistem tidak ikut terhapus.
+
+          Kartu "Unduh cadangan (CSV / Excel)" PINDAH ke kolom
+          kanan, tepat di bawah PhotoStorageCard. Sempat jadi kartu
+          terakhir di kolom kiri, di bagian paling bawah halaman,
+          sementara kolom kanan sudah habis di tengah. Kartu
+          cadangan justru yang paling sering dibuka, jadi tidak
+          seharusnya yang paling jauh dari mata. */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <LogoSettings hasLogo={hasLogo} />
@@ -77,19 +97,7 @@ export default async function PengaturanPage() {
           </div>
 
           <PhotoStorageCard blob={blobConfigured()} initialUsage={storage} />
-
-          <div className="card min-w-0 overflow-hidden p-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="icon-tile"><Smartphone size={18} /></span>
-              <div><h3 className="text-sm font-semibold text-[color:var(--pf-ink)]">Pasang di HP &amp; buat APK</h3><p className="text-[11px] text-slate-400">Akses cepat untuk owner dan karyawan</p></div>
-            </div>
-            <ol className="mt-4 space-y-2 text-xs leading-relaxed text-slate-600">
-              <li><strong className="text-slate-800">Cara cepat:</strong> buka alamat aplikasi di Chrome HP → menu ⋮ → “Tambahkan ke layar utama”.</li>
-              <li><strong className="text-slate-800">APK:</strong> buka <a href="https://www.pwabuilder.com" target="_blank" rel="noreferrer" className="font-bold text-teal-700 underline">pwabuilder.com</a> → tempel alamat aplikasi → Package for stores → Android.</li>
-              <li><strong className="text-slate-800">Windows/Mac:</strong> buka di Chrome/Edge → ikon Install di address bar.</li>
-            </ol>
-            <Link href="/panduan" className="btn-ghost mt-4 w-full"><BookOpen size={15} /> Panduan lengkap APK</Link>
-          </div>
+          <BackupDownloads />
         </div>
       </div>
     </div>

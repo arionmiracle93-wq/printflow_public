@@ -451,12 +451,6 @@ function llmConfig(): LlmConfig | null {
   return null;
 }
 
-export function aiProviderName(): string {
-  const cfg = llmConfig();
-  if (!cfg) return "engine";
-  return cfg.provider;
-}
-
 async function askLlm(prompt: string, context: string): Promise<string | null> {
   const cfg = llmConfig();
   if (!cfg) return null;

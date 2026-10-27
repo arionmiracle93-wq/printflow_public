@@ -6,6 +6,7 @@
    seperti lg:hidden tidak tertimpa. */
 @import "./design-tokens.css";
 @import "./dashboard.css";
+@import "./home.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -44,7 +45,7 @@
   --brand-yellow: #fbbf24;
   --brand-yellow-soft: #fef3c7;
   --surface: #ffffff;
-  --page: #eef6f5;
+  --page: #edf7fd;
   --text-body: #0f2937;
 }
 
@@ -68,10 +69,10 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background:
     radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.1), transparent 26rem),
-    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.1), transparent 25rem),
+    radial-gradient(circle at 93% 8%, rgba(56, 189, 248, 0.11), transparent 25rem),
     radial-gradient(circle at 55% 26%, rgba(56, 189, 248, 0.05), transparent 32rem),
     radial-gradient(circle at 10% 46%, rgba(20, 184, 166, 0.06), transparent 32rem),
-    radial-gradient(circle at 92% 64%, rgba(251, 191, 36, 0.055), transparent 30rem),
+    radial-gradient(circle at 92% 64%, rgba(125, 211, 252, 0.075), transparent 30rem),
     radial-gradient(circle at 45% 78%, rgba(56, 189, 248, 0.045), transparent 30rem),
     radial-gradient(circle at 14% 92%, rgba(20, 184, 166, 0.05), transparent 28rem),
     var(--page);
@@ -80,12 +81,15 @@ body {
 }
 
 .dark body {
+  /* Latar mode gelap memakai aksen biru muda, bukan kuning/amber.
+     Opacity sengaja dipertahankan rendah supaya kartu kaca dan teks
+     terang di atasnya tetap kontras seperti sebelumnya. */
   background:
     radial-gradient(circle at 8% 2%, rgba(20, 184, 166, 0.13), transparent 26rem),
-    radial-gradient(circle at 93% 8%, rgba(251, 191, 36, 0.09), transparent 25rem),
+    radial-gradient(circle at 93% 8%, rgba(125, 211, 252, 0.09), transparent 25rem),
     radial-gradient(circle at 55% 26%, rgba(56, 189, 248, 0.075), transparent 32rem),
     radial-gradient(circle at 10% 46%, rgba(20, 184, 166, 0.09), transparent 32rem),
-    radial-gradient(circle at 92% 64%, rgba(251, 191, 36, 0.075), transparent 30rem),
+    radial-gradient(circle at 92% 64%, rgba(125, 211, 252, 0.075), transparent 30rem),
     radial-gradient(circle at 45% 78%, rgba(56, 189, 248, 0.065), transparent 30rem),
     radial-gradient(circle at 14% 92%, rgba(20, 184, 166, 0.075), transparent 28rem),
     var(--page);
@@ -99,6 +103,91 @@ body {
 .dark ::selection {
   background: #0f766e;
   color: #f0fdfa;
+}
+
+/* ------------------------------------------------------------------
+   SCROLLBAR APLIKASI
+   ------------------------------------------------------------------
+   Satu gaya untuk SEMUA scrollbar: halaman, panel pilihan, kalender,
+   modal, sidebar. Bentuknya lonjong (pill) setebal 10px, alurnya
+   transparan, dan warnanya diambil dari --pf-scrollbar-thumb.
+
+   Kenapa satu aturan global, bukan per komponen: scrollbar bawaan
+   browser adalah satu-satunya bagian tampilan yang tidak pernah
+   disentuh desain aplikasi. Dulu tiap tempat yang punya scrollbar
+   diperbaiki satu-satu (ada .scroll-x, .pf-tabbar, .ppi-in, dan
+   beberapa warna hex yang ditulis terpisah), sehingga panel pilih
+   warnanya beda dari kalender, dan modal beda lagi.
+
+   Tiga detail yang menentukan supaya hasilnya benar:
+
+   1. ::-webkit-scrollbar-BUTTON dihilangkan. Tombol panah atas dan
+      bawah itu yang paling merusak di panel pilihan (lihat Select.tsx)
+      - kotak abu-abu besar yang warna dan bentuknya tidak ada
+      hubungannya dengan aplikasi ini.
+      Di Firefox tombol itu tidak bisa dihapus, tapi scrollbar-width:
+      thin di bawah sudah membuat ukurannya kecil sekali.
+
+   2. Gagang pakai `border: 2px solid transparent` +
+      `background-clip: content-box`, bukan border-radius saja. Cara ini
+      membuat gagang selalu berbentuk kapsul walaupun panjangnya
+      pendek (saat daftar baru mulai digulir), sedangkan
+      border-radius saja akan menjulurkan sudutnya jadi kotak.
+
+   3. Aturan ::-webkit-scrollbar sengaja hanya dipasang untuk
+      pointer: fine. Di HP dan tablet, scrollbar bawaan bersifat
+      overlay - ia muncul saat digulir lalu hilang, dan tidak memakan
+      ruang dari isi. Begitu ::-webkit-scrollbar diberi ukuran, browser
+      mengubahnya jadi scrollbar klasik yang selalu ada dan memakan
+      10px lebar konten. Di 360px itu cukup untuk memotong satu kata
+      di baris paling sempit. Jadi perangkat sentuh dibiarkan pakai
+      perilaku bawaannya (yang sudah benar), dan yang diberi gaya baru
+      perangkat dengan tetikus atau trackpad.
+
+   Firefox tidak punya sakelar pointer yang sedetail itu, jadi
+   scrollbar-width dan scrollbar-color dipasang untuk semua
+   perangkat: di sana "thin" tidak mengambil ruang ekstra yang berarti.
+
+   Yang SENGAJA dibiarkan menimpa aturan global ini: .ppi-in,
+   .pf-swipe, .pf-side-scroll, .pf-setnav yang scrollbar-nya dimatikan.
+   Aturan mereka memakai kelas, sedangkan yang di sini cuma "*", jadi
+   spesifisitas mereka tetap menang. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pf-scrollbar-thumb) transparent;
+}
+
+@media (pointer: fine) {
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--pf-scrollbar-thumb);
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--pf-scrollbar-thumb-hover);
+    background-clip: content-box;
+  }
+
+  /* Tombol panah atas/bawah. Di Chrome tombol ini muncul sebagai kotak
+     abu-abu besar di ujung scrollbar; disembunyikan supaya yang
+     terlihat hanya gagang bulat. */
+  *::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 @layer components {
@@ -222,6 +311,124 @@ body {
     }
     .btn-danger:hover:not(:disabled) {
       border-color: currentColor;
+    }
+  }
+
+  /* ---------- Tombol katalog: grup segmen + outline ----------
+     .seg-group    pembungkus tombol-tombol yang menempel jadi satu grup, persis
+                   kontrol "Kartu / Padat / Ringkas": hanya ujung luar yang
+                   bulat, ditambah border tipis teal muda.
+     .seg-btn      satu segmen: teks 11px tebal abu-abu kebiruan, tanpa warna
+                   isi; disorot abu muda saat disentuh kursor.
+     .seg-btn-on   segmen utama: teal penuh + teks putih (seperti "Kartu"
+                   yang aktif). Segmen lain ikut jadi teal saat ditekan.
+     .btn-outline  polos tanpa warna isi, hanya border tipis. Teks teal;
+                   tambah .btn-outline-muted untuk teks abu-abu kebiruan. */
+  .seg-group {
+    display: inline-flex;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid #43d3be;
+  }
+
+  .seg-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #62748e;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .seg-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .seg-btn-on,
+  .seg-btn:active:not(:disabled) {
+    background: #009689;
+    color: #ffffff;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .seg-btn:hover:not(:disabled):not(.seg-btn-on) {
+      background: #f1f5f9;
+    }
+  }
+
+  .dark .seg-group {
+    border-color: rgba(67, 211, 190, 0.55);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dark .seg-btn:hover:not(:disabled):not(.seg-btn-on) {
+      background: #1e293b;
+    }
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 34px;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid #cbd5e1;
+    background: transparent;
+    color: #0d7d75;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--pf-fast) ease,
+      border-color var(--pf-fast) ease,
+      color var(--pf-fast) ease,
+      transform var(--pf-fast) ease;
+  }
+
+  .btn-outline:active {
+    transform: translateY(1px);
+  }
+
+  .btn-outline:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+  }
+
+  .btn-outline.btn-outline-muted {
+    color: #62748e;
+  }
+
+  .dark .btn-outline {
+    border-color: #475569;
+    color: #5eead4;
+  }
+
+  .dark .btn-outline.btn-outline-muted {
+    color: #94a3b8;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn-outline:hover:not(:disabled) {
+      border-color: var(--pf-accent-line);
+      background: var(--pf-accent-soft);
     }
   }
 
@@ -504,23 +711,533 @@ body {
   }
 }
 
-.scroll-x::-webkit-scrollbar { height: 6px; }
-.scroll-x::-webkit-scrollbar-thumb { background: #99d6cf; border-radius: 999px; }
-.dark .scroll-x::-webkit-scrollbar-thumb { background: #1f4a52; }
+/* Lebar bar tetap 6px: lebih pipih dari 10px bawaan, karena bar ini
+   horizontal dan letaknya di bawah kepala halaman yang selalu terlihat -
+   bar setebal 10px di sana memakan ruang isi yang banyak.
 
-/* Overlay gradasi hero dashboard. Foto-nya sekarang TIDAK lagi di sini:
-   foto digeser otomatis oleh komponen HeroSlideshow (3 slide, geser
-   kiri tiap 6 detik), jadi kelas ini cuma bertugas jadi lapisan
-   gradasi gelap di ATAS foto. Strategi gradasi tetap beda mobile vs
-   desktop — di HP kontennya selebar kartu (butuh gelap merata), di
-   desktop teks cuma di kiri (foto boleh lebih kelihatan di kanan).
+   Warnanya sengaja TIDAK ditulis di sini. Warna hex di kelas akan
+   mengalahkan aturan global (kelas " beat universal selector "*"),
+   sehingga bar ini jadi satu-satunya scrollbar yang warnanya tidak ikut
+   mode terang/gelap. Warnanya diambil dari --pf-scrollbar-thumb. */
+.scroll-x::-webkit-scrollbar { height: 6px; }
+
+/* ------------------------------------------------------------------
+   KPI DI HP - GRID 2 x 2 GAYA STRIP BERANDA
+   ------------------------------------------------------------------
+   Memakai komponen KpiCard yang sama dengan Beranda (ikon besar, label
+   kecil, angka, garis progres tipis). Hanya tata letaknya yang diubah:
+   di HP disusun 2 kolom x 2 baris, bukan satu baris panjang.
+
+   Aturan ini SENGAJA ditulis di luar @layer. Gaya .pf-kpi aslinya ada
+   di @layer components, sedangkan utility Tailwind (text-lg, h-8, dll.)
+   ada di @layer utilities yang selalu menang atas components. Kalau aturan
+   ini ikut diletakkan di dalam layer, utility yang menempel di
+   elemen yang sama akan mengalahkan penyesuaian kita.
+
+   Yang disesuaikan di sini (hanya berlaku di bawah 640px):
+   1. Garis pemisah dimatikan seluruhnya. Tiap kartu sudah punya garis
+      progres tipis sendiri; ditambah garis tegak dan garis atas baris
+      kedua, tiap kartu terlihat punya tiga garis - terlalu ramai.
+   2. Ikon, angka, dan padding dikecilkan. Satu sel hanya ~168px,
+      sedangkan ukuran bawaan KpiCard disetel untuk 6 kolom selebar
+      ~200px - angka "Rp 12.500.000" tidak muat dan akan menabrak
+      kolom sebelah. */
+@media screen and (max-width: 639px) {
+  .pf-kpi-grid .pf-kpi { padding: 10px 6px 10px 0; }
+  .pf-kpi-grid .pf-kpi svg { width: 22px; height: 22px; stroke-width: 1.7; }
+  .pf-kpi-grid .pf-kpi p { font-size: 15px; }
+  .pf-kpi-grid .pf-kpi p.pf-kpi-label { font-size: 9px; letter-spacing: 0; }
+  .pf-kpi-grid .pf-kpi p.truncate { font-size: 10px; }
+  /* Garis progres diberi lebar penuh sel, bukan 96px tetap: di HP
+     kotak yang tersedia sempit, jadi tidak perlu disisakan ruang kosong. */
+  .pf-kpi-grid .pf-kpi [class*="w-24"] { width: 100%; }
+
+  /* TANPA GARIS PEMISAH.
+     Versi pertama memakai garis tegak antar kolom dan garis atas baris
+     kedua. Di HP hasilnya ramai: tiap kartu sudah punya garis progres
+     tipis sendiri, jadi satu kartulooked punya tiga garis - terlalu
+     banyak untuk empat kotak yang isinya cuma angka.
+
+     Yang membedakan kolom dan baris sekarang adalah jarak (gap) grid
+     dan jarak antar label dengan angka, jadi batasnya tetap terbaca
+     tanpa perlu garis.
+
+     Catatan: ::before harus dimatikan total, bukan hanya disembunyikan
+     di kolom kiri. Garis itu digambar dashboard.css (garis di kiri tiap
+     kartu pada strip Beranda 2/3/6 kolom). Kalau ::before dibiarkan
+     menyala, kartu yang dibungkus <div> akan terbaca sebagai "anak
+     pertama" dan aturan Beranda justru menyembunyikannya - hasilnya
+     garis muncul-hilang tidak menentu. */
+  .pf-kpi-grid .pf-kpi::before { display: none; }
+}
+
+/* ------------------------------------------------------------------
+   KPI INVOICE DI DESKTOP (4 SEJAJAR)
+   ------------------------------------------------------------------
+   Di 1024-1279px keempat kartu sudah sejajar, tetapi ruang per kartu
+   masih sempit karena sidebar Invoice memakan ~248px. Ukuran kompak
+   yang sama dengan versi HP dipakai di rentang ini supaya nominal
+   Rupiah dan hint tidak bertabrakan. Mulai xl, ukuran KpiCard normal
+   kembali karena kolom sudah cukup lebar. */
+@media screen and (min-width: 640px) {
+  /* Ratakan ikon kartu pertama dengan judul di atasnya. Kartu lain
+     tetap punya padding kiri sendiri sebagai jarak antar-kolom. */
+  .invoice-kpi-grid > div:first-child .pf-kpi { padding-left: 0; }
+}
+
+@media screen and (min-width: 1024px) and (max-width: 1279px) {
+  .invoice-kpi-grid .pf-kpi { padding: 10px 6px 10px 0; }
+  .invoice-kpi-grid .pf-kpi > .grid { column-gap: 10px; }
+  .invoice-kpi-grid .pf-kpi svg { width: 22px; height: 22px; stroke-width: 1.7; }
+  .invoice-kpi-grid .pf-kpi p { font-size: 15px; }
+  .invoice-kpi-grid .pf-kpi p.pf-kpi-label { font-size: 9px; letter-spacing: 0; }
+  .invoice-kpi-grid .pf-kpi p.truncate { font-size: 10px; }
+  .invoice-kpi-grid .pf-kpi [class*="w-24"] { width: 100%; }
+}
+
+/* ------------------------------------------------------------------
+   MENU GESER UNTUK LAYAR KECIL (src/components/MobileDrawer.tsx)
+   ------------------------------------------------------------------
+   Panel aksi dokumen yang tadinya berupa deretan tombol lebar penuh
+   di atas kertas. Di 360px deretannya memakan dua baris penuh - lebih
+   tinggi dari kepala dokumennya - sehingga pengguna harus menggulir
+   melewati tombol dulu sebelum sampai ke isi tagihan yang justru mau
+   dibaca. Sekarang tombolnya disembunyikan di balik satu tombol tiga
+   garis, jadi isi dokumen langsung terlihat.
+
+   Hanya di layar kecil (lg:hidden di markup). Di lg ke atas sidebar
+   sudah menjadi kolom action sendiri, jadi di sana panel ini tidak
+   boleh muncul sama sekali.
+
+   Animasi: panel meluncur dari tepi kiri (translateX) dan latar gelap
+   memudar - pola menu geser standar. Gerak masuk memakai kurva
+   cubic-bezier(0.32, 0.72, 0, 1): awal cepat, akhir melambat halus.
+   Gerak keluar dibalik dan sedikit lebih singkat. Saat ditutup,
+   MobileDrawer menandai elemen dengan data-state="closed" dan baru
+   melepasnya dari halaman setelah animasi keluar selesai.
+
+   Bayangan panel ikut dianimasikan: dengan bayangan permanen, tepi
+   kanan panel yang masih di luar layar tetap "bocor" sebagai garis
+   gelap di tepi kiri layar.
+
+   prefers-reduced-motion dihormati - panel muncul dan hilang tanpa
+   gerak dan halaman di belakang tetap bisa digulir. */
+.pf-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgb(2 8 12 / 0.6);
+  will-change: opacity;
+  animation: pf-drawer-fade 280ms ease-out both;
+}
+.pf-drawer-backdrop[data-state="closed"] {
+  animation: pf-drawer-fade-out 200ms ease-out forwards;
+  pointer-events: none;
+}
+/* Panel = kerangka yang bergeser (transform). TIDAK punya overflow, jadi
+   bayangannya (::before) tidak terpotong. Isi yang bisa digulir ada di
+   .pf-drawer-scroll di dalamnya.
+
+   PENYEBAB LAG SAAT MENUTUP (sudah diperbaiki):
+   1. Dulu keyframe ikut menganimasikan box-shadow. Properti itu tidak bisa
+      dijalankan di compositor, sehingga SELURUH animasi (termasuk geser)
+      jatuh ke main thread. Saat menutup main thread sedang sibuk (React
+      memperbarui state, tautan memulai navigasi, panel dilepas), jadinya
+      geseran tersendat. Sekarang keyframe hanya berisi transform dan
+      opacity - dua-duanya jalan di compositor, mulus walau main thread
+      sibuk. Bayangan dipindah ke ::before dan hanya di-fade (opacity).
+   2. Kurva keluar lama (0.4, 0, 0.9, 0.6) berawal sangat lambat, jadi
+      setelah jari mengetuk "tutup" panel seperti diam sesaat sebelum
+      bergerak. Sekarang memakai kurva yang sama dengan saat membuka -
+      langsung bergerak begitu diketuk. */
+.pf-drawer-panel {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 91;
+  width: min(20rem, 86vw);
+  background: var(--pf-surface-solid);
+  border-inline-end: 1px solid var(--pf-line);
+  will-change: transform;
+  backface-visibility: hidden;
+  animation: pf-drawer-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.pf-drawer-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  box-shadow: 18px 0 48px rgb(0 0 0 / 0.34);
+  animation: pf-drawer-shadow-in 300ms ease-out both;
+}
+.pf-drawer-panel[data-state="closed"] {
+  animation: pf-drawer-out 220ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  pointer-events: none;
+}
+.pf-drawer-panel[data-state="closed"]::before {
+  animation: pf-drawer-shadow-out 160ms ease-out forwards;
+}
+.pf-drawer-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px;
+}
+@keyframes pf-drawer-in {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes pf-drawer-out {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-100%, 0, 0); }
+}
+@keyframes pf-drawer-shadow-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pf-drawer-shadow-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes pf-drawer-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pf-drawer-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+/* Halaman di belakang tidak ikut bergulir selagi menu terbuka. Diterapkan
+   lewat :has() supaya tidak perlu state React hanya untuk satu aturan CSS. */
+html:has(.pf-drawer-panel[data-state="open"]) { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-drawer-panel,
+  .pf-drawer-panel::before,
+  .pf-drawer-backdrop,
+  .pf-drawer-panel[data-state],
+  .pf-drawer-panel[data-state]::before,
+  .pf-drawer-backdrop[data-state] { animation: none; }
+  html:has(.pf-drawer-panel[data-state="open"]) { overflow: visible; }
+}
+
+/* ------------------------------------------------------------------
+   SIDEBAR INVOICE: GULIR TERPISAH DARI HALAMAN
+   ------------------------------------------------------------------
+   Roda mouse di atas sidebar hanya menggerakkan sidebar. Setelah
+   isinya habis di atas atau bawah, gulir TIDAK diteruskan ke halaman,
+   jadi kertas invoice tetap diam.
+
+   Ini butuh dua hal sekaligus:
+   1. Sidebar harus jadi wadah bergulir sendiri (max-h + overflow-y-auto).
+      Tanpa itu, overscroll-behavior tidak berlaku apa-apa.
+   2. overscroll-behavior: contain yang menahan CONTINUATION-nya.
+
+   Aturan ini hanya berlaku di layar lebar (>=1024px). Di bawah itu
+   sidebar berubah jadi deretan menu di atas konten dan seluruh
+   halaman digulir sebagai satu kesatuan - membelah gulir di layar
+   sekecil itu justru membingungkan.
+
+   Bilah gulir disembunyikan, bukan karena dihapus: panelnya sudah
+   penuh dengan garis, dan bilah yang tidak terlihat hampir tidak
+   pernah dipakai di panel seperti ini. Gulir tetap jalan.
+
+   Aturan ini hanya berlaku di layar lebar (>=1024px). Di bawah itu
+   sidebar berubah jadi deretan menu di atas konten dan seluruh
+   halaman digulir sebagai satu kesatuan - membelah gulir di layar
+   sekecil itu justru membingungkan. */
+@media screen and (min-width: 1024px) {
+  .pf-side-scroll {
+    max-height: calc(100dvh - 6.5rem);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+  }
+  .pf-side-scroll::-webkit-scrollbar { display: none; }
+}
+
+/* ------------------------------------------------------------------
+   DERETAN TAB (src/components/TabBar.tsx)
+   ------------------------------------------------------------------
+   Satu kotak pembatas di luar; tab di dalamnya TIDAK diberi kotak
+   sendiri, hanya pemisah tipis antar tab. Tab aktif ditandai garis
+   2px di bawahnya dan latar sedikit lebih pekat.
+
+   Bentuk "kotak per tab" (yang dipakai versi pertama) sempat dicoba
+   lalu ditolak: dengan empat tab di 360px tiap tab hanya dapat ~84px.
+   Setelah dikurangi padding dan tanpa ikon, "Tampilan" masih muat;
+   dengan ikon 15px teksnya terpotong jadi "Tamp...".
+
+   Pemisah antar tab dibuat dengan border-right, bukan gap + border
+   keliling: kalau memakai gap, jarak kosong itu tidak ikut bergeser
+   bersama konten saat digulir, dan pemisah akan tampak melayang.
+
+   Bilah gulir sengaja TAMPIL dan tipis. pf-scroll-x yang pernah ada
+   menyembunyikannya dan memberi guntingan tepi; untuk deretan tab itu
+   menyesatkan karena yang terpotong terlihat pudar, bukan "bisa
+   digulir". pf-scroll-x sudah dihapus total.
+
+   Aturan ditulis di luar @layer supaya mengalahkan utility Tailwind
+   yang menempel di elemen yang sama. */
+.pf-tabbar {
+  border: 1px solid var(--pf-line-soft);
+  border-radius: var(--pf-r-control);
+  scrollbar-width: thin;
+}
+.pf-tabbar > .pf-tab {
+  border-right: 1px solid var(--pf-line-soft);
+  border-radius: 0;
+}
+/* Tab terakhir tidak perlu pemisah di sebelah kanannya. */
+.pf-tabbar > .pf-tab[data-last] { border-right: 0; }
+/* Hanya lebarnya yang ditulis. Warnanya diambil dari
+   --pf-scrollbar-thumb supaya sama dengan scrollbar lain dan ikut mode
+   terang/gelap. Lihat catatan panjang di .scroll-x::-webkit-scrollbar. */
+.pf-tabbar::-webkit-scrollbar { height: 6px; }
+
+/* ------------------------------------------------------------------
+   SIDEBAR PENGATURAN (src/components/SettingsShell.tsx)
+   ------------------------------------------------------------------
+   Dua tingkat navigasi pengaturan - pilih AREA (Print Flow / Invoice)
+   dan pilih BAGIAN (Usaha / Bayar / Dokumen / Tampilan) - pindah dari
+   dua deretan tab mendatar menjadi SATU daftar di kiri.
+
+   Kenapa bukan tetap mendatar: kedua deretan itu bertumpuk di
+   atas yang sama dan sama-sama memakai lebar layar penuh,
+   padahal isinya cuma daftar pendek. Di 360px tiap tab hanya
+   dapat ~84px, sedangkan jumlah tabnya sudah enam - dua area
+   ditambah empat bagian - dan tidak semuanya muat tanpa
+   menggulir. Bentuknya sekarang mengikuti Application Settings
+   di sistem operasi: daftar di kiri, isi di kanan.
+
+   TANPA GULIR MENDATAR. Di bawah 1024px daftar ini jadi kisi
+   DUA KOLOM di atas isi, bukan baris yang digulir. Enam butir
+   jadi tiga baris, semuanya terlihat tanpa ada yang terpotong.
+
+   TANPA GULIR MANDIRI DI LAYAR SEMPIT. Sama seperti sidebar
+   invoice, pemisahan gulir hanya masuk akal di layar lebar.
+
+   Penanda aktif memakai GARIS TEAL DI KIRI, bukan isian penuh.
+   Alasannya: di sini bisa ada dua butir aktif sekaligus - "Invoice"
+   di kelompok SISTEM dan "Dokumen" di kelompok INVOICE - jadi
+   isian penuh akan terlihat seperti satu blok besar dan salah
+   satu tingkatnya kehilangan artinya. Garis di kiri menandai
+   tiap tingkat tanpa saling menimpa.
+
+   Ditaruh di luar @layer supaya mengalahkan utility Tailwind
+   yang menempel di elemen yang sama, sama seperti .pf-tabbar
+   di atas. */
+.pf-setnav {
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: var(--pf-r-card);
+  box-shadow: var(--pf-shadow-1);
+}
+
+.pf-setnav-group {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+
+.pf-setnav-sep {
+  height: 1px;
+  margin: 0.375rem 0.625rem;
+  background: var(--pf-line-soft);
+}
+
+.pf-setnav-item {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 40px;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--pf-r-control);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--pf-ink-2);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--pf-fast) ease,
+    color var(--pf-fast) ease;
+}
+
+/* Garis penanda aktif. Transparent kalau tidak aktif supaya ruangnya
+   sudah dipesan dari awal - kalau baru muncul saat aktif, seluruh
+   daftar melompat ke kanan setiap kali pindah butir. */
+.pf-setnav-item::before {
+  content: "";
+  position: absolute;
+  inset-block: 7px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: var(--pf-r-pill);
+  background: transparent;
+  transition: background-color var(--pf-fast) ease;
+}
+
+.pf-setnav-item > svg {
+  flex: none;
+  opacity: 0.85;
+}
+
+.pf-setnav-item:hover {
+  background: var(--pf-surface-2);
+  color: var(--pf-ink);
+}
+
+/* Selector ditulis [aria-current] TANPA nilai, bukan
+   [aria-current="true"]. Ada dua nilai yang dipakai di daftar ini:
+   "page" untuk butir AREA (dipakai Link) dan "true" untuk butir
+   BAGIAN (dipakai button). Keduanya sama-sama berarti aktif, jadi
+   keduanya harus mendapat garis penanda.
+
+   Versi pertama hanya menulis [aria-current="true"], dan akibatnya
+   butir AREA aktif kehilangan garisnya. Terlihat benar dari jauh
+   karena isian --pf-accent-soft masih menyala, tapi garis di kiri
+   yang justru jadi penanda utama tidak muncul. Selector yang
+   sempit seperti ini paling berbahaya justru karena tidak
+   menghasilkan error sama sekali. */
+.pf-setnav-item[aria-current] {
+  background: var(--pf-accent-soft);
+  color: var(--pf-accent);
+  font-weight: 700;
+}
+
+.pf-setnav-item[aria-current]::before { background: var(--pf-accent); }
+.pf-setnav-item[aria-current] > svg { opacity: 1; }
+
+/* ---------------------------------------------------------------
+   KELOMPOK INVOICE KETIKA AREANYA PRINT FLOW
+   ---------------------------------------------------------------
+   Keempat butir bagian mengatur isi halaman Invoice. Ketika area
+   yang terbuka Print Flow, halaman itu tidak menampilkan form
+   Invoice sama sekali, jadi butir-butir itu tidak punya apa pun
+   untuk dikerjakan.
+
+   Mati sungguhan, bukan sekadar kelihatan redup: atribut
+   disabled dipasang di komponennya. CSS di bawah ini HANYA
+   mengatur tampilan. Tombol yang masih bisa diklik tapi terlihat
+   redup adalah jebakan - yang salahnya baru terasa setelah
+   diklik, dan itu tidak ada yang berubah.
+
+   Penanda aktif TIDAK ikut jadi redup. Komponen sengaja tidak
+   memasang aria-current ketika mati, jadi di sini tidak ada
+   aturan yang perlu mematikannya. Kalau suatu saat aturan active
+   dibuat lebih syarat daripada "tidak ada aria-current", aturan
+   itu WAJIB ikut memanggil :disabled di sini.
+
+   Kepala kelompok "Invoice" ikut redup supaya yang terlihat mati
+   bukan cuma empat butirnya, tapi kelompaknya. Kalau kepala
+   tetap terang, empat butir pucat itu terbaca seperti kelompok
+   yang salah warna, bukan kelompok yang sedang tidak berlaku.
+
+   Angka 0.42 dipilih supaya butirnya masih terbaca. Redup total
+   membuat butir hilang dari daftar, padahal ia tetap ada di
+   sana dan akan hidup lagi begitu Invoice diklik. */
+.pf-setnav-item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.pf-setnav-item:disabled:hover {
+  background: transparent;
+  color: var(--pf-ink-2);
+}
+
+.pf-setnav-group[data-mati] {
+  opacity: 0.5;
+}
+
+.pf-setnav-item:focus-visible {
+  outline: 2px solid var(--pf-accent);
+  outline-offset: -2px;
+}
+
+@media screen and (min-width: 1024px) {
+  .pf-setnav {
+    position: sticky;
+    top: 5rem;
+    align-self: start;
+    max-height: calc(100dvh - 7rem);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+  }
+  .pf-setnav::-webkit-scrollbar { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-setnav-item,
+  .pf-setnav-item::before { transition: none; }
+}
+
+/* Foto hero dashboard. HeroSlideshow mengirim empat URL gambar lewat
+   variabel CSS di setiap slide: terang/gelap × HP/desktop. Pemilihan
+   dilakukan CSS supaya tema yang aktif sudah terpakai sejak paint
+   pertama dan browser tidak perlu mengunduh dua set gambar. */
+.hero-slide {
+  background-color: #eaf6fb;
+  background-image: var(--hero-light-mobile);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.dark .hero-slide {
+  background-color: #07141d;
+  background-image: var(--hero-dark-mobile);
+}
+
+@media (min-width: 768px) {
+  .hero-slide {
+    background-image: var(--hero-light-desktop);
+  }
+
+  .dark .hero-slide {
+    background-image: var(--hero-dark-desktop);
+  }
+}
+
+/* Overlay gradasi di ATAS foto. Tema terang memakai tirai putih-biru
+   agar teks navy tetap terbaca; tema gelap tetap memakai tirai navy
+   yang lama agar teks putih tidak kehilangan kontras. Strategi beda
+   mobile vs desktop: di HP tirai merata, di desktop hanya sisi kiri
+   (area teks) yang pekat dan foto tetap terlihat di kanan.
    JANGAN tambah background-color di sini: nanti menutupi foto. */
 .hero-photo-bg {
-  background-image: linear-gradient(180deg, rgba(5, 15, 21, 0.6) 0%, rgba(6, 20, 27, 0.48) 60%, rgba(6, 20, 27, 0.4) 100%);
+  background-image: linear-gradient(
+    180deg,
+    rgba(244, 251, 254, 0.7) 0%,
+    rgba(244, 251, 254, 0.52) 58%,
+    rgba(244, 251, 254, 0.2) 100%
+  );
 }
 
 @media (min-width: 768px) {
   .hero-photo-bg {
+    /* Desktop tema terang: overlay putih-biru DIHAPUS (Okt 2026) supaya
+       foto tampil polos tanpa tirai gradasi. Tema gelap tidak terpengaruh
+       (diatur terpisah oleh .dark .hero-photo-bg di bawah). Mobile tetap
+       memakai tirai dari aturan di atas. */
+    background-image: none;
+  }
+}
+
+.dark .hero-photo-bg {
+  background-image: linear-gradient(180deg, rgba(5, 15, 21, 0.6) 0%, rgba(6, 20, 27, 0.48) 60%, rgba(6, 20, 27, 0.4) 100%);
+}
+
+@media (min-width: 768px) {
+  .dark .hero-photo-bg {
     /* Gradasi dipersempit: gelap pekat cuma di zona teks (kiri), lalu cepat
        memudar ke transparan sebelum area foto — supaya foto tetap terang
        di sana, bukan ikut ketutup gelap sampai ujung kanan. */
@@ -850,12 +1567,13 @@ body {
    dekoratif di belakang foto hero dashboard (tetap terlihat rapi
    walau foto asli belum dipasang). */
 .print-halftone {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.85) 1px, transparent 1.6px);
+  background-image: radial-gradient(rgba(7, 56, 79, 0.55) 1px, transparent 1.6px);
   background-size: 12px 12px;
-  opacity: 0.14;
+  opacity: 0.09;
 }
 
 .dark .print-halftone {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.85) 1px, transparent 1.6px);
   opacity: 0.08;
 }
 
@@ -1154,7 +1872,12 @@ button, a, [role="button"] {
    ========================================================== */
 .ppi-paper,
 .ppi-modal,
-.ppi-side {
+.ppi-side,
+/* Menu geser (MobileDrawer) memuat tombol ppi-side-btn yang warnanya
+   berasal dari token --ppi-*. Kalau drawer tidak masuk daftar ini,
+   semua --ppi-* di dalamnya tidak terdefinisi dan tombolnya jadi tidak
+   berwarna. */
+.pf-drawer-panel {
   /* Terang (default) */
   --ppi-bg: #ffffff;
   --ppi-fg: #0f172a;
@@ -1179,6 +1902,14 @@ button, a, [role="button"] {
   /* Ikon sidebar gaya "outline": kotak ikon hanya garis tepi. */
   --ppi-side-ico-ink: #0f2f3f;
   --ppi-side-ico-line: rgba(15, 47, 63, 0.26);
+
+  /* Scrollbar memakai palet KERTAS, bukan palet aplikasi.
+     Token --pf-scrollbar-* di dalam .ppi-paper masih bernilai mode
+     aplikasi. Kalau tidak ditimpa di sini, di mode gelap scrollbar
+     terang muncul di atas kertas yang gelap - terang di tempat yang
+     seharusnya gelap. */
+  --pf-scrollbar-thumb: rgb(15 47 63 / 0.26);
+  --pf-scrollbar-thumb-hover: rgb(15 118 110 / 0.62);
 }
 /* Mode gelap. Warna gelap = terang yang mengikuti mode gelap,
    supaya tinta di kertas tidak pernah hilang di atas kertas
@@ -1186,7 +1917,8 @@ button, a, [role="button"] {
    sementara teksnya sudah di-adaptasi jadi terang). */
 .dark .ppi-paper,
 .dark .ppi-modal,
-.dark .ppi-side {
+.dark .ppi-side,
+.dark .pf-drawer-panel {
   --ppi-bg: #132a38;
   --ppi-fg: #eef6f4;
   --ppi-line: #24485a;
@@ -1212,6 +1944,10 @@ button, a, [role="button"] {
      putih, ikonnya hilang di atas kartu putih. */
   --ppi-side-ico-ink: #ffffff;
   --ppi-side-ico-line: rgba(255, 255, 255, 0.45);
+
+  /* Scrollbar ikut palet kertas gelap (lihat catatan di blok terang). */
+  --pf-scrollbar-thumb: rgb(255 255 255 / 0.24);
+  --pf-scrollbar-thumb-hover: rgb(45 212 191 / 0.7);
 }
 .ppi-paper {
   position: relative;
@@ -1227,12 +1963,88 @@ button, a, [role="button"] {
    harus ikut gelap, kalau tidak daftar terbuka tampil putih. */
 .dark .ppi-paper,
 .dark .ppi-modal { color-scheme: dark; }
-.ppi-paper::before {
+/* --------------------------------------------------------------
+   PITA WARNA DI TEPAS ATAS KERTAS INVOICE
+   --------------------------------------------------------------
+   Dua pita yang masing-masing dipotong miring, seperti gambar
+   acuan: pita teal dan pita kuning sama-sama berakhir dengan
+   garis diagonal yang turun ke kiri, sehingga pita kuning
+   menjulang lebih jauh ke kanan di bagian atas dan menyempit ke
+   bawah.
+
+   Kenapa DUA pseudo-element, bukan satu:
+
+   Bentuk pada gambar acuan punya TIGA garis miring yang sejajar:
+   ujung kanan teal, batas teal-kuning, dan ujung kanan kuning.
+
+   Satu elemen tidak cukup. clip-path hanya menerima satu polygon,
+   dan background hanya satu gradien. Gradien memang bisa
+   dimiringkan dengan sudut, tapi sudut itu bergantung pada
+   perbandingan lebar dan tinggi elemen, dan perbandingan itu
+   berubah mengikuti lebar kertas di setiap layar - jadi sudutnya
+   ikut berubah antara monitor 27 inci dan HP. Polygon dalam persen
+   tidak punya masalah itu.
+
+   Tumpang tindih SENGAJA 0.6 persen di batas teal-kuning. Dua
+   polygon yang berbagi sisi persis menghasilkan celah
+   anti-alias tipis, seperti retak diagonal di pita. Kuning
+   digambar di atas teal, jadi tumpang tindihnya menutup celah
+   itu. Kalau nanti batasnya digeser, geser KEDUA ujungnya
+   sekaligus, jangan cuma satu.
+
+   pointer-events: none karena pita ini setinggi 7px di tepi atas
+   kertas. Tanpa itu, pita bisa menahan klik di 7px paling atas.
+
+   TIGA ANGKA YANG BISA DIUTAKAN BERSAMAAN. Semuanya dalam persen
+   dari lebar kertas, dan semuanya relatif terhadap 58 persen
+   (batas teal-kuning), bukan relatif terhadap tepi kiri:
+
+     58     batas teal-kuning
+     0.6    tumpang tindih kuning di atas teal
+     2.5    besar kemiringan, sama untuk ketiga garis
+     22.6   panjang pita kuning
+
+   Panjang pita kuning dihitung dari dua sisi sekaligus - 57.4
+   sampai 80 persen di atas, 54.9 sampai 77.5 persen di bawah.
+   Keduanya harus selisihnya 22.6 persen; kalau hanya satu sisi
+   yang diubah, pita jadi tidak rata dan satu ujungnya lebih
+   panjang dari yang lain.
+
+   Kemiringan 2.5 persen, bukan 6 seperti versi pertama. Pada
+   kertas selebar 700 piksel, 6 persen berarti ujung pita turun
+   42 piksel dalam 7 piksel tinggi - sudutnya landai sekali dan
+   ujungnya terlihat runcing seperti sirip. 2.5 persen memberi
+   turun 17 piksel dengan lebar pita yang jauh lebih panjang,
+   sehingga bentuknya lebih panjang dan ujungnya tidak lancip.
+
+   Semua nilai di bawah dalam PERSEN, bukan piksel. Kertas
+   menyempit di layar kecil, dan kalau sudutnya ditulis piksel
+   hasilnya pita yang landai di HP dan curam di desktop.
+
+   Di bawah 640px SELURUH gaya "lembar kertas" dilepas dan pita
+   ini disembunyikan, jadi ::after wajib ikut disembunyikan.
+   Kalau tidak, di HP hanya tersisa pita kuning sendirian tanpa
+   teal, karena pita tealnya sudah dimatikan lebih dulu. */
+.ppi-paper::before,
+.ppi-paper::after {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
   height: 7px;
-  background: linear-gradient(90deg, #0f766e 0%, #14b8a6 55%, #f5b41b 55%, #f5b41b 70%, transparent 70%);
+  pointer-events: none;
+}
+/* Teal: dari tepi kiri sampai 58 persen. Ujung kanannya miring 2.5
+   persen - LANDAI, bukan landai dan curam seperti versi pertama. */
+.ppi-paper::before {
+  background: linear-gradient(90deg, #0f766e 0%, #14b8a6 58%);
+  clip-path: polygon(0 0, 58% 0, 55.5% 100%, 0 100%);
+}
+/* Kuning: mulai 0.6 persen sebelum ujung teal (tumpang tindih), panjangnya
+   22.6 persen dan ujungnya juga miring 2.5 persen, sehingga kedua
+   sisinya tetap sejajar. Lebar di atas dan di bawah sengaja sama. */
+.ppi-paper::after {
+  background: #f5b41b;
+  clip-path: polygon(57.4% 0, 80% 0, 77.5% 100%, 54.9% 100%);
 }
 .ppi-in {
   width: 100%;
@@ -1279,7 +2091,29 @@ button, a, [role="button"] {
 }
 .ppi-row { display: grid; gap: 6px 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ppi-row > .ppi-c-wide { grid-column: 1 / -1; }
-.ppi-mlabel { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ppi-muted); }
+/* Satu item memuat 6 label (Produk, Keterangan, M2, Qty, Harga, Jumlah).
+   Semuanya huruf besartebal membuat kartu item jadi riuh di layar 360px,
+   padahal label itu hanya penanda. Dikecilkan dan direda supaya nilainya
+   yang dibaca lebih dulu. */
+.ppi-mlabel { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ppi-muted); opacity: 0.85; }
+
+/* Sel JUMLAH di HP: melebar penuh, label kiri + nominal besar kanan,
+   dipisah garis putus -Cara membacanya jadi seperti struk belanja, bukan
+   sel tabel yang dipipihkan. Ini murni gaya HP; blok min-width:768px dan
+   blok @media print di bawah keduanya mengembalikannya jadi sel biasa. */
+.ppi-c-total {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--ppi-line);
+  text-align: left;
+}
+.ppi-c-total .ppi-mlabel { display: block; }
+.ppi-c-total > span:last-child { font-size: 15px; font-weight: 900; white-space: nowrap; }
 
 /* ------------------------------------------------------------------
    RAPI-KAN TEKS BARIS SEJAJAR DENGAN TEKS HEADER KOLOMNYA
@@ -1320,11 +2154,589 @@ button, a, [role="button"] {
   .ppi-thead > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
   .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 0; }
   .ppi-row > .ppi-c-wide { grid-column: auto; }
+  /* Kembalikan sel Jumlah ke sel biasa: tidak melebar, tanpa garis pemisah,
+     rata kanan seperti kolomnya. WAJIB ada di blok min-width:768px DAN di
+     blok @media print - kalau hanya salah satu, bentuk cetakan akan
+     berbeda dari yang tampil di layar. */
+  /* Kembalikan sel Jumlah ke sel biasa: tidak melebar, tanpa garis pemisah,
+     rata kanan seperti kolomnya. WAJIB ada di blok min-width:768px DAN di
+     blok @media print - kalau hanya salah satu, bentuk cetakan akan
+     berbeda dari yang tampil di layar.
+
+     padding-top di sini 6px, bukan 4px seperti di blok print. Lima kolom
+     lain di baris ini semuanya memakai py-1.5 (6px), jadi 4px membuat
+     kolom Jumlah naik 2px - saat diukur, sebar garis dasar lima kolom
+     lain 0px tapi Jumlah 2px. Blok @media print di bawah tetap 4px,
+     jadi dokumen yang dicetak tidak berubah sedikit pun. */
+  .ppi-c-total {
+    grid-column: auto;
+    display: block;
+    margin-top: 0;
+    padding-top: 6px;
+    border-top: 0;
+    text-align: right;
+  }
+  .ppi-c-total > span:last-child { font-size: inherit; font-weight: inherit; white-space: normal; }
+  .ppi-c-total .ppi-mlabel { display: none; }
   /* Isian di dalam sel tidak menambah padding sendiri. Kalau ditambah,
      teks baris terdorong 8px dari teks header kolomnya. */
   .ppi-row .ppi-in { padding-left: 0; padding-right: 0; }
   .ppi-mlabel { display: none; }
 }
+
+/* ------------------------------------------------------------------
+   DESKTOP: TEKS BARIS ITEM DI EDITOR DUDUK SATU GARIS DASAR
+   ------------------------------------------------------------------
+   Keluhan owner: di lembar invoice versi desktop, teks antar kolom
+   terlihat tidak rata - ada yang lebih naik, ada yang lebih turun.
+
+   Diukur, penyebabnya satu dan konkret: jarak ATAS antar sel tidak
+   sama. Dua sel (Produk, Keterangan) memakai py-1.5 = 6px, sedangkan
+   sel angka, Quantity, dan Harga tidak memakai apa-apa. Seolah-olah
+   semua sel naik ke atas baris (align-items: start) tapi tidak semua
+   punya jarak yang sama, hasilnya:
+
+     Produk        baseline  72.2px
+     Keterangan    baseline  72.2px
+     M2 Bahan      baseline  66.2px
+     Qty           baseline  66.2px
+     Harga satuan  baseline  66.2px
+     Jumlah        baseline  66.6px
+     ---------------------------------
+     sebar         6px
+
+   Enam piksel itu tidak terlihat di satu kolom, tapi kalau lima kolom
+   dibaca mendatar, matanya langsung menangkapnya.
+
+   Dua perbaikan:
+
+   1. JARAK ATAS SERAGAM. Semua sel dapat padding atas dan bawah 6px,
+      sama persis dengan yang sudah dipakai dua sel pertama.
+
+   2. ISI SEL DISERAGAMKAN. Kolom Jumlah isinya teks biasa, bukan
+      isian, jadi tingginya cuma 20px sedangkan isian di sebelahnya
+      32.2px - walau padding-nya sudah sama, teksnya tetap melorot.
+      .ppi-amount memusatkan teks itu di dalam kotak setinggi isian.
+
+   DIBATASI .ppi-paper.ppi-editing. Halaman baca dan hasil cetak punya
+   aturan sendiri yang sudah benar; menyentuhnya akan mengubah
+   dokumen yang dicetak. */
+@media (min-width: 768px) {
+  .ppi-paper.ppi-editing .ppi-row > * {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    /* 44px = 32px tinggi isian + 6px atas + 6px bawah. Ditaruh di SEL,
+       bukan di isiannya: kalau di isian, kolom Jumlah yang isinya cuma
+       20px tetap jabrak di dalam kotak 32px dan teksnya tidak ikut
+       naik - persis kesalahan pertama yang sudah diperbaiki. */
+    min-height: 44px;
+  }
+  .ppi-paper.ppi-editing .ppi-row > .ppi-amount { display: flex; align-items: center; justify-content: flex-end; }
+  /* Tombol hapus: kotaknya cuma 28px, sedangkan selnya sekarang
+     setinggi isian, jadi harus dipusatkan supaya tidak menggantung. */
+  .ppi-paper.ppi-editing .ppi-row > .ppi-row-rm { display: flex; align-items: center; justify-content: flex-end; }
+}
+
+/* ------------------------------------------------------------------
+   HP: KERTAS DIJADI BENTUK FORM ISIAN
+   ------------------------------------------------------------------
+   Di layar sempit kertas tidak lagi bergaya dokumen: kartu putih,
+   garis tepi, bayangan, dan garis warna di atasnya dihapus, kop
+   perusahaan (logo + nama + alamat + kontak) serta judul "INVOICE"
+   disembunyikan. Yang tersisa adalah baris-baris isian dengan garis
+   pemisah - dibaca seperti form, bukan seperti lembar yang akan
+   dicetak.
+
+   PENTING: blok ini memakai "screen and", bukan media query biasa.
+   Saat CETAK dan saat PDF dirender, media yang aktif adalah "print",
+   sehingga seluruh blok ini otomatis TIDAK berlaku - kop perusahaan
+   dan judul dokumen tetap ikut ke dokumen seperti biasa. Kalau
+   penulisan media-nya "all" atau tanpa "screen", invoice yang
+   dicetak akan kehilangan logo dan judul. */
+@media screen and (max-width: 639px) {
+  /* Kop perusahaan + judul jenis dokumen */
+  .ppi-paper .ppi-brand,
+  .ppi-paper .ppi-doc-title { display: none; }
+
+  /* Lepas seluruh gaya "lembar kertas" */
+  .ppi-paper {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+  /* Pita warna teal-amber di tepi atas kertas. ::after (pita kuning)
+     WAJIB ikut disembunyikan di sini. Kalau tidak, di HP hanya
+     tersisa pita kuning sendirian tanpa teal, karena pita tealnya
+     sudah dimatikan lebih dulu. */
+  .ppi-paper::before,
+  .ppi-paper::after { display: none; }
+
+  /* Baris meta (No. Invoice / Tanggal / Jatuh Tempo): kotak jadi
+     garis pemisah tipis, nilai tetap rata kanan. */
+  .ppi-paper .ppi-meta {
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    margin-top: 0;
+  }
+  .ppi-paper .ppi-meta-row { padding: 10px 0; }
+  .ppi-paper .ppi-meta-row:first-child { border-top: 1px solid var(--ppi-line); }
+
+  /* Panel (Metode Pembayaran, Rincian Total, Syarat & Ketentuan):
+     latar dan garis tepi hilang, tinggal judul kecil + isinya. */
+  .ppi-paper .ppi-panel {
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  /* Kotak putus-putus gaya dokumen jadi baris biasa */
+  .ppi-paper .ppi-dashed {
+    border: 0;
+    border-top: 1px solid var(--ppi-line);
+    border-radius: 0;
+    background: transparent;
+    padding: 10px 0;
+  }
+}
+
+/* ------------------------------------------------------------------
+   BARIS KETUK UNTUK EDITOR INVOICE (EditRow)
+   ------------------------------------------------------------------
+   Cuma berlaku di bawah lg. Di lg ke atas kepala barisnya disembunyikan
+   (lihat .ppi-editrow-head) dan isinya tetap terbuka, sehingga tampilan
+   desktop tidak berubah sama sekali.
+
+   BATASNYA 1024px, BUKAN 640px. Ini penting dan pernah keliru:
+   kepala baris disembunyikan mulai 640px, sementara isinya baru dibuka
+   permanen oleh kelas `lg:block` (1024px) milik EditRow. Di antara 640
+   dan 1023 keduanya tersembunyi - kepala karena CSS ini, isi karena
+   `hidden` yang belum ditimpa `lg:block`. Hasilnya seluruh baris lenyap
+   di layar tablet: customer, monitoring produksi, syarat, pembayaran -
+   semua hilang tanpa jejak.
+
+   Jadi kedua batas di sini dan batas `lg:` di EditRow HARUS sama.
+   Kalau salah satu diubah, yang lain wajib ikut. */
+@media screen and (max-width: 1023px) {
+  .ppi-editrow { border-bottom: 1px solid var(--pf-line-soft); }
+  .ppi-editrow:last-child { border-bottom: 0; }
+
+  .ppi-editrow-head {
+    display: flex;
+    width: 100%;
+    min-height: 60px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+  button.ppi-editrow-head { cursor: pointer; }
+  button.ppi-editrow-head:active { background: var(--pf-accent-soft); }
+
+  .ppi-editrow-ico {
+    display: flex;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--pf-accent-soft);
+    color: var(--pf-accent);
+  }
+
+  .ppi-editrow-chev {
+    flex: none;
+    color: var(--pf-ink-3);
+    transition: transform var(--pf-base) var(--pf-ease);
+  }
+  .ppi-editrow-chev.open { transform: rotate(90deg); }
+
+  /* Tombol kecil di kanan baris (tambah item, ubah customer, dll).
+     Sengaja <span role="button">, bukan <button> asli: kalau memakai
+     <button>, browser membolehkan dua elemen interaktif di dalam satu
+     tombol baris - klik dan ketuk ganda jadi berantakan. */
+  .ppi-editrow-add {
+    display: flex;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--pf-accent-soft);
+    color: var(--pf-accent);
+  }
+  .ppi-editrow-text {
+    flex: none;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pf-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Isi baris yang terbuka diberi ruang dan garis pemisah, supaya
+     jelas berbeda dari baris-baris yang masih tertutup. */
+  .ppi-editrow > .block,
+  .ppi-editrow > .hidden.lg\:block {
+    padding: 0 14px 14px;
+  }
+}
+
+/* Layar lebar: kepala baris disembunyikan sepenuhnya dan isinya selalu
+   terbuka, sehingga tampilan desktop PERSIS sama seperti sebelum
+   EditRow dipasang. Border dan padding pun TIDAK ada di sini - semuanya
+   hanya berlaku di blok max-width di atas.
+
+   Batas 1024px harus sama dengan batas `lg:` yang dipakai EditRow untuk
+   isi barisnya. Kalau kepala disembunyikan lebih dulu dari saat isinya
+   dibuka permanen, ada rentang lebar di mana barisnya tidak terlihat
+   sama sekali. Lihat catatan panjang di blok max-width di atas. */
+@media screen and (min-width: 1024px) {
+  .ppi-editrow-head { display: none; }
+}
+
+/* ------------------------------------------------------------------
+   MODE EDITOR: KOLOM ISIAN TERLIHAT
+   ------------------------------------------------------------------
+   Di halaman baca dan hasil cetak, .ppi-in sengaja dibuat transparan
+   supaya kertasnya bersih dan rapi. Masalahnya, di EDITOR kolom itu
+   jadi tidak terlihat sama sekali sampai diketuk - pengguna baru
+   mengira tidak ada isian di situ.
+
+   Jadi hanya di dalam .ppi-editing isian diberi latar dan garis.
+   Halaman baca (InvoicePaper) dan cetakan tidak tersentuh. */
+.ppi-paper.ppi-editing .ppi-in {
+  border-color: var(--ppi-line);
+  background: var(--ppi-fill);
+}
+.ppi-paper.ppi-editing .ppi-in:hover { background: var(--ppi-fill-hover); }
+.ppi-paper.ppi-editing .ppi-in.boxed { background: var(--ppi-fill); }
+/* Placeholder dibuat lebih terang supaya terbaca sebagai "ada isian di
+   sini", bukan sekadar hiasan. */
+.ppi-paper.ppi-editing .ppi-in::placeholder { color: var(--ppi-muted); opacity: 1; }
+
+/* ------------------------------------------------------------------
+   KALENDER APLIKASI
+   ------------------------------------------------------------------
+   Popup kalender milik sendiri (src/components/Calendar.tsx),
+   menggantikan popup bawaan browser. Gaya tombolnya ditaruh di sini,
+   bukan sebagai utility Tailwind panjang di dalam JSX, supaya kelas
+   di komponen tetap pendek dan semua tweak tampilan bisa dilakukan
+   di satu tempat. */
+.pf-cal-btn {
+  display: inline-flex;
+  height: 28px;
+  /* min-width, bukan width. Awalnya dipakai width: 28px karena tombol panah
+     memang kotak ikon - tapi tombol nama bulan dan tahun di kepala juga
+     memakai kelas yang sama, dan "Januari" jauh lebih lebar dari 28px.
+     Dengan width tetap, teksnya dipaksa masuk kotak 28px lalu meluber
+     ke luar dan menabrak tahun di sebelahnya ("Janua2027").
+
+     min-width tetap membuat tombol ikon selebar 28px seperti biasa
+     (ikonnya cuma 16px), sementara tombol teks boleh selebar
+     isinya + px-2-nya. */
+  min-width: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--pf-ink-3);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pf-cal-btn:hover { background: var(--pf-surface-2); color: var(--pf-ink); }
+.pf-cal-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--pf-accent); }
+
+/* Wadah popup (kelas dipakai di DateFieldID, MonthFieldID,
+   TanggalFieldID, dan TimeFieldID).
+
+   LATARNYA HARUS DI SINI, BUKAN DI ISI PANEL.
+   Dulu latar, garis tepi, dan sudut bulat menempel di elemen paling
+   dalam - .pf-cal, yaitu kalender itu sendiri - sementara wadah ini
+   benar-benar tembus pandang. Selama panel hanya berisi kalender,
+   tidak ada yang salah:.latarnya menutupi seluruh isi.
+
+   Tapi begitu ada isi lain di ATAS kalender, latar itu tidak ikut
+   menutupinya. Penyaring tanggal di panel cari memakai tempat itu
+   untuk sakelar "Tanggal/Bulan", dan hasilnya: sakelar berdiri di
+   atas area tembus pandang, lalu celah 8px di bawahnya (margin-b-nya)
+   memperlihatkan teks panel cari yang ada di belakang - "Ketik
+   minimal 2 huruf atau angka" muncul melintas di tengah popup. Tombol
+   tutup punya masalah yang sama sejak dulu, hanya tidak pernah
+   terlihat karena isinya cuma satu huruf X di sudut.
+
+   Jadi permukaannya dipindah ke sini: satu latar, satu garis tepi,
+   satu sudut bulat, satu bayangan - menutupi apa yang ada di dalam,
+   termasuk sakelar dan tombol tutup.
+
+   PADDINGNYA IKUT PINDAH KE SINI, dengan alasan yang sama. Kalau
+   padding tetap di .pf-cal, isi di atas kalender jadi menempel ke
+   tepi panel tanpa jarak sama sekali. .pf-cal sekarang w-full, jadi
+   ikut menyusut mengikuti wadahnya.
+
+   Bayangan pindah dari filter: drop-shadow ke box-shadow. filter
+   tidak mengikuti border-radius (bayangannya ikut kotak persegi
+   kelabu, terpisah dari panel yang bulat), dan box-shadow jauh lebih
+   murah karena tidak membuat lapisan render tersendiri.
+
+   max-width tetap dijaga supaya wadahnya sendiri tidak pernah
+   melebihi viewport - kalau tidak, gulir horizontal muncul dan
+   seluruh halaman ikut bergeser. */
+.pf-pop-cal {
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.75rem;
+  border: 1px solid var(--pf-line);
+  border-radius: 1rem;
+  background: var(--pf-surface-solid);
+  box-shadow: 0 18px 45px rgb(7 56 79 / 0.22);
+}
+
+/* ------------------------------------------------------------------
+   ISIAN BARIS ITEM DI EDITOR: POLOS SEPENUHNYA
+   ------------------------------------------------------------------
+   Diminta owner: kolom Produk, Keterangan, M2, Qty, dan Harga satuan
+   dibuat polos seperti kolom Jumlah.
+
+   Riwayat singkatnya penting, karena dua versi sebelumnya sudah
+   ditolak:
+
+   1. Versi pertama memakai kotak (border penuh + latar). Terlalu
+      ramai: kolom Jumlah yang isinya cuma teks terlihat paling tenang,
+      sementara empat kolom di sebelahnya - yang justru yang diketik -
+      paling berisik. Lima kotak bersusun membuat baris itu terbaca
+      seperti tabel formulir, bukan daftar yang sedang diisi.
+   2. Versi kedua menghilangkan kotaknya tapi menyisakan garis bawah
+      tipis, lalu saat diklik garis itu menebal jadi warna aksen.
+      Owner menolak lagi: garis-garis di bawah teks dihilangkan saja.
+
+   Jadi sekarang benar-benar tidak ada gambar sama sekali: tanpa
+   border, tanpa latar, tanpa bayangan. Yang tersisa hanya kursor
+   berkedip milik browser - dan itu justru penanda fokus yang paling
+   jujur, karena ikut bergerak persis dengan tempat ketikan.
+
+   Yang sengaja DIPERTAHANKAN:
+   - Placeholder tetap terang. Tanpa placeholder, kolom kosong akan
+     terlihat sama sekali tidak bisa diisi - dan itu persis masalah
+     yang membuat kotak isian dipasang di editor sejak awal.
+   - Warna sangat tipis saat tetikus lewat. Bukan garis dan bukan
+     kotak; tanpa ini area yang bisa diklik jadi tak terlihat,
+     sehingga orang tidak tahu bahwa angka-angka kecil itu bisa
+     diketuk.
+
+   Yang TIDAK tersentuh: isian kotak di blok meta (No. Invoice,
+   Tanggal, Jatuh Tempo) dan seluruh halaman baca / cetakan. */
+.ppi-paper.ppi-editing .ppi-row .ppi-in {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.ppi-paper.ppi-editing .ppi-row .ppi-in:hover { background: var(--ppi-fill-hover); }
+.ppi-paper.ppi-editing .ppi-row .ppi-in:focus {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------
+   HP: KOLOM ISIAN SATU BARIS, BUKAN DUA KOLOM
+   ------------------------------------------------------------------
+   Empat kolom angka (M2 bahan, Qty, Harga satuan, Jumlah) dibelah dua
+   kolom di 360px sehingga tiap isiannya cuma sekitar 150px - terlalu
+   sempit untuk diklik jari. Di layar HP semua kolom turun satu baris
+   penuh. sm: ke atas tetap dua kolom seperti semula. */
+@media screen and (max-width: 639px) {
+  /* Pasangan isian yang tadinya dua kolom (Harga dasar + Kategori di
+     form katalog) turun satu baris penuh. Di dalam modal yang lebarnya
+     hanya ~380px, dua kolom menyisakan ~143px per isian - sempit
+     dipakai jari. Ini masalah yang sama seperti kolom angka di editor
+     invoice. sm: ke atas kembali dua kolom. */
+  .pf-m2-pair { grid-template-columns: minmax(0, 1fr); }
+
+  .ppi-paper .ppi-row { grid-template-columns: minmax(0, 1fr); gap: 10px 8px; }
+
+  /* Setiap baris item di editor HP adalah kartu putih tersendiri.
+     Sebelumnya hanya baris genap yang diberi zebra; baris ganjil menyatu
+     dengan latar halaman sehingga batas antar-item sulit dibaca. */
+  .ppi-paper.ppi-editing .ppi-rowwrap {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--ppi-line);
+    border-radius: 16px;
+    background: var(--ppi-bg);
+  }
+  .ppi-paper.ppi-editing .ppi-rowwrap:nth-child(even) {
+    background: var(--ppi-bg);
+  }
+  .ppi-paper.ppi-editing .ppi-rowwrap:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ------------------------------------------------------------
+     HP: ISIAN BARIS ITEM DIKEMBALIKAN MENJADI KOTAK
+     ------------------------------------------------------------
+     Di desktop isian dalam baris item sengaja dibuat polos -
+     tanpa garis, tanpa latar, tanpa bayangan - supaya lembarnya
+     terbaca seperti kertas, bukan form.
+
+     Di HP keputusan itu berbalik. Di bawah 640px SELURUH gaya
+     "lembar kertas" sudah dilepas: tanpa border, tanpa radius,
+     tanpa bayangan, tanpa padding. Isian yang tetap polos di sini
+     lalu terlihat seperti tulisan yang tercetak di atas kertas
+     kosong - tidak ada yang memberi tahu bahwa tulisan itu bisa
+     diketuk, dan tidak ada yang membedakan isian yang sudah
+     diisi dari yang masih kosong.
+
+     Jadi di bawah 640px isian baris item dikembalikan jadi kotak.
+     Desktop tidak tersentuh sama sekali - aturan ini tidak
+     berlaku di 640px ke atas.
+
+     TOKEN YANG DIPAKAI SAMA DENGAN ISIAN META
+     Latar dan garis memakai --ppi-fill dan --ppi-line, bukan
+     warna baru. Varsinya sudah menyesuaikan mode terang,
+     mode gelap, dan kertas yang sedang dicetak, jadi isian ini
+     otomatis ikut berubah kalau temanya diganti.
+
+     UKURAN TEKS 15px, BUKAN 16px
+     Browser di HP MEMBESARKAN tampilan halaman begitu fokus
+     masuk ke isian yang lebih kecil dari 16px, dan setelah
+     halaman membesar begitu, halaman tidak kembali sendiri
+     saat isian berikutnya diketuk - orang kehilangan tempat
+     berdirinya di layar. 15px cukup besar untuk dibaca tanpa
+     memicu hal itu. Ini alasan teknis, bukan selera.
+
+     TINGGI 40px
+     Semula 48px. Di HP kotak setinggi 48px terasa "kosong":
+     teksnya cuma satu baris 15px (baris teks ~21px), jadi sisa
+     ruang +/- 13px hanya jadi rongga di atas dan bawah huruf.
+     Owner minta isiannya diperkecil AGAR SEIMBANG dengan
+     isinya, jadi tinggi kotak diturunkan ke 40px dan padding
+     vertikalnya jadi 6px. Dengan begitu jarak teks ke tepi
+     kotak tinggal ~9px - kotak jadi menempel pada teksnya,
+     bukan melayang jauh di atasnya.
+
+     40px bukan angka sembarangan: kotak isian di HP ini selebar
+     layar, jadi yang penting kotak ini masih enak diketuk. 40px
+     adalah tinggi sentuh minimum yang lazim dipakai - jadi
+     dikitkan, tapi TIDAK dikecilkan drastis. Desktop tidak
+     tersentuh sama sekali - aturan ini hanya berlaku di bawah
+     640px.
+
+     LABEL 11px DAN OPASITAS PENUH
+     Label baris item 9.5px dengan opasitas 0.85. Di layar kecil
+     kombinasi itu praktis tidak terbaca, terutama di atas latar
+     yang sekarang sudah lebih terang. */
+  .ppi-paper.ppi-editing .ppi-row .ppi-in {
+    border-color: var(--ppi-line);
+    background: var(--ppi-fill);
+    border-radius: 10px;
+    font-size: 15px;
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+  /* Fokus di HP dibuat lebih jelas, bukan dihilangkan. Versi desktop
+     sengaja membuat isian yang difokuskan tetap polos supaya
+     lembarnya tidak bergaris-garis; di HP isiannya sudah jadi kotak
+     sendiri, jadi yang perlu cared adalah mana yang sedang diketuk. */
+  .ppi-paper.ppi-editing .ppi-row .ppi-in:focus {
+    border-color: #14b8a6;
+    background: var(--ppi-fill-focus);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+  }
+  /* Isian meta (No. Invoice, Tanggal, Jatuh Tempo) juga ikut
+     diperbesar, bukan cuma baris item. Tingginya ikut 40px,
+     sama seperti isian baris item di atas, supaya semua kotak
+     isian di HP punya tinggi yang sama. */
+  .ppi-paper.ppi-editing .ppi-in { font-size: 15px; min-height: 40px; }
+  .ppi-paper.ppi-editing .ppi-row .ppi-mlabel {
+    font-size: 11px;
+    opacity: 1;
+    margin-bottom: 4px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   HP: BARIS META & BARIS ITEM LEBIH RINGKAS (InvoicePaper, tampilan baca)
+   ------------------------------------------------------------------
+   Dua masalah yang keduanya soal ruang terbuang.
+
+   1. BARIS META. Tanpa aturan mobile, .ppi-meta-row adalah blok biasa:
+      label dan kotaknya berderet dalam satu baris, dan kotak inline
+      menyusut mengikuti isinya. Hasilnya ketiga kotak jadi BERBEDA
+      lebar (260 / 277 / 248px) dan tepi kirinya pun tidak lurus -
+      padahal isinya sama-sama satu baris. Barisnya juga 53px, jadi
+      tiga baris saja memakan 160px.
+
+      Sekarang: label jadi kolom selebar 88px dan kotaknya mengisi sisa
+      ruang. Ketiga kotak jadi sama panjang, tepi kirinya lurus, dan
+      barisnya turun. Label 88px cukup untuk "Jatuh Tempo" - diukur,
+      label terpanjang hanya 76px.
+
+   2. BARIS ITEM. Di HP setiap sel jadi blok penuh: label di atas, nilai
+      di bawah. Enam sel = enam baris, satu item saja memakan 329px,
+      dan tiap sel meninggalkan ruang kosong di kiri karena labelnya
+      cuma setinggi 10px sedangkan isinya rata kanan.
+
+      Sekarang tiap sel jadi satu baris: label kiri, nilai kanan. Enam
+      sel jadi enam baris tipis tanpa kehilangan apa pun.
+
+   DIBATASI .ppi-paper:not(.ppi-editing). Editor memakai kelas sel yang
+   sama dan membutuhkannya tetap bertumpuk: isiannya bisa diketik dan
+   harus selebar layar penuh supaya mudah diketik. Tanpa batas ini, form
+   editor ikut berubah jadi satu baris dan isiannya menyusut.
+
+   Ditulis di luar @layer supaya mengalahkan utility Tailwind (py-1.5,
+   text-right) yang menempel di sel yang sama. */
+@media screen and (max-width: 767px) {
+  /* Selector memakai .ppi-paper di depan, sama seperti aturan dasar di
+     baris 1596. Tanpa itu "padding: 10px 0" dari sana menang karena
+     spesifisitasnya lebih tinggi (0,2,0 vs 0,1,0) - aturan yang ditulis
+     belakangan tidak otomatis menang kalau selektornya lebih lemah. */
+  .ppi-paper .ppi-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 9px;
+  }
+  .ppi-paper .ppi-meta-row + .ppi-meta-row { border-top: 1px solid var(--ppi-line-soft); }
+  .ppi-paper .ppi-meta-label {
+    flex: none;
+    width: 88px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ppi-muted);
+  }
+  .ppi-paper .ppi-meta-row > .ppi-in {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    text-align: right;
+  }
+
+  /* Item: label kiri, nilai kanan, satu baris per sel. */
+  .ppi-paper:not(.ppi-editing) .ppi-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .ppi-paper:not(.ppi-editing) .ppi-row > * {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 12px;
+    text-align: left;
+  }
+  /* Label tidak ikut memendek; nilai boleh, supaya nama produk panjang
+     membungkus ke baris berikutnya alih-alih meluber keluar kolom. */
+  .ppi-paper:not(.ppi-editing) .ppi-row .ppi-mlabel { display: block; flex: none; }
+  .ppi-paper:not(.ppi-editing) .ppi-row > * > *:not(.ppi-mlabel) { min-width: 0; text-align: right; }
+  /* Sel Jumlah tetap mempertahankan padding-top aslinya (ruang untuk garis putus). */
+  .ppi-paper:not(.ppi-editing) .ppi-row > .ppi-c-total { padding-top: 7px; }
+}
+
 .ppi-rowwrap { border-bottom: 1px solid var(--ppi-line-soft); }
 .ppi-rowwrap:nth-child(even) { background: var(--ppi-zebra); }
 .ppi-icon-btn {
@@ -1369,6 +2781,20 @@ button, a, [role="button"] {
   background: var(--ppi-bg); color: var(--ppi-fg); padding: 18px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
+/* Di layar yang memakai bottom navigation (invoice s.d. 1023px, modul lain
+   s.d. 767px), nav setinggi ~64px bisa menutup tombol paling bawah modal
+   (mis. Mode Cepat Katalog: "Batal" / "Buat Produk"). Overlay modal
+   dinaikkan di atas header + nav, dan tinggi modal dihitung dari dvh +
+   safe area supaya bagian bawah tetap bisa di-scroll dan diketuk. */
+@media screen and (max-width: 1023px) {
+  .ppi-modal-back {
+    z-index: 95;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  }
+  .ppi-modal {
+    max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+  }
+}
 /* ==========================================================
    KOMPONEN DESAIN HALAMAN INVOICE (gambar acuan)
    ------------------------------------------------------------
@@ -1406,6 +2832,18 @@ button, a, [role="button"] {
   border: 1px dashed var(--ppi-dashed);
   background: transparent;
 }
+/* Kalau kotak putus-putus itu dipakai sebagai <button> (Data Customer),
+   bawaan tombol browser harus dibuang dulu: font sistem yang berbeda,
+   dan tidak ada penanda kursor tangan. Tanpa aturan ini kotak itu
+   terlihat seperti tombol, tapi bentuk hurufnya meleset dari teks di
+   sekitarnya dan kursor masih panah - dua tanda yang keduanya
+   diselesaikan di sini, bukan per kasus di tiap file. */
+button.ppi-dashed {
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+button.ppi-dashed:hover { background: var(--ppi-accent-tint); }
 .ppi-dashed-btn {
   display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px;
   border-radius: 14px; border: 1px dashed var(--ppi-dashed);
@@ -1517,6 +2955,16 @@ button, a, [role="button"] {
      bukan bagian dokumen - jangan ikut ke kertas. */
   .ppi-side { display: none !important; }
 
+  /* Pengaman: isian editor (latar + garis) dikembalikan jadi
+     transparan. Editor normalnya tidak pernah dicetak - tombol Cetak
+     hanya ada di halaman baca - tapi kalau suatu saat halaman editor
+     ikut tercetak, isiannya harus tetap terlihat seperti kertas biasa,
+     bukan kotak isian yang penuh. */
+  .ppi-paper.ppi-editing .ppi-in {
+    border-color: transparent;
+    background: transparent;
+  }
+
   /* Kertas yang dicetak SELALU terang, apa pun tema layarnya.
      Tombol "Cetak" / "Unduh PDF" aman tanpa aturan ini karena
      keduanya merender kertas di iframe yang tidak punya kelas
@@ -1601,6 +3049,20 @@ button, a, [role="button"] {
   .ppi-thead > * { padding-left: var(--ppi-cell-x); padding-right: var(--ppi-cell-x); }
   .ppi-row { grid-template-columns: var(--ppi-cols); align-items: start; padding: 4px 0; }
   .ppi-row > .ppi-c-wide { grid-column: auto; }
+  /* Kembalikan sel Jumlah ke sel biasa: tidak melebar, tanpa garis pemisah,
+     rata kanan seperti kolomnya. WAJIB ada di blok min-width:768px DAN di
+     blok @media print - kalau hanya salah satu, bentuk cetakan akan
+     berbeda dari yang tampil di layar. */
+  .ppi-c-total {
+    grid-column: auto;
+    display: block;
+    margin-top: 0;
+    padding-top: 4px;
+    border-top: 0;
+    text-align: right;
+  }
+  .ppi-c-total > span:last-child { font-size: inherit; font-weight: inherit; white-space: normal; }
+  .ppi-c-total .ppi-mlabel { display: none; }
   /* Isian di dalam sel tidak menambah padding sendiri, supaya teks
      baris berhenti pada garis yang sama dengan teks header kolomnya. */
   .ppi-row .ppi-in { padding-left: 0; padding-right: 0; }
@@ -1627,3 +3089,236 @@ button, a, [role="button"] {
 
 @keyframes ppi-flash-kf { 0% { background-color: rgba(20, 184, 166, 0.28); } 100% { background-color: transparent; } }
 .ppi-flash { animation: ppi-flash-kf 1.6s ease-out; }
+
+/* =====================================================================
+   KARTU RIWAYAT DOKUMEN (halaman /invoice) - komponen InvoiceHistoryCard
+   Gaya: kartu putih bersudut besar, pojok kanan atas bersemu teal,
+   ikon dokumen kecil, garis pemisah memudar, baris info berikon, dan
+   lencana berbentuk pil. Versi ringkas: jarak vertikal sengaja rapat.
+   ===================================================================== */
+.ihc {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--pf-line-soft);
+  background: var(--pf-surface);
+  box-shadow: var(--pf-shadow-1);
+}
+.ihc-link { position: relative; display: block; flex: 1; color: inherit; }
+
+.ihc-head { display: flex; align-items: flex-start; gap: 10px; }
+/* Tinggi 34px = tinggi gabungan baris nomor (17px) + baris nama (17px). */
+.ihc-doc-ico {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgb(20 184 166 / 0.14);
+  color: #0f766e;
+}
+.ihc-id { flex: 1; min-width: 0; }
+.ihc-number,
+.ihc-name { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ihc-number { font-size: 14px; line-height: 17px; font-weight: 600; color: var(--pf-ink); }
+.ihc-name { font-size: 12px; line-height: 17px; color: var(--pf-ink-2); }
+.ihc-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.ihc-total {
+  margin: 0;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--pf-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ihc-total-ok { color: #0f766e; }
+.ihc-total-muted { color: var(--pf-ink-3); }
+
+.ihc-rule {
+  height: 1px;
+  margin: 10px 0 2px;
+  background: linear-gradient(90deg, rgb(13 148 136 / 0.45), rgb(13 148 136 / 0.08));
+}
+
+.ihc-rows { margin: 0; padding: 0; }
+.ihc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; }
+.ihc-row + .ihc-row { border-top: 1px solid var(--pf-line-soft); }
+.ihc-row-label { display: flex; flex: none; align-items: center; gap: 8px; font-size: 12px; color: var(--pf-ink-2); }
+.ihc-row-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: rgb(20 184 166 / 0.12);
+  color: #0f766e;
+}
+.ihc-row-value {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--pf-ink);
+}
+.ihc-row-value-rose { color: #e11d48; }
+.ihc-row-note { font-weight: 500; color: var(--pf-ink-3); }
+
+.ihc-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--pf-line-soft);
+}
+
+/* Lencana / pil. Dipakai untuk status utama (kanan atas) dan deretan bawah. */
+.ihc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.ihc-tone-green  { background: rgb(16 185 129 / 0.12);  color: #047857; border-color: rgb(16 185 129 / 0.28); }
+.ihc-tone-teal   { background: rgb(20 184 166 / 0.12);  color: #0f766e; border-color: rgb(20 184 166 / 0.28); }
+.ihc-tone-blue   { background: rgb(59 130 246 / 0.10);  color: #1d4ed8; border-color: rgb(59 130 246 / 0.22); }
+.ihc-tone-rose   { background: rgb(244 63 94 / 0.10);   color: #be123c; border-color: rgb(244 63 94 / 0.25); }
+.ihc-tone-amber  { background: rgb(245 158 11 / 0.13);  color: #b45309; border-color: rgb(245 158 11 / 0.30); }
+.ihc-tone-slate  { background: rgb(100 116 139 / 0.10); color: #475569; border-color: rgb(100 116 139 / 0.22); }
+.ihc-tone-sky    { background: rgb(14 165 233 / 0.10);  color: #0369a1; border-color: rgb(14 165 233 / 0.25); }
+.ihc-tone-violet { background: rgb(139 92 246 / 0.10);  color: #6d28d9; border-color: rgb(139 92 246 / 0.25); }
+
+.dark .ihc-doc-ico,
+.dark .ihc-row-ico { background: rgb(20 184 166 / 0.18); color: #5eead4; }
+.dark .ihc-total-ok { color: #5eead4; }
+.dark .ihc-row-value-rose { color: #fb7185; }
+.dark .ihc-tone-green  { color: #6ee7b7; background: rgb(16 185 129 / 0.16); border-color: rgb(16 185 129 / 0.32); }
+.dark .ihc-tone-teal   { color: #5eead4; background: rgb(20 184 166 / 0.16); border-color: rgb(20 184 166 / 0.32); }
+.dark .ihc-tone-blue   { color: #93c5fd; background: rgb(59 130 246 / 0.16); border-color: rgb(59 130 246 / 0.32); }
+.dark .ihc-tone-rose   { color: #fda4af; background: rgb(244 63 94 / 0.16);  border-color: rgb(244 63 94 / 0.32); }
+.dark .ihc-tone-amber  { color: #fcd34d; background: rgb(245 158 11 / 0.16); border-color: rgb(245 158 11 / 0.32); }
+.dark .ihc-tone-slate  { color: #cbd5e1; background: rgb(148 163 184 / 0.14); border-color: rgb(148 163 184 / 0.28); }
+.dark .ihc-tone-sky    { color: #7dd3fc; background: rgb(14 165 233 / 0.16); border-color: rgb(14 165 233 / 0.32); }
+.dark .ihc-tone-violet { color: #c4b5fd; background: rgb(139 92 246 / 0.16); border-color: rgb(139 92 246 / 0.32); }
+
+/* ---- Tampilan PADAT (kartu kecil) --------------------------------
+   Kartu ringkas: hanya kepala (nomor, nama, status, total) + satu baris
+   meta (tanggal, kode pekerjaan, sisa tagihan). Baris detail dan deretan
+   lencana bawah sengaja tidak dirender supaya lebih banyak dokumen
+   terlihat sekaligus. Ikon dokumen disembunyikan agar nomor tetap utuh. */
+.ihc-dense { padding: 10px 12px; border-radius: 16px; }
+.ihc-dense .ihc-doc-ico { display: none; }
+.ihc-dense .ihc-number { font-size: 13px; line-height: 16px; font-weight: 600; }
+.ihc-dense .ihc-total { font-size: 14px; line-height: 17px; font-weight: 600; }
+.ihc-dense-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 8px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--pf-line-soft);
+  font-size: 10.5px;
+  color: var(--pf-ink-2);
+}
+.ihc-dense-meta > span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.ihc-dense-remaining { font-weight: 600; color: #e11d48; }
+.dark .ihc-dense-remaining { color: #fb7185; }
+
+/* ---- Tampilan RINGKAS (daftar baris) ----------------------------
+   Satu baris per dokumen. Dipakai dua kolom mulai lg supaya tidak
+   memanjang sia-sia, dan tetap satu kolom di HP. */
+.ihc-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--pf-line-soft);
+  border-radius: 12px;
+  background: var(--pf-surface);
+  box-shadow: var(--pf-shadow-1);
+  color: inherit;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.ihc-list-row:hover { border-color: rgb(20 184 166 / 0.55); }
+.ihc-doc-ico-sm { width: 28px; height: 28px; border-radius: 8px; }
+.ihc-doc-ico-sm svg { width: 15px; height: 15px; }
+.ihc-list-row .ihc-total { font-size: 12.5px; line-height: 16px; font-weight: 600; }
+.ihc-chip-sm { height: 20px; padding: 0 8px; font-size: 10.5px; font-weight: 600; }
+.ihc-chip-sm svg { width: 11px; height: 11px; }
+
+/* =====================================================================
+   TAB IKON MELEBAR (komponen ExpandingTabs)
+   Tab aktif melebar jadi pil ikon + label, tab lain cuma ikon. Lebar
+   dianimasikan lewat trik grid 0fr -> 1fr (tanpa mengukur lebar teks di
+   JavaScript), teks ikut memudar. Ikon menguning saat disentuh / disorot.
+   ===================================================================== */
+.etabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--pf-line);
+  background: var(--pf-surface);
+}
+.etab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 34px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pf-ink-3);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.28s ease, color 0.28s ease, padding 0.28s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.etab-ico { display: inline-flex; flex: none; transition: color 0.2s ease; }
+.etab-label {
+  display: grid;
+  grid-template-columns: 0fr;
+  opacity: 0;
+  transition: grid-template-columns 0.3s ease, opacity 0.22s ease, margin-left 0.3s ease;
+}
+.etab-label > span { min-width: 0; overflow: hidden; white-space: nowrap; }
+.etab[aria-pressed="true"] {
+  padding: 0 13px 0 11px;
+  background: rgb(20 184 166 / 0.14);
+  color: #0f766e;
+}
+.etab[aria-pressed="true"] .etab-label { grid-template-columns: 1fr; opacity: 1; margin-left: 6px; }
+.etab:hover .etab-ico,
+.etab:active .etab-ico { color: #d97706; }
+.etab:focus-visible { outline: 2px solid #14b8a6; outline-offset: 1px; }
+.dark .etab[aria-pressed="true"] { background: rgb(255 255 255 / 0.1); color: #f1f5f9; }
+.dark .etab:hover .etab-ico,
+.dark .etab:active .etab-ico { color: #fbbf24; }
+@media (prefers-reduced-motion: reduce) {
+  .etab, .etab-ico, .etab-label { transition: none; }
+}

@@ -93,6 +93,18 @@ export const orderItems = pgTable("order_items", {
    * Lihat src/lib/item-status.ts untuk aturan penghitungannya.
    */
   status: text("status"),
+  /**
+   * Deadline khusus produk ini. null = ikut deadline pekerjaan.
+   * Disalin dari invoice_items saat pekerjaan produksi dibuat.
+   */
+  dueDate: date("due_date", { mode: "string" }),
+  dueTime: text("due_time"),
+  /**
+   * Kunci baris invoice asal. Dipakai supaya item invoice yang sudah masuk
+   * produksi tidak tersalin dua kali saat pemilik menambah produk baru.
+   * null = item lama / item yang ditambahkan manual di halaman pekerjaan.
+   */
+  sourceLineKey: text("source_line_key"),
   /** Mitra yang mengerjakan produk ini. null = dikerjakan sendiri. */
   outsourceJobId: integer("outsource_job_id").references(() => outsourceJobs.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -323,6 +335,9 @@ export type InvoiceTierConfig = {
   list: { min: number; price: number }[];
 };
 
+/** Preset harga pilihan cepat untuk produk dengan harga fleksibel (lihat pricingMode di invoiceProducts). */
+export type PricePreset = { label: string; price: number };
+
 /**
  * PENOMORAN INVOICE
  * Satu baris per hari (WIB), format kunci YYYYMMDD. Nomor urut diambil
@@ -396,6 +411,12 @@ export const invoiceItems = pgTable("invoice_items", {
     .notNull()
     .references(() => invoices.id, { onDelete: "cascade" }),
   position: integer("position").notNull().default(0),
+  /**
+   * Kunci stabil per baris invoice. ID baris bisa berubah saat invoice
+   * diedit (baris ditulis ulang), jadi kunci ini yang dipakai untuk
+   * mencocokkan item invoice dengan item pekerjaan produksi.
+   */
+  lineKey: text("line_key"),
   productName: text("product_name").notNull(),
   description: text("description"),
   unit: text("unit").notNull().default("pcs"),
@@ -407,6 +428,15 @@ export const invoiceItems = pgTable("invoice_items", {
   /** Hasil hitung server, disimpan sebagai arsip. */
   unitPrice: numeric("unit_price", { precision: 14, scale: 2, mode: "number" }).notNull().default(0),
   amount: integer("amount").notNull().default(0),
+  /**
+   * Monitoring produksi per item. Hanya item yang true yang ikut dibuatkan
+   * baris pekerjaan produksi saat invoice diterbitkan. Bawaan true supaya
+   * item lama / invoice lama tidak berubah perilakunya.
+   */
+  needsProduction: boolean("needs_production").notNull().default(true),
+  /** Deadline item. null = ikut deadline produksi utama invoice. */
+  prodDueDate: date("prod_due_date", { mode: "string" }),
+  prodDueTime: text("prod_due_time"),
 });
 
 /**
@@ -425,6 +455,13 @@ export const payments = pgTable("payments", {
   method: text("method").notNull().default("Transfer"),
   paidAt: timestamp("paid_at", { withTimezone: true }).notNull().defaultNow(),
   note: text("note"),
+  /**
+   * Nomor referensi transaksi dari sisi bank / penyedia QRIS (RRN, ID transaksi di
+   * aplikasi merchant, dsb). Opsional. Dipakai untuk mencocokkan dengan mutasi dan
+   * mencegah satu transaksi dicatat dua kali. Kolom dibuat otomatis oleh
+   * ensurePaymentSchema() dan juga ada di /api/setup.
+   */
+  reference: text("reference"),
   /** Kode unik dari perangkat (anti-dobel saat pembayaran dikirim ulang / dari antrean offline). */
   clientRef: text("client_ref").unique(),
   createdBy: text("created_by").notNull().default("Owner"),
@@ -463,21 +500,41 @@ export const invoiceProducts = pgTable("invoice_products", {
   price: integer("price").notNull().default(0),
   tiers: jsonb("tiers").$type<InvoiceTierConfig>(),
   category: text("category"),
+  /**
+   * VARIAN (sub-kategori) dua tingkat: induk utama -> sub-induk -> varian.
+   *  - parentId kosong + isGroup = false = produk biasa.
+   *  - parentId kosong + isGroup = true  = INDUK UTAMA (mis. NOTA).
+   *  - parentId terisi + isGroup = true  = SUB-INDUK di dalam induk utama (mis. NCR A5).
+   *  - parentId terisi + isGroup = false = VARIAN (harga & tier-nya milik sendiri).
+   * Sub-induk tidak boleh punya sub-induk lagi; aturan kedalaman dijaga di invoice-catalog.ts.
+   * Kunci asing (ON DELETE SET NULL) dibuat lewat /api/setup.
+   */
+  parentId: integer("parent_id"),
+  /** true = kartu INDUK (kelompok varian): tidak punya harga sendiri dan tidak bisa dipilih langsung di invoice. */
+  isGroup: boolean("is_group").notNull().default(false),
+  /**
+   * Harga FLEKSIBEL: jasa yang harganya berubah-ubah tergantung kondisi (mis. jasa desain/setting,
+   * setiap operator menetapkan sendiri). "fleksibel" = tidak ada harga baku; harga ditetapkan saat
+   * produk ditambahkan ke invoice lewat dialog "Set Harga" (preset + riwayat harga sebagai panduan).
+   * "tetap" (bawaan) = perilaku lama, harga katalog dipakai.
+   */
+  pricingMode: text("pricing_mode").notNull().default("tetap"),
+  /** Pilihan cepat harga untuk produk fleksibel: klik preset = harga terisi dengan label itu (masih bisa diubah). null = tanpa preset. */
+  pricePresets: jsonb("price_presets").$type<PricePreset[]>(),
   /** Gambar produk sebagai data URL JPEG/PNG/WebP (dikecilkan di perangkat, maks 400px). Null = tanpa gambar. */
   imageData: text("image_data"),
   /** Naik tiap gambar diganti; dipakai agar browser tidak memakai gambar lama dari cache. */
   imageV: integer("image_v").notNull().default(0),
+  /**
+   * TEKS PENGGANTI GAMBAR: bila kartu tidak punya gambar sendiri, kartu ini merender teks
+   * besar (SVG/DOM murni — tanpa file, tanpa permintaan jaringan baru). Kalau kartu punya
+   * gambar sendiri, teks ini diabaikan dan kembali berlaku bila gambar dihapus. Baris isinya
+   * (varian tanpa gambar) ikut mewarisi teks dari pemilik gambar yang berlaku (sama seperti gambar).
+   */
+  imageText: text("image_text"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export type InvoiceProduct = typeof invoiceProducts.$inferSelect;
-
 export type Customer = typeof customers.$inferSelect;
 export type Order = typeof orders.$inferSelect;
-export type NewOrder = typeof orders.$inferInsert;
-export type OrderItemRow = typeof orderItems.$inferSelect;
-export type NewOrderItem = typeof orderItems.$inferInsert;
-export type OrderEvent = typeof orderEvents.$inferSelect;
-export type AiNote = typeof aiNotes.$inferSelect;
-export type OrderPhoto = typeof orderPhotos.$inferSelect;

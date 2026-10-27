@@ -10,7 +10,7 @@ export function AppLogo() {
   if (failed) return <BrandMark />;
 
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-white shadow-[0_8px_24px_rgba(13,148,136,.25)]">
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-teal-100 bg-white shadow-[0_8px_24px_rgba(13,148,136,.18)] dark:border-white/20 dark:shadow-[0_8px_24px_rgba(13,148,136,.25)]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/api/branding/logo"

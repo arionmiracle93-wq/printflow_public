@@ -1,0 +1,101 @@
+================================================================
+LOGO DI POJOK KANAN ATAS HALAMAN LACAK + KARTU WHATSAPP
+Tanggal : 25-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+1) Halaman lacak: logo + nama usaha sekarang ada di POJOK KANAN
+   ATAS kartu status (bagian berwarna), tidak lagi di atas kartu.
+
+2) Kartu pratinjau WhatsApp: baris tebal paling atas (yang tadinya
+   berisi alamat domain) sekarang berisi NAMA USAHA, dan di
+   sampingnya tampil LOGO USAHA sebagai gambar kecil.
+
+3) Yang TIDAK bisa diubah lewat kode: tulisan alamat domain kecil
+   di bagian bawah kartu. WhatsApp selalu menampilkannya. Satu-satunya
+   cara menggantinya adalah memakai custom domain.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/lacak/[token]/page.tsx
+   - Logo (kotak putih) + nama usaha dipindah ke pojok kanan atas
+     header kartu status. Di HP nama usaha boleh 2 baris.
+   - Judul kartu WhatsApp (og:title) = nama usaha. Judul tab browser
+     tetap "Lacak Pesanan - Nama Usaha".
+   - Gambar kartu WhatsApp (og:image) = logo usaha, dengan alamat
+     lengkap mengikuti domain yang sedang dipakai.
+
+B) src/app/api/branding/preview/route.ts  (FILE BARU)
+   - Membuat gambar kartu dari logo: persegi KECIL 200x200, latar putih (di bawah ±300 px WhatsApp memakainya sebagai thumbnail di samping teks; kalau lebih besar jadi banner besar),
+     format JPEG ringan (beberapa puluh KB). WhatsApp menolak gambar
+     besar (> ~300 KB), jadi logo asli sampai 2 MB tidak dipakai
+     langsung.
+   - Hanya bisa dibaca (GET), tanpa login, isinya cuma logo usaha.
+
+C) src/proxy.ts
+   - /api/branding/preview ikut dibuka untuk GET tanpa login (sama
+     seperti /api/branding/logo), karena yang mengambilnya server
+     WhatsApp.
+
+D) src/lib/whatsapp-share.ts
+   - TRACKING_LINK_VERSION dinaikkan 2 -> 4 supaya tautan baru
+     dianggap URL baru oleh WhatsApp dan pratinjaunya diambil ulang.
+
+E) package.json + package-lock.json
+   - Menambahkan "sharp" (pengolah gambar) sebagai paket resmi.
+     Sebelumnya sudah ikut terpasang bersama Next.js, sekarang
+     ditulis eksplisit supaya aman.
+
+F) Tidak ada perubahan database. Tidak perlu buka /api/setup.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+----------------------------------------------------------------
+1. Upload semua file di daftar bawah ke GitHub, tunggu Vercel selesai
+   deploy.
+
+2. Pastikan di Pengaturan sudah terisi NAMA USAHA dan LOGO USAHA.
+   Kalau salah satu kosong:
+   - tanpa logo  -> kartu WhatsApp tanpa gambar, hanya nama usaha.
+   - tanpa nama  -> judul kartu hanya "Lacak Pesanan".
+
+3. Kirim tautan lacak BARU (yang berakhiran ?v=4). Pesan lama tetap
+   menampilkan pratinjau lama karena sudah tersimpan di WhatsApp.
+
+
+FILE YANG DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+- src/app/lacak/[token]/page.tsx
+- src/app/api/branding/preview/route.ts   (baru)
+- src/proxy.ts
+- src/lib/whatsapp-share.ts
+- package.json
+- package-lock.json
+- public/dokumentasi-update/2026-10-25-logo-pojok-kanan-dan-kartu-wa.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit : lolos
+  eslint (file yang diubah) : lolos
+
+  Diuji lokal dengan database contoh (nama usaha + logo + pesanan):
+  - Tampilan HP (360 & 390 px) dan desktop: logo + nama usaha rapi di
+    pojok kanan atas, untuk status biru (proses) dan hijau (siap).
+  - Diambil dengan identitas "WhatsApp": og:title = nama usaha,
+    og:image = alamat lengkap ke gambar logo, semuanya berada di
+    <head>.
+  - Gambar pratinjau: JPEG 200x200, di bawah 10 KB.
+  - Belum bisa diuji di aplikasi WhatsApp sungguhan, jadi tampilan
+    akhir kartu perlu dicek setelah deploy dengan mengirim tautan baru.
+
+
+DAMPAK KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada biaya tambahan. Gambar pratinjau kecil dan disimpan di cache
+selama 1 hari (URL-nya berganti otomatis kalau logo diganti).

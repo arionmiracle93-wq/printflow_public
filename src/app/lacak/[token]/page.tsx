@@ -1,22 +1,151 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { cache } from "react";
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
 import { CheckCircle2, History, Image as ImageIcon, Lock, PackageCheck, PartyPopper, StickyNote, UserRound, Wrench } from "lucide-react";
 import { STATUS_ICONS } from "@/components/ui";
+import { db } from "@/db";
+import { businessBranding } from "@/db/schema";
 import { safeDb } from "@/lib/dbcheck";
 import { getPublicTracking } from "@/lib/queries";
 import { STATUSES, customerProgress, formatDateID, formatDateTimeID, formatNumber, statusMeta } from "@/lib/domain";
 import { effectiveItemStatus, isSplit } from "@/lib/item-status";
+import { DEFAULT_INVOICE_SETTINGS, getInvoiceSettings } from "@/lib/invoice-settings";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Lacak Pesanan - Print Flow",
-  robots: { index: false, follow: false },
+type TrackingBrand = {
+  /** Nama usaha yang sudah diisi owner. Null = masih placeholder/kosong. */
+  name: string | null;
+  /** Logo usaha dari tabel branding; null = belum diunggah. */
+  logo: { url: string; type: string; previewUrl: string } | null;
 };
+
+/**
+ * Identitas yang dipakai untuk kartu pratinjau WhatsApp halaman lacak.
+ *
+ * WhatsApp mengambil judul/deskripsi dari metadata halaman dan ikon kecil dari
+ * favicon halaman. Jadi jangan warisi identitas aplikasi dari layout root:
+ * pakai nama usaha + logo yang sudah diatur owner di halaman Pengaturan.
+ */
+const getTrackingBrand = cache(async (): Promise<TrackingBrand> => {
+  const [settings, logo] = await Promise.all([
+    getInvoiceSettings().catch(() => DEFAULT_INVOICE_SETTINGS),
+    (async () => {
+      try {
+        const rows = await db
+          .select({ mime: businessBranding.mime, updatedAt: businessBranding.updatedAt })
+          .from(businessBranding)
+          .where(eq(businessBranding.id, 1))
+          .limit(1);
+        const row = rows[0];
+        if (!row) return null;
+        const version = new Date(row.updatedAt).getTime();
+        return {
+          // Versi di URL ikut berubah saat logo diganti, supaya WhatsApp/browser
+          // tidak terus memakai gambar lama dari cache.
+          url: `/api/branding/logo?v=${Number.isFinite(version) ? version : 0}`,
+          type: row.mime,
+          // Versi khusus kartu pratinjau WhatsApp (persegi, ringan).
+          previewUrl: `/api/branding/preview?v=${Number.isFinite(version) ? version : 0}&s=200`,
+        };
+      } catch {
+        // Database lama/belum siap tidak boleh membuat halaman lacak gagal dibuka.
+        return null;
+      }
+    })(),
+  ]);
+
+  const name = settings.businessName.trim();
+  return {
+    name: name && name !== DEFAULT_INVOICE_SETTINGS.businessName ? name : null,
+    logo,
+  };
+});
+
+/**
+ * Alamat situs yang sedang diakses (https://domain-anda). WhatsApp hanya mau
+ * menampilkan gambar pratinjau kalau alamatnya LENGKAP (https://...), jadi
+ * alamat gambar harus dibangun dari domain yang benar-benar dipakai pelanggan -
+ * otomatis ikut kalau nanti pakai custom domain.
+ */
+async function currentOrigin(): Promise<string | null> {
+  try {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") ?? h.get("host");
+    if (!host) return null;
+    const proto = h.get("x-forwarded-proto")?.split(",")[0].trim() || (host.startsWith("localhost") ? "http" : "https");
+    return `${proto}://${host}`;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [brand, origin] = await Promise.all([getTrackingBrand(), currentOrigin()]);
+  // Judul tab browser tetap "Lacak Pesanan - Nama Usaha".
+  const title = brand.name ? `Lacak Pesanan - ${brand.name}` : "Lacak Pesanan";
+  const description = "Pantau progres dan foto pesanan Anda.";
+  // Judul di kartu pratinjau WhatsApp = NAMA USAHA saja (baris tebal paling
+  // atas kartu). Sebelumnya baris ini berisi alamat domain aplikasi.
+  const shareTitle = brand.name ?? "Lacak Pesanan";
+
+  return {
+    title,
+    description,
+    // Tanpa ini alamat gambar pratinjau tidak bisa dibuat lengkap.
+    ...(origin ? { metadataBase: new URL(origin) } : {}),
+    applicationName: brand.name ?? undefined,
+    // Halaman pelanggan tidak perlu manifest PWA aplikasi internal. Ini juga
+    // mencegah nama/ikon "Print Flow" terbaca dari manifest saat tautan dibuka.
+    manifest: null,
+    // Kalau pelanggan menyimpan tautan ini ke layar utama iPhone, judulnya
+    // ikut nama usaha - bukan nama aplikasi.
+    appleWebApp: brand.name
+      ? { capable: true, title: brand.name, statusBarStyle: "black-translucent" }
+      : undefined,
+    robots: { index: false, follow: false },
+    openGraph: {
+      title: shareTitle,
+      description,
+      siteName: brand.name ?? undefined,
+      type: "website",
+      // Logo usaha sebagai gambar kartu WhatsApp (kotak persegi KECIL 200 px ->
+      // tampil sebagai thumbnail di samping nama usaha, bukan banner besar).
+      // Pakai route khusus yang merapikan logo (latar putih, 200x200, ringan) karena WhatsApp
+      // menolak gambar besar (> ~300 KB) dan tidak selalu bisa membaca WEBP.
+      ...(brand.logo
+        ? {
+            images: [
+              {
+                url: brand.logo.previewUrl,
+                width: 200,
+                height: 200,
+                type: "image/jpeg",
+                alt: brand.name ? `Logo ${brand.name}` : "Logo usaha",
+              },
+            ],
+          }
+        : {}),
+    },
+    // Kalau logo belum ada, jangan tulis `icons` supaya ikon bawaan layout
+    // tetap dipakai sebagai fallback. Kalau ada, favicon halaman lacak
+    // sepenuhnya memakai logo usaha (bukan ikon printer aplikasi).
+    ...(brand.logo
+      ? {
+          icons: {
+            icon: [{ url: brand.logo.url, type: brand.logo.type, sizes: "512x512" }],
+            apple: [{ url: brand.logo.url, type: brand.logo.type, sizes: "512x512" }],
+          },
+        }
+      : {}),
+  };
+}
 
 export default async function LacakPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
 
-  const loaded = await safeDb(() => getPublicTracking(token));
+  const [loaded, brand] = await Promise.all([safeDb(() => getPublicTracking(token)), getTrackingBrand()]);
   if (!loaded.ok) {
     return <Gagal code="salah" />;
   }
@@ -46,7 +175,9 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 py-2">
-      {/* HEADER */}
+      {/* HEADER — header/footer aplikasi disembunyikan oleh layout, jadi
+          identitas yang dilihat pelanggan hanya logo + nama usaha. Keduanya
+          ditaruh di sudut kanan atas kartu status (bukan lagi di atas kartu). */}
       <div className="card overflow-hidden">
         <div
           className={`px-5 py-5 text-white ${
@@ -57,31 +188,63 @@ export default async function LacakPage({ params }: { params: Promise<{ token: s
                 : "bg-gradient-to-r from-[#07384f] to-teal-600"
           }`}
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-white/70">Pelacakan Pesanan</p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold leading-snug">
-            {selesai ? (
-              <>
-                <CheckCircle2 size={20} strokeWidth={2.3} /> Pesanan Anda sudah selesai!
-              </>
-            ) : siap ? (
-              <>
-                <PackageCheck size={20} strokeWidth={2.3} /> Pesanan Anda sudah siap!
-              </>
-            ) : (
-              (() => {
-                const StatusIcon = STATUS_ICONS[order.status] ?? UserRound;
-                return (
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-widest text-white/70">Pelacakan Pesanan</p>
+              <h1 className="mt-1 flex items-center gap-2 text-xl font-semibold leading-snug">
+                {selesai ? (
                   <>
-                    <StatusIcon size={20} strokeWidth={2.3} /> {meta.label}
+                    <CheckCircle2 size={20} strokeWidth={2.3} className="shrink-0" /> Pesanan Anda sudah selesai!
                   </>
-                );
-              })()
-            )}
-          </h1>
-          <p className="mt-1 text-sm text-white/85">{order.title}</p>
-          <p className="mt-0.5 text-xs font-semibold text-white/70">
-            No. pesanan: {order.code}
-          </p>
+                ) : siap ? (
+                  <>
+                    <PackageCheck size={20} strokeWidth={2.3} className="shrink-0" /> Pesanan Anda sudah siap!
+                  </>
+                ) : (
+                  (() => {
+                    const StatusIcon = STATUS_ICONS[order.status] ?? UserRound;
+                    return (
+                      <>
+                        <StatusIcon size={20} strokeWidth={2.3} className="shrink-0" /> {meta.label}
+                      </>
+                    );
+                  })()
+                )}
+              </h1>
+              <p className="mt-1 text-sm text-white/85">{order.title}</p>
+              <p className="mt-0.5 text-xs font-semibold text-white/70">
+                No. pesanan: {order.code}
+              </p>
+            </div>
+
+            {/* IDENTITAS USAHA — pojok kanan atas. Logo ditaruh di kotak putih
+                supaya tetap jelas di atas warna header apa pun (biru, hijau,
+                merah). Kalau hanya salah satu (logo / nama) yang sudah diisi
+                owner, yang lain tidak ditampilkan. */}
+            {brand.name || brand.logo ? (
+              <div
+                className={`flex w-[84px] shrink-0 flex-col gap-1 sm:w-[108px] ${
+                  brand.logo ? "items-center text-center" : "items-end text-right"
+                }`}
+              >
+                {brand.logo ? (
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white p-1.5 shadow-md ring-1 ring-white/40 sm:h-14 sm:w-14">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- logo from a dynamic API route, cached by the browser */}
+                    <img
+                      src={brand.logo.url}
+                      alt={brand.name ? `Logo ${brand.name}` : "Logo usaha"}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </span>
+                ) : null}
+                {brand.name ? (
+                  <p className="line-clamp-2 break-words text-[10px] font-bold leading-tight text-white/90 sm:text-[11px]">
+                    {brand.name}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="space-y-4 p-5">

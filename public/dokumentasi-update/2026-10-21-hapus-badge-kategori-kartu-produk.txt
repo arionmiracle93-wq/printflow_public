@@ -1,0 +1,67 @@
+PRINT FLOW - HAPUS BADGE KATEGORI DI ATAS GAMBAR PRODUK
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu cek tampilan di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Lencana (badge) nama kategori yang menempel di pojok kiri atas gambar
+kartu produk (OUTDOOR, PRINT HVS, INDOOR, dst) sudah dihapus. Gambar
+produk sekarang bersih tanpa tempelan teks.
+
+===============================================================
+ALASAN PERUBAHAN
+===============================================================
+
+Badge menutupi sebagian gambar produk, padahal kategori sudah bisa
+dilihat dan difilter lewat tab kategori di atas daftar produk
+(Semua, CUTTING, INDOOR, OUTDOOR, dst).
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+Sebelum: kartu produk menampilkan badge putih berisi nama kategori di
+         pojok kiri atas gambar.
+Sesudah: badge tidak ada lagi. Nama, harga, label tier (3 tier, m2),
+         dan tanda centang mode "Pilih" tetap seperti semula.
+
+Kartu produk memakai satu komponen yang sama, jadi perubahan ini
+berlaku di dua tempat:
+- Halaman Katalog (kelola produk)
+- Pemilih produk saat membuat invoice
+
+Yang TIDAK berubah: tab kategori, pencarian berdasarkan kategori,
+data kategori di database, dan Impor/Export CSV.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogParts.tsx
+- public/dokumentasi-update/2026-10-21-hapus-badge-kategori-kartu-produk.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+Perubahan hanya menghapus satu blok tampilan; tidak ada import atau
+variabel yang jadi tidak terpakai. Build penuh belum dijalankan di sini,
+jadi mohon cek tampilan Katalog setelah deploy.
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+Kalau nanti ingin kategori tetap kelihatan di kartu, bisa ditaruh
+sebagai teks kecil di bawah nama produk (bukan di atas gambar).

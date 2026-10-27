@@ -9,6 +9,9 @@ export const metadata = { title: "Status Sistem - Print Flow" };
 
 export default async function StatusPage() {
   const check = await checkDatabase();
+  // Hanya SEPADATNYA nilai ini yang ditampilkan, tidak pernah nilainya
+  // sendiri. Nilainya harus tetap rahasia di sisi server.
+  const adaAuthSecret = Boolean(process.env.AUTH_SECRET?.trim());
 
   if (check.ok) {
     return (
@@ -28,14 +31,38 @@ export default async function StatusPage() {
             <Row label="Jumlah pekerjaan" value={String(check.counts?.orders ?? 0)} />
             <Row label="Jumlah pelanggan" value={String(check.counts?.customers ?? 0)} />
             <Row label="Tabel" value={`${check.tables.filter((t) => t.ada).length}/${check.tables.length} siap`} />
+            <Row
+              label="Kunci login (AUTH_SECRET)"
+              value={adaAuthSecret ? "Sudah dipasang" : "BELUM - kunci ikut DATABASE_URL"}
+              tone={adaAuthSecret ? "text-emerald-600" : "text-amber-600"}
+            />
           </div>
         </div>
+
+        {!adaAuthSecret ? (
+          <div className="card border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950/40">
+            <h2 className="text-sm font-bold text-amber-900 dark:text-amber-200">Kunci login masih ikut alamat database</h2>
+            <p className="mt-1 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/80">
+              Selama <code className="font-bold">AUTH_SECRET</code> belum diisi, kunci penandatangan sesi login diambil dari
+              alamat database. Kalau alamat itu berubah - password dirotasi atau host pooler diganti - semua orang ikut
+              ter-logout sekaligus, termasuk yang memakai APK.
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/80">
+              Menambahkannya akan membuat semua orang ter-logout <b>sekali</b> (web dan APK), lalu tidak lagi terjadi
+              karena perubahan database. Lakukan saat sepi. Setelah dipasang, jangan diubah-ubah.
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-amber-900/70 dark:text-amber-200/70">
+              Cara persisnya ada di <b>CATATAN-PRINTFLOW.txt</b> bagian <b>[ ] 4b</b>. Buat nilainya sendiri lewat
+              halaman preview - jangan kirim ke siapa pun, termasuk ke chat.
+            </p>
+          </div>
+        ) : null}
 
         <div className="card p-5">
           <h2 className="text-sm font-bold text-slate-900">Buka aplikasi</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link href="/" className="btn-primary inline-flex items-center gap-1.5">
-              <Gauge size={15} /> Dashboard
+              <Gauge size={15} /> Beranda
             </Link>
             <Link href="/pesanan" className="btn-ghost inline-flex items-center gap-1.5">
               <ClipboardList size={15} /> Pekerjaan

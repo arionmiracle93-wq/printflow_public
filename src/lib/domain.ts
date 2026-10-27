@@ -199,8 +199,6 @@ export const MACHINES = [
 
 export const UNITS = ["pcs", "rim", "box", "lembar", "meter", "pack", "set"];
 
-export const OPERATOR_SUGGESTIONS = ["Pak Andi", "Bu Rina", "Dimas", "Yoga", "Tim Finishing"];
-
 export const NEXT_STATUS: Record<StatusKey, StatusKey | null> = {
   antrian: "desain",
   desain: "cetak",
@@ -319,13 +317,6 @@ export function humanDuration(hours: number): string {
 
 export function todayISO(): string {
   const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
-export function addDaysISO(days: number): string {
-  const now = new Date();
-  now.setDate(now.getDate() + days);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }

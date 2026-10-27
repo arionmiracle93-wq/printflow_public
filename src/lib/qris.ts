@@ -57,8 +57,14 @@ function checkRaw(raw: string): QrisCheck {
   const get = (id: string) => tags.find((t) => t.id === id)?.value ?? null;
   if (get("00") === null) return { ok: false, msg: "Tag 00 (format indicator) tidak ditemukan" };
   if (get("63") === null) return { ok: false, msg: "Tag 63 (CRC) tidak ditemukan" };
-  const idx = raw.lastIndexOf("6304");
-  if (idx === -1) return { ok: false, msg: "Penanda CRC tidak ditemukan" };
+  // CRC SELALU 8 karakter terakhir: "63" + "04" + 4 digit hex. Jangan dicari dengan
+  // lastIndexOf("6304"): kalau nilai CRC-nya sendiri kebetulan "6304" (1 dari 65.536
+  // QRIS), yang ketemu adalah isi CRC, dan payload yang valid ditolak.
+  const idx = raw.length - 8;
+  const last = tags[tags.length - 1];
+  if (raw.substring(idx, idx + 4) !== "6304" || last?.id !== "63" || last.value.length !== 4) {
+    return { ok: false, msg: "Penanda CRC tidak ditemukan di akhir payload" };
+  }
   const expect = qrisCRC(raw.substring(0, idx + 4));
   const actual = raw.substring(idx + 4, idx + 8).toUpperCase();
   if (expect !== actual) return { ok: false, msg: `CRC tidak cocok (${actual} ≠ ${expect}) — teks mungkin salah salin` };
@@ -88,7 +94,7 @@ export function qrisWithAmount(payload: string, amount: number): string | null {
   const amt = Math.round(Number(amount) || 0);
   if (amt <= 0) return v.raw;
 
-  const idx = v.raw.lastIndexOf("6304");
+  const idx = v.raw.length - 8; // posisi penanda CRC (sudah dipastikan valid oleh qrisValidate)
   const body = v.raw.substring(0, idx);
   const tags = qrisParse(body);
   if (!tags) return null;

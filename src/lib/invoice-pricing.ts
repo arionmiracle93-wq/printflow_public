@@ -15,6 +15,8 @@
  * total yang tercetak = penjumlahan angka yang terlihat di kertas.
  */
 
+import type { PricePreset } from "@/db/schema";
+
 export type TierMode = "flat" | "graduated";
 export type TierBasis = "qty" | "m2";
 export type Tier = { min: number; price: number };
@@ -24,6 +26,35 @@ export const EMPTY_TIERS: TierConfig = { mode: "flat", basis: "qty", list: [] };
 
 /** Batas aman nominal (kolom integer PostgreSQL maksimal ±2,14 miliar). */
 export const MAX_RUPIAH = 2_000_000_000;
+
+/** Batas jumlah preset harga per produk fleksibel. */
+export const MAX_PRICE_PRESETS = 8;
+
+/**
+ * Rapikan daftar preset harga produk fleksibel yang dikirim browser:
+ * label wajib (maks 40 karakter) dan harga sah (0..MAX_RUPIAH, "15.000" dibaca
+ * gaya Indonesia), label kembar dibuang, jumlah dibatasi MAX_PRICE_PRESETS.
+ * Bila tidak ada preset yang sah = null. Tidak pernah melempar error — preset
+ * ngawang cukup diabaikan.
+ */
+export function sanitizePricePresets(input: unknown): PricePreset[] | null {
+  if (!Array.isArray(input)) return null;
+  const seen = new Set<string>();
+  const out: PricePreset[] = [];
+  for (const raw of input.slice(0, MAX_PRICE_PRESETS)) {
+    if (!raw || typeof raw !== "object") continue;
+    const r = raw as { label?: unknown; price?: unknown };
+    const label = typeof r.label === "string" ? r.label.trim().slice(0, 40) : "";
+    if (!label) continue;
+    const priceNum = typeof r.price === "string" ? parseLooseNumber(r.price.replace(/rp\.?/gi, "").replace(/\s+/g, "")) : Number(r.price);
+    if (!Number.isFinite(priceNum) || priceNum < 0 || priceNum > MAX_RUPIAH) continue;
+    const key = label.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ label, price: Math.round(priceNum) });
+  }
+  return out.length ? out : null;
+}
 
 function toNumber(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);

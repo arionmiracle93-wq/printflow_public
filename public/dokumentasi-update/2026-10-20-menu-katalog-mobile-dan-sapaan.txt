@@ -1,0 +1,163 @@
+PRINT FLOW - MENU TIGA GARIS KATALOG & UKURAN SAPAAN
+Tanggal: 2026-10-20
+Status: selesai di kode; pengujian perangkat dilakukan pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Dua penyesuaian atas masukan pemilik:
+
+1. Sapaan besar di Beranda "/" diperkecil supaya tidak lagi
+   mendominasi layar.
+
+2. Di HP/tablet, tombol Import CSV, Contoh CSV, dan Muat produk
+   contoh dipindahkan dari badan halaman Katalog ke menu tiga garis
+   (drawer). Filter kategori juga pindah ke sana dalam bentuk baris
+   "Kategori" dengan panah dropdown. Saat dibuka, baris itu
+   menampilkan kategori yang sudah dibuat beserta jumlah produknya.
+   Memilih kategori langsung menyaring katalog dan menutup drawer.
+
+Di desktop tidak ada menu tiga garis, jadi toolbar dan chip kategori
+lama tetap dipakai. Yang berubah hanya tampilan HP/tablet.
+
+===============================================================
+ALASAN PERUBAHAN
+===============================================================
+
+Di layar sempit, deretan tombol impor/contoh dan baris kategori
+memakan tinggi sebelum pengguna sampai ke daftar produk. Pemilik
+meminta kontrol pengelolaan itu masuk ke menu tiga garis supaya
+halaman Katalog langsung menampilkan pencarian dan produk.
+
+Filter kategori tetap harus mudah dijangkau. Karena itu bentuknya
+dropdown di dalam menu, bukan halaman terpisah: satu ketukan membuka
+daftar kategori, satu ketukan lagi menyaring katalog.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. Ukuran sapaan Beranda
+   - Ukuran lama: clamp(2.05rem, 7vw, 3.35rem).
+   - Ukuran baru: clamp(1.8rem, 5.6vw, 2.7rem).
+   - Artinya di desktop sapaan sekitar 20% lebih kecil; di HP tetap
+     terbaca jelas tetapi tidak memenuhi layar.
+   - Tidak ada perubahan struktur, warna, atau isi sapaan.
+
+2. Menu tiga garis halaman Katalog (HP/tablet)
+   - Isi drawer sekarang:
+       Import CSV
+       Contoh CSV
+       Muat produk contoh
+       Kategori  (dropdown + panah)
+       Export CSV
+   - Import CSV, Contoh CSV, dan Muat produk contoh hanya muncul
+     untuk Owner, sama seperti sebelumnya.
+   - Tombol-tombol itu TIDAK lagi tampil di badan halaman pada layar
+     di bawah lg (1024px).
+   - Export CSV tetap di drawer untuk semua pengguna berizin.
+
+3. Dropdown Kategori
+   - Baris "Kategori" menampilkan kategori yang sedang aktif di
+     bawahnya (mis. "Semua", "A3", "OUTDOOR").
+   - Panah berputar saat daftar dibuka.
+   - Daftar berisi:
+       Semua + jumlah seluruh produk
+       Tanpa kategori + jumlahnya (kalau ada)
+       setiap kategori yang sudah dibuat + jumlah produknya
+   - Kategori yang sedang aktif diberi tanda centang dan warna aksen.
+   - Memilih kategori langsung menyaring daftar produk, lalu drawer
+     menutup otomatis.
+   - Owner melihat tombol "Kelola kategori" di bawah daftar. Tombol
+     itu membuka dialog Kelola Kategori yang sudah ada (tambah/hapus
+     kategori lewat satu baris per kategori).
+
+4. Desktop
+   - Toolbar Import CSV / Contoh CSV / Muat produk contoh tetap di
+     tempatnya.
+   - Chip kategori dan tombol "Kategori" tetap tampil.
+   - Tidak ada perubahan alur di layar lebar.
+
+5. Cara kerja teknis
+   - CatalogManager tetap menjadi satu-satunya pemilik state produk,
+     kategori aktif, impor, dan muat contoh.
+   - CatalogScreen (pembungkus client baru) menjembatani menu mobile
+     dengan CatalogManager lewat ref dan callback; tidak ada salinan
+     state kategori yang bisa berbeda dari daftar produk.
+   - MobileDrawer sekarang juga menutup panel saat elemen bertanda
+     data-drawer-close diklik (pilih kategori, impor, kelola
+     kategori). Tautan biasa tetap menutup seperti sebelumnya.
+   - Tidak ada endpoint API baru dan tidak ada perubahan database.
+
+6. Berkas yang diubah/ditambah
+   - src/components/CatalogDrawerMenu.tsx : menu tiga garis Katalog (baru).
+   - src/components/CatalogScreen.tsx     : pembungkus menu + katalog (baru).
+   - src/components/CatalogManager.tsx    : ref aksi menu, laporan
+                                            kategori, toolbar desktop.
+   - src/components/MobileDrawer.tsx      : dukungan data-drawer-close.
+   - src/app/invoice/katalog/page.tsx     : memakai CatalogScreen.
+   - src/app/home.css                     : ukuran sapaan Beranda.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Beranda "/" di desktop dan HP.
+   - Sapaan "Selamat ..., Nama Usaha" lebih kecil dari sebelumnya.
+   - Subjudul dan dua kartu modul tetap rapi; tidak ada teks yang
+     terpotong.
+
+2. Katalog di HP (<= 1023px).
+   - Buka /invoice/katalog.
+   - Pastikan tombol Import CSV, Contoh CSV, dan Muat produk contoh
+     TIDAK lagi tampil di badan halaman.
+   - Pastikan baris chip kategori juga tidak tampil di badan halaman.
+
+3. Menu tiga garis Katalog.
+   - Ketuk Menu di bottom navigation.
+   - Pastikan isinya Import CSV, Contoh CSV, Muat produk contoh,
+     Kategori, dan Export CSV (tombol impor/contoh hanya untuk
+     Owner).
+   - Ketuk Kategori: daftar kategori muncul dengan panah menghadap
+     atas dan jumlah produk di kanan.
+   - Pilih salah satu kategori: drawer tertutup dan daftar produk
+     langsung tersaring. Buka menu lagi: kategori aktif tampil di
+     bawah tulisan Kategori dan diberi centang.
+   - Pilih "Semua": semua produk kembali tampil.
+
+4. Kelola kategori (Owner).
+   - Buka menu > Kategori > Kelola kategori.
+   - Drawer tertutup, dialog Kelola Kategori muncul.
+   - Tambah/hapus satu baris, Simpan, lalu buka menu lagi:
+     daftar kategori di dropdown ikut berubah.
+
+5. Aksi impor/contoh.
+   - Import CSV: drawer tertutup, pemilih berkas terbuka, lalu
+     dialog pilihan gabung/ganti muncul seperti sebelumnya.
+   - Contoh CSV: berkas contoh terunduh.
+   - Muat produk contoh: konfirmasi muncul, lalu produk contoh
+     ditambahkan dan katalog diperbarui.
+
+6. Desktop (>= 1024px).
+   - Toolbar Import CSV / Contoh CSV / Muat produk contoh tetap
+     terlihat di atas daftar produk.
+   - Chip kategori dan tombol Kategori tetap berfungsi.
+   - Tidak ada drawer tiga garis di bagian bawah.
+
+7. Akun tanpa izin Invoice.
+   - Menu tiga garis tetap ada, berisi Kategori dan Export CSV.
+   - Tombol impor/contoh dan Kelola kategori tidak muncul.
+
+===============================================================
+CATATAN
+===============================================================
+
+- Semua aksi memakai endpoint yang sudah ada. Tidak perlu migrasi
+  atau menjalankan ulang setup.
+- Filter kategori di HP tidak mengubah URL. Setelah halaman dimuat
+  ulang, filter kembali ke "Semua", sama seperti perilaku chip
+  kategori sebelumnya.
+- Pengujian otomatis: lint, typecheck, dan build lolos. Pengujian
+  perangkat fisik (terutama dialog berkas dan unduhan CSV di
+  Android/iOS) tetap dilakukan pemilik.

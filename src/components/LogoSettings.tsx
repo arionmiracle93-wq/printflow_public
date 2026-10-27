@@ -7,7 +7,8 @@ import { BrandMark } from "@/components/BrandMark";
 export function LogoSettings({ hasLogo }: { hasLogo: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [exists, setExists] = useState(hasLogo);
-  const [version, setVersion] = useState(Date.now());
+  // Versi awal cukup 0; angka baru dipakai setelah upload untuk mem-bust cache.
+  const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 

@@ -1,0 +1,55 @@
+PRINT FLOW - GAYA TOMBOL KATALOG PRODUK
+Tanggal: 2026-10-24
+Status: selesai di kode (perubahan tampilan saja, tanpa perubahan database)
+
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Tombol di halaman Katalog Produk (invoice) dirapikan jadi dua gaya:
+
+1) Tombol AKSI jadi GRUP SEGMEN, persis kontrol "Kartu / Padat / Ringkas":
+     [ + Produk Baru | Induk Baru | Mode Cepat ]
+     [ + Sub-induk | + Varian | Ubah induk ]   (di dalam induk)
+   - Tombol menempel satu sama lain, hanya ujung luar grup yang bulat,
+     ditambah border tipis teal muda di sekeliling grup.
+   - Tombol utama (Produk Baru, Varian) teal penuh + teks putih tebal,
+     seperti "Kartu" yang aktif. Tombol lain tanpa warna isi dengan
+     teks abu-abu kebiruan.
+   - Disentuh kursor: tombol lain disorot abu muda. Saat ditekan:
+     berubah teal sebentar (transisi halus seperti saat ganti tampilan).
+
+2) Tombol UTILITAS (Pilih, Impor CSV, Export CSV, Contoh CSV,
+   Muat produk contoh)
+   -> polos tanpa warna isi, hanya border outline tipis.
+      Teks Pilih / Impor CSV / Export CSV berwarna teal;
+      Contoh CSV dan Muat produk contoh berwarna abu-abu kebiruan.
+      Tombol Contoh CSV ikut diberi ikon dokumen.
+
+3) Grup pilih tampilan (Kartu / Padat / Ringkas) ikut memakai border
+   tipis teal muda yang sama dengan grup tombol aksi.
+
+Mode gelap ikut disesuaikan. Mode "Pilih" yang sedang aktif tetap
+menyala teal muda seperti sebelumnya. Di HP grup melebar penuh dan
+tiap tombol berbagi lebar sama rata.
+
+
+===============================================================
+FILE YANG BERUBAH
+===============================================================
+
+- src/app/globals.css
+    + kelas baru .seg-group, .seg-btn, .seg-btn-on, .btn-outline,
+      .btn-outline-muted (kelas lama .btn-primary / .btn-secondary /
+      .btn-ghost TIDAK diubah, jadi tombol di halaman lain aman)
+- src/components/CatalogManager.tsx
+    + tombol di atas memakai kelas baru; impor ikon FileText
+
+
+===============================================================
+CARA MENGEMBALIKAN
+===============================================================
+
+Ganti kelas seg-btn / btn-outline di CatalogManager.tsx kembali ke
+btn-primary / btn-secondary / btn-ghost seperti semula.

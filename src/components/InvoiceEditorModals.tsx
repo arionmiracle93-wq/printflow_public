@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Calculator, X } from "lucide-react";
+import { Calculator, UserRound, X } from "lucide-react";
+import { SavedCustomerSelect, type SavedCustomerOption } from "@/components/SavedCustomerSelect";
 import { formatRupiah } from "@/lib/domain";
 import {
   computeRowPricing,
@@ -183,15 +184,13 @@ export function TierModal({
 /* Jendela Data Customer                                               */
 /* ------------------------------------------------------------------ */
 export function CustomerModal({
-  names,
-  phones,
+  customers,
   name,
   phone,
   onSave,
   onClose,
 }: {
-  names: string[];
-  phones: Record<string, string>;
+  customers: readonly SavedCustomerOption[];
   name: string;
   phone: string;
   onSave: (name: string, phone: string) => void;
@@ -199,13 +198,23 @@ export function CustomerModal({
 }) {
   const [n, setN] = useState(name);
   const [p, setP] = useState(phone);
+  const [pickedId, setPickedId] = useState(() => {
+    const match = customers.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase());
+    return match ? String(match.id) : "";
+  });
   const q = n.trim().toLowerCase();
-  const suggestions = q ? names.filter((x) => x.toLowerCase().includes(q) && x.toLowerCase() !== q).slice(0, 6) : [];
+  const selected = customers.find((c) => String(c.id) === pickedId);
+  // Saat nama sudah persis sama dengan pilihan dari dropdown, daftar saran
+  // tidak perlu diulang. Saat pengguna mengetik nama lain, saran kembali muncul.
+  const suggestions =
+    q && selected?.name.trim().toLowerCase() !== q
+      ? customers.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6)
+      : [];
 
-  function pick(value: string) {
-    setN(value);
-    const known = phones[value.toLowerCase()];
-    if (known && !p.trim()) setP(known);
+  function applyCustomer(customer: SavedCustomerOption) {
+    setPickedId(String(customer.id));
+    setN(customer.name);
+    setP(customer.phone ?? "");
   }
 
   return (
@@ -215,15 +224,58 @@ export function CustomerModal({
           <p className="text-sm font-extrabold">Data Customer</p>
           <button type="button" onClick={onClose} className="ppi-icon-btn" aria-label="Tutup"><X size={14} /></button>
         </div>
+
+        {customers.length ? (
+          <div className="mb-3">
+            <span className="ppi-label">Ambil dari pelanggan tersimpan</span>
+            <SavedCustomerSelect
+              customers={customers}
+              value={pickedId}
+              onChange={(id) => {
+                const customer = customers.find((c) => String(c.id) === id);
+                if (customer) applyCustomer(customer);
+              }}
+              className="ppi-in boxed"
+            />
+            <p className="mt-1 text-[10.5px] leading-snug text-slate-500">
+              Nama dan WhatsApp langsung terisi. Untuk pelanggan baru, ketik namanya di bawah.
+            </p>
+          </div>
+        ) : (
+          <p className="mb-3 rounded-xl bg-slate-50 px-2.5 py-2 text-[10.5px] leading-snug text-slate-500">
+            Belum ada pelanggan tersimpan. Isi nama baru di bawah.
+          </p>
+        )}
+
         <label className="block">
           <span className="ppi-label">Nama customer</span>
-          <input autoFocus value={n} onChange={(e) => setN(e.target.value)} placeholder="Nama customer" autoComplete="off" className="ppi-in boxed" />
+          <input
+            autoFocus
+            value={n}
+            onChange={(e) => {
+              setN(e.target.value);
+              setPickedId("");
+            }}
+            placeholder="Nama customer"
+            autoComplete="off"
+            className="ppi-in boxed"
+          />
         </label>
         {suggestions.length ? (
-          <ul className="mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white text-sm shadow-sm">
+          <ul className="mt-1 max-h-44 overflow-y-auto rounded-xl border border-[color:var(--ppi-line)] bg-[color:var(--ppi-bg)] text-sm shadow-sm">
             {suggestions.map((s) => (
-              <li key={s}>
-                <button type="button" onClick={() => pick(s)} className="block w-full px-3 py-2 text-left text-xs font-semibold hover:bg-teal-50">{s}</button>
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => applyCustomer(s)}
+                  className="flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-[color:var(--ppi-panel-bg)]"
+                >
+                  <UserRound size={13} className="mt-0.5 shrink-0 text-[color:var(--ppi-muted)]" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-semibold text-[color:var(--ppi-fg)]">{s.name}</span>
+                    {s.phone ? <span className="block text-[10px] text-[color:var(--ppi-muted)]">{s.phone}</span> : null}
+                  </span>
+                </button>
               </li>
             ))}
           </ul>

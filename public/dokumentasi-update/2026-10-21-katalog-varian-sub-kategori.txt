@@ -1,0 +1,175 @@
+PRINT FLOW - KATALOG: VARIAN (SUB-KATEGORI) UNTUK PRODUK
+Tanggal: 2026-10-21
+Status: selesai di kode; /api/setup dianjurkan sekali (otomatis juga, lihat bagian "Langkah pemilik")
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Katalog sekarang punya KARTU INDUK dengan VARIAN di dalamnya.
+Contoh: induk "Print HVS" (punya gambar + nama) berisi varian "A4 Warna",
+"A4 Hitam Putih", "F4 Hitam Putih", dst.
+
+- Kartu induk TIDAK punya harga. Label di kartunya: "3 varian - mulai Rp 500"
+  (harga "mulai" = harga DASAR varian termurah, bukan harga tier grosir).
+- Varian adalah produk biasa: harga, harga bertingkat (tier), keterangan
+  masing-masing tetap jalan seperti sekarang. Harga warna dan hitam putih
+  bebas beda.
+- Gambar varian otomatis memakai gambar induk; boleh diganti gambar sendiri.
+- Kategori varian selalu mengikuti induknya (ganti kategori induk = semua
+  varian ikut).
+- Produk biasa (tanpa induk) bekerja PERSIS seperti sebelumnya. Tidak ada
+  produk lama yang berubah dengan sendirinya.
+
+===============================================================
+CARA PAKAI
+===============================================================
+
+A. Kelola Katalog (Owner)
+   1) Tombol "Induk Baru" (di sebelah "Produk Baru"): isi nama, gambar,
+      keterangan, kategori. Setelah disimpan, kartu induk langsung terbuka.
+   2) Tombol "+ Varian": ada di bagian atas daftar varian (setelah kartu
+      induk diketuk) dan, khusus tampilan RINGKAS, di ujung baris induk.
+      Kartu pada tampilan Kartu dan Padat sengaja polos (tanpa lencana,
+      tombol, atau bayangan khusus) seperti sebelum fitur varian; beda
+      induk hanya pada labelnya ("3 varian - mulai Rp 500") sebagai
+      pengganti harga. Formulir varian punya "Simpan & tambah lagi"
+      supaya beberapa varian bisa diisi beruntun.
+   2b) Kartu VARIAN (tampilan Kartu dan Padat) menampilkan isi kolom
+      Keterangan di bawah nama varian, dengan warna aksen (indigo) yang
+      beda dari nama dan harga. Di HP juga selalu tampil. Produk biasa
+      tidak berubah.
+   3) Ketuk kartu induk = membuka daftar variannya; tombol "Semua produk"
+      untuk kembali. "Ubah induk" mengubah nama/gambar/kategori induk.
+   4) Produk lama (mis. "Print HVS A4 Warna" yang sudah ada) dipindah ke
+      induk lewat mode "Pilih" -> centang produknya -> "Jadikan varian..."
+      -> pilih induk. Pilihan "Lepas dari induk" mengembalikan jadi
+      produk biasa.
+   5) Di formulir produk ada pilihan "Induk (opsional)" untuk memasang atau
+      melepas satu produk dari induknya.
+
+B. Saat membuat invoice
+   1) Tombol Katalog: ketuk kartu induk (berlabel "N varian") -> pilih
+      variannya -> masuk ke
+      tabel invoice. Kartu induk yang belum punya varian disembunyikan.
+   2) Nama yang tertulis di invoice adalah nama LENGKAP:
+      "Print HVS A4 Warna" (induk + varian), bukan "A4 Warna" saja, supaya
+      jelas dibaca pelanggan di invoice cetak.
+   3) Pencarian (di jendela Katalog maupun saran saat mengetik nama produk
+      di tabel): ketik "hvs warna" langsung menemukan variannya, tanpa
+      membuka induk. Ketik "hvs" menampilkan semua varian HVS.
+   4) Invoice yang sudah dibuat TIDAK terpengaruh: item invoice menyimpan
+      salinan nama + harga + tier, bukan referensi ke produk katalog.
+
+C. Impor / Export CSV
+   - Kolom baru ke-6: "Induk". Varian = nama induknya; kartu induk = tanda *;
+     produk biasa = kosong. Export menaruh varian tepat di bawah induknya.
+   - Induk yang belum ada dibuat otomatis saat impor.
+   - CSV lama (5 kolom) tetap bisa diimpor. "Contoh CSV" sekarang berisi
+     contoh induk + varian (Print HVS).
+
+D. Menghapus induk yang masih punya varian
+   Muncul pilihan (bukan langsung terhapus):
+   - "Lepas varian jadi produk biasa (aman)" - bawaan. Nama jadi gabungan
+     (mis. "Print HVS A4 Warna"), harga + tier + gambar tetap. Kalau nama
+     bentrok dengan produk lain diberi akhiran (2), (3), dst.
+   - "Hapus induk + semua variannya".
+
+===============================================================
+CATATAN KECIL
+===============================================================
+
+Panel editor produk (Produk Baru / Ubah Produk / Induk / Varian) tidak
+lagi menutup sendiri saat area gelap di luar panel diketuk, supaya isian
+yang sedang diketik tidak hilang karena salah ketuk. Tutup lewat tombol
+X atau Batal. (Panel lain, mis. Kelola Kategori dan Impor CSV, tidak
+diubah.)
+
+===============================================================
+ATURAN YANG DIJAGA
+===============================================================
+
+- Hanya satu tingkat: induk -> varian (induk tidak bisa jadi varian).
+- Aturan unik nama + keterangan sekarang PER INDUK. Jadi "A4 Warna" boleh
+  ada di bawah "Print HVS" dan di bawah "Fotocopy". Di dalam satu induk
+  (atau di tingkat atas tanpa induk) nama + keterangan yang sama tetap
+  ditolak.
+- Kartu induk tanpa harga/tier; tidak bisa dipilih langsung di invoice.
+- Jumlah di filter kategori menghitung satu induk = satu kartu.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada yang wajib. Dianjurkan sekali buka /api/setup setelah deploy:
+- menambah kolom parent_id + is_group di tabel invoice_products
+- membuat aturan unik per induk, lalu membuang aturan unik lama
+- aman dijalankan berulang; data produk TIDAK diubah/dihapus.
+Kalau lupa: aplikasi menyiapkan sendiri struktur itu pada pembukaan
+katalog pertama setelah deploy (sekali per instance server), jadi fitur
+tetap jalan.
+
+===============================================================
+FILE YANG BERUBAH / BARU (upload ke GitHub)
+===============================================================
+
+BARU
+- src/lib/catalog-variants.ts
+- src/app/api/invoice-products/move/route.ts
+- public/dokumentasi-update/2026-10-21-katalog-varian-sub-kategori.txt
+
+DIUBAH
+- src/db/schema.ts
+- src/app/api/setup/route.ts
+- src/lib/invoice-catalog.ts
+- src/lib/invoice-catalog-match.ts
+- src/lib/invoice-catalog-sample.ts
+- src/lib/csv-parse.ts
+- src/app/api/invoice-products/[id]/route.ts
+- src/app/api/invoice-products/bulk-delete/route.ts
+- src/app/api/invoice-products/import/route.ts
+- src/app/api/invoice-products/export/route.ts
+- src/components/CatalogParts.tsx
+- src/components/CatalogPicker.tsx
+- src/components/CatalogManager.tsx
+- src/components/InvoicePaperEditor.tsx
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- TypeScript (tsc --noEmit) dan ESLint: bersih.
+- 25 pengujian logika server pada PostgreSQL sungguhan, termasuk upgrade
+  dari database LAMA (tabel + indeks unik lama + data lama): kolom dan
+  indeks dibuat otomatis, data lama utuh; induk/varian; kategori + gambar
+  diwariskan; nama kembar per induk; pindah/lepas massal; hapus induk
+  (lepas atau hapus semua, bentrok nama); impor CSV (induk otomatis,
+  impor ulang tidak menggandakan); Export -> Impor menghasilkan katalog
+  yang sama persis.
+- DDL /api/setup dijalankan 2x pada database kosong: tanpa error; kunci
+  asing ON DELETE SET NULL sebagai pengaman bila induk terhapus.
+- Pencarian/filter: "hvs warna" menemukan varian; "hvs" menampilkan semua
+  varian di pemilih invoice dan hanya kartu induk di Kelola Katalog;
+  kategori + induk kosong + 1 huruf.
+- BELUM diuji: tampilan visual di browser/HP (kartu bertumpuk, tombol
+  "+ Varian", mode gelap) dan "next build" penuh (di lingkungan uji
+  Google Fonts tidak bisa diunduh). Mohon dicek sekilas di aplikasi.
+
+===============================================================
+DAMPAK KUOTA / BIAYA
+===============================================================
+
+Tidak ada layanan baru. Satu kolom boolean + satu kolom integer di
+database; gambar varian memakai gambar induk (tidak menyimpan salinan),
+jadi tidak menambah ukuran database.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+- Rapikan produk lama yang namanya bertingkat jadi induk + varian
+  (mis. "Roll Banner 60x90 dengan/tanpa laminasi"), lewat Pilih ->
+  Jadikan varian.
+- Kalau nanti butuh, varian bisa diberi urutan manual (sekarang urut
+  abjad nama).

@@ -5,6 +5,23 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, LogIn, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
+/**
+ * Hanya izinkan path internal setelah login. Pemeriksaan startsWith("/")
+ * saja tidak cukup: "//evil.com" dan "/\\evil.com" bisa ditafsirkan browser
+ * sebagai alamat host lain. URL dinormalisasi dulu, lalu dicek origin-nya.
+ */
+function safeNextPath(raw: string | null) {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "/";
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.origin !== window.location.origin) return "/";
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    return path.startsWith("//") ? "/" : path;
+  } catch {
+    return "/";
+  }
+}
+
 export function LoginForm() {
   const params = useSearchParams();
   const [form, setForm] = useState({ username: "", password: "" });
@@ -29,8 +46,7 @@ export function LoginForm() {
     const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const json = (await res.json()) as { ok?: boolean; error?: string };
     if (!json.ok) { setError(json.error ?? "Login gagal."); setBusy(false); return; }
-    const target = params.get("next");
-    window.location.href = target?.startsWith("/") && !target.startsWith("//") ? target : "/";
+    window.location.href = safeNextPath(params.get("next"));
   }
 
   // Semua tambahan class md:... di bawah (padding/gap/text/rounded/ukuran

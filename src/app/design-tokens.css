@@ -112,6 +112,15 @@
   --pf-fast: 130ms;
   --pf-base: 220ms;
   --pf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Scrollbar (lihat blok "SCROLLBAR APLIKASI" di globals.css).
+     Warnanya lebih netral dari warna aksen: scrollbar selalu ada di
+     layar, sehingga warna aksen di sana membuat halaman terasa
+     berantakan. Baru ketika kursor mendekat (hover) warnanya berubah
+     ke aksen, supaya yang menonjol adalah isinya, bukan gagang
+     scrollbar-nya. */
+  --pf-scrollbar-thumb: rgb(15 61 74 / 0.26);
+  --pf-scrollbar-thumb-hover: rgb(13 125 117 / 0.6);
 }
 
 .dark {
@@ -156,6 +165,13 @@
   --pf-shadow-1: 0 7px 24px rgb(0 0 0 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.06);
   --pf-shadow-2: 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 20px rgb(0 0 0 / 0.34);
   --pf-shadow-3: 0 10px 34px rgb(0 0 0 / 0.44);
+
+  /* Scrollbar mode gelap. Netral putih transparan, bukan abu-abu solid
+     - abu gelap di atas latar gelap hampir tidak terlihat, dan
+     scrollbar yang tak terlihat berarti orang tidak tahu isinya
+     masih bisa digulir. */
+  --pf-scrollbar-thumb: rgb(255 255 255 / 0.22);
+  --pf-scrollbar-thumb-hover: rgb(62 203 189 / 0.7);
 }
 
 /* ---------------------------------------------------------------

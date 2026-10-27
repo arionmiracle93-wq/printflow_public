@@ -21,7 +21,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
     return { access, detail, customers, settings };
   });
   if (!loaded.ok) return <ProblemScreen problem={loaded.problem} hint="Form dokumen butuh database." />;
-  if (!loaded.data) redirect("/tidak-diizinkan");
+  if (!loaded.data) redirect("/tidak-diizinkan?dari=invoice");
   const { access, detail, customers, settings } = loaded.data;
   if (!detail) notFound();
   const inv = detail.invoice;
@@ -51,6 +51,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
     prodDueDate: inv.prodDueDate ?? "",
     prodDueTime: inv.prodDueTime ?? "17:00",
     items: detail.items.map((it) => ({
+      lineKey: it.lineKey,
       productName: it.productName,
       description: it.description ?? "",
       unit: it.unit,
@@ -58,6 +59,9 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
       areaM2: it.areaM2,
       basePrice: it.basePrice,
       tiers: it.tiers,
+      needsProduction: it.needsProduction,
+      prodDueDate: it.prodDueDate,
+      prodDueTime: it.prodDueTime,
     })),
   };
 

@@ -14,6 +14,9 @@ import { usePathname, useRouter } from "next/navigation";
 const INTERVAL_MS = 45_000;
 const MIN_HIDDEN_MS = 8_000;
 
+/* /invoice/laporan SENGAJA tidak ada di daftar ini: halaman laporan
+   menjalankan banyak query agregat, dan laporan tidak perlu
+   disegarkan tiap 45 detik. Ia tetap menyegarkan saat dibuka ulang. */
 const ALLOWED: RegExp[] = [
   /^\/$/,
   /^\/pesanan$/,
@@ -23,7 +26,6 @@ const ALLOWED: RegExp[] = [
   /^\/pelanggan$/,
   /^\/invoice$/,
   /^\/invoice\/\d+$/,
-  /^\/invoice\/laporan$/,
   /^\/invoice\/katalog$/,
 ];
 

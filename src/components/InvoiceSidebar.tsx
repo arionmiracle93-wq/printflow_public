@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { BarChart3, FilePlus2, History, Package, ReceiptText, Settings } from "lucide-react";
 import { SidebarThemeButton } from "@/components/ThemeToggle";
+import { InvoiceBottomNav } from "@/components/InvoiceBottomNav";
 import { Select } from "@/components/Select";
 import { AccentLastWord } from "@/components/AccentLastWord";
 import { DOC_MODES, DOC_TYPES, docModeOf, type DocType } from "@/lib/invoice-modes";
@@ -31,6 +32,9 @@ export function InvoiceSidebar({
   modeBehavior,
   onSwitchMode,
   actions,
+  actionsPosition = "afterLeading",
+  menuLabel,
+  hideModeOnMobile = false,
 }: {
   businessName: string;
   isOwner: boolean;
@@ -38,6 +42,33 @@ export function InvoiceSidebar({
   modeBehavior: "filter" | "switch" | "fixed";
   onSwitchMode?: (next: DocType) => void;
   actions?: ReactNode;
+  /**
+   * Posisi slot `actions` di layar lebar (lg ke atas):
+   *   "afterLeading" (bawa-an) -> di bawah dua menu teratas (Invoice Baru,
+   *      Riwayat Dokumen). Dipakai tombol aksi draft di editor
+   *      (Simpan Draft, Terbitkan, dan seterusnya).
+   *   "top" -> paling atas, langsung di bawah kartu Mode Dokumen, di atas
+   *      menu navigasi. Dipakai halaman Riwayat supaya Filter Status
+   *      tetap berdiri pertama.
+   */
+  actionsPosition?: "afterLeading" | "top";
+  /**
+   * Tulisan slot tiga garis di bottom navigation dan judul panelnya.
+   *
+   * Bawaannya "Menu", yang benar untuk hampir semua halaman: isinya
+   * perintah (Edit, Terbitkan, Cetak, Unduh PDF). Halaman daftar
+   * invoice lewat "Status" karena isinya memang deretan filter status -
+   * owner minta yang begitu karena dua isi itu beda jenis dan
+   * menuliskan keduanya dengan satu kata akan menyesatkan.
+   */
+  menuLabel?: string;
+  /**
+   * Sembunyikan pemilih Mode Dokumen di HP/layar sempit. Dipakai halaman
+   * yang tidak berurusan dengan jenis dokumen (mis. Katalog Produk), supaya
+   * tidak ada dropdown "Semua dokumen" yang tidak nyambung di atas halaman.
+   * Di layar lebar sidebar tidak berubah.
+   */
+  hideModeOnMobile?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -72,17 +103,43 @@ export function InvoiceSidebar({
     </div>
   );
 
-  const links = [
-    { href: "/invoice", label: "Riwayat Dokumen", icon: History, active: pathname === "/invoice" },
+  // "Invoice Baru" + "Riwayat Dokumen" selalu berdiri paling atas laman
+  // Mode Dokumen, di atas slot tombol aksi draft (Simpan Draft, Terbitkan,
+  // dst.). Menu lain menyusul di bawahnya mengikuti urutan lama.
+  const leadingLinks = [
     { href: newHref, label: current.newBtn, icon: FilePlus2, active: pathname === "/invoice/baru" },
+    { href: "/invoice", label: "Riwayat Dokumen", icon: History, active: pathname === "/invoice" },
+  ];
+
+  const trailingLinks = [
     { href: "/invoice/katalog", label: "Katalog Produk", icon: Package, active: pathname === "/invoice/katalog" },
     ...(isOwner ? [{ href: "/invoice/laporan", label: "Laporan Bulanan", icon: BarChart3, active: pathname === "/invoice/laporan" }] : []),
   ];
 
   return (
     <>
-      {/* ======= Layar lebar ======= */}
-      <aside className="ppi-side sticky top-20 hidden w-full flex-col self-start p-4 lg:flex">
+      {/* ======= Layar lebar =======
+
+          GULIR TERPISAH. Sidebar punya wadahnya sendiri:
+          - max-h + overflow-y-auto : isinya boleh lebih tinggi dari layar
+            tanpa membuat halaman ikut memanjang.
+          - overscroll-contain : kalau mouse wheel diarahkan ke sidebar,
+            yang bergulir HANYA sidebar. Saat isinya sudah habis di atas
+            atau bawah, gulir TIDAK diteruskan ke halaman - jadi kertas
+            invoice diam, persis seperti yang diminta. Sebaliknya, wheel
+            di atas kertas tidak pernah menyentuh sidebar karena sidebar
+            lengket (sticky).
+
+          Catatan: tanpa overscroll-contain, roda mouse di atas sidebar yang
+          isinya lebih pendek dari layar sama sekali tidak melakukan
+          apa-apa, dan orang mengira layarnya rusak. contain yang
+          membuatnya diam dengan sengaja - dan sekarang sidebar memang
+          bisa digulir sendiri.
+
+          Bilah gulir disembunyikan supaya tidak menambah satu garis lagi
+          di panel yang warnanya sudah gelap. Gulir tetap jalan; yang hilang
+          hanya batangnya. */}
+      <aside className="ppi-side pf-side-scroll sticky top-20 hidden w-full flex-col self-start p-4 lg:flex">
         <div className="ppi-side-brand">
           {logoFailed ? (
             <span className="ppi-side-logo text-[color:var(--ppi-accent)]">
@@ -121,16 +178,37 @@ export function InvoiceSidebar({
           </p>
         </div>
 
-        {actions ? <div className="mt-3 space-y-0.5">{actions}</div> : null}
+        {/* Blok "top": slot actions dipanjatkan ke paling atas
+            (halaman Riwayat menaruh Filter Status di sini). */}
+        {actionsPosition === "top" ? (
+          <>
+            {actions ? <div className="mt-3 space-y-0.5">{actions}</div> : null}
+            <hr className="ppi-side-hr my-4" />
+          </>
+        ) : null}
 
-        <hr className="ppi-side-hr my-4" />
+        <nav className={actionsPosition === "top" ? "space-y-0.5" : "mt-3 space-y-0.5"}>
+          {leadingLinks.map((l) => (
+            <SideButtonLink key={l.label} href={l.href} label={l.label} icon={<l.icon size={15} />} active={l.active} />
+          ))}
+        </nav>
+
+        {/* Bawa-an: actions nempel di bawah dua menu teratas tanpa
+            jarak ekstra (diminta owner) - garis pemisah tetap sebelum
+            menu sisanya. */}
+        {actionsPosition === "afterLeading" ? (
+          <>
+            {actions ? <div className="space-y-0.5">{actions}</div> : null}
+            <hr className="ppi-side-hr my-4" />
+          </>
+        ) : null}
 
         <nav className="space-y-0.5">
-          {links.map((l) => (
+          {trailingLinks.map((l) => (
             <SideButtonLink key={l.label} href={l.href} label={l.label} icon={<l.icon size={15} />} active={l.active} />
           ))}
           {isOwner ? (
-            <SideButtonLink href="/invoice/pengaturan" label="Pengaturan" icon={<Settings size={15} />} active={pathname === "/invoice/pengaturan"} />
+            <SideButtonLink href="/pengaturan/invoice" label="Pengaturan" icon={<Settings size={15} />} active={pathname === "/pengaturan/invoice"} />
           ) : null}
         </nav>
 
@@ -148,21 +226,28 @@ export function InvoiceSidebar({
         </div>
       </aside>
 
-      {/* ======= HP / layar sempit ======= */}
-      <nav className="flex items-center gap-2 overflow-x-auto pb-1 lg:hidden" aria-label="Menu dokumen">
-        <div className="w-44 shrink-0">{select}</div>
-        {links.map((l) => (
-          <Link
-            key={l.label}
-            href={l.href}
-            className={`chip shrink-0 gap-1 px-3 py-2 text-xs font-bold ${
-              l.active ? "border-teal-500 bg-teal-500 text-white" : "border-slate-200 bg-white text-slate-700"
-            }`}
-          >
-            <l.icon size={13} /> {l.label}
-          </Link>
-        ))}
-      </nav>
+      {/* ======= HP / layar sempit =======
+         Deretan tab di atas judul sudah dipindahkan ke bottom navigation
+         (InvoiceBottomNav): Status/Menu, Riwayat, Baru, Katalog, Laporan.
+         Yang tersisa di sini hanya pemilih Mode Dokumen. "Pengaturan"
+         tidak ikut karena pintunya sudah ada di menu tiga titik header. */}
+      <div className="space-y-2 lg:hidden">
+        {modeBehavior !== "fixed" && !hideModeOnMobile ? (
+          <div>
+            <span className="mb-1 block px-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Mode Dokumen
+            </span>
+            {select}
+          </div>
+        ) : null}
+      </div>
+
+      <InvoiceBottomNav
+        isOwner={isOwner}
+        newHref={newHref}
+        actions={actions}
+        menuLabel={menuLabel}
+      />
     </>
   );
 }
@@ -170,10 +255,10 @@ export function InvoiceSidebar({
 /** Nama usaha di kop: gaya "Pamulang Printing" (kata terakhir beraksen). */
 function SideButtonLink({ href, label, icon, active }: { href: string; label: string; icon: ReactNode; active?: boolean }) {
   return (
-    <Link href={href} className={`ppi-side-btn ${active ? "active" : ""}`}>
+    <PrefetchLink href={href} className={`ppi-side-btn ${active ? "active" : ""}`}>
       <span className="ppi-ico">{icon}</span>
       {label}
-    </Link>
+    </PrefetchLink>
   );
 }
 
@@ -188,12 +273,49 @@ export function InvoiceFrame({
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-5">
       <div className="contents lg:block">{sidebar}</div>
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0">
+        {children}
+        {/* Bottom nav Invoice tampil sampai lg, sedangkan padding bawah
+            .app-main untuk tablet hanya 3rem. Ruang ini mencegah kartu
+            terakhir tertutup navigasi. Di HP padding .app-main sudah
+            cukup, jadi spacer hanya muncul di md sampai lg. */}
+        <div className="hidden h-20 md:block lg:hidden no-print" aria-hidden />
+      </div>
     </div>
   );
 }
 
-/** Tombol menu di sidebar (dipakai halaman untuk slot "actions"). */
+/**
+ * Link navigasi modul invoice.
+ *
+ * prefetch={false} MATI karena alasan yang sama seperti menu utama:
+ * dari tangkapan DevTools, tiap membuka /invoice causes /invoice/baru,
+ * /invoice/katalog, /invoice/laporan, dan /pengaturan/invoice ikut
+ * diunduh otomatis - padahal owner yang sedang cuma berpindah tab
+ * filter tidak akan membuka satu pun dari halaman itu. Semuanya
+ * berebut koneksi yang sama dengan tab yang sedang ditunggu.
+ *
+ * onPointerDown memindahkan waktu pramuat ke saat jari menyentuh: halaman
+ * yang benar-benar mau dibuka tetap sudah siap sebelum jarinya mengangkat.
+ */
+function PrefetchLink({ href, className, children, "aria-current": ariaCurrent }: { href: string; className?: string; children: ReactNode; "aria-current"?: "page" | "true" | undefined }) {
+  const router = useRouter();
+  const prepare = useCallback(() => router.prefetch(href), [router, href]);
+  return (
+    <Link href={href} prefetch={false} onPointerDown={prepare} className={className} aria-current={ariaCurrent}>
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * Tombol menu di sidebar (dipakai halaman untuk slot "actions").
+ *
+ * `active` menandai tombol yang sedang terpilih. Dulu tidak ada karena
+ * semua pemakaiannya adalah perintah (Edit, Cetak, Hapus) - tidak pernah
+ * ada tombol yang "sedang aktif". Sekarang deretan filter status juga
+ * memakai komponen ini, jadi diperlukan tanda yang mana sedang dipakai.
+ */
 export function SideButton({
   icon,
   children,
@@ -202,6 +324,8 @@ export function SideButton({
   danger,
   disabled,
   title,
+  active,
+  ariaCurrent,
 }: {
   icon: ReactNode;
   children: ReactNode;
@@ -210,17 +334,31 @@ export function SideButton({
   danger?: boolean;
   disabled?: boolean;
   title?: string;
+  active?: boolean;
+  /** Nilai untuk aria-current; default "page" kalau active. */
+  ariaCurrent?: "page" | "true" | false;
 }) {
-  const cls = `ppi-side-btn ${danger ? "danger" : ""}`;
+  const cls = `ppi-side-btn ${danger ? "danger" : ""} ${active ? "active" : ""}`;
+  /* aria-current hanya boleh "page" atau "true" (atau tidak ada sama
+     sekali). Nilai false dari pemanggil diterjemahkan jadi undefined
+     supaya atributnya benar-benar tidak muncul di HTML, bukan
+     muncul dengan nilai false - yang tidak valid untuk atribut ini. */
+  const current = active ? (ariaCurrent === "page" ? "page" : "true") : undefined;
   const inner = (
     <>
       <span className="ppi-ico">{icon}</span>
-      {children}
+      <span className="min-w-0 truncate">{children}</span>
     </>
   );
-  if (href && !disabled) return <Link href={href} className={cls}>{inner}</Link>;
+  if (href && !disabled) {
+    return (
+      <PrefetchLink href={href} className={cls} aria-current={current}>
+        {inner}
+      </PrefetchLink>
+    );
+  }
   return (
-    <button type="button" className={cls} onClick={onClick} disabled={disabled} title={title}>
+    <button type="button" className={cls} onClick={onClick} disabled={disabled} title={title} aria-current={current}>
       {inner}
     </button>
   );

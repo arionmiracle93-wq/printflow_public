@@ -1,0 +1,69 @@
+PRINT FLOW - TAMPILAN "RINGKAS" DI POP UP KATALOG INVOICE
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Pop up Katalog di editor invoice sekarang punya dua pilihan tampilan,
+tombolnya di sebelah kanan kolom pencarian:
+
+- Kartu   : seperti sebelumnya (gambar besar, 3-4 kolom).
+- Ringkas : daftar baris kecil. Tiap baris berisi gambar mini, nama,
+            keterangan (satu baris), harga, dan label tier. Di layar
+            lebar dibuat 2 kolom, di HP 1 kolom, jadi jauh lebih banyak
+            produk terlihat tanpa menggulir. Cocok untuk laptop berlayar
+            kecil.
+
+Pilihan tampilan diingat di perangkat itu (tersimpan di browser), jadi
+tidak perlu memilih lagi setiap membuka katalog. Bawaan tetap "Kartu".
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+- src/components/CatalogPicker.tsx : tombol pilihan Kartu / Ringkas,
+  penyimpanan pilihan di browser (aman bila browser menolak
+  penyimpanan: kembali ke Kartu).
+- src/components/CatalogParts.tsx  : komponen baris ringkas baru
+  (ProductCompactRow).
+
+Yang TIDAK berubah: pencarian, tab kategori, klik produk = masuk
+invoice lalu pop up tertutup, halaman Katalog (kelola produk), data.
+Pada tampilan Ringkas keterangan selalu terlihat, jadi produk bernama
+kembar tetap mudah dibedakan.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogPicker.tsx
+- src/components/CatalogParts.tsx
+- public/dokumentasi-update/2026-10-21-katalog-invoice-tampilan-ringkas.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+Pengecekan tipe seluruh proyek (tsc --noEmit) dan lint (eslint) pada
+file yang diubah: lolos tanpa masalah. Tampilan di layar belum diuji di
+perangkat; mohon cek: buka invoice > Katalog > klik "Ringkas" > daftar
+jadi baris kecil; tutup lalu buka lagi > tetap Ringkas.
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+Kalau masih terasa besar, ukuran gambar mini dan jarak baris bisa
+dikecilkan lagi, atau tampilan yang sama ditambahkan ke halaman
+Katalog (kelola produk).

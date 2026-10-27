@@ -115,21 +115,40 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const session = await verifySessionToken(token);
   if (!session) return null;
   try {
-    const rows = await db.select({
-      id: users.id,
-      username: users.username,
-      name: users.name,
-      role: users.role,
-      active: users.active,
-      tokenVersion: users.tokenVersion,
-    }).from(users).where(eq(users.id, session.userId)).limit(1);
+    /* Dua query ini TIDAK bergantung satu sama lain: userId dan
+       sessionId keduanya sudah ada di dalam token yang baru saja
+       diverifikasi di atas, jadi keduanya bisa ditanya bersamaan.
+
+       Sebelumnya berurutan (await users, baru await userSessions),
+       sehingga satu buka halaman memakai dua kali bolak-balik ke
+       database. Karena Neon diakses lewat internet, satu putaran
+       bolak-balik punya biaya jaringan nyata - dua kali berurutan
+       berarti jeda yang terlihat dua kali lipat.
+
+       Baris "tandai lastSeenAt" di bawah sengaja tetap fire-and-forget:
+       menunggu query penanda hanya memperlambat tanpa manfaat. */
+    const [rows, sessionRows] = await Promise.all([
+      db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          role: users.role,
+          active: users.active,
+          tokenVersion: users.tokenVersion,
+        })
+        .from(users)
+        .where(eq(users.id, session.userId))
+        .limit(1),
+      db
+        .select({ revokedAt: userSessions.revokedAt })
+        .from(userSessions)
+        .where(eq(userSessions.id, session.sessionId))
+        .limit(1),
+    ]);
     const row = rows[0];
     if (!row || !row.active || row.tokenVersion !== session.tokenVersion || !ROLES.includes(row.role as UserRole)) return null;
 
-    const sessionRows = await db.select({ revokedAt: userSessions.revokedAt })
-      .from(userSessions)
-      .where(eq(userSessions.id, session.sessionId))
-      .limit(1);
     if (!sessionRows[0] || sessionRows[0].revokedAt) return null;
     // Tandai kapan sesi ini terakhir dipakai — tanpa menunggu, tidak memblokir respons.
     void db.update(userSessions).set({ lastSeenAt: new Date() }).where(eq(userSessions.id, session.sessionId));

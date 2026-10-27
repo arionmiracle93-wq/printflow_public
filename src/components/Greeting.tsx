@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 function greetingFor(hour: number) {
   if (hour < 10) return "Selamat pagi";
@@ -13,12 +13,20 @@ function greetingFor(hour: number) {
  * Sapaan berdasarkan jam perangkat pengguna (pola sama seperti LocalDateTime:
  * render netral dulu di server, baru disesuaikan di client agar tidak hydration-mismatch).
  */
-export function Greeting() {
-  const [text, setText] = useState("Halo");
+function subscribe() {
+  return () => {};
+}
 
-  useEffect(() => {
-    setText(greetingFor(new Date().getHours()));
-  }, []);
+function getSnapshot() {
+  return greetingFor(new Date().getHours());
+}
+
+function getServerSnapshot() {
+  return "Halo";
+}
+
+export function Greeting() {
+  const text = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   return <span suppressHydrationWarning>{text}</span>;
 }

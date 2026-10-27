@@ -1,0 +1,66 @@
+PRINT FLOW - PENCARIAN UKURAN "60x90" = "60 x 90"
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Pencarian produk di Katalog sekarang menganggap ukuran yang ditulis
+rapat dan renggang sebagai hal yang sama. Produk bernama
+"Banner 60 x 90" sekarang ketemu kalau diketik "60x90", dan
+sebaliknya. Huruf besar (60X90) dan tanda kali (60×90) juga sama.
+
+Catatan: laporan awal "pencarian katalog tidak berfungsi" ternyata
+karena filter kategori sedang aktif saat mencari produk dari kategori
+lain. Itu bukan kerusakan; pencarian memang bekerja di dalam kategori
+yang dipilih. Pilih kategori "Semua" untuk mencari ke seluruh katalog.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/lib/product-search.ts
+   - Tanda kali (×) disamakan dengan huruf x.
+   - Huruf x yang diapit dua angka dirapatkan: "60 x 90" -> "60x90".
+     Berlaku untuk teks produk DAN kata kunci, jadi keduanya selalu
+     sama. Ukuran bersambung juga jalan: "3 x 4 x 5" = "3x4x5".
+   - Huruf x di dalam kata biasa tidak tersentuh ("X-Banner", "Flexi").
+
+Pencarian ini dipakai di tiga tempat sekaligus, jadi ketiganya ikut
+membaik tanpa perubahan lain: halaman Katalog, jendela Katalog di
+editor invoice, dan saran produk saat mengetik nama produk di baris
+invoice.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Buat produk bernama "Banner 60 x 90" (dengan spasi).
+2. Di kategori "Semua", cari "60x90" -> produk harus muncul.
+3. Cari "60 x 90", "60X90", "60×90" -> produk yang sama muncul.
+4. Cari "x banner" dan "flexi" -> hasil sama seperti sebelumnya.
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- Uji fungsi (Node): 60x90 / 60 x 90 / 60X90 / 60×90 menemukan semua
+  penulisan ukuran yang sama; 3x4x5 = 3 x 4 x 5; "xbanner",
+  "flexi", "a3" tetap benar.
+- Uji render komponen (halaman Katalog dan jendela Katalog): pencarian
+  menyaring daftar dengan benar.
+
+===============================================================
+FILE YANG DIUBAH
+===============================================================
+
+- src/lib/product-search.ts
+- public/dokumentasi-update/2026-10-20-pencarian-ukuran-60x90.txt (baru)
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+DAMPAK KUOTA / BIAYA
+===============================================================
+
+Tidak ada perubahan database, API, atau biaya.

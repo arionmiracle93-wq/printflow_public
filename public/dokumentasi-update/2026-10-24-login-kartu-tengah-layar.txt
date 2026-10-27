@@ -1,0 +1,83 @@
+================================================================
+LOGIN — KARTU DIRATA-TENGAHKAN DI LAYAR (TIDAK NAIK LAGI)
+Tanggal : 24-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Kartu login sekarang benar-benar di tengah layar pada desktop.
+Penyebabnya bukan form-nya, tapi wadah tempat kartu di-center:
+tingginya cuma 80vh. Artinya titik tengahnya ada di 40% layar,
+bukan 50% — jadi selalu kelihatan "naik" dan menyisakan ruang
+kosong lebih banyak di bawah. Sekarang dari ukuran tablet ke atas
+wadahnya setinggi layar penuh (100svh), jadi kartu pas di tengah
+vertikal. Tampilan HP tidak diubah.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/login/page.tsx
+   - Class wadah kartu:
+       sebelum : min-h-[80vh]
+       sesudah : min-h-[80vh] md:min-h-svh
+   - Artinya:
+       * HP (< 768px)  : tetap 80vh, persis seperti sebelumnya.
+       * Tablet/desktop: 100svh = setinggi viewport.
+   - svh (small viewport height) dipakai supaya tinggi tidak
+     berubah-ubah saat address bar browser mobile muncul/hilang.
+   - min-h (bukan h) tetap dipakai supaya kalau tinggi layar lebih
+     pendek dari kartu, kartu tidak terpotong — halaman yang
+     memanjang, bukan isi yang hilang.
+   - Komentar penjelas di atas wadah ikut diperbarui.
+
+B) Tidak ada perubahan pada:
+   - src/components/LoginForm.tsx (isi form)
+   - src/app/globals.css (warna, kaca, background, kurva)
+   - ukuran kartu, foto/video, atau padding di dalam kartu
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit   : lolos
+  npx next build     : Compiled successfully (Next.js 16.2.6)
+
+  Pemeriksaan posisi di browser (viewport 1000x700):
+    - sebelum : titik tengah kartu 280px (70px di atas tengah)
+    - sesudah : titik tengah kartu 350px
+                titik tengah layar  350px  -> pas
+    - tinggi halaman 700px = tinggi layar, tidak ada scroll
+      tambahan di desktop.
+
+  Catatan: build dijalankan tanpa DATABASE_URL, jadi endpoint
+  database mengembalikan 503 saat dijalankan — itu kondisi
+  environment lokal, tidak berkaitan dengan perubahan ini.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/login/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-24-login-kartu-tengah-layar.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau ingin kartu sedikit lebih ke bawah/ke atas dari titik
+  tengah (misalnya karena ada logo di atas), tambahkan padding
+  vertikal di wadah kartu, bukan mengubah min-h-nya:
+    md:pt-6   -> kartu bergeser turun sedikit
+    md:pb-6   -> kartu bergeser naik sedikit
+- Untuk layar desktop yang sangat pendek, kartu akan otomatis
+  memanjangkan halaman (scroll) alih-alih terpotong.
+
+================================================================

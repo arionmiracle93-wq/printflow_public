@@ -1,0 +1,62 @@
+PRINT FLOW - POP UP KATALOG DI INVOICE TERTUTUP OTOMATIS SETELAH PILIH PRODUK
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Di editor invoice, tombol "Katalog" membuka pop up daftar produk.
+Sebelumnya, setelah klik sebuah produk, pop up tetap terbuka (supaya
+bisa memilih beberapa produk) dan harus ditutup manual dengan tombol
+"Selesai". Sekarang begitu sebuah produk diklik, produk langsung masuk
+ke kertas invoice dan pop up otomatis tertutup.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+src/components/CatalogPicker.tsx
+- Klik kartu produk: produk dimasukkan ke baris invoice, lalu pop up
+  ditutup.
+- Tulisan hijau "... ditambahkan ke invoice" dan penghitung waktunya
+  dihapus (tidak ada gunanya lagi karena pop up langsung menutup).
+- Tombol bawah "Selesai" diganti "Tutup" untuk menutup tanpa memilih.
+- Cara memasukkan produk ke baris invoice tidak berubah (baris kosong
+  terakhir diisi dulu, kalau tidak ada dibuat baris baru).
+
+Catatan: untuk memasukkan beberapa produk lewat pop up, sekarang
+tombol Katalog dibuka lagi untuk tiap produk. Saran produk saat mengetik
+nama di baris invoice tidak terpengaruh.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogPicker.tsx
+- public/dokumentasi-update/2026-10-21-katalog-invoice-tutup-otomatis.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+Hanya pemeriksaan kode (alur pemilihan produk dan pembersihan import
+yang tidak terpakai). Build penuh belum dijalankan di sini; mohon uji:
+buka invoice, klik Katalog, klik sebuah produk -> baris terisi dan
+pop up menutup.
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+Kalau kadang perlu memilih banyak produk sekaligus, bisa ditambah
+kotak centang "Tutup otomatis" yang diingat di perangkat. Kabari saja.

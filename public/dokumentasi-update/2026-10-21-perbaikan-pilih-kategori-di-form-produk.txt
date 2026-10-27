@@ -1,0 +1,68 @@
+PRINT FLOW - PERBAIKAN: KATEGORI PRODUK BISA DIGANTI LAGI DI FORM "UBAH PRODUK"
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Saat mengubah produk yang sudah jadi, kolom Kategori sudah terisi
+(mis. OUTDOOR) dan daftar kategori lain yang sudah dibuat tidak muncul,
+sehingga kategori tidak bisa diganti dengan mudah. Sekarang semua
+kategori selalu tampil sebagai pilihan (chip) tepat di bawah kolom
+Kategori. Tinggal klik untuk memilih.
+
+===============================================================
+PENYEBAB
+===============================================================
+
+Kolom Kategori memakai daftar saran bawaan browser (datalist). Daftar
+itu hanya menampilkan kategori yang COCOK dengan teks yang sudah ada di
+kolom. Karena kolom sudah berisi "OUTDOOR", yang tampil hanya
+"OUTDOOR"; kategori lain tersembunyi sampai teksnya dihapus manual.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+src/components/CatalogManager.tsx (form Produk Baru / Ubah Produk)
+- Di bawah kolom Kategori ada deretan chip: "Tanpa kategori" dan semua
+  kategori yang ada. Klik chip = kategori terisi; chip aktif berwarna
+  teal. Bila kategorinya banyak, deretan bisa digulir.
+- Kolom Kategori tetap bisa diketik untuk MEMBUAT kategori baru.
+- Daftar saran bawaan browser dihapus (penyebab masalah).
+
+Tidak mengubah cara simpan, data, API, atau halaman lain.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogManager.tsx
+- public/dokumentasi-update/2026-10-21-perbaikan-pilih-kategori-di-form-produk.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+Pengecekan tipe seluruh proyek (tsc --noEmit) dan lint: lolos. Tampilan
+belum dicoba di perangkat; mohon cek: Katalog > klik produk > di bawah
+kolom Kategori muncul semua kategori > klik salah satu > Simpan >
+kategori produk berubah.
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+Bila ingin, kategori yang dipilih bisa juga ditampilkan sebagai pilihan
+saat mengimpor CSV atau saat memilih beberapa produk sekaligus (mode
+Pilih) untuk dipindah kategori dalam satu kali klik.

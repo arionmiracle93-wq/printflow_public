@@ -1,0 +1,77 @@
+PRINT FLOW - PENCARIAN KATALOG HANYA COCOK DARI AWAL KATA
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Mengetik "ro" di pencarian Katalog sebelumnya ikut memunculkan
+"X banner albatros", karena "ro" ada di tengah kata "albatROs".
+Sekarang pencarian hanya cocok dari AWAL kata, jadi "ro" menemukan
+"Roll Banner" tetapi tidak lagi "albatros".
+
+===============================================================
+PENYEBAB
+===============================================================
+
+Pencocokan memakai "mengandung potongan teks" di mana saja dalam nama,
+keterangan, dan kategori produk. Potongan 2 huruf seperti "ro" sangat
+umum di tengah kata (albatROs, kaROsel, dst), jadi hasilnya terlalu
+longgar.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+src/lib/product-search.ts
+- Kata kunci harus cocok di awal sebuah kata produk (awal teks atau
+  setelah spasi).
+- Pengecualian ukuran: huruf "x" yang diapit angka dianggap pemisah,
+  jadi mencari "90" tetap menemukan "60x90", dan "40" menemukan "40x60".
+- Yang tetap sama: huruf besar/kecil diabaikan, kata boleh diacak
+  ("banner outdoor" = "outdoor banner"), "60x90" = "60 x 90" = "60X90",
+  sinonim (banner = spanduk, dst), minimal 2 huruf.
+
+Contoh:
+  "ro"      -> Roll Banner            (X banner albatros tidak muncul)
+  "banner"  -> Roll Banner, X banner, Spanduk (lewat sinonim)
+  "90"      -> semua produk ukuran 60x90
+  "alba"    -> X banner albatros
+
+Catatan: mencari dari TENGAH kata tidak lagi bisa, mis. "ros" tidak
+menemukan "albatros". Kalau ingin mengembalikan sifat lama, ganti
+kataDimulaiDi() di file itu dengan haystack.includes(form).
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/lib/product-search.ts
+- public/dokumentasi-update/2026-10-21-pencarian-dari-awal-kata.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+Fungsi pencarian dijalankan langsung dengan 28 kasus (ro, roll, alba,
+banner/spanduk, 90, 60x90, 60 x 90, 60×90, a3, copy/fc, kata diacak,
+dll): semua lulus. Build penuh belum dijalankan di sini; mohon cek
+Katalog setelah deploy.
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+Saran produk saat mengetik nama di baris invoice (matchCatalog) punya
+aturan sendiri dan masih menampilkan "mengandung" di urutan terakhir.
+Kalau mau disamakan dengan Katalog, kabari saja.

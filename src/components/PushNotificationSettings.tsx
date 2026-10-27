@@ -46,32 +46,43 @@ export function PushNotificationSettings() {
 
   async function refreshStatus() {
     const can = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    setSupported(can);
     if (!can) {
       // APK WebView: tidak ada Web Push, tapi status OneSignal tetap dibaca dari server.
       try {
-        setStatus((await fetch("/api/push", { cache: "no-store" }).then((r) => r.json())) as PushStatus);
+        const api = (await fetch("/api/push", { cache: "no-store" }).then((r) => r.json())) as PushStatus;
+        setSupported(false);
+        setStatus(api);
       } catch {
+        setSupported(false);
         /* status tidak terbaca, bagian OneSignal menampilkan petunjuk umum */
       }
       return;
     }
-    setPermission(Notification.permission);
     try {
       const [api, registration, workerText] = await Promise.all([
         fetch("/api/push", { cache: "no-store" }).then((r) => r.json()) as Promise<PushStatus & { ok?: boolean }>,
         navigator.serviceWorker.ready,
         fetch(`/sw.js?check=${Date.now()}`, { cache: "no-store" }).then((response) => response.text()),
       ]);
+      setSupported(true);
+      setPermission(Notification.permission);
       setStatus(api);
       setWorkerVersion(workerText.match(/print-flow-shell-v\d+/)?.[0] ?? "versi tidak ditemukan");
       setSubscribed(Boolean(await registration.pushManager.getSubscription()));
     } catch {
+      setSupported(true);
       setMessage("Tidak dapat memeriksa status notifikasi.");
     }
   }
 
-  useEffect(() => { void refreshStatus(); }, []);
+  useEffect(() => {
+    // Ditunda satu tick agar pemeriksaan status (yang memperbarui beberapa
+    // state sekaligus) tidak memicu cascading render saat hydration.
+    const timer = window.setTimeout(() => {
+      void refreshStatus();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function generateKeys() {
     setBusy(true); setMessage(null); setGenerated(null);

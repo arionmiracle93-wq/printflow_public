@@ -17,6 +17,13 @@ type User = {
   createdAt: string;
 };
 
+type UsersResponse = { ok?: boolean; data?: User[] };
+
+async function fetchUsers(): Promise<UsersResponse> {
+  const res = await fetch("/api/users");
+  return (await res.json()) as UsersResponse;
+}
+
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [form, setForm] = useState({ name: "", username: "", password: "", role: "karyawan" });
@@ -26,11 +33,19 @@ export function UserManagement() {
   const [showForm, setShowForm] = useState(false);
 
   async function load() {
-    const res = await fetch("/api/users");
-    const json = (await res.json()) as { ok?: boolean; data?: User[] };
+    const json = await fetchUsers();
     if (json.ok && json.data) setUsers(json.data);
   }
-  useEffect(() => { void load(); }, []);
+
+  useEffect(() => {
+    let active = true;
+    void fetchUsers().then((json) => {
+      if (active && json.ok && json.data) setUsers(json.data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function create(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError(null);

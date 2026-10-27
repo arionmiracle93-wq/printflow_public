@@ -1,0 +1,106 @@
+================================================================
+RIWAYAT INVOICE — FILTER STATUS DI SIDEBAR JADI DROPDOWN
+Tanggal : 25-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Di sidebar halaman Riwayat Dokumen (layar lebar), tujuh tombol
+filter status (Semua, Belum bayar, Sebagian, Lewat tempo, Lunas,
+Draft, Batal) sekarang berupa dropdown yang TERTUTUP secara
+bawaan. Yang terlihat hanya satu tombol: "FILTER STATUS" + nama
+filter yang sedang dipakai + panah. Klik tombol itu, daftar
+membuka di bawahnya. Klik lagi (atau tekan Esc) untuk menutup.
+
+HP dan tablet TIDAK berubah: filter tetap lewat tombol "Status"
+di bottom navigation, dan daftar di dalam menu geser itu tetap
+tampil penuh (menu gesernya sendiri sudah tertutup sampai disentuh,
+jadi tidak perlu lapis tutup-buka lagi).
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) BARU: src/components/StatusFilterDropdown.tsx
+   - Komponen client kecil: tombol dropdown + wadah daftar.
+   - Tertutup bawaan. Tombol memakai gaya .ppi-side-btn yang sama
+     dengan menu sidebar lain (ikon kotak outline di kiri).
+   - Tombol menampilkan ikon + nama filter aktif. Kalau filter
+     selain "Semua" yang aktif, tombolnya berwarna aksen teal,
+     jadi orang tahu ada filter yang menyaring daftar walau
+     dropdown tertutup.
+   - Panah memutar saat terbuka. aria-expanded / aria-controls
+     terpasang untuk pembaca layar. Esc menutup daftar.
+   - Daftar membuka DI TEMPAT (mendorong menu di bawahnya turun),
+     bukan panel melayang. Alasan: sidebar punya wadah gulir
+     sendiri (overflow-y-auto), jadi panel melayang akan
+     terpotong di tepi sidebar.
+   - Di bawah lg (HP/tablet): tombol dropdown disembunyikan dan
+     daftar selalu tampil, persis seperti sebelumnya.
+
+B) src/app/invoice/page.tsx (berkas ini berakhiran baris CRLF,
+   tetap dipertahankan)
+   - import StatusFilterDropdown.
+   - const activeFilter = filter yang tampil di tombol. Kalau
+     filter di URL tidak ada di daftar mode itu (mis. ?f=lunas
+     di mode Penawaran), jatuh ke "Semua".
+   - Blok filter status dibungkus <StatusFilterDropdown
+     key={filter} ...>. key={filter} membuat dropdown menutup
+     lagi setelah orang memilih filter (halaman memuat ulang).
+   - Tiap pilihan tetap <SideButton href=...> (link biasa),
+     halaman daftar invoice tetap server component. Tautan
+     filter, tombol "Export CSV" (HP/tablet), dan filter tanggal
+     tidak berubah.
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit : lolos, tanpa error.
+
+  Uji di browser (Chromium, Next dev) memakai halaman uji
+  sementara yang menyusun InvoiceSidebar + dropdown persis
+  seperti di page.tsx (halaman /invoice asli butuh login +
+  database, jadi tidak dijalankan langsung; halaman uji TIDAK
+  ikut di zip):
+    Desktop 1440x900:
+      - awal tertutup (aria-expanded=false), "Belum bayar" tidak
+        terlihat
+      - klik -> terbuka, 7 pilihan terlihat
+      - Esc -> tertutup lagi
+      - pilih "Lunas" -> URL ?f=lunas, dropdown tertutup lagi,
+        tombol berlabel "Lunas" dan berwarna aksen
+    HP 390px & tablet 820px:
+      - tombol dropdown tidak terlihat
+      - menu geser "Status": 7 pilihan tampil penuh
+
+  Belum diuji di sini: tampilan di tema gelap dan di data asli.
+  Mohon dicek sekali setelah deploy.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/invoice/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  src/components/StatusFilterDropdown.tsx
+  public/dokumentasi-update/2026-10-25-riwayat-invoice-filter-status-dropdown.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada. Tidak ada query atau permintaan tambahan.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau ingin dropdown terbuka secara bawaan saat sebuah filter
+  aktif, ubah useState(false) di StatusFilterDropdown.tsx jadi
+  useState(active).
+- Kalau ingin panel melayang (bukan membuka di tempat), sidebar
+  perlu overflow-visible dulu; hati-hati karena sidebar sengaja
+  punya gulir sendiri.
+
+================================================================

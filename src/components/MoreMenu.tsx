@@ -10,6 +10,7 @@ import {
   Factory,
   FileClock,
   History,
+  LayoutGrid,
   MoreVertical,
   ReceiptText,
   Settings,
@@ -24,24 +25,59 @@ type MoreItem = {
   label: string;
   description: string;
   icon: LucideIcon;
+  /** Hanya tampil di layar kecil; disembunyikan dari md ke atas. */
   mobileOnly?: boolean;
-  /** Hanya tampil bila akun punya izin Invoice. */
-  needsInvoice?: boolean;
-  /** Sudah ada di bar atas layar lebar (xl), jadi disembunyikan di sana. */
-  hideOnXl?: boolean;
   roles: UserRole[];
+  /** Butuh izin modul Invoice. */
+  requiresInvoice?: boolean;
+  /** Tautan modul, bukan menu utilitas. */
+  isModule?: boolean;
 };
 
 const ITEMS: MoreItem[] = [
+  /* "Beranda" ada untuk semua akun dan semua ukuran layar, karena
+     "/" adalah home screen pemilih modul dan tidak ada satu pun tombol
+     lain yang mengarah ke sana.
+
+     Di layar lebar, jalur ke home sudah ada lewat logo di header. Di
+     layar kecil logo itu DIHIDDENkan (lihat layout.tsx: kelasnya
+     "hidden md:flex"), jadi tanpa entri ini pengguna HP tidak punya
+     jalan kembali ke beranda sama sekali. Itu sebabnya entri ini tidak
+     diberi mobileOnly - dipakai semua orang, bukan cuma di HP. */
+  {
+    href: "/",
+    label: "Beranda",
+    description: "Pilih modul Produksi atau Invoice",
+    icon: LayoutGrid,
+    roles: ["owner", "karyawan"],
+  },
+  /* Dua modul juga tersedia di menu ini KHUSUS layar kecil. Di layar
+     lebar, switcher modul di header sudah cukup. Di HP switcher itu
+     tidak dipaksakan masuk header karena ruangnya sempit - akibatnya
+     dulu dari Invoice ke Produksi harus mampir ke Beranda dulu.
+     Sekarang perpindahan modul tetap satu menu, tanpa kehilangan
+     tombol Beranda yang sudah ada. */
+  {
+    href: "/produksi",
+    label: "Produksi",
+    description: "Dashboard, antrean, dan tahapan pekerjaan",
+    icon: Factory,
+    mobileOnly: true,
+    roles: ["owner", "karyawan"],
+    isModule: true,
+  },
   {
     href: "/invoice",
     label: "Invoice",
-    description: "Tagihan, DP, cicilan, dan pelunasan",
+    description: "Tagihan, pembayaran, dan laporan",
     icon: ReceiptText,
-    hideOnXl: true,
-    needsInvoice: true,
+    mobileOnly: true,
     roles: ["owner", "karyawan"],
+    requiresInvoice: true,
+    isModule: true,
   },
+  /* Shift sudah pindah ke bottom navigation mobile (MainNav), jadi
+     tidak lagi didaftarkan di menu tiga titik. */
   {
     href: "/mitra",
     label: "Produksi Mitra",
@@ -57,10 +93,20 @@ const ITEMS: MoreItem[] = [
     icon: BellRing,
     roles: ["owner", "karyawan"],
   },
+  /* Satu pintu untuk SEMUA pengaturan - diminta owner. Dulu ada dua
+     tempat: /pengaturan di sini (logo, push, backup, kondisi sistem)
+     dan /invoice/pengaturan di dalam modul invoice (kop, rekening,
+     aturan dokumen). Dua pintu untuk satu urusan membuat orang
+     menyimpannya di tempat berbeda, jadi saat mau mengubah rekening
+     selalu ada satu yang tidak ditemukan.
+
+     Sekarang /pengaturan menjadi satu-satunya pintu, dengan tab
+     "Produksi" dan "Invoice" di dalamnya. Keterangan di bawah
+     menyebutkan keduanya supaya jelas apa saja yang ada di dalam. */
   {
     href: "/pengaturan",
     label: "Pengaturan",
-    description: "Logo, notifikasi, backup & sistem",
+    description: "Produksi & Invoice: identitas, rekening, sistem",
     icon: Settings,
     roles: ["owner"],
   },
@@ -101,17 +147,36 @@ const ITEMS: MoreItem[] = [
   },
 ];
 
-export function MoreMenu({ role, canInvoice = false }: { role: UserRole; canInvoice?: boolean }) {
+type MoreMenuProps = { role: UserRole; bisaInvoice: boolean };
+
+export function MoreMenu({ role, bisaInvoice }: MoreMenuProps) {
   const pathname = usePathname();
+  return (
+    <MoreMenuForPath
+      key={pathname}
+      pathname={pathname}
+      role={role}
+      bisaInvoice={bisaInvoice}
+    />
+  );
+}
+
+function MoreMenuForPath({
+  role,
+  bisaInvoice,
+  pathname,
+}: MoreMenuProps & { pathname: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const allowedItems = ITEMS.filter((item) => item.roles.includes(role) && (!item.needsInvoice || canInvoice));
-  const isUtilityPage = allowedItems.some(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+  const allowedItems = ITEMS.filter(
+    (item) => item.roles.includes(role) && (!item.requiresInvoice || bisaInvoice),
   );
-
-  useEffect(() => setOpen(false), [pathname]);
+  // Tautan modul tidak membuat tombol "Menu lainnya" menyala seperti
+  // halaman utilitas. Di modul, penanda aktif sudah ada di switcher.
+  const isUtilityPage = allowedItems.some(
+    (item) => !item.isModule && (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -143,8 +208,8 @@ export function MoreMenu({ role, canInvoice = false }: { role: UserRole; canInvo
         title="Menu lainnya"
         className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all md:h-9 md:w-9 ${
           open || isUtilityPage
-            ? "border-amber-300 bg-amber-400 text-[color:var(--pf-ink)] shadow-[0_5px_16px_rgba(251,191,36,.24)]"
-            : "border-white/15 bg-white/10 text-white hover:bg-white/20"
+            ? "border-amber-300 bg-amber-400 text-black shadow-[0_5px_16px_rgba(251,191,36,.24)]"
+            : "border-[color:var(--pf-line)] bg-[color:var(--pf-surface-2)] text-[color:var(--pf-ink)] hover:border-[color:var(--pf-accent-line)] hover:bg-[color:var(--pf-accent-soft)]"
         }`}
       >
         <MoreVertical size={20} strokeWidth={2.4} />
@@ -165,11 +230,11 @@ export function MoreMenu({ role, canInvoice = false }: { role: UserRole; canInvo
                 <Link
                   key={item.href}
                   href={item.href}
-                  prefetch
+                  prefetch={false}
                   onMouseEnter={() => router.prefetch(item.href)}
                   onTouchStart={() => router.prefetch(item.href)}
                   onClick={() => setOpen(false)}
-                  className={`${item.mobileOnly ? "flex md:hidden" : item.hideOnXl ? "flex xl:hidden" : "flex"} items-center gap-3 rounded-xl px-2.5 py-2.5 transition ${
+                  className={`${item.mobileOnly ? "flex md:hidden" : "flex"} items-center gap-3 rounded-xl px-2.5 py-2.5 transition ${
                     active ? "bg-teal-50 text-teal-800" : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
@@ -181,7 +246,9 @@ export function MoreMenu({ role, canInvoice = false }: { role: UserRole; canInvo
                     <Icon size={17} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-semibold">{item.label}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold">{item.label}</span>
+                    </span>
                     <span className="mt-0.5 block text-[10px] leading-tight text-slate-400">
                       {item.description}
                     </span>

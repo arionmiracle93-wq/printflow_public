@@ -1,0 +1,98 @@
+PRINT FLOW - SAPAAN LEBIH KECIL & KOTAK ISIAN HP LEBIH RAPI
+Tanggal: 2026-10-20
+Status: selesai di kode; pengujian perangkat dilakukan pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Dua penyesuaian atas masukan pemilik:
+
+1. Sapaan besar di Beranda "/" ("Selamat ..., Nama Usaha") diperkecil
+   lagi. Semula sudah pernah diperkecil, tapi masih terasa mendominasi
+   layar di desktop. Sekarang ukurannya turun sekali lagi.
+
+2. Kotak isian data di modul Invoice versi HP (baris item: Nama
+   produk, Keterangan, M2 bahan, Qty, Harga satuan) dikecilkan
+   Tingginya, supaya kotaknya tidak terlihat "kosong" dan seimbang
+   dengan teks yang ada di dalamnya.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. Ukuran sapaan Beranda
+   - src/app/home.css, kelas .pf-home__hello
+   - Ukuran lama: clamp(1.8rem, 5.6vw, 2.7rem)
+   - Ukuran baru: clamp(1.5rem, 4.4vw, 2.05rem)
+   - Di desktop (>= 900px) sapaan turun dari 43px jadi 33px.
+     Di HP (360px) turun dari 29px jadi 24px.
+   - Yang berubah HANYA ukuran huruf. Isi, warna, weight, dan
+     jarak ke subjudul tetap sama.
+   - Berkas yang sebelumnya mencatat ukuran lama ikut diperbarui
+     (komentar di .pf-home__hello).
+
+2. Tinggi kotak isian di HP (modul Invoice)
+   - src/app/globals.css, blok @media screen and (max-width: 639px)
+   - .ppi-paper.ppi-editing .ppi-row .ppi-in
+       lama: padding 8px 10px; min-height 48px
+       baru: padding 6px 10px; min-height 40px
+   - .ppi-paper.ppi-editing .ppi-in (isian meta: No. Invoice, Tanggal,
+     Jatuh Tempo)
+       lama: min-height 48px
+       baru: min-height 40px
+   - Semua aturan ini berada DI DALAM blok media query max-width 639px,
+     jadi tampilan desktop sama sekali tidak tersentuh.
+
+   - Angka hasil ukur (lebar layar 390px):
+       tinggi kotak : 48px  -> 40px
+       jarak teks ke tepi atas : 13.5px -> 9.5px
+       jarak teks ke tepi bawah : 13.5px -> 9.5px
+     Teks 15px dengan line-height 21px kini duduk di tengah kotak
+     dengan jarak sama rata di atas dan bawah.
+
+3. Yang TIDAK berubah
+   - Ukuran huruf isian tetap 15px. Ini sengaja: browser di HP
+     MEMBESARKAN tampilan halaman saat fokus masuk ke isian yang
+     lebih kecil dari 16px, dan setelah halaman membesar begitu,
+     halaman tidak kembali sendiri saat isian berikutnya diketuk.
+   - Label 11px, radius 10px, warna, dan garis isian tetap sama.
+   - Semua endpoint, database, dan alur data tidak tersentuh.
+     Ini perubahan tampilan saja.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Beranda "/" di desktop.
+   - Sapaan "Selamat ..., Nama Usaha" jelas lebih kecil dari
+     sebelumnya, dan tidak lagi lebih besar dari isi kartu modul.
+   - Subjudul "Kelola produksi & bisnis printmu dengan mudah"
+     tetap terbaca dan jaraknya terasa seimbang.
+   - Tidak ada teks yang terpotong atau menabrak kartu di bawahnya.
+
+2. Beranda "/" di HP.
+   - Sapaan tetap terbaca jelas, sekarang tidak memenuhi layar.
+   - Dua kartu modul (Produksi, Invoice) tidak berubah.
+
+3. Modul Invoice di HP (<= 639px), halaman dokumen baru.
+   - Buka satu item. Kotak "Nama produk", "Keterangan", "M2 bahan",
+     "Qty", dan "Harga satuan" sekarang lebih pendek.
+   - Teks di dalam kotak terlihat menempel, tidak melayang jauh di
+     tengah kotak yang terlalu dalam.
+   - Kotak masih enak diketuk jarinya (tinggi 40px).
+
+4. Modul Invoice di desktop (>= 640px).
+   - Semua isian tetap seperti sebelumnya (tinggi, garis, posisi).
+     Halaman baca dan hasil cetak juga tidak berubah.
+
+5. Isian meta (No. Invoice, Tanggal, Jatuh Tempo) di HP.
+   - Tingginya ikut 40px supaya semua kotak isian di HP sama tinggi.
+   - Tanggal dan nomor tetap bisa diketuk dan diketik seperti biasa.
+
+===============================================================
+CATATAN
+===============================================================
+
+- typecheck dan build lolos.
+- Pengujian perangkat fisik (HP sungguhan) tetap dilakukan pemilik.

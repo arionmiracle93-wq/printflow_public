@@ -1,0 +1,130 @@
+================================================================
+BRANDING PRATINJAU WHATSAPP HALAMAN LACAK
+Tanggal : 25-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Kartu pratinjau WhatsApp untuk tautan /lacak/... sekarang memakai
+nama usaha dan logo usaha dari halaman Pengaturan, bukan lagi
+"Print Flow" dan ikon printer aplikasi.
+
+Halaman lacak yang dibuka pelanggan juga tidak lagi menampilkan
+header/footer aplikasi. Di bagian atas halaman hanya ada logo dan
+nama usaha (kalau sudah diisi).
+
+Catatan penting: alamat domain di kartu WhatsApp tidak bisa
+disembunyikan lewat kode. Kalau ingin domain perusahaan, pasang
+custom domain (mis. lacak.namaperusahaan.com).
+
+
+ALASAN PERUBAHAN
+----------------------------------------------------------------
+Pratinjau WhatsApp sebelumnya mewarisi metadata layout utama:
+  - judul  : "Lacak Pesanan - Print Flow"
+  - deskripsi: "Aplikasi percetakan dengan dua modul setara..."
+  - ikon   : ikon printer aplikasi
+
+Pelanggan seharusnya melihat identitas usaha, bukan identitas
+aplikasi internal. Nama dan logo usaha sudah tersedia di database,
+jadi bisa dipakai otomatis tanpa upload ulang.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/lacak/[token]/page.tsx
+   - Metadata statis diganti generateMetadata().
+   - Judul  : "Lacak Pesanan - <Nama Usaha>" (atau "Lacak Pesanan"
+     kalau nama usaha masih placeholder).
+   - Deskripsi: "Pantau progres dan foto pesanan Anda di <Nama Usaha>."
+   - openGraph title/description/siteName memakai nama usaha.
+   - icons halaman lacak memakai /api/branding/logo (logo yang sudah
+     diupload owner), bukan /api/pwa/icon (ikon printer).
+   - appleWebApp.title ikut nama usaha.
+   - Ditambahkan blok logo + nama usaha di atas kartu status.
+   - Kalau logo belum ada, ikon bawaan tetap dipakai sebagai fallback.
+
+B) src/app/layout.tsx
+   - Halaman /lacak tidak lagi menampilkan header aplikasi
+     ("Print Flow") dan footer aplikasi.
+   - Padding main khusus halaman lacak, karena tidak ada header tetap.
+
+C) src/lib/whatsapp-share.ts
+   - Helper baru buildTrackingUrl(origin, token).
+   - Tautan diberi ?v=2. Tujuannya agar WhatsApp menganggap ini URL
+     baru dan mengambil metadata terbaru, bukan pratinjau lama dari
+     cache. Angka versi dinaikkan lagi kalau branding diubah lagi.
+
+D) src/components/ShareWhatsApp.tsx
+   - Tautan tampil, tombol kirim WA, dan salin pesan memakai
+     buildTrackingUrl yang sama.
+
+E) src/app/api/orders/[id]/share/route.ts
+   - Respons API ikut memakai URL berversi.
+
+F) Tidak ada perubahan database.
+
+
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+----------------------------------------------------------------
+1. Deploy kode ini.
+
+2. Buka Pengaturan, lalu isi Nama Usaha dan upload Logo Usaha.
+   - Logo disarankan persegi 512x512 px, PNG/JPG/WEBP, maksimal 2 MB.
+   - Kalau logo belum diupload, pratinjau masih memakai ikon printer.
+
+3. Kirim tautan lacak BARU ke pelanggan.
+   - Pesan lama yang sudah terlanjur dikirim bisa tetap menampilkan
+     pratinjau lama karena cache WhatsApp. Tautan baru memakai ?v=2.
+
+4. Kalau ingin domain aplikasi tidak terlihat:
+   - Pasang custom domain di Vercel, lalu buka aplikasi lewat domain
+     tersebut. Tautan yang dibuat dari domain itu akan memakai domain
+     perusahaan.
+   - Tanpa custom domain, kartu WhatsApp tetap menampilkan
+     printflow-orcin.vercel.app.
+
+
+FILE YANG DIUPLOAD KE GITHUB
+----------------------------------------------------------------
+- src/app/lacak/[token]/page.tsx
+- src/app/layout.tsx
+- src/lib/whatsapp-share.ts
+- src/components/ShareWhatsApp.tsx
+- src/app/api/orders/[id]/share/route.ts
+- public/dokumentasi-update/2026-10-25-branding-preview-whatsapp.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit   : lolos
+  npm run lint       : lolos (tanpa peringatan)
+  npm run build      : Compiled successfully (Next.js 16.2.6)
+
+  Uji halaman produksi lokal tanpa DATABASE_URL:
+  - /lacak/test-token?v=2 dapat dibuka.
+  - Header/footer aplikasi tidak muncul.
+  - Teks "Print Flow" tidak muncul di halaman.
+  - Judul/deskripsi fallback tidak menyebut aplikasi.
+  - Karena database belum tersedia, kombinasi nama usaha + logo
+    belum bisa diuji langsung. Kode sudah memakai data yang sama
+    dengan halaman Pengaturan.
+
+
+DAMPAK KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada biaya tambahan. Logo tetap dilayani route yang sudah ada
+dan memakai cache/ETag yang sudah ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Setelah deploy, cek pratinjau dengan mengirim tautan baru ke
+  WhatsApp (bukan tautan lama).
+- Kalau logo berubah dan pratinjau WhatsApp masih lama, naikkan
+  TRACKING_LINK_VERSION di src/lib/whatsapp-share.ts.
+- Pertimbangkan custom domain agar domain Vercel tidak tampil di
+  kartu WhatsApp.

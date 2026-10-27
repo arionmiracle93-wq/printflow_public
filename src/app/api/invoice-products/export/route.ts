@@ -5,7 +5,7 @@ import { toCsv } from "@/lib/invoice-reports";
 
 export const dynamic = "force-dynamic";
 
-/** Export CSV katalog (tanpa gambar, sama dengan app lama): Nama Produk;Keterangan;Harga;Harga Bertingkat;Kategori. */
+/** Export CSV katalog (tanpa gambar): Nama Produk;Keterangan;Harga;Harga Bertingkat;Kategori;Induk. Kolom Induk memakai path: "*" = induk utama, "*NOTA" = sub-induk, "NOTA > NCR A5" = varian di sub-induk. */
 export async function GET() {
   try {
     const auth = await requireInvoiceAccess();

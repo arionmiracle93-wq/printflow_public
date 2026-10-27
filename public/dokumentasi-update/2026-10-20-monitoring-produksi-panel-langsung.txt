@@ -1,0 +1,109 @@
+PRINT FLOW - MONITORING PRODUKSI: PANEL LANGSUNG TERBUKA
+Tanggal: 2026-10-20
+Status: selesai di kode; pengujian perangkat dilakukan pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Bagian "Monitoring Produksi" di lembar invoice (modul Invoice, HP)
+sekarang tidak pakai dropdown lagi.
+
+Perubahan:
+- Chevron (panah) di baris "Monitoring Produksi" dihilangkan.
+- Baris itu tidak bisa diketuk untuk membuka isi.
+- Yang membuka panel isian (Deadline produksi + Jam deadline) adalah
+  SAKELAR di baris itu sendiri: nyalakan -> panel langsung terbuka,
+  matikan -> panel langsung tertutup. Tidak ada langkah tambahan.
+- Panel isian TIDAK TERSEMBUNYI. Baru tampil setelah monitoring
+  diaktifkan.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/components/EditRow.tsx
+   - EditRow gaining prop baru: `open`.
+   - Kalau `open` diisi, status buka/tutup baris datang dari luar:
+       * chevron tidak dirender,
+       * kepala baris dirender sebagai elemen statis (bukan tombol),
+         jadi baris itu bukan dropdown lagi,
+       * isi baris mengikuti nilai `open` tersebut.
+   - EditRow yang dipakai baris lain (Tanggal, Item, Customer,
+     Metode Pembayaran, Rincian Biaya, Syarat, dst.) TIDAK berubah -
+     prop `open` tidak diisi di sana, jadi perilakunya persis seperti
+     sebelumnya.
+
+2. src/components/InvoicePaperEditor.tsx
+   - Baris "Monitoring Produksi" memakai `open={needsProduction}`.
+   - Sakelar di dalam panel disembunyikan di HP
+     (class "hidden lg:inline-block"). Di HP sakelar pada baris utama
+     ada tepat di atas panel, jadi dua sakelar untuk hal yang sama
+     hanya membingungkan. Di desktop kepala baris tetap disembunyikan
+     (aturan .ppi-editrow-head), jadi di desktop sakelar di dalam
+     panel yang dipakai - perilakunya di sana tidak berubah.
+
+3. Yang TIDAK berubah
+   - Desktop (>= 1024px) bentuknya tetap sama seperti sebelumnya:
+     panel monitoring selalu terlihat, sakelarnya ada di dalam panel,
+     dan kolom deadline + jam muncul kalau monitoring dinyalakan.
+   - Isian, validasi, dan alur data tidak tersentuh sama sekali.
+     Sakelar ini tetap menyimpan needsProduction, prodDate, prodTime
+     seperti sebelumnya; tidak ada perubahan endpoint atau database.
+   - Baris yang sudah terkunci ke pekerjaan produksi (tertaut) tetap
+     menampilkan keterangannya, tidak ada panel monitoring.
+
+===============================================================
+CATATAN TEKNIS
+===============================================================
+
+- Kepala baris "Monitoring Produksi" sekarang <div>, bukan <button>.
+  Adanya sakelar di dalam kepala baris sebelumnya berarti ada
+  <button> di dalam <button> - tidak valid di HTML. Sekarang tidak
+  ada lagi.
+- Pemanggilan toggle dari state `needsProduction` membuat panel
+  mengikuti sakelar secara otomatis, tanpa efek samping: state
+  deadline/jam tidak di-reset saat sakelar dimatikan, jadi kalau
+  dinyalakan lagi isiannya masih ada.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Modul Invoice di HP, dokumen baru.
+   - Buka bagian "Monitoring Produksi".
+   - Pastikan TIDAK ada chevron di baris itu.
+   - Pastikan panel isian (Deadline produksi, Jam deadline) TIDAK
+     tampil saat masih OFF.
+   - Nyalakan sakelarnya: panel harus langsung terbuka tanpa perlu
+     mengetuk apa pun lagi.
+   - Isi tanggal dan jam deadline.
+   - Matikan sakelarnya: panel harus langsung tertutup.
+   - Nyalakan lagi: isian tanggal dan jam masih ada (tidak ke-reset).
+
+2. Modul Invoice di desktop (>= 1024px).
+   - Bentuknya harus sama persis dengan sebelumnya: panel monitoring
+     terlihat, ada sakelar di dalamnya, dan kolom deadline + jam
+     muncul hanya saat monitoring dinyalakan.
+   - Tidak ada baris "Monitoring Produksi" dengan chevron yang
+     menggantung.
+
+3. Invoice yang sudah terbit.
+   - Tidak ada monitor produksi yang bisa diubah; barisnya
+     menampilkan keterangan keterkaitan seperti sebelumnya.
+
+4. Invoice yang sudah tertaut ke pekerjaan produksi.
+   - Tidak ada sakelar monitoring sama sekali; hanya catatan
+     keterkaitan.
+
+5. Pemakaian normal invoice.
+   - Publish invoice dengan monitoring ON: tanggal deadline produksi
+     tetap tersimpan dan pekerjaan tetap masuk antrian produksi
+     seperti sebelumnya.
+
+===============================================================
+CATATAN
+===============================================================
+
+- typecheck, lint, dan build lolos.
+- Pengujian perangkat fisik (HP sungguhan) tetap dilakukan pemilik.

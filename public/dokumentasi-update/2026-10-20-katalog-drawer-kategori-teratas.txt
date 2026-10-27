@@ -1,0 +1,37 @@
+PRINT FLOW - MENU TIGA GARIS KATALOG: KATEGORI DI URUTAN TERATAS
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Di menu tiga garis halaman Katalog (HP/tablet), baris "Kategori"
+sekarang berada di urutan paling atas, karena itu yang paling sering
+dipakai. Urutan baru:
+
+  1. Kategori (dropdown)
+  2. Import CSV          (Owner)
+  3. Contoh CSV          (Owner)
+  4. Muat produk contoh  (Owner)
+  5. Export CSV
+
+Cara kerja tidak berubah: memilih kategori langsung menyaring katalog
+dan menutup menu; "Kelola kategori" tetap di dalam dropdown (Owner).
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+- src/components/CatalogDrawerMenu.tsx : hanya urutan blok.
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Buka Katalog di HP, ketuk Menu di bottom navigation.
+2. "Kategori" ada paling atas; ketuk -> daftar kategori terbuka.
+3. Pilih kategori -> katalog tersaring dan menu menutup.

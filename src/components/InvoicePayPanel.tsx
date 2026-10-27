@@ -73,7 +73,9 @@ export function InvoicePayPanel({
             ) : (
               <p className="text-lg font-extrabold text-teal-900">{formatRupiah(info.payable)}</p>
             )}
-            {isQris ? <p className="text-[10.5px] text-slate-500">Nominal sudah tertera pada QRIS di atas.</p> : null}
+            {/* Hanya kalau QR-nya benar-benar tampil. Kalau QRIS belum diisi/valid, kalimat ini
+                menyesatkan karena di kertas tidak ada QR untuk dipindai. */}
+            {isQris && qrisOk ? <p className="text-[10.5px] text-slate-500">Nominal sudah tertera pada QRIS di atas.</p> : null}
           </div>
         ) : null}
       </div>
@@ -87,7 +89,7 @@ export function InvoicePayPanel({
           <CircleHelp size={13} className="shrink-0" />
           <span>
             Nomor rekening belum diisi
-            {isOwner ? <> — <Link href="/invoice/pengaturan" className="underline">klik untuk mengatur</Link></> : "."}
+            {isOwner ? <> — <Link href="/pengaturan/invoice" className="underline">klik untuk mengatur</Link></> : "."}
           </span>
         </p>
       ) : null}
@@ -97,7 +99,7 @@ export function InvoicePayPanel({
           <CircleHelp size={13} className="shrink-0" />
           <span>
             Kode QRIS belum diisi
-            {isOwner ? <> — <Link href="/invoice/pengaturan" className="underline">klik untuk mengatur</Link></> : "."}
+            {isOwner ? <> — <Link href="/pengaturan/invoice" className="underline">klik untuk mengatur</Link></> : "."}
           </span>
         </p>
       ) : null}

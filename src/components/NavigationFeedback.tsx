@@ -10,6 +10,12 @@ import { useEffect, useRef, useState } from "react";
  */
 export function NavigationFeedback() {
   const pathname = usePathname();
+  // Key membuat state progress otomatis bersih setiap pindah halaman,
+  // tanpa setState di dalam effect.
+  return <NavigationFeedbackForPath key={pathname} pathname={pathname} />;
+}
+
+function NavigationFeedbackForPath({ pathname }: { pathname: string }) {
   const [loading, setLoading] = useState(false);
   const showRef = useRef<number | null>(null);
   const safetyRef = useRef<number | null>(null);
@@ -22,11 +28,6 @@ export function NavigationFeedback() {
   }
 
   useEffect(() => {
-    clearTimers();
-    setLoading(false);
-  }, [pathname]);
-
-  useEffect(() => {
     const start = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const target = event.target as Element | null;
@@ -37,7 +38,7 @@ export function NavigationFeedback() {
         url.origin !== window.location.origin ||
         url.href === window.location.href ||
         url.hash ||
-        url.pathname === window.location.pathname
+        url.pathname === pathname
       ) return;
 
       clearTimers();
@@ -53,7 +54,7 @@ export function NavigationFeedback() {
       document.removeEventListener("click", start, true);
       clearTimers();
     };
-  }, []);
+  }, [pathname]);
 
   if (!loading) return null;
   return (

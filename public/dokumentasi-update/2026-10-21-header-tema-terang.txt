@@ -1,0 +1,138 @@
+PRINT FLOW - HEADER MENGIKUTI TEMA TERANG
+Tanggal: 2026-10-21
+Status: selesai di kode; sudah dicek warna & kontras di browser
+
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Sebelumnya header aplikasi selalu navy/dark teal, termasuk saat
+tema terang. Sekarang:
+
+- Tema terang : header putih lembut (putih 95%), garis tepi teal
+                muda, bayangan tipis. Teks dan tombol memakai warna
+                gelap supaya terbaca.
+- Tema gelap  : header tetap navy seperti sebelumnya, teks terang.
+
+Tinggi header, ukuran tombol, susunan menu, dan fungsi tombol tidak
+diubah. Yang berubah hanya warna permukaan, teks, ikon, dan border.
+
+
+===============================================================
+PERUBAHAN WARNA
+===============================================================
+
+A. Header (src/app/layout.tsx)
+   - Terang : bg-white/95, border teal-100/80, bayangan lembut.
+   - Gelap  : bg #07384f/95, border white/10 (dipertahankan).
+   - Nama "Print Flow": navy tua di tema terang, putih di tema gelap.
+   - Subjudul "Produksi & Invoice": --pf-ink-2, jadi abu-biru tua
+     yang tetap terbaca di kedua tema.
+
+B. Logo (src/components/AppLogo.tsx)
+   - Border bingkai logo: teal muda di tema terang, tetap terang di
+     tema gelap. Bayangan sedikit lebih ringan di tema terang.
+
+C. Menu Produksi (src/components/MainNav.tsx)
+   - Menu aktif: teal-700 + teks putih di tema terang; teal-500 +
+     teks putih di tema gelap.
+   - Menu tidak aktif: --pf-ink-2; hover memakai aksen teal lembut
+     (--pf-accent-soft) dan teks --pf-ink.
+
+D. Switcher Produksi | Invoice (src/components/ModuleSwitcher.tsx)
+   - Wadah: --pf-surface-3 dengan garis --pf-line, bukan kaca putih
+     transparan yang hanya cocok di header gelap.
+   - Menu tidak aktif: --pf-ink-2, hover aksen teal lembut.
+   - Produksi aktif: teal-700 + putih di tema terang; teal-500 di
+     tema gelap.
+   - Invoice aktif tetap amber-400 + teks HITAM.
+
+E. Tombol akun / perusahaan (src/components/UserMenu.tsx)
+   - Tertutup : --pf-surface-2, border --pf-line, teks --pf-ink.
+   - Terbuka  : latar --pf-accent-soft, border --pf-accent-line.
+   - Nama perusahaan mengikuti warna teks tombol; jabatan memakai
+     --pf-ink-2. Ikon panah memakai --pf-ink-3.
+   - Huruf awal perusahaan di kotak amber tetap hitam.
+
+F. Tombol cari, tema, dan menu tiga titik
+   (QuickSearch.tsx, ThemeToggle.tsx, MoreMenu.tsx)
+   - Tampilan tertutup: --pf-surface-2, border --pf-line, ikon
+     --pf-ink; hover border aksen dan latar aksen lembut.
+   - Menu tiga titik saat terbuka / halaman utilitas tetap amber,
+     teks dan ikonnya sekarang hitam (bukan warna tema yang bisa
+     berubah terang di mode gelap).
+
+
+===============================================================
+FILE YANG BERUBAH
+===============================================================
+
+- src/app/layout.tsx
+- src/components/AppLogo.tsx
+- src/components/MainNav.tsx
+- src/components/ModuleSwitcher.tsx
+- src/components/MoreMenu.tsx
+- src/components/QuickSearch.tsx
+- src/components/ThemeToggle.tsx
+- src/components/UserMenu.tsx
+- public/dokumentasi-update/2026-10-21-header-tema-terang.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+Kalau browser masih menampilkan header lama, lakukan hard refresh
+(Ctrl+F5) atau buka ulang aplikasi.
+
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/app/layout.tsx
+- src/components/AppLogo.tsx
+- src/components/MainNav.tsx
+- src/components/ModuleSwitcher.tsx
+- src/components/MoreMenu.tsx
+- src/components/QuickSearch.tsx
+- src/components/ThemeToggle.tsx
+- src/components/UserMenu.tsx
+- public/dokumentasi-update/2026-10-21-header-tema-terang.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- npx eslint untuk 8 file yang berubah: lolos.
+- Uji browser (viewport 1000 x 700), tema terang:
+  * header terukur putih 95%, teks utama rgb(15, 41, 55);
+  * judul logo rgb(10, 47, 64), subjudul rgb(55, 90, 103);
+  * wadah switcher rgb(238, 243, 244);
+  * teks menu tidak aktif rgb(55, 90, 103);
+  * Invoice hitam di atas amber;
+  * tombol akun/cari/tema/menu berlatar rgb(247, 250, 250)
+    dengan teks rgb(10, 47, 64).
+- Uji browser tema gelap:
+  * header tetap navy 95%, teks rgb(231, 241, 239);
+  * tombol memakai lapisan putih 5% dengan teks terang;
+  * Invoice tetap hitam di atas amber.
+- Halaman uji sementara sudah dihapus; tidak tertinggal di repo.
+
+
+===============================================================
+CATATAN TEKNIS
+===============================================================
+
+- Warna memakai token --pf-* yang sudah ada, supaya tema terang dan
+  gelap tidak perlu dua daftar warna yang berbeda untuk setiap
+  komponen.
+- Header tetap memakai bg-white/95 di tema terang dan
+  dark:bg-[#07384f]/95 di tema gelap.
+- Tidak ada perubahan database, API, atau data.

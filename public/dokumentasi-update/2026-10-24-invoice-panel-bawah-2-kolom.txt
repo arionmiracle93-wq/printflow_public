@@ -1,0 +1,81 @@
+================================================================
+INVOICE — PANEL DI BAWAH KERTAS JADI 2 KOLOM
+Tanggal : 24-10-2026
+Status  : selesai
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Area di bawah kertas invoice (Pembayaran, Tambah item ke
+produksi, Produksi, dan Riwayat aktivitas) sekarang disusun
+2 kolom di layar lebar, jadi tidak lagi melar selebar kertas.
+Pembayaran di kolom kiri; tiga kartu pendamping bertumpuk di
+kolom kanan. Di HP tetap 1 kolom seperti sebelumnya.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/invoice/[id]/page.tsx
+   - Semua panel SETELAH kertas invoice dibungkus satu grid:
+       grid gap-4 md:grid-cols-2 md:items-start
+     (class grid-cols hanya dipasang kalau dokumen ini punya
+     panel pembayaran).
+   - Kolom kiri : InvoicePaymentPanel (id="pembayaran" tetap,
+                  jadi tautan/scroll ke #pembayaran masih jalan).
+   - Kolom kanan: ProductionCreator (kalau ada), ProductionAdder,
+                  keterangan produksi draft, kartu Produksi, dan
+                  Riwayat aktivitas — bertumpuk dengan jarak 16px.
+   - md:items-start dipakai supaya tiap kartu tingginya wajar,
+     tidak ikut ditarik memenuhi tinggi kolom sebelahnya.
+   - Kertas invoice di atasnya TIDAK diubah; tetap selebar
+     konten seperti sebelumnya.
+   - Kalau dokumen tidak punya pembayaran (mis. penawaran),
+     grid tetap 1 kolom penuh — tidak ada kolom kosong.
+
+B) Tidak ada perubahan pada:
+   - src/components/InvoicePaymentPanel.tsx (isi/rumus pembayaran)
+   - src/components/ProductionAdder.tsx
+   - src/components/ProductionCreator.tsx
+   - data, API, atau perhitungan tagihan
+
+
+HASIL PENGUJIAN
+----------------------------------------------------------------
+  npx tsc --noEmit   : lolos
+  npx next build     : Compiled successfully (Next.js 16.2.6)
+
+  Layout:
+    - < 768px : 1 kolom (sama seperti sebelumnya)
+    - >= 768px: 2 kolom, pembayaran kiri + panel lain kanan
+    - Tanpa panel pembayaran: panel lain memakai lebar penuh
+
+  Catatan: halaman invoice memerlukan DATABASE_URL untuk dibuka
+  di lokal, jadi pengecekan visual dilakukan dari struktur
+  layout/responsif + build produksi, bukan dari data asli.
+
+
+DAFTAR FILE YANG HARUS DIUPLOAD
+----------------------------------------------------------------
+DIUBAH:
+  src/app/invoice/[id]/page.tsx
+  public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+BARU:
+  public/dokumentasi-update/2026-10-24-invoice-panel-bawah-2-kolom.txt
+
+
+DAMPAK KE KUOTA / BIAYA
+----------------------------------------------------------------
+Tidak ada.
+
+
+SARAN LANGKAH BERIKUTNYA
+----------------------------------------------------------------
+- Kalau ingin kolom pembayaran lebih lebar daripada kolom kanan,
+  ganti `md:grid-cols-2` menjadi:
+    md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]
+- Kalau ingin 2 kolom baru aktif di layar yang lebih besar,
+  ganti prefix `md:` menjadi `lg:` (aktif mulai 1024px).
+
+================================================================

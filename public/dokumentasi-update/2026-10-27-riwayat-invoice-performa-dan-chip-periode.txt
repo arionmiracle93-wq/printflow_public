@@ -1,0 +1,85 @@
+================================================================
+RIWAYAT INVOICE — LANDING LEBIH RINGAN + CHIP PERIODE
+Tanggal : 27-10-2026
+Status  : selesai (sudah lolos tsc + eslint)
+================================================================
+
+
+JAWABAN SINGKAT
+----------------------------------------------------------------
+Tujuan utama: halaman /invoice jangan memuat data terlalu banyak
+saat dibuka. Penyebab sebenarnya bukan jumlah baris (daftar sudah
+dibatasi 41 baris), tapi dua hal di database:
+  1. Tidak ada index untuk urutan daftar (created_at, id), jadi
+     database menyapu SELURUH tabel lalu menyortir.
+  2. listInvoices menjalankan query agregat seluruh tabel di setiap
+     kunjungan, hanya untuk teks "N belum dibayar" yang angkanya
+     juga bukan angka periode yang tampil.
+Keduanya diperbaiki. Tampilan daftar saat dibuka TIDAK berubah
+(bawaan tetap "Semua").
+
+Tambahan: chip periode di atas daftar, seperti halaman Laporan.
+
+
+APA YANG BERUBAH
+----------------------------------------------------------------
+A) src/app/api/setup/route.ts
+   - Index baru: invoices_created_at_id_idx (created_at DESC, id DESC).
+   - WAJIB jalankan /api/setup SEKALI setelah deploy.
+
+B) src/app/invoice/page.tsx
+   - listInvoices dipanggil dengan tanpaStats: true. Teks
+     "N belum dibayar" dihapus (kartu ringkasan tetap dari
+     getARSummary, tidak berubah).
+   - Chip periode: Hari Ini · Kemarin · 7 Hari · Bulan Ini · Semua
+     · Pilih tanggal. Memilih chip selalu kembali ke halaman 1 dan
+     tetap membawa jenis dokumen + filter status.
+   - Banner lama "Menampilkan dokumen bulan ... / Ubah / Lihat
+     semua" diganti chip.
+   - Kalau periode non-"Semua" kosong: "Belum ada invoice hari ini"
+     (dst.) + tombol cepat Kemarin / 7 Hari / Semua.
+   - Export CSV: ikut periode DAN status yang tampil, tombolnya
+     menyebut periode ("Export CSV · Hari ini"). Dimatikan saat
+     daftar kosong (dulu mengarah ke halaman JSON 404 mentah).
+     Tidak tampil di filter Draft / Batal.
+
+C) src/lib/invoice-period.ts
+   - resolveListPeriod / listPeriodQuery / LIST_PRESETS.
+   - DEFAULT_LIST_PERIOD = "semua". Ganti ke "hari" atau "7h" kalau
+     nanti mau daftar mendarat lebih pendek. Aturannya sudah siap:
+     bawaan hanya berlaku saat filter status = Semua; status lain
+     otomatis semua tanggal; periode pilihan sendiri selalu dipakai.
+   - Aturan bawaan SENGAJA ada di halaman, bukan di listInvoices,
+     jadi pencarian header tetap mencari semua tanggal.
+
+D) src/lib/invoice-queries.ts & src/lib/invoice-reports.ts
+   - Filter bulan: to_char(issue_date,'YYYY-MM') diganti rentang
+     tanggal biasa (>= awal bulan, <= akhir bulan) supaya index
+     invoices_issue_date_idx terpakai. Dua tempat (daftar + export).
+   - getExportRows menerima payStatus (belum/sebagian/lunas/lewat).
+
+E) src/app/api/invoices/export/route.ts
+   - Param ?status=. Nama file satu hari jadi
+     rekap_invoice_2026-10-27.csv (bukan ..._sampai_...).
+
+F) BARU: src/components/PeriodeTanggalChip.tsx
+   - Chip "Pilih tanggal" dengan panel dua tanggal (DateFieldID).
+     Satu tanggal terisi = satu hari; terbalik ditukar otomatis.
+
+
+CATATAN
+----------------------------------------------------------------
+- Periode memakai tanggal dokumen (issue_date), sama seperti
+  Laporan. Invoice yang tanggalnya diedit mundur tidak muncul di
+  "Hari Ini".
+- Link lama ?bulan= dan ?dari=&sampai= (panel cari, bookmark) tetap
+  jalan.
+- Efek index terasa makin besar seiring jumlah invoice bertambah.
+  Kalau tabelnya masih kecil, selisihnya mungkin tidak kelihatan.
+
+
+CARA PASANG
+----------------------------------------------------------------
+Seperti biasa: ekstrak zip, di GitHub Add file > Upload files, seret
+folder "src" dan "public". Setelah deploy selesai, buka /api/setup
+sekali untuk membuat index baru.

@@ -43,6 +43,9 @@ const DDL = [
       quantity integer NOT NULL DEFAULT 1,
       unit text NOT NULL DEFAULT 'pcs',
       position integer NOT NULL DEFAULT 0,
+      due_date date,
+      due_time text,
+      source_line_key text,
       created_at timestamptz NOT NULL DEFAULT now()
    )`,
   `CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items (order_id)`,
@@ -152,6 +155,12 @@ const DDL = [
   // produk terhubung = mengerjakan seluruh pekerjaan, persis seperti dulu.
   `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS status text`,
   `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS outsource_job_id integer REFERENCES outsource_jobs(id) ON DELETE SET NULL`,
+  // Deadline khusus item (disalin dari invoice). null = ikut deadline pekerjaan.
+  `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS due_date date`,
+  `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS due_time text`,
+  // Kunci baris invoice asal, supaya item baru tidak tersalin dua kali.
+  `ALTER TABLE order_items ADD COLUMN IF NOT EXISTS source_line_key text`,
+  `CREATE INDEX IF NOT EXISTS order_items_source_line_idx ON order_items (source_line_key)`,
   `CREATE INDEX IF NOT EXISTS order_items_outsource_idx ON order_items (outsource_job_id)`,
   // Lepas batas "1 mitra per pekerjaan". Nama constraint berbeda tergantung
   // tabel dibuat lewat /api/setup (…_key) atau drizzle-kit push (…_unique).
@@ -284,11 +293,15 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS invoices_status_idx ON invoices (status)`,
   `CREATE INDEX IF NOT EXISTS invoices_pay_status_idx ON invoices (pay_status)`,
   `CREATE INDEX IF NOT EXISTS invoices_issue_date_idx ON invoices (issue_date)`,
+  // Daftar riwayat: ORDER BY created_at DESC, id DESC LIMIT 41. Tanpa index ini database
+  // menyapu seluruh tabel lalu menyortir; dengan index ini cukup membaca 41 baris teratas.
+  `CREATE INDEX IF NOT EXISTS invoices_created_at_id_idx ON invoices (created_at DESC, id DESC)`,
   `CREATE INDEX IF NOT EXISTS invoices_customer_idx ON invoices (customer_id)`,
   `CREATE TABLE IF NOT EXISTS invoice_items (
       id serial PRIMARY KEY,
       invoice_id integer NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
       position integer NOT NULL DEFAULT 0,
+      line_key text,
       product_name text NOT NULL,
       description text,
       unit text NOT NULL DEFAULT 'pcs',
@@ -297,7 +310,10 @@ const DDL = [
       base_price integer NOT NULL DEFAULT 0,
       tiers jsonb,
       unit_price numeric(14,2) NOT NULL DEFAULT 0,
-      amount integer NOT NULL DEFAULT 0
+      amount integer NOT NULL DEFAULT 0,
+      needs_production boolean NOT NULL DEFAULT true,
+      prod_due_date date,
+      prod_due_time text
    )`,
   `CREATE INDEX IF NOT EXISTS invoice_items_invoice_idx ON invoice_items (invoice_id)`,
   `CREATE TABLE IF NOT EXISTS payments (
@@ -338,6 +354,18 @@ const DDL = [
   `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS needs_production boolean NOT NULL DEFAULT false`,
   `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS prod_due_date date`,
   `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS prod_due_time text`,
+  // --- Monitoring produksi PER ITEM ---
+  // Item lama otomatis dianggap perlu produksi (true) supaya invoice lama
+  // yang monitoringnya menyala tetap membuat pekerjaan seperti sebelumnya.
+  `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS needs_production boolean NOT NULL DEFAULT true`,
+  `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS prod_due_date date`,
+  `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS prod_due_time text`,
+  `ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS line_key text`,
+  `UPDATE invoice_items SET line_key = 'inv-' || id WHERE line_key IS NULL`,
+  `CREATE INDEX IF NOT EXISTS invoice_items_line_key_idx ON invoice_items (invoice_id, line_key)`,
+  // Pencocokan NAMA produk di baris invoice (riwayat harga produk fleksibel lewat dialog
+  // "Set Harga"): pakai ekspresi yang SAMA dengan query pencocokannya supaya index terpakai.
+  `CREATE INDEX IF NOT EXISTS invoice_items_name_lower_idx ON invoice_items (lower(btrim(product_name)))`,
   // --- MODUL INVOICE tahap E: katalog produk ---
   `CREATE TABLE IF NOT EXISTS invoice_products (
       id serial PRIMARY KEY,
@@ -351,9 +379,35 @@ const DDL = [
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
    )`,
-  // Satu nama produk hanya sekali (tidak peduli huruf besar/kecil & spasi pinggir).
-  `CREATE UNIQUE INDEX IF NOT EXISTS invoice_products_name_key ON invoice_products ((lower(btrim(name))))`,
+  // Nama produk BOLEH sama asal keterangannya beda (mis. "Roll Banner" - "60x90" dan
+  // "Roll Banner" - "80x200"). Yang ditolak hanya kombinasi nama + keterangan yang
+  // sama persis (tidak peduli huruf besar/kecil & spasi pinggir; keterangan kosong = kosong).
+  // Indeks lama (hanya nama) dibuang dulu; aman dijalankan berulang.
+  `DROP INDEX IF EXISTS invoice_products_name_key`,
   `CREATE INDEX IF NOT EXISTS invoice_products_category_idx ON invoice_products (category)`,
+  // --- Katalog: VARIAN (sub-kategori). Induk "Print HVS" -> varian "A4 Warna", "A4 Hitam Putih", dst. ---
+  // Varian adalah produk biasa yang punya parent_id (harga + tier-nya milik sendiri). Induk adalah
+  // baris dengan is_group = true tanpa harga: parent_id kosong = induk utama, parent_id terisi = sub-induk.
+  // Kedalaman maksimal dua tingkat; aturan itu dijaga di invoice-catalog.ts.
+  // Kunci asing ON DELETE SET NULL = pengaman: kalau induk terhapus, varian tidak ikut hilang diam-diam.
+  `ALTER TABLE invoice_products ADD COLUMN IF NOT EXISTS parent_id integer REFERENCES invoice_products(id) ON DELETE SET NULL`,
+  `ALTER TABLE invoice_products ADD COLUMN IF NOT EXISTS is_group boolean NOT NULL DEFAULT false`,
+  `CREATE INDEX IF NOT EXISTS invoice_products_parent_idx ON invoice_products (parent_id)`,
+  // Aturan unik sekarang PER INDUK: nama + keterangan harus beda di dalam satu induk (atau di tingkat
+  // atas bila tanpa induk). Jadi "A4 Warna" boleh ada di bawah "Print HVS" DAN di bawah "Fotocopy".
+  // Indeks baru lebih longgar dari yang lama, jadi pasti bisa dibuat di data yang sudah ada.
+  // Indeks lama (nama + keterangan se-katalog) dibuang SETELAH yang baru jadi. Aman dijalankan berulang.
+  `CREATE UNIQUE INDEX IF NOT EXISTS invoice_products_scope_name_desc_key ON invoice_products ((coalesce(parent_id, 0)), (lower(btrim(name))), (lower(btrim(coalesce(description, '')))))`,
+  `DROP INDEX IF EXISTS invoice_products_name_desc_key`,
+  // --- Harga FLEKSIBEL: jasa tanpa harga baku (mis. jasa desain), operator menetapkan harga saat menjual.
+  // "tetap" (bawaan semua baris lama) = harga katalog seperti biasa. price_presets = pilihan cepat dari owner.
+  `ALTER TABLE invoice_products ADD COLUMN IF NOT EXISTS pricing_mode text NOT NULL DEFAULT 'tetap'`,
+  `ALTER TABLE invoice_products ADD COLUMN IF NOT EXISTS price_presets jsonb`,
+  // Teks pengganti gambar: kartu tanpa gambar menampilkan teks besar (SVG murni, tanpa file baru).
+  `ALTER TABLE invoice_products ADD COLUMN IF NOT EXISTS image_text text`,
+  // --- Pembayaran: nomor referensi transaksi (RRN / ID transaksi QRIS atau bank). Opsional. ---
+  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS reference text`,
+  `CREATE INDEX IF NOT EXISTS payments_reference_idx ON payments (lower(reference)) WHERE reference IS NOT NULL`,
 ];
 
 type SeedCustomer = [string, string | null, string | null, string, string];

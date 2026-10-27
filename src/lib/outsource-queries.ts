@@ -174,12 +174,6 @@ export async function saveOutsource(input: {
   return { ...row, previousStatus: current?.status ?? null };
 }
 
-/** Kompatibilitas kode lama: perbarui mitra pertama, atau buat kalau belum ada. */
-export async function upsertOutsource(input: Omit<Parameters<typeof saveOutsource>[0], "id">) {
-  const first = await getOutsource(input.orderId);
-  return saveOutsource({ ...input, id: first?.id ?? null });
-}
-
 /** Hapus satu mitra (jobId), atau semua mitra pekerjaan ini kalau jobId kosong. */
 export async function deleteOutsource(orderId: number, jobId?: number) {
   const where = jobId

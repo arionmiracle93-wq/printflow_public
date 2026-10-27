@@ -3,7 +3,7 @@
 import { Check, Copy, MessageCircle, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { buildWhatsAppMessage, openWhatsAppShare, WHATSAPP_SHARE_WINDOW, type ShareOrder } from "@/lib/whatsapp-share";
+import { buildTrackingUrl, buildWhatsAppMessage, openWhatsAppShare, WHATSAPP_SHARE_WINDOW, type ShareOrder } from "@/lib/whatsapp-share";
 
 export function ShareWhatsApp({ order, initialToken }: { order: ShareOrder; initialToken: string | null }) {
   const router = useRouter();
@@ -14,7 +14,7 @@ export function ShareWhatsApp({ order, initialToken }: { order: ShareOrder; init
 
   function trackingUrl(): string {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return token ? `${origin}/lacak/${token}` : "";
+    return token ? buildTrackingUrl(origin, token) : "";
   }
 
   async function prepare(): Promise<string | null> {
@@ -45,7 +45,7 @@ export function ShareWhatsApp({ order, initialToken }: { order: ShareOrder; init
     const popup = window.open("", WHATSAPP_SHARE_WINDOW);
     const t = await prepare();
     if (!t) return; // jangan tutup popup - bisa jadi itu tab WA yang sudah lama dipakai user
-    const url = `${window.location.origin}/lacak/${t}`;
+    const url = buildTrackingUrl(window.location.origin, t);
     const outcome = await openWhatsAppShare(order, url, popup);
     if (outcome === "copied") {
       setError("Pop-up diblokir browser. Pesannya sudah disalin - buka WhatsApp lalu tempel (paste) manual.");
@@ -57,7 +57,7 @@ export function ShareWhatsApp({ order, initialToken }: { order: ShareOrder; init
   async function copy() {
     const t = await prepare();
     if (!t) return;
-    const url = `${window.location.origin}/lacak/${t}`;
+    const url = buildTrackingUrl(window.location.origin, t);
     try {
       await navigator.clipboard.writeText(buildWhatsAppMessage(order, url));
       setCopied(true);

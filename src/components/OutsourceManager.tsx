@@ -1,6 +1,7 @@
 "use client";
 
 import { TimeFieldID } from "@/components/TimeFieldID";
+import { DateFieldID } from "@/components/DateFieldID";
 import { Select } from "@/components/Select";
 import { AlertTriangle, Building2, CheckCircle2, ExternalLink, Pencil, Phone, Plus, Save, Trash2, Truck, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -427,7 +428,10 @@ function JobForm({
           <label className="label" htmlFor={`mitra-tgl-${job?.id ?? "baru"}`}>
             Target barang kembali
           </label>
-          <input id={`mitra-tgl-${job?.id ?? "baru"}`} type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} className="input" />
+          {/* Dulu <input type="date"> polos: popup-nya milik browser,
+              tidak bisa diberi gaya. Sekarang DateFieldID - format
+              dd/mm/yyyy dan kalender milik aplikasi. */}
+          <DateFieldID id={`mitra-tgl-${job?.id ?? "baru"}`} value={expectedDate} onChange={setExpectedDate} className="input" />
         </div>
         <div>
           <label className="label" htmlFor={`mitra-jam-${job?.id ?? "baru"}`}>

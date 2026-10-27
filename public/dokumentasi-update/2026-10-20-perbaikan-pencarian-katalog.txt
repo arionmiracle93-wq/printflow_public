@@ -1,0 +1,126 @@
+PRINT FLOW - PENCARIAN KATALOG PRODUK DIPERBAIKI
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Pencarian di jendela "Katalog Produk" pada editor invoice sekarang
+menemukan produk walaupun kata yang diketik berbeda dari nama produk.
+Contoh: mengetik "banner" menemukan produk yang diberi nama
+"Spanduk Outdoor". Pencarian juga tidak lagi gagal karena huruf
+besar/kecil, tanda baca, spasi ganda, atau karakter tak terlihat.
+
+Dua penyebab lain yang ikut diperbaiki:
+- Daftar katalog di editor bisa basi setelah owner menambah produk baru;
+  sekarang daftar dimuat ulang setiap jendela Katalog dibuka.
+- Di mode development, service worker lama bisa membuat halaman tidak
+  ter-hydrate: teks yang diketik muncul di kolom, tetapi React tidak
+  menjalankan filter. Service worker sekarang dimatikan di development.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/lib/product-search.ts (baru)
+   - Normalisasi teks: huruf besar/kecil, aksen, tanda baca, spasi
+     ganda, dan karakter zero-width.
+   - Pencocokan per kata (urutan kata bebas).
+   - Sinonim istilah percetakan: banner = spanduk, stiker = sticker,
+     fotocopy = copy/fc, laminasi = laminating, print = cetak, dll.
+
+2. src/components/CatalogParts.tsx
+   - filterProducts memakai pencarian baru + cache teks per produk.
+   - Filter kategori tetap sama seperti sebelumnya.
+
+3. src/components/CatalogPicker.tsx
+   - Tombol X untuk menghapus pencarian.
+   - Pesan kosong menampilkan kata yang dicari dan tombol
+     "Tampilkan semua produk" (mereset pencarian + kategori).
+
+4. src/components/CatalogManager.tsx
+   - Tombol X yang sama di kolom pencarian halaman Katalog.
+
+5. src/lib/invoice-catalog-match.ts
+   - Saran produk saat mengetik juga memakai pencarian toleran;
+     mengetik "banner" bisa menyarankan "Spanduk Outdoor".
+
+6. src/components/InvoicePaperEditor.tsx
+   - Katalog dimuat ulang saat tombol Katalog dibuka, supaya produk
+     yang baru ditambahkan langsung terlihat.
+
+7. src/components/ServiceWorkerRegister.tsx
+   - Di development: service worker lama di-unregister, cache
+     "print-flow-*" dibersihkan, dan service worker baru tidak
+     didaftarkan.
+   - Di production tidak berubah: PWA, offline, dan push tetap aktif.
+
+8. Pembersihan
+   - Route sementara /preview-katalog dan komponen PreviewCatalog
+     dihapus.
+   - /preview-katalog dihapus dari daftar halaman publik di proxy.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Buka editor invoice, lalu tombol Katalog.
+2. Ketik "banner". Produk "Spanduk Outdoor" harus muncul.
+3. Ketik "spanduk", "BANNER", "outdoor spanduk", "sticker", "fc",
+   dan "laminating" - hasil harus sesuai.
+4. Ketik kata yang tidak ada ("zzz") - muncul pesan dan tombol
+   "Tampilkan semua produk".
+5. Klik tombol X - semua produk tampil lagi.
+6. Tambah produk baru di halaman Katalog (tab lain), lalu buka jendela
+   Katalog di editor - produk baru harus sudah ada.
+
+Jika setelah deploy masih tampak data lama di HP/PWA: tutup aplikasi,
+buka ulang, atau hapus cache situs sekali. Service worker production
+tetap aktif; perubahan ini hanya mematikan SW saat development.
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- Uji filter (Node): "banner" -> Spanduk Outdoor + X-Banner;
+  "spanduk", "BANNER", "outdoor spanduk", "sticker", "fc",
+  "laminating" sesuai.
+- npm run lint: lolos.
+- npm run typecheck: lolos.
+- npm run build: lolos.
+- Uji visual browser: tombol X dan tombol "Tampilkan semua produk"
+  berfungsi; input "banner" menampilkan produk Spanduk.
+
+===============================================================
+FILE YANG DIUPLOAD
+===============================================================
+
+- src/lib/product-search.ts
+- src/components/CatalogParts.tsx
+- src/components/CatalogPicker.tsx
+- src/components/CatalogManager.tsx
+- src/lib/invoice-catalog-match.ts
+- src/components/InvoicePaperEditor.tsx
+- src/components/ServiceWorkerRegister.tsx
+- src/proxy.ts
+- public/dokumentasi-update/2026-10-20-perbaikan-pencarian-katalog.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+- (hapus) src/app/preview-katalog/page.tsx
+- (hapus) src/components/PreviewCatalog.tsx
+- (hapus) _uji_filter.js
+
+===============================================================
+DAMPAK KUOTA / BIAYA
+===============================================================
+
+Tidak ada perubahan database, API, atau biaya. Tidak ada query baru
+selain pemuatan ulang katalog yang sama saat jendela Katalog dibuka.
+
+===============================================================
+SARAN BERIKUTNYA
+===============================================================
+
+- Uji di HP pemilik setelah deploy.
+- Jika ada istilah toko lain yang sering dipakai bergantian, tambahkan
+  pasangannya di daftar SINONIM pada src/lib/product-search.ts.

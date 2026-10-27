@@ -4,8 +4,8 @@ import { Select } from "@/components/Select";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Building2, CheckCircle2, Layers, Loader2, X } from "lucide-react";
-import { STATUSES, statusMeta } from "@/lib/domain";
+import { ArrowRight, Building2, CalendarDays, CheckCircle2, Layers, Loader2, X } from "lucide-react";
+import { STATUSES, formatDateID, statusMeta } from "@/lib/domain";
 import { effectiveItemStatus, nextItemStatus } from "@/lib/item-status";
 import { OUTSOURCE_STATUSES, outsourceStatusMeta } from "@/lib/outsource";
 import type { OrderItem } from "@/lib/order-items";
@@ -299,6 +299,13 @@ export function QuickStatusPopup({
                             {item.quantity} {item.unit}
                             {job ? ` · di ${job.partnerName}` : ""}
                           </p>
+                          {item.dueDate ? (
+                            <p className="mt-0.5 flex items-center gap-1 truncate text-[10.5px] text-[color:var(--pf-ink-3)]">
+                              <CalendarDays size={10} className="shrink-0" />
+                              Deadline item {formatDateID(item.dueDate)}
+                              {item.dueTime ? ` · ${item.dueTime}` : ""}
+                            </p>
+                          ) : null}
                         </div>
                         <span className={`chip shrink-0 ${meta.badge}`}>{meta.short}</span>
                       </div>

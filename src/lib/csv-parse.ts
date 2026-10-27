@@ -39,9 +39,13 @@ export function parseCsv(text: string, delim: string): string[][] {
   return rows;
 }
 
-export type CatalogCsvItem = { name: string; description: string; price: string; tiers: string; category: string };
+/** parent (kolom Induk): path induk; "*" = induk utama, "*NOTA" = sub-induk, "NOTA > NCR A5" = varian di sub-induk; kosong = produk biasa. */
+export type CatalogCsvItem = { name: string; description: string; price: string; tiers: string; category: string; parent: string };
 
-/** Baca CSV katalog: kolom Nama Produk; Keterangan; Harga; Harga Bertingkat; Kategori. Baris judul dilewati. */
+/**
+ * Baca CSV katalog: kolom Nama Produk; Keterangan; Harga; Harga Bertingkat; Kategori; Induk (kolom Induk boleh tidak ada,
+ * jadi CSV lama tetap terbaca). Baris judul dilewati.
+ */
 export function catalogFromCsv(raw: string): CatalogCsvItem[] {
   const text = String(raw).replace(/^\uFEFF/, "");
   const rows = parseCsv(text, detectCsvDelimiter(text));
@@ -56,6 +60,7 @@ export function catalogFromCsv(raw: string): CatalogCsvItem[] {
       price: String(r[2] || "").trim(),
       tiers: String(r[3] || "").trim(),
       category: String(r[4] || "").trim(),
+      parent: String(r[5] || "").trim(),
     });
   });
   return items;

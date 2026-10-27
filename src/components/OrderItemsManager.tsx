@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { AlertCircle, Building2, Check, CheckCircle2, ChevronDown, Loader2, Package, Pencil, Save } from "lucide-react";
+import { AlertCircle, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, Loader2, Package, Pencil, Save } from "lucide-react";
 import { OrderItemsEditor } from "@/components/OrderItemsEditor";
-import { STATUSES, formatNumber, statusMeta } from "@/lib/domain";
+import { STATUSES, formatDateID, formatNumber, statusMeta } from "@/lib/domain";
 import { effectiveItemStatus, isSplit } from "@/lib/item-status";
 import { type OrderItem, type OrderItemInput } from "@/lib/order-items";
 
@@ -23,12 +23,17 @@ export function OrderItemsManager({
   orderId,
   initialItems,
   orderStatus,
+  orderDueDate,
+  orderDueTime,
   jobs = [],
 }: {
   orderId: number;
   initialItems: OrderItem[];
   /** Status pekerjaan saat ini, dipakai untuk produk yang "ikut pekerjaan". */
   orderStatus: string;
+  /** Deadline pekerjaan, cadangan untuk item yang tidak punya deadline sendiri. */
+  orderDueDate?: string;
+  orderDueTime?: string;
   /** Mitra pekerjaan ini, untuk menampilkan produk dikerjakan di mana. */
   jobs?: { id: number; partnerName: string }[];
 }) {
@@ -140,9 +145,9 @@ export function OrderItemsManager({
           <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             {saved.length} produk, total {formatNumber(totalUnit)} unit.{" "}
             {!multi
-              ? "Satu status dan satu deadline."
+              ? "Deadline item mengikuti invoice."
               : split
-                ? "Status pekerjaan otomatis mengikuti produk paling lambat."
+                ? "Status pekerjaan otomatis mengikuti produk paling lambat; deadline tiap produk tampil di bawah."
                 : "Semua produk masih ikut status pekerjaan. Ubah tahap salah satu produk untuk memisahkannya."}
           </p>
         </div>
@@ -173,6 +178,7 @@ export function OrderItemsManager({
                       <div className="min-w-0 flex-1">
                         <p className="break-words text-sm font-semibold text-slate-800 dark:text-slate-100">{item.productType}</p>
                         <JobTag item={item} jobs={jobs} />
+                        <ItemDeadline item={item} orderDueDate={orderDueDate} orderDueTime={orderDueTime} />
                       </div>
                       <p className="pf-num shrink-0 text-sm text-slate-600 dark:text-slate-300">
                         <b className="font-semibold text-slate-800 dark:text-slate-100">{formatNumber(item.quantity)}</b> {item.unit}
@@ -212,6 +218,7 @@ export function OrderItemsManager({
                       <td className="px-3 py-2.5">
                         <span className="block font-semibold text-slate-800 dark:text-slate-200">{item.productType}</span>
                         <JobTag item={item} jobs={jobs} />
+                        <ItemDeadline item={item} orderDueDate={orderDueDate} orderDueTime={orderDueTime} />
                       </td>
                       <td className="pf-num px-3 py-2.5 text-right font-semibold text-slate-800 dark:text-slate-200">
                         {formatNumber(item.quantity)}
@@ -272,6 +279,28 @@ function JobTag({ item, jobs }: { item: OrderItem; jobs: { id: number; partnerNa
   return (
     <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300">
       <Building2 size={11} className="shrink-0" /> {job.partnerName}
+    </span>
+  );
+}
+
+/** Deadline item; kalau kosong, tampilkan deadline pekerjaan sebagai cadangan. */
+function ItemDeadline({
+  item,
+  orderDueDate,
+  orderDueTime,
+}: {
+  item: OrderItem;
+  orderDueDate?: string;
+  orderDueTime?: string;
+}) {
+  const dueDate = item.dueDate ?? orderDueDate;
+  if (!dueDate) return null;
+  const dueTime = item.dueTime ?? orderDueTime;
+  return (
+    <span className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+      <CalendarDays size={11} className="shrink-0" />
+      Deadline {formatDateID(dueDate)}
+      {dueTime ? ` · ${dueTime}` : ""}
     </span>
   );
 }

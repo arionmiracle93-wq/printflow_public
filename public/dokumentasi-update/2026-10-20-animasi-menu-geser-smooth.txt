@@ -1,0 +1,63 @@
+PRINT FLOW - ANIMASI MENU GESER (DRAWER) DIBUAT HALUS
+Tanggal: 2026-10-20
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Menu tiga garis di HP/tablet sekarang bergerak seperti menu geser
+standar:
+
+- Masuk: panel meluncur dari tepi kiri layar, cepat di awal lalu
+  melambat halus di akhir (300ms). Latar gelap memudar masuk.
+- Keluar: panel meluncur kembali ke kiri dan latar memudar (230ms).
+  Sebelumnya panel langsung hilang begitu saja saat ditutup, dan
+  gerak masuknya berupa efek melebar (scaleX) yang terlihat kaku.
+
+Berlaku untuk SEMUA menu geser di aplikasi, karena memakai komponen
+yang sama (Katalog, Riwayat/Status, Editor Invoice, dst).
+
+Tetap berlaku: ditutup dengan tombol X, ketuk latar gelap, tombol
+Escape, atau memilih tautan/kategori. Bila pengguna membuka lagi saat
+panel masih bergerak keluar, panel kembali terbuka tanpa kedip.
+Pengguna yang mengaktifkan "kurangi gerakan" di perangkatnya tetap
+melihat panel muncul/hilang tanpa animasi.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+1. src/components/MobileDrawer.tsx
+   - Panel tetap terpasang sampai animasi keluar selesai (state
+     "terpasang" terpisah dari "buka"), ditandai data-state
+     open/closed.
+   - Saat panel bergerak keluar, ketukan tidak diteruskan ke panel
+     maupun latar (pointer-events dimatikan).
+
+2. src/app/globals.css (blok .pf-drawer-*)
+   - translateX menggantikan scaleX; kurva cubic-bezier(0.32, 0.72, 0, 1).
+   - Animasi keluar baru (pf-drawer-out, pf-drawer-fade-out).
+   - Bayangan panel ikut dianimasikan supaya tidak ada garis gelap
+     "bocor" di tepi kiri layar saat panel belum terlihat.
+   - prefers-reduced-motion tetap dihormati.
+
+3. public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.
+
+===============================================================
+CARA UJI MANUAL
+===============================================================
+
+1. Di HP, ketuk Menu di bottom navigation: panel meluncur dari kiri
+   dengan halus, latar gelap memudar.
+2. Tutup lewat X, latar, atau pilih kategori: panel meluncur keluar
+   (bukan hilang mendadak).
+3. Ketuk Menu lalu langsung ketuk latar berulang-ulang: tidak ada
+   kedip atau panel nyangkut.
+4. Cek juga menu di Riwayat Dokumen dan Editor Invoice.
+
+Jika gerakannya terasa terlalu cepat/lambat: durasi masuk 300ms dan
+keluar 230ms di globals.css (blok .pf-drawer-*); angka 240 di
+MobileDrawer.tsx harus ikut selaras dengan durasi keluar.

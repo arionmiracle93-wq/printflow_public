@@ -42,3 +42,6 @@ coverage/
 
 # Drizzle (jika suatu saat memakai folder migrasi otomatis)
 drizzle/meta/
+
+# cache eslint (jangan ikut commit)
+.eslintcache

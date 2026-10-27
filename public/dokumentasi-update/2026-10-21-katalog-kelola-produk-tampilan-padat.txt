@@ -1,0 +1,94 @@
+PRINT FLOW - TAMPILAN "PADAT" DI HALAMAN KATALOG (KELOLA PRODUK)
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Halaman Invoice > Katalog (kelola produk) sekarang punya pilihan
+tampilan seperti pop up Katalog:
+
+- Kartu   : tampilan lama (gambar besar).
+- Padat   : kartu kecil dengan gambar persegi, nama, dan harga.
+             Ini tampilan BAWAAN halaman Katalog sekarang.
+- Ringkas : daftar baris kecil (gambar mini di kiri).
+
+Jumlah kolom tampilan Padat di halaman kelola produk:
+- HP             : 3 kolom
+- tablet kecil   : 4 kolom (mulai 640 px)
+- tablet         : 5 kolom (mulai 768 px)
+- laptop         : 6 kolom (mulai 1024 px)
+- layar lebar    : 8 kolom (mulai 1280 px)
+
+Pilihan tampilan diingat di perangkat itu (localStorage
+"pf-katalog-kelola-tampilan"), terpisah dari pilihan di pop up
+Katalog invoice.
+
+Mode Pilih (centang banyak produk) tetap berfungsi di ketiga
+tampilan: kartu kecil dan baris ringkas sekarang ikut menampilkan
+lingkaran centang saat mode Pilih aktif. Klik kartu tetap membuka
+formulir Ubah Produk bila mode Pilih tidak aktif.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+- src/components/CatalogManager.tsx
+  - Pilihan tampilan Kartu / Padat / Ringkas di baris jumlah produk.
+  - Bawaan "Padat"; pilihan disimpan di perangkat.
+  - Grid Padat 3-8 kolom mengikuti lebar layar.
+  - Pilihan dibaca lewat useSyncExternalStore supaya tidak ada
+    peringatan ketidakcocokan hidrasi (localStorage tidak ada di
+    server).
+
+- src/components/CatalogParts.tsx
+  - ProductMiniCard dan ProductCompactRow sekarang menerima
+    selectable/selected: lingkaran centang dan bingkai teal saat
+    dipilih, sama seperti ProductCard.
+
+Yang TIDAK berubah: pencarian, tab kategori, menu kategori di HP,
+tambah/ubah/hapus produk, impor/ekspor CSV, muat produk contoh,
+formulir produk, database, dan API.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak ada. Tidak perlu menjalankan /api/setup.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/components/CatalogManager.tsx
+- src/components/CatalogParts.tsx
+- public/dokumentasi-update/2026-10-21-katalog-kelola-produk-tampilan-padat.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+- npm run typecheck: lolos.
+- npx eslint (tiga file katalog): lolos.
+- Uji render di browser (lebar 1000 px):
+  - halaman Katalog langsung tampil dalam mode Padat (5 kolom);
+  - tombol Kartu / Padat / Ringkas bisa dipilih;
+  - mode Pilih: lingkaran centang muncul, klik kartu menambah
+    "1 dipilih" dan TIDAK membuka formulir;
+  - klik kartu saat mode Pilih mati membuka formulir Ubah Produk;
+  - Ringkas menampilkan baris 2 kolom dengan centang tetap aktif;
+  - pilihan Padat tetap terpakai setelah halaman dimuat ulang;
+  - tidak ada error hidrasi di konsol.
+- Tampilan di HP dan layar 1440 px belum diuji di perangkat; jumlah
+  kolom mengikuti aturan di atas.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+- Bila kartu Padat di layar lebar terasa terlalu kecil, kurangi
+  xl:grid-cols-8 menjadi xl:grid-cols-7 di CatalogManager.tsx.
+- Bila ingin pilihan tampilan pop up dan halaman Katalog selalu
+  sama, samakan kunci localStorage keduanya.

@@ -154,7 +154,14 @@ export function RiskDonut({ counts, averageScore }: { counts: RiskCounts; averag
   const C = 2 * Math.PI * R;
   const visible = RISK_SLICES.filter((s) => counts[s.key] > 0);
   const gap = visible.length > 1 ? 2.2 : 0;
-  let drawn = 0;
+  // Offset dihitung tanpa variabel akumulator yang dimutasi saat render.
+  const slices = visible.map((s, i) => {
+    const len = (counts[s.key] / total) * C;
+    const offset = -visible
+      .slice(0, i)
+      .reduce((sum, previous) => sum + (counts[previous.key] / total) * C, 0);
+    return { s, i, seg: Math.max(0.001, len - gap), offset };
+  });
 
   return (
     <Panel
@@ -169,30 +176,24 @@ export function RiskDonut({ counts, averageScore }: { counts: RiskCounts; averag
           <div className="relative h-[132px] w-[132px] shrink-0">
             <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" role="img" aria-label="Diagram sebaran risiko pekerjaan aktif">
               <circle cx="60" cy="60" r={R} fill="none" strokeWidth="14" style={{ stroke: "var(--pf-surface-3)" }} />
-              {visible.map((s, i) => {
-                const len = (counts[s.key] / total) * C;
-                const seg = Math.max(0.001, len - gap);
-                const offset = -drawn;
-                drawn += len;
-                return (
-                  <circle
-                    key={s.key}
-                    data-risk={s.key}
-                    className="pf-donut-seg"
-                    cx="60"
-                    cy="60"
-                    r={R}
-                    fill="none"
-                    strokeWidth="14"
-                    strokeLinecap="butt"
-                    strokeDasharray={`${seg} ${C - seg}`}
-                    strokeDashoffset={offset}
-                    style={{ stroke: s.color, ["--pf-seg" as string]: `${seg}`, ["--pf-c" as string]: `${C}`, animationDelay: `${i * 90}ms` }}
-                  >
-                    <title>{`${s.label}: ${counts[s.key]} pekerjaan`}</title>
-                  </circle>
-                );
-              })}
+              {slices.map(({ s, i, seg, offset }) => (
+                <circle
+                  key={s.key}
+                  data-risk={s.key}
+                  className="pf-donut-seg"
+                  cx="60"
+                  cy="60"
+                  r={R}
+                  fill="none"
+                  strokeWidth="14"
+                  strokeLinecap="butt"
+                  strokeDasharray={`${seg} ${C - seg}`}
+                  strokeDashoffset={offset}
+                  style={{ stroke: s.color, ["--pf-seg" as string]: `${seg}`, ["--pf-c" as string]: `${C}`, animationDelay: `${i * 90}ms` }}
+                >
+                  <title>{`${s.label}: ${counts[s.key]} pekerjaan`}</title>
+                </circle>
+              ))}
             </svg>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="pf-num text-[1.75rem] font-semibold leading-none tracking-[-0.03em] text-[color:var(--pf-ink)]">

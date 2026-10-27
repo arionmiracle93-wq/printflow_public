@@ -72,11 +72,19 @@ export default function LoginPage() {
         </defs>
       </svg>
 
-      {/* min-h-[80vh] tetap ukuran penuh, TIDAK ikut mengecil - biar area
-          vertikal tempat kartu di-center tidak berubah. max-w-5xl (1024px)
-          diganti max-w-[57.6rem] (921.6px = persis 1024×0.9) - inilah
-          yang bikin kartu ~10% lebih kecil sekarang, BUKAN transform/zoom
-          lagi. Kenapa ganti pendekatan: transform:scale() (bahkan yang
+      {/* Tinggi wadah: 80vh di HP, 100svh (setinggi layar penuh) dari md ke
+          atas. Sebelumnya 80vh di SEMUA ukuran, jadi di desktop kartu
+          ke-center di 80% atas layar dan selalu kelihatan "naik" (sisa 20vh
+          kosong di bawah). Di HP nilai 80vh TETAP dipakai karena main masih
+          punya padding bawaan header mobile (5rem atas + 7rem bawah) yang
+          membuat kartu sudah mendekati tengah; kalau ikut 100svh halaman
+          justru jadi bisa di-scroll. svh dipilih (bukan vh) supaya tidak
+          lompat saat address bar browser mobile muncul/hilang. min-h (bukan
+          h) menjaga kartu tetap utuh kalau layar lebih pendek dari kartu.
+          Catatan lama: max-w-5xl (1024px) diganti max-w-[57.6rem]
+          (921.6px = persis 1024×0.9) - inilah yang bikin kartu ~10% lebih
+          kecil sekarang, BUKAN transform/zoom lagi. Kenapa ganti
+          pendekatan: transform:scale() (bahkan yang
           sudah dipisah dari elemen backdrop-filter) TERBUKTI masih bikin
           teks agak blur - itu memang keterbatasan umum GPU compositing
           kalau nge-scale konten yang ada teksnya (browser tetap sempat
@@ -88,7 +96,7 @@ export default function LoginPage() {
           dari CSS), bukan dirender besar lalu di-kecilin belakangan.
           Semua pengecilan di bawah cuma lewat class ber-prefix md: -
           mobile 100% tidak disentuh, persis kayak sebelumnya. */}
-      <div className="relative mx-auto flex min-h-[80vh] max-w-[57.6rem] items-center px-3 sm:px-4">
+      <div className="relative mx-auto flex min-h-[80vh] max-w-[57.6rem] items-center px-3 sm:px-4 md:min-h-svh">
         <div className="login-glass-card relative rounded-[1.75rem] md:aspect-[1318/665] md:min-h-[396px] md:rounded-[2.5rem]">
           {/* Panel foto/video - kotak biasa di atas saat mobile (pendek, tanpa
               kurva); jadi lapisan penuh yang di-clip kurva saat md+.

@@ -2,7 +2,8 @@ import { randomBytes } from "node:crypto";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { aiNotes, customers, orderEvents, orderItems, orderPhotos, orders, settings } from "@/db/schema";
-import { ACTIVE_STATUSES, estimateHoursForItems, orderCode, statusMeta, type StatusKey } from "@/lib/domain";
+import { ACTIVE_STATUSES, estimateHoursForItems, orderCode, statusMeta } from "@/lib/domain";
+import { ensureItemProductionSchema } from "@/lib/item-production";
 import { effectiveItemStatus, flowIndex, rollupStatus } from "@/lib/item-status";
 import { type OrderItem, type OrderItemInput } from "@/lib/order-items";
 import type { AiOrder } from "@/lib/ai";
@@ -45,6 +46,7 @@ const toAiOrder = (row: typeof orders.$inferSelect, items: OrderItem[]): AiOrder
 export async function itemsByOrderId(ids: number[]): Promise<Map<number, OrderItem[]>> {
   const map = new Map<number, OrderItem[]>();
   if (!ids.length) return map;
+  await ensureItemProductionSchema();
   const rows = await db
     .select({
       id: orderItems.id,
@@ -53,6 +55,9 @@ export async function itemsByOrderId(ids: number[]): Promise<Map<number, OrderIt
       quantity: orderItems.quantity,
       unit: orderItems.unit,
       status: orderItems.status,
+      dueDate: orderItems.dueDate,
+      dueTime: orderItems.dueTime,
+      sourceLineKey: orderItems.sourceLineKey,
       outsourceJobId: orderItems.outsourceJobId,
     })
     .from(orderItems)
@@ -67,6 +72,9 @@ export async function itemsByOrderId(ids: number[]): Promise<Map<number, OrderIt
       quantity: row.quantity,
       unit: row.unit,
       status: row.status,
+      dueDate: row.dueDate,
+      dueTime: row.dueTime,
+      sourceLineKey: row.sourceLineKey,
       outsourceJobId: row.outsourceJobId,
     });
     map.set(row.orderId, list);
@@ -747,9 +755,3 @@ export async function statusCounts() {
   for (const row of rows) map.set(row.status, Number(row.count));
   return map;
 }
-
-export function statusLabelOf(key: string) {
-  return key;
-}
-
-export type { StatusKey };

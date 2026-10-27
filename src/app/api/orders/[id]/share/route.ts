@@ -1,5 +1,6 @@
 import { problemResponse } from "@/lib/dbcheck";
 import { ensureShareToken, getOrderById } from "@/lib/queries";
+import { buildTrackingUrl } from "@/lib/whatsapp-share";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function POST(_request: Request, { params }: Params) {
     if (!order) return Response.json({ ok: false, error: "Pekerjaan tidak ditemukan" }, { status: 404 });
     const token = await ensureShareToken(orderId);
     if (!token) return Response.json({ ok: false, error: "Gagal membuat tautan lacak." }, { status: 500 });
-    return Response.json({ ok: true, token, url: `/lacak/${token}` });
+    return Response.json({ ok: true, token, url: buildTrackingUrl("", token) });
   } catch (error) {
     console.error("POST /api/orders/[id]/share", error);
     return problemResponse(error);

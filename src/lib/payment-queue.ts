@@ -17,10 +17,14 @@ export type QueuedPayment = {
   method: string;
   kind: "dp" | "bayar";
   note: string;
+  /** No. referensi transaksi (RRN / ID transaksi QRIS). Opsional; item lama di antrean tidak punya. */
+  reference?: string;
   /** Waktu pembayaran sebenarnya (ISO). */
   paidAt: string;
   createdAt: string;
   confirmOverpay: boolean;
+  /** Kasir sudah mengonfirmasi bahwa referensi yang sama memang sengaja dipakai lagi. */
+  confirmDuplicateReference?: boolean;
   /** pending = menunggu dikirim; failed = ditolak server dan perlu ditinjau. */
   status: "pending" | "failed";
   error?: string;
@@ -91,7 +95,10 @@ export function patchQueueItem(ref: string, patch: Partial<QueuedPayment>) {
 
 type PostResult = { status: number; json: { ok?: boolean; error?: string; code?: string; duplicate?: boolean } };
 
-async function postPayment(item: Pick<QueuedPayment, "invoiceId" | "ref" | "amount" | "method" | "kind" | "note" | "paidAt" | "confirmOverpay">): Promise<PostResult> {
+async function postPayment(
+  item: Pick<QueuedPayment, "invoiceId" | "ref" | "amount" | "method" | "kind" | "note" | "paidAt" | "confirmOverpay"> &
+    Partial<Pick<QueuedPayment, "reference" | "confirmDuplicateReference">>,
+): Promise<PostResult> {
   const res = await fetch(`/api/invoices/${item.invoiceId}/payments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -100,9 +107,11 @@ async function postPayment(item: Pick<QueuedPayment, "invoiceId" | "ref" | "amou
       method: item.method,
       kind: item.kind,
       note: item.note,
+      reference: item.reference ?? "",
       paidAt: item.paidAt,
       clientRef: item.ref,
       confirmOverpay: item.confirmOverpay,
+      confirmDuplicateReference: Boolean(item.confirmDuplicateReference),
     }),
   });
   const json = (await res.json().catch(() => ({}))) as PostResult["json"];
@@ -116,9 +125,12 @@ export type SubmitInput = {
   method: string;
   kind?: "dp" | "bayar";
   note?: string;
+  /** No. referensi transaksi (opsional). */
+  reference?: string;
   /** Waktu pembayaran (ISO); bawaan: sekarang. */
   paidAt?: string;
   confirmOverpay?: boolean;
+  confirmDuplicateReference?: boolean;
   /** Pakai ulang kode yang sama untuk percobaan ulang (mis. setelah konfirmasi kelebihan bayar). */
   ref?: string;
 };
@@ -138,9 +150,11 @@ export async function submitPaymentOrQueue(input: SubmitInput): Promise<SubmitRe
     method: input.method,
     kind: input.kind ?? "bayar",
     note: input.note ?? "",
+    reference: (input.reference ?? "").trim().slice(0, 60),
     paidAt: input.paidAt ?? new Date().toISOString(),
     createdAt: new Date().toISOString(),
     confirmOverpay: Boolean(input.confirmOverpay),
+    confirmDuplicateReference: Boolean(input.confirmDuplicateReference),
     status: "pending",
     attempts: 0,
   };

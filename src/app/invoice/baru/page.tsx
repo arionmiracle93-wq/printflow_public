@@ -14,17 +14,30 @@ export const metadata = { title: "Dokumen Baru - Print Flow" };
 
 export default async function NewInvoicePage({ searchParams }: { searchParams: Promise<{ m?: string; dariPesanan?: string }> }) {
   const sp = await searchParams;
+  const orderIdRaw = Number.parseInt(sp.dariPesanan ?? "", 10);
+  const orderId = Number.isInteger(orderIdRaw) && orderIdRaw > 0 ? orderIdRaw : null;
+  /* DULU tiga langkah BERURUTAN: akses -> (pelanggan+pengaturan) ->
+     prefill -> invoice yang sudah ada. Setiap langkah = satu bolak-balik ke
+     database lewat internet (Neon), jadi form terasa lelet saat dibuka.
+     SEKARANG satu langkah: semua yang tidak salingtunggu jalan paralel.
+     getInvoiceForOrder ternyata menerima id pesanan langsung, jadi dia tidak
+     perlu menunggu hasil prefill - keduanya dikirim bareng, bukan beruntun
+     (invoice untuk pesanan itu ditemukan lewat kolom source_id yang sama).
+     Pengguna yang ternyata tidak punya izin tetap ditolak setelah query;
+     hasilnya tidak pernah tampil, sama seperti aturan di halaman Riwayat. */
   const loaded = await safeDb(async () => {
-    const access = await getInvoiceAccess();
+    const [access, customers, settings, prefill, existing] = await Promise.all([
+      getInvoiceAccess(),
+      listCustomers(),
+      getInvoiceSettings(),
+      orderId ? getOrderPrefill(orderId) : Promise.resolve(null),
+      orderId ? getInvoiceForOrder(orderId) : Promise.resolve(null),
+    ]);
     if (!access) return null;
-    const [customers, settings] = await Promise.all([listCustomers(), getInvoiceSettings()]);
-    const orderId = Number.parseInt(sp.dariPesanan ?? "", 10);
-    const prefill = Number.isInteger(orderId) && orderId > 0 ? await getOrderPrefill(orderId) : null;
-    const existing = prefill ? await getInvoiceForOrder(prefill.order.id) : null;
     return { access, customers, settings, prefill, existing };
   });
   if (!loaded.ok) return <ProblemScreen problem={loaded.problem} hint="Form dokumen butuh database." />;
-  if (!loaded.data) redirect("/tidak-diizinkan");
+  if (!loaded.data) redirect("/tidak-diizinkan?dari=invoice");
   const { access, customers, settings, prefill, existing } = loaded.data;
   // 1 invoice = 1 pekerjaan: bila pekerjaan ini sudah punya invoice, buka yang itu saja.
   if (existing) redirect(`/invoice/${existing.id}`);

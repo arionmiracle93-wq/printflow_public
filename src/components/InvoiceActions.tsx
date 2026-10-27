@@ -155,20 +155,84 @@ export function InvoiceActions({
           ))}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {items.map((i) =>
-            i.href ? (
-              <a key={i.key} href={i.href} className="btn-secondary px-3 py-2 text-xs">{i.icon} {i.label}</a>
-            ) : (
-              <button key={i.key} type="button" onClick={i.onClick} disabled={i.disabled} title={i.title} className={`${i.danger ? "btn-danger" : "btn-secondary"} px-3 py-2 text-xs`}>
-                {i.icon} {i.label}
-              </button>
-            ),
-          )}
+        /* HP: satu baris ikon-atas-label per kelompok. Tombol BERBAHAYA
+           tetap dipisah ke baris sendiri di paling bawah, ditandai garis
+           tipis + warna merah, supaya "Hapus draft" / "Batalkan" tidak
+           bisa tersalah ketuk di antara "Edit" dan "Duplikat". */
+        <div className="space-y-1.5">
+          {items.some((i) => !i.danger) ? (
+            <div className="flex items-stretch gap-1">
+              {items.filter((i) => !i.danger).map((i) => (
+                <MobileAction key={i.key} href={i.href} onClick={i.onClick} disabled={i.disabled} title={i.title} icon={i.icon} label={i.label} />
+              ))}
+            </div>
+          ) : null}
+          {items.some((i) => i.danger) ? (
+            <div className="flex items-stretch gap-1 border-t border-[color:var(--pf-line-soft)] pt-1.5">
+              {items.filter((i) => i.danger).map((i) => (
+                <MobileAction key={i.key} href={i.href} onClick={i.onClick} disabled={i.disabled} title={i.title} icon={i.icon} label={i.label} danger />
+              ))}
+            </div>
+          ) : null}
         </div>
       )}
       {status === "terbit" && isOwner && hasActivePayments ? <p className="text-[11px] text-slate-400">Untuk membatalkan, batalkan dulu semua pembayarannya.</p> : null}
       {error ? <p className="break-words rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p> : null}
     </div>
+  );
+}
+
+  /**
+ * Tombol aksi untuk HP (layout="row").
+ *
+ * Bentuknya ikon di atas, label kecil di bawah - seperti tab. Dulu
+ * tombolnya selebar kolom dengan teks menyamping, sehingga lima tombol
+ * menjadi empat baris tinggi penuh di bagian atas halaman. Dokumennya
+ * sendiri baru terlihat setelah layar penuh terisi tombol.
+ *
+ * Sekarang tiap kelompok muat dalam satu baris (~54px), bukan ~200px.
+ * Label dipotong satu baris supaya semua tombol satu baris tetap sama
+ * tinggi, dan tombol berbahaya tetap merah dengan garis pemisah agar
+ * tidak tertukar dengan aksi biasa.
+ *
+ * Target sentuh: tinggi 54px masih di atas minimum 44px (WCAG 2.5.5).
+ */
+function MobileAction({
+  href,
+  onClick,
+  disabled,
+  title,
+  icon,
+  label,
+  danger = false,
+}: {
+  href?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  title?: string;
+  icon: React.ReactNode;
+  label: string;
+  danger?: boolean;
+}) {
+  const cls = `flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 ${
+    danger ? "text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10" : "text-[color:var(--pf-ink-2)] hover:bg-[color:var(--pf-surface-2)]"
+  } ${disabled ? "pointer-events-none opacity-45" : ""}`;
+  const isi = (
+    <>
+      <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center [&>svg]:h-[19px] [&>svg]:w-[19px]">{icon}</span>
+      <span className="w-full truncate text-center text-[10px] font-bold leading-tight">{label}</span>
+    </>
+  );
+  if (href) {
+    return (
+      <a href={href} className={cls} title={title ?? label}>
+        {isi}
+      </a>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} title={title ?? label} className={cls}>
+      {isi}
+    </button>
   );
 }

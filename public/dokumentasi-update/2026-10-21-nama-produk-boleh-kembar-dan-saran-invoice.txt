@@ -1,0 +1,118 @@
+PRINT FLOW - NAMA PRODUK BOLEH KEMBAR + SARAN INVOICE DISAMAKAN DENGAN KATALOG
+Tanggal: 2026-10-21
+Status: selesai di kode; /api/setup tetap dianjurkan sekali (revisi 2: otomatis juga)
+
+===============================================================
+RINGKASAN
+===============================================================
+
+1) Katalog sekarang boleh punya beberapa produk dengan NAMA SAMA asal
+   isi kolom KETERANGAN-nya beda (teks yang diketik di field
+   "Keterangan" pada form produk). Contoh: "Roll Banner 60 x 90" -
+   keterangan "dengan laminasi", dan "Roll Banner 60 x 90" - keterangan
+   "tanpa laminasi". Yang tetap ditolak hanya produk dengan nama DAN
+   isi Keterangan yang sama persis (huruf besar/kecil dan spasi pinggir
+   diabaikan; keterangan kosong dianggap sama dengan kosong).
+
+2) Saran produk saat mengetik nama di baris invoice kini memakai aturan
+   cari yang SAMA dengan pencarian di halaman Katalog.
+
+===============================================================
+ALASAN PERUBAHAN
+===============================================================
+
+1) Banyak produk percetakan satu nama tapi beda ukuran/bahan. Aturan lama
+   (nama harus unik) memaksa nama diubah-ubah supaya bisa disimpan.
+
+2) Saran invoice punya aturan cari sendiri yang masih mencari "potongan di
+   tengah kata", sehingga hasilnya beda dengan Katalog.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+A. Database (lewat /api/setup)
+   - Indeks lama "nama harus unik" (invoice_products_name_key) dibuang.
+   - Indeks baru: nama + keterangan harus unik
+     (invoice_products_name_desc_key). Huruf besar/kecil dan spasi
+     pinggir diabaikan; keterangan kosong dianggap sama dengan kosong.
+   - Aman dijalankan berulang. Data produk TIDAK diubah/dihapus.
+   - REVISI 2: saat tambah/ubah/impor produk, aplikasi mengecek sendiri
+     apakah indeks lama masih ada dan menggantinya otomatis. Jadi nama
+     kembar langsung bisa dipakai walau /api/setup belum dijalankan.
+     (Sebelum revisi ini, database lama menolak nama kembar dan pesan
+     errornya salah menyebut "keterangan yang sama".)
+
+B. Tambah/ubah produk
+   - Pesan bila kembar menyebut isi keterangan yang dibandingkan:
+     "Produk "X" dengan keterangan "Y" sudah ada di katalog. Ubah isi
+     kolom Keterangan supaya beda dari produk itu, atau ubah produk
+     yang lama."
+
+C. Impor CSV / produk contoh (mode Gabungkan)
+   - Pembeda produk = nama + keterangan. Baris CSV bernama sama dengan
+     keterangan lain jadi produk baru (tidak lagi dilewati/digabung).
+   - Pengecualian agar tidak muncul kembaran palsu: bila produk lama
+     bernama sama belum punya keterangan dan baris CSV punya, keterangan
+     itu dilengkapi ke produk lama.
+   - Mengimpor ulang hasil Export CSV tidak membuat duplikat.
+
+D. Tampilan kartu produk
+   - Bila sebuah nama dipakai lebih dari satu produk, keterangannya juga
+     ditampilkan di HP (biasanya disembunyikan) supaya kembarannya bisa
+     dibedakan. Produk bernama unik tampil seperti biasa.
+   - Saran di baris invoice sudah menampilkan keterangan sejak dulu.
+
+E. Saran produk di baris invoice (matchCatalog)
+   - Cocok dari awal kata (bukan tengah kata), kata boleh diacak,
+     sinonim banner = spanduk, ukuran 60x90 = 60 x 90, ikut mencari di
+     nama + keterangan + kategori, minimal 2 huruf.
+   - Urutan: nama diawali kata kunci > cocok di nama > cocok lewat
+     keterangan/kategori/sinonim. Maksimal 8 saran.
+   - Perubahan perilaku: mengetik potongan tengah kata (mis. "ros" untuk
+     "albatros") tidak lagi memunculkan saran, sama seperti Katalog.
+
+===============================================================
+LANGKAH YANG WAJIB DILAKUKAN PEMILIK
+===============================================================
+
+Tidak wajib lagi. Aplikasi mengganti indeks lama sendiri saat produk
+pertama kali ditambah/diubah/diimpor. Tetap boleh membuka /api/setup
+sekali seperti biasa.
+
+===============================================================
+FILE YANG HARUS DIUPLOAD KE GITHUB
+===============================================================
+
+- src/app/api/setup/route.ts
+- src/lib/invoice-catalog.ts   (revisi 2: ganti indeks otomatis + pesan error)
+- src/lib/invoice-catalog-match.ts
+- src/components/CatalogParts.tsx
+- src/components/CatalogManager.tsx
+- src/components/CatalogPicker.tsx
+- public/dokumentasi-update/2026-10-21-nama-produk-boleh-kembar-dan-saran-invoice.txt
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+===============================================================
+HASIL PENGUJIAN
+===============================================================
+
+Fungsi saran invoice dijalankan langsung dengan produk contoh (termasuk
+dua "Roll Banner" berbeda ukuran): "ro", "roll", "alba", "banner",
+"80", "60x90", "60 x 90", "print", "outdoor banner", "indoor" semuanya
+sesuai harapan; "r" (1 huruf) dan "ros" tidak memunculkan saran.
+Build penuh dan uji ke database BELUM dijalankan di sini (tidak ada
+node_modules/database di paket), jadi mohon uji setelah deploy:
+  1. Tambah "Roll Banner 60 x 90", keterangan "dengan laminasi".
+  2. Tambah lagi "Roll Banner 60 x 90", keterangan "tanpa laminasi" -> tersimpan.
+  3. Tambah lagi "Roll Banner 60 x 90", keterangan "tanpa laminasi" -> ditolak, pesan menyebut keterangannya.
+  4. Ketik "roll" di baris invoice -> kedua produk muncul, keterangannya terlihat.
+
+Tidak ada perubahan biaya.
+
+===============================================================
+SARAN LANGKAH BERIKUTNYA
+===============================================================
+
+Setelah dipakai, cek apakah kartu bernama kembar cukup jelas di HP.
+Kalau perlu, keterangan bisa dibuat lebih menonjol.

@@ -97,21 +97,27 @@ export function PaymentQueueSync() {
                     </span>
                   </div>
                   {it.status === "failed" ? <p className="mt-1 break-words text-[11px] font-semibold text-rose-700">{it.error}</p> : null}
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     {it.status === "failed" && it.code === "KELEBIHAN_BAYAR" ? (
-                      <button type="button" onClick={() => { patchQueueItem(it.ref, { status: "pending", confirmOverpay: true, error: undefined, code: undefined }); void tick(); }} className="rounded-lg bg-rose-600 px-2.5 py-1 text-[11px] font-bold text-white">
+                      <button type="button" onClick={() => { patchQueueItem(it.ref, { status: "pending", confirmOverpay: true, error: undefined, code: undefined }); void tick(); }} className="min-h-10 rounded-lg bg-rose-600 px-3 text-[11px] font-bold text-white">
                         Kirim sebagai kelebihan bayar
                       </button>
                     ) : null}
                     {it.status === "failed" && it.code !== "KELEBIHAN_BAYAR" ? (
-                      <button type="button" onClick={() => { patchQueueItem(it.ref, { status: "pending", error: undefined, code: undefined }); void tick(); }} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-[11px] font-bold text-slate-700">
+                      <button type="button" onClick={() => { patchQueueItem(it.ref, { status: "pending", error: undefined, code: undefined }); void tick(); }} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-slate-300 px-3 text-[11px] font-bold text-slate-700">
                         <RefreshCw size={11} /> Coba lagi
                       </button>
                     ) : null}
                     <button
                       type="button"
                       onClick={() => { if (confirm(`Buang pembayaran ${formatRupiah(it.amount)} ini dari antrean? Pembayaran TIDAK akan tercatat.`)) removeFromQueue(it.ref); }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1 text-[11px] font-bold text-rose-600"
+                      /* ml-auto: tombol Buang (menghapus catatan pembayaran)
+                         didorong ke kanan supaya tidak menempel di sebelah
+                         "Coba lagi". Dulu keduanya berdempetan dengan tinggi
+                         cuma ~24px - mudah salah ketuk, apalagi justru saat
+                         jaringannya bermasalah. min-h-10 = 40px, di atas
+                         batas bawah 44px yang disarankan untuk sentuhan. */
+                      className="ml-auto inline-flex min-h-10 items-center gap-1 rounded-lg border border-rose-200 px-3 text-[11px] font-bold text-rose-600"
                     >
                       <Trash2 size={11} /> Buang
                     </button>

@@ -1,0 +1,60 @@
+PRINT FLOW - PERBAIKAN LAG SAAT MENUTUP MENU GESER (DRAWER)
+Tanggal: 2026-10-21
+Status: selesai di kode; perlu uji di perangkat pemilik
+
+===============================================================
+RINGKASAN
+===============================================================
+
+Saat membuka, menu geser sudah halus. Saat MENUTUP, geserannya agak
+tersendat. Sekarang penutupan sudah dibuat sehalus pembukaan. Berlaku
+untuk semua menu geser (Riwayat/Status, Editor Invoice, Katalog, dst)
+karena memakai komponen yang sama.
+
+===============================================================
+PENYEBAB
+===============================================================
+
+1. Animasi ikut menganimasikan bayangan (box-shadow). Properti ini
+   tidak bisa dikerjakan oleh "jalur cepat" browser (compositor),
+   sehingga seluruh geseran ikut dikerjakan di jalur utama. Saat
+   menutup, jalur utama sedang sibuk (aplikasi memperbarui tampilan,
+   tautan di menu memulai pindah halaman, panel dilepas) - geseran
+   jadi tersendat. Saat membuka, kerjaan sibuk itu belum ada.
+
+2. Kurva gerak keluar berawal sangat lambat, jadi setelah diketuk
+   panel seperti diam sebentar sebelum bergerak (terasa "telat").
+
+3. Panel dilepas oleh timer tetap 240ms yang mulai dihitung dari
+   ketukan, bukan dari mulainya animasi. Kalau perangkat sedang
+   sibuk, panel bisa dilepas sebelum geserannya selesai, terlihat
+   seperti menghilang mendadak.
+
+4. Kunci gulir halaman baru dilepas setelah panel hilang, sehingga di
+   layar dengan scrollbar biasa (tablet/desktop yang dikecilkan)
+   isi halaman bisa melompat sedikit di ujung animasi.
+
+===============================================================
+APA YANG BERUBAH
+===============================================================
+
+- Animasi geser sekarang hanya memakai transform dan opacity (jalur
+  cepat). Bayangan dipindah ke elemen tambahan (::before) dan hanya
+  dipudarkan, tidak lagi dianimasikan sebagai box-shadow.
+- Gerak keluar memakai kurva yang sama dengan gerak masuk, langsung
+  bergerak begitu diketuk (220ms).
+- Panel dilepas tepat saat animasi keluarnya selesai (onAnimationEnd).
+  Timer 600ms hanya cadangan.
+- Kunci gulir halaman dilepas begitu menutup dimulai.
+- Fokus dikembalikan ke tombol tanpa menggeser halaman
+  (preventScroll).
+- Isi panel yang bisa digulir dipindah ke pembungkus
+  .pf-drawer-scroll supaya bayangan tidak terpotong. Tampilan, warna
+  mode gelap, dan isi menu tidak berubah.
+
+File yang diubah:
+- src/components/MobileDrawer.tsx
+- src/app/globals.css (blok MENU GESER UNTUK LAYAR KECIL)
+- public/dokumentasi-update/00-DAFTAR-ISI.txt
+
+Tidak ada perubahan database, API, atau biaya.
