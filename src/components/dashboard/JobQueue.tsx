@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, ChevronRight, RefreshCw, Users } from "lucide-react";
-import { RISK_META, type OrderInsight } from "@/lib/ai";
+import { type OrderInsight } from "@/lib/ai";
 import { humanDuration, statusMeta } from "@/lib/domain";
 import { CopyMessageQuick } from "@/components/CopyMessageQuick";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
@@ -93,7 +93,6 @@ function JobRow({
   dueTime: string;
 }) {
   const meta = statusMeta(insight.status);
-  const risk = RISK_META[insight.riskLevel];
   const order = shareOrderOf(insight, dueDate, dueTime);
 
   return (
@@ -130,13 +129,6 @@ function JobRow({
         <div className="mt-0.5">
           <Deadline hoursLeft={insight.hoursLeft} status={insight.status} />
         </div>
-      </div>
-
-      <div
-        className={`pf-num rounded-xl px-1.5 py-1 text-center text-[13px] font-semibold ${riskTone(insight.riskLevel)}`}
-        title={`Risiko ${risk.label}`}
-      >
-        {Math.round(insight.riskScore)}
       </div>
 
       <div className="flex items-center justify-center gap-1">
@@ -284,7 +276,6 @@ export function JobQueue({
           <span>Pekerjaan</span>
           <span>Tahap</span>
           <span>PIC dan tenggat</span>
-          <span className="text-center">Skor</span>
           <span className="text-center">Aksi</span>
         </div>
         {jobs.map((job) => (
