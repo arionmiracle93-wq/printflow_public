@@ -2968,12 +2968,12 @@ button.ppi-dashed:hover { background: var(--ppi-accent-tint); }
 .dark .ppi-side--produksi {
   border-color: rgba(94, 164, 200, 0.32);
   background:
-    radial-gradient(120% 55% at 50% 0%, rgba(45, 212, 191, 0.1), transparent 62%),
-    linear-gradient(180deg, #14303f 0%, #10242f 100%);
+    radial-gradient(120% 55% at 50% 0%, rgba(45, 212, 191, 0.08), transparent 62%),
+    linear-gradient(180deg, #112a38 0%, #0c1e29 100%);
 }
 .ppi-side--produksi .ppi-kicker {
   padding: 0 8px;
-  font-size: 14px;
+  font-size: 12.6px;
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 1.2;
