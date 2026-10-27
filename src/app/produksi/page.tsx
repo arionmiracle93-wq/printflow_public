@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { AiAssistant } from "@/components/AiAssistant";
 import { ProblemScreen } from "@/components/ProblemScreen";
+import { ProduksiFrame } from "@/components/ProduksiSidebar";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { KpiCard } from "@/components/ui";
@@ -69,9 +70,11 @@ export const metadata = { title: "Produksi - Print Flow" };
  */
 export default function ProduksiPage() {
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardContent />
-    </Suspense>
+    <ProduksiFrame>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardContent />
+      </Suspense>
+    </ProduksiFrame>
   );
 }
 

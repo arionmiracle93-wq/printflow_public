@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MapPin, Plus, StickyNote, User, Users } from "lucide-react";
 import { CustomerForm } from "@/components/CustomerForm";
 import { ProblemScreen } from "@/components/ProblemScreen";
+import { ProduksiFrame } from "@/components/ProduksiSidebar";
 import { safeDb } from "@/lib/dbcheck";
 import { formatDateID, formatRupiah } from "@/lib/domain";
 import { listCustomers, listOrders } from "@/lib/queries";
@@ -17,6 +18,7 @@ export default async function CustomersPage() {
   const [customers, orders] = loaded.data;
 
   return (
+    <ProduksiFrame>
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -87,5 +89,6 @@ export default async function CustomersPage() {
         </div>
       )}
     </div>
+    </ProduksiFrame>
   );
 }

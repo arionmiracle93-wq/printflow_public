@@ -2,6 +2,7 @@ import { Select } from "@/components/Select";
 import Link from "next/link";
 import { ClipboardCheck, ClipboardList, Clock, Factory, FilterX, Image as ImageIcon, Package, Plus, Search, SearchX, User } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
+import { ProduksiFrame } from "@/components/ProduksiSidebar";
 import { PhotoQuickPeek } from "@/components/PhotoQuickPeek";
 import { QuickStatusPopup } from "@/components/QuickStatusPopup";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/ui";
@@ -58,7 +59,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
   const now = new Date();
 
   return (
-    <div className="space-y-4">
+    <ProduksiFrame>
+      <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title flex items-center gap-2">
@@ -346,6 +348,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
           </div>
         </>
       )}
-    </div>
+      </div>
+    </ProduksiFrame>
   );
 }

@@ -12,6 +12,7 @@ import { OutsourceManager } from "@/components/OutsourceManager";
 import { HandoverManager } from "@/components/HandoverManager";
 import { listHandovers, type HandoverRecord } from "@/lib/handover-queries";
 import { ProblemScreen } from "@/components/ProblemScreen";
+import { ProduksiFrame } from "@/components/ProduksiSidebar";
 import { AiInsightCard } from "@/components/AiInsightCard";
 import { listOutsource, listPartners } from "@/lib/outsource-queries";
 import { outsourceStatusMeta } from "@/lib/outsource";
@@ -79,10 +80,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     const insight = analyzeOrder(order);
     const meta = statusMeta(order.status);
     return (
+      <ProduksiFrame>
       <div className="space-y-4">
         <UpgradeNotice />
         <FallbackDetailBody order={order} events={fallback.data.events} notes={fallback.data.notes} insight={insight} meta={meta} />
       </div>
+      </ProduksiFrame>
     );
   }
   if (!loaded.data) notFound();
@@ -559,6 +562,7 @@ function FallbackDetailBody({
   const outstanding = Math.max(0, order.price - order.paidAmount);
 
   return (
+    <ProduksiFrame>
     <div className="space-y-4">
       <Link href="/pesanan" className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline dark:text-teal-300">
         ← Kembali ke daftar pekerjaan
@@ -655,6 +659,7 @@ function FallbackDetailBody({
         </div>
       ) : null}
     </div>
+    </ProduksiFrame>
   );
 }
 

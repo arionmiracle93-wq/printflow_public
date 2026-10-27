@@ -70,7 +70,8 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-function CountBadge({ count, floating = false }: { count: number; floating?: boolean }) {
+/** Badge hitungan serah terima menunggu; dipakai MainNav & ProduksiSidebar. */
+export function CountBadge({ count, floating = false }: { count: number; floating?: boolean }) {
   if (count <= 0) return null;
   const label = count > 99 ? "99+" : String(count);
   return (
@@ -172,6 +173,16 @@ export function MainNav() {
     pathname === "/invoice" ||
     pathname.startsWith("/invoice/") ||
     pathname.startsWith("/pengaturan/invoice");
+  /* Halaman yang dibungkus ProduksiFrame: baris pill di bar atas jangan
+     dirender (navigasinya sudah pindah ke kolom kiri), supaya menu tidak
+     dobel. Bottom nav mobile tetap ikut dirender - di halaman berframe
+     ini ia diperluas sampai lg (di bawah lg sidebar menyala). */
+  const diHalamanSidebar =
+    pathname === "/produksi" ||
+    /^\/pesanan(\/|$)/.test(pathname) ||
+    /^\/pelanggan(\/|$)/.test(pathname) ||
+    /^\/mitra(\/|$)/.test(pathname) ||
+    /^\/serah-terima(\/|$)/.test(pathname);
   if (diHalamanNetral || diModulInvoice) return null;
 
   /* Tidak ada lagi penyaringan izin di sini.
@@ -188,21 +199,25 @@ export function MainNav() {
 
   return (
     <>
-      <nav className="hidden items-center gap-0.5 xl:flex">
-        {DESKTOP_LINKS.map((item) => (
-          <NavLink key={item.href} item={item} pathname={pathname} compact pendingCount={pendingCount} onIntent={prefetch} />
-        ))}
-      </nav>
+      {!diHalamanSidebar ? (
+        <>
+          <nav className="hidden items-center gap-0.5 xl:flex">
+            {DESKTOP_LINKS.map((item) => (
+              <NavLink key={item.href} item={item} pathname={pathname} compact pendingCount={pendingCount} onIntent={prefetch} />
+            ))}
+          </nav>
 
-      <nav className="hidden items-center gap-0.5 md:flex xl:hidden">
-        {DESKTOP_LINKS.filter((l) => ["/produksi", "/pesanan", "/pesanan/baru", "/serah-terima", "/pelanggan", "/pengaturan"].includes(l.href)).map(
-          (item) => <NavLink key={item.href} item={item} pathname={pathname} compact pendingCount={pendingCount} onIntent={prefetch} />,
-        )}
-      </nav>
+          <nav className="hidden items-center gap-0.5 md:flex xl:hidden">
+            {DESKTOP_LINKS.filter((l) => ["/produksi", "/pesanan", "/pesanan/baru", "/serah-terima", "/pelanggan", "/pengaturan"].includes(l.href)).map(
+              (item) => <NavLink key={item.href} item={item} pathname={pathname} compact pendingCount={pendingCount} onIntent={prefetch} />,
+            )}
+          </nav>
+        </>
+      ) : null}
 
       {mounted
         ? createPortal(
-            <nav className="mobile-bottom-nav border-t border-teal-100 bg-white/95 shadow-[0_-8px_30px_rgba(8,47,73,.12)] backdrop-blur-xl md:hidden no-print dark:border-teal-900/40 dark:bg-[#0b1c28]/95 dark:shadow-[0_-8px_30px_rgba(0,0,0,.4)]">
+            <nav className={`mobile-bottom-nav border-t border-teal-100 bg-white/95 shadow-[0_-8px_30px_rgba(8,47,73,.12)] backdrop-blur-xl no-print dark:border-teal-900/40 dark:bg-[#0b1c28]/95 dark:shadow-[0_-8px_30px_rgba(0,0,0,.4)] ${diHalamanSidebar ? "lg:hidden" : "md:hidden"}`}>
               <ul
                 /* Lima menu, jadi lima kolom. Invoice dicabut dari
                    navigasi bawah; Shift masuk supaya menu harian tidak

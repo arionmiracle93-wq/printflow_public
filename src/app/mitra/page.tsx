@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, Building2, CircleDollarSign, Clock3, ExternalLink, PackageCheck, Plus, StickyNote, Truck } from "lucide-react";
 import { ProblemScreen } from "@/components/ProblemScreen";
+import { ProduksiFrame } from "@/components/ProduksiSidebar";
 import { safeDb } from "@/lib/dbcheck";
 import { deadlineOf, formatDateID, formatRupiah, humanDuration } from "@/lib/domain";
 import { listOutsourceOverview } from "@/lib/outsource-queries";
@@ -36,6 +37,7 @@ export default async function MitraPage() {
   const totalMargin = [...priceByOrder].reduce((s, [orderId, price]) => s + (price - (costByOrder.get(orderId) ?? 0)), 0);
 
   return (
+    <ProduksiFrame>
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="page-title">Produksi Mitra</h1><p className="mt-1 text-sm text-slate-500">Pantau pekerjaan di percetakan lain atau pusat tanpa kehilangan kendali deadline dan margin.</p></div>
@@ -82,6 +84,7 @@ export default async function MitraPage() {
         </div>
       )}
     </div>
+    </ProduksiFrame>
   );
 }
 

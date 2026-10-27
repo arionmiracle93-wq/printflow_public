@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { NewOrderForm } from "@/components/NewOrderForm";
 import { ProblemScreen } from "@/components/ProblemScreen";
+import { ProduksiFrame } from "@/components/ProduksiSidebar";
 import { safeDb } from "@/lib/dbcheck";
 import { listCustomers } from "@/lib/queries";
 import { listPartners } from "@/lib/outsource-queries";
@@ -16,6 +17,7 @@ export default async function NewOrderPage() {
   const [customers, employees, partners] = result.data;
 
   return (
+    <ProduksiFrame>
     <div className="space-y-4">
       <div>
         <h1 className="page-title flex items-center gap-2">
@@ -32,5 +34,6 @@ export default async function NewOrderPage() {
         partners={partners.map((p) => ({ id: p.id, name: p.name, kind: p.kind, phone: p.phone, active: p.active }))}
       />
     </div>
+    </ProduksiFrame>
   );
 }
