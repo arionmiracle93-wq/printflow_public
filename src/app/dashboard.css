@@ -65,7 +65,9 @@
     }
   }
 
-  @media (min-width: 1280px) {
+  /* Breakpoint pemisah 6 kolom mengikuti grid strip KPI yang kini 2xl
+     (1536px) karena sidebar kiri membuat kolom isi menyusut sejak lg. */
+  @media (min-width: 1536px) {
     .pf-kpi:nth-child(3n + 1)::before {
       display: block;
     }

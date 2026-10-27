@@ -151,8 +151,11 @@ async function DashboardContent() {
           dipisah garis vertikal). Ikon tetap versi original; hover hanya naik
           sedikit. Tampilan diatur oleh KpiCard di src/components/ui.tsx dan
           .pf-kpi di src/app/dashboard.css. Garis progres mewakili data nyata:
-          lihat src/lib/kpi-bars.ts untuk arti tiap garis. */}
-      <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 xl:grid-cols-6">
+          lihat src/lib/kpi-bars.ts untuk arti tiap garis.
+          Enam kolom menunggu 2xl (1536px): sejak sidebar lebih muncul (lg+)
+          kolom isi menyusut ±248px, jadi di lg-2xl strip tampil 3x2 supaya
+          label "Pekerjaan aktif" dsb. tidak terpotong. Skeleton harus ikut. */}
+      <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 2xl:grid-cols-6">
         <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={bars.aktif.pct} barLabel={bars.aktif.label} />
         <KpiCard
           label="Terlambat"
