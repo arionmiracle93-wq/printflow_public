@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, Camera, ClipboardList, Factory, History, MessageCircle, MoreHorizontal } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Camera, ClipboardList, Factory, Gauge, History, MessageCircle, MoreHorizontal } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 type TabKey = "ringkasan" | "mitra" | "komunikasi" | "foto" | "lainnya";
@@ -127,13 +128,22 @@ export function OrderDetailTabs({
 
       {/* ============================================================
           Sidebar menu tab vertikal - CUMA desktop (xl, >=1280px).
-          Tombol yang sama, cuma tampilannya beda (vertikal, bukan
-          pil horizontal) supaya jadi kolom pertama. Menempel (sticky)
-          saat halaman digulir.
+          Baris paling atas = tautan balik ke dashboard produksi
+          (permintaan owner), dipisah garis tipis, lanjut tombol tab
+          yang sama (vertical, bukan pil horizontal) supaya jadi kolom
+          pertama. Menempel (sticky) saat halaman digulir.
           ============================================================ */}
       <div className="hidden xl:col-start-1 xl:row-start-1 xl:row-span-2 xl:block xl:self-start xl:sticky xl:top-20">
         <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[.12em] text-slate-400 dark:text-slate-500">Navigation</p>
         <nav className="flex flex-col gap-1">
+          <Link
+            href="/produksi"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-bold transition text-teal-700 hover:bg-teal-50 hover:text-teal-800 dark:text-teal-300 dark:hover:bg-white/5 dark:hover:text-teal-200"
+          >
+            <Gauge size={17} className="shrink-0" />
+            Dashboard
+          </Link>
+          <div className="mx-1 my-1 h-px bg-slate-200 dark:bg-white/10" aria-hidden />
           {tabs.map((t) => (
             <button
               key={t.key}

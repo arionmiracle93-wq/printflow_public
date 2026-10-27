@@ -75,18 +75,18 @@ function riskTone(level: string) {
    Versi sebelumnya memakai kartu tebal dua kolom, sehingga hanya
    empat pekerjaan terlihat sekaligus. Dengan baris data, delapan
    sampai sepuluh pekerjaan bisa dipindai sekali lihat, yang memang
-   tugas utama layar ini.
+   tugas utama layar ini. Kolom "#" (nomor urut) dihapus atas
+   permintaan owner: ruangnya diserahkan ke kolom Pekerjaan supaya
+   kode + nama pelanggan tidak cepat terpotong.
    ================================================================= */
 function JobRow({
   insight,
-  rank,
   photoCount,
   outsource,
   dueDate,
   dueTime,
 }: {
   insight: OrderInsight;
-  rank: number;
   photoCount: number;
   outsource: Outsource;
   dueDate: string;
@@ -98,8 +98,6 @@ function JobRow({
 
   return (
     <div className="pf-row">
-      <span className="pf-num text-xs font-semibold text-[color:var(--pf-ink-3)]">{rank}</span>
-
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
           <Link
@@ -283,18 +281,16 @@ export function JobQueue({
       {/* Layar lebar: baris data. */}
       <div className="pf-surface hidden overflow-hidden lg:block">
         <div className="pf-row-head">
-          <span>#</span>
           <span>Pekerjaan</span>
           <span>Tahap</span>
           <span>PIC dan tenggat</span>
           <span className="text-center">Skor</span>
           <span className="text-center">Aksi</span>
         </div>
-        {jobs.map((job, i) => (
+        {jobs.map((job) => (
           <JobRow
             key={job.orderId}
             insight={job}
-            rank={i + 1}
             photoCount={photoCounts.get(job.orderId) ?? 0}
             outsource={outsource.get(job.orderId)}
             dueDate={due.get(job.orderId)?.dueDate ?? ""}
