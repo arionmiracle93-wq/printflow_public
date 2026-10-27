@@ -129,7 +129,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         {user ? <PaymentQueueSync /> : null}
         {user ? <AutoRefresh /> : null}
         <ExitOnBackConfirm />
-        {!noShell && !isLacak && (<header className="app-header sticky top-0 z-30 border-b border-teal-100/80 bg-white/95 shadow-[0_8px_30px_rgba(7,56,79,.10)] backdrop-blur-xl no-print dark:border-white/10 dark:bg-[#07384f]/95 dark:shadow-[0_8px_30px_rgba(0,0,0,.28)]">
+        {!noShell && !isLacak && (<header className="app-header sticky top-0 z-30 border-b border-teal-100/80 bg-white/95 shadow-[0_8px_30px_rgba(7,56,79,.10)] backdrop-blur-xl no-print dark:border-white/10 dark:bg-[#081420]/95 dark:shadow-[0_8px_30px_rgba(0,0,0,.28)]">
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-2.5 lg:px-6">
             {/* Logo -> home. "/" sekarang home screen pemilih modul,
                 sebelumnya dashboard Produksi.
