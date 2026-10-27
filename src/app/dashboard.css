@@ -78,37 +78,6 @@
     }
   }
 
-  /* Strip 6 segaris milik dashboard produksi (.pf-kpi-strip). Kolom isi
-     menyusut ±248px karena sidebar dan TIDAK pulih di layar super lebar
-     (max-width konten 1440 membuat lebar kartu tetap ±180px ke atas),
-     jadi aturan ini berlaku di semua ukuran >=1024 dengan skala pas:
-     huruf label & angka mengecil, padding kiri + jarak kolom dirapatkan,
-     dan ikon dikecilkan sedikit supaya teks tidak menabrak garis pemisah.
-     Kelas strip hanya dipasang di /produksi (+ skeleton); modul Invoice
-     tetap memakai grid 4 kolom sendiri dan tidak tersentuh. */
-  @media (min-width: 1024px) {
-    .pf-kpi-strip .pf-kpi {
-      padding-left: 0.875rem;
-    }
-
-    .pf-kpi-strip .pf-kpi > div:first-child {
-      column-gap: 10px;
-    }
-
-    .pf-kpi-strip .pf-kpi svg {
-      width: 26px;
-      height: 26px;
-    }
-
-    .pf-kpi-strip .pf-kpi-label {
-      font-size: clamp(8.5px, 0.6vw, 10px);
-    }
-
-    .pf-kpi-strip .pf-kpi-value {
-      font-size: clamp(12.5px, 1.02vw, 17px);
-    }
-  }
-
   /* -------------------------------------------------------------
      1. Antrean pekerjaan, baris data (layar lebar)
      ------------------------------------------------------------- */
@@ -573,5 +542,45 @@
     .dark .pf-act-wide-primary:hover {
       color: #05242c;
     }
+  }
+}
+
+/* =====================================================================
+   ATURAN DI LUAR @layer components:
+   UKURAN ISI STRIP KPI PRODUKSI (.pf-kpi-strip)
+   =====================================================================
+   Kenapa di luar layer: ukuran bawaan KpiCard disetel lewat util Tailwind
+   (md:text-[11px], md:pl-6, md:gap-x-3.5, [&>svg]:h-8) yang tinggal di
+   @layer utilities. CSS dalam layer header KAPAN PUN kalah dari util di
+   layer utilities, sekalipun seleksinya lebih besar - dua revisi sebelumnya
+   "diam saja" karena ditaruh di dalam layer. Ini pola yang sama dipakai
+   override KPI ringkas Invoice di globals.css (aturan .pf-kpi-grid ...).
+   Kolom isi menyusut ±248px karena sidebar dan tidak pulih di layar super
+   lebar (max-width konten 1440 membuat lebar kartu tetap ±180px ke atas),
+   jadi skala strip berlaku di semua ukuran >=1024: huruf label & angka
+   mengecil, padding kiri + jarak kolom dirapatkan, ikon dikecilkan sedikit
+   supaya teks tidak menabrak garis pemisah. Kelas strip hanya dipasang di
+   /produksi (+ skeleton); modul Invoice tetap memakai grid 4 kolom sendiri.
+   ===================================================================== */
+@media (min-width: 1024px) {
+  .pf-kpi-strip .pf-kpi {
+    padding-left: 0.875rem;
+  }
+
+  .pf-kpi-strip .pf-kpi > div:first-child {
+    column-gap: 10px;
+  }
+
+  .pf-kpi-strip .pf-kpi svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .pf-kpi-strip .pf-kpi p.pf-kpi-label {
+    font-size: clamp(9px, 0.6vw, 10px);
+  }
+
+  .pf-kpi-strip .pf-kpi p.pf-kpi-value {
+    font-size: clamp(12.5px, 1.02vw, 17px);
   }
 }
