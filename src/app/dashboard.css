@@ -65,15 +65,37 @@
     }
   }
 
-  /* Breakpoint pemisah 6 kolom mengikuti grid strip KPI yang kini 2xl
-     (1536px) karena sidebar kiri membuat kolom isi menyusut sejak lg. */
-  @media (min-width: 1536px) {
+  /* Pemisah 6 kolom mulai lg (1024px): strip KPI produksi kini 6 segaris
+     pada semua ukuran yang menampilkan sidebar (pilihan owner), bukan
+     hanya sejak 1536px. */
+  @media (min-width: 1024px) {
     .pf-kpi:nth-child(3n + 1)::before {
       display: block;
     }
 
     .pf-kpi:first-child::before {
       display: none;
+    }
+  }
+
+  /* Strip 6 segaris milik dashboard produksi (.pf-kpi-strip). Kolom isi
+     menyusut ±248px karena sidebar, jadi huruf label & angka ikut lebar
+     layar mengecil (clamp), dan padding kiri kartu dirapatkan. Kelas strip
+     ini hanya dipasang di /produksi (+ skeleton); modul Invoice memakai
+     grid 4 kolom sendiri dan tidak tersentuh. */
+  @media (min-width: 1024px) and (max-width: 1535.98px) {
+    .pf-kpi-strip .pf-kpi {
+      padding-left: 0.875rem;
+    }
+
+    .pf-kpi-strip .pf-kpi-label {
+      font-size: clamp(9px, 0.72vw, 11px);
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1439.98px) {
+    .pf-kpi-strip .pf-kpi-value {
+      font-size: clamp(12.5px, 1.02vw, 17px);
     }
   }
 

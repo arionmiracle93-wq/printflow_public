@@ -10,9 +10,9 @@ export function DashboardSkeleton() {
       <div className="pf-skel h-[270px] w-full rounded-[1.5rem] md:h-[260px]" />
 
       {/* Bentuknya mengikuti strip KPI: ikon besar di kiri, label, angka,
-          dan garis tipis; enam kolom mulai 2xl (pagari sama dengan
-          /produksi/page.tsx, sidebar membuat kolom isi menyusut). */}
-      <div className="grid grid-cols-2 gap-y-3 md:grid-cols-3 2xl:grid-cols-6">
+          dan garis tipis; 6 segaris mulai lg (pagari sama dengan
+          /produksi/page.tsx) dan kelas ulang .pf-kpi-strip. */}
+      <div className="pf-kpi-strip grid grid-cols-2 gap-y-3 md:grid-cols-3 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="pf-kpi relative py-3 pl-4 pr-2 md:pl-6 xl:pl-5">
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 md:gap-x-3.5">

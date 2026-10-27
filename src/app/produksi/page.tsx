@@ -152,10 +152,11 @@ async function DashboardContent() {
           sedikit. Tampilan diatur oleh KpiCard di src/components/ui.tsx dan
           .pf-kpi di src/app/dashboard.css. Garis progres mewakili data nyata:
           lihat src/lib/kpi-bars.ts untuk arti tiap garis.
-          Enam kolom menunggu 2xl (1536px): sejak sidebar lebih muncul (lg+)
-          kolom isi menyusut ±248px, jadi di lg-2xl strip tampil 3x2 supaya
-          label "Pekerjaan aktif" dsb. tidak terpotong. Skeleton harus ikut. */}
-      <section className="grid grid-cols-2 gap-y-3 md:grid-cols-3 2xl:grid-cols-6">
+          PILIHAN owner: strip 6 SEGARIS di setiap ukuran yang menampilkan
+          sidebar (lg+). Kolom isi menyusut ±248px, jadi label & angka versi
+          strip memakai huruf mengecil bertahap via .pf-kpi-strip
+          (dashboard.css). HP tetap 2 kolom dan tablet 3x2; skeleton ikut. */}
+      <section className="pf-kpi-strip grid grid-cols-2 gap-y-3 md:grid-cols-3 lg:grid-cols-6">
         <KpiCard label="Pekerjaan aktif" value={String(insight.stats.totalActive)} icon={<ClipboardList size={18} />} bar={bars.aktif.pct} barLabel={bars.aktif.label} />
         <KpiCard
           label="Terlambat"

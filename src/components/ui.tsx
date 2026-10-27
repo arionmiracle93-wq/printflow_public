@@ -128,7 +128,7 @@ export function KpiCard({
             {label}
           </p>
           <div className="mt-1 flex items-baseline gap-2">
-            <p className={`whitespace-nowrap font-semibold leading-none tracking-tight ${valueSize} ${tone}`}>{value}</p>
+            <p className={`pf-kpi-value whitespace-nowrap font-semibold leading-none tracking-tight ${valueSize} ${tone}`}>{value}</p>
             {hint ? <p className="min-w-0 truncate text-[11px] font-normal text-slate-400">{hint}</p> : null}
           </div>
         </div>
