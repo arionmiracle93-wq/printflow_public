@@ -80,16 +80,11 @@ function SideRow({
       onTouchStart={() => onIntent(item.href)}
       className={`ppi-side-btn ${active ? "active" : ""}`}
     >
-      <span className="relative inline-flex shrink-0">
-        {/* Pembungkus relatif: badge mengambang di sudut ikon ikut pola
-            CountBadge floating, jadi tetap terlihat saat sidebar
-            menyempit jadi rail ikon. */}
-        <span className="ppi-ico">
-          <Icon size={18} strokeWidth={1.75} />
-        </span>
-        <CountBadge count={shiftCount} floating />
+      <span className="ppi-ico">
+        <Icon size={18} strokeWidth={1.75} />
       </span>
       <span className="ppi-side-label">{item.label}</span>
+      <CountBadge count={shiftCount} />
     </Link>
   );
 }
@@ -104,11 +99,7 @@ export function ProduksiSidebar() {
   };
 
   return (
-    /* MODE RAIL: bawaan sempit (hanya ikon); hover/fokus mengembang
-       penuh - animasinya lewat CSS (blok "SIDEBAR PRODUKSI RAIL" di
-       globals.css), tanpa JavaScript tambahan. Kolom grid di
-       ProduksiFrame memakai track `auto` supaya isi halaman mengikuti. */
-    <aside className="ppi-side ppi-side--produksi pf-side-scroll sticky top-20 hidden flex-col self-start lg:flex">
+    <aside className="ppi-side ppi-side--produksi pf-side-scroll sticky top-20 hidden w-full flex-col self-start lg:flex">
       {/* Kicker "Modul Produksi" dihapus per permintaan owner — identitas
           modul tetap terbaca dari halaman & ilustrasi di bawah ini. */}
       {/* Ilustrasi dekoratif: dipasang lewat CSS background (bukan <img>)
@@ -141,15 +132,14 @@ export function ProduksiSidebar() {
 
 /**
  * Pembungkus dua kolom halaman Produksi (sidebar kiri + isi). Pola sama
- * dengan InvoiceFrame, dengan satu beda: kolom pertamanya `auto`, bukan
- * `248px`, supaya kolom mengikuti lebar sidebar yang berkembang saat
- * hover (mode rail; lihat catatan di ProduksiSidebar). Di bawah lg frame ini menjadi transparan - kolomnya
+ * dengan InvoiceFrame: sidebar jadi kolom sendiri di lg+, isi mengecil
+ * dengan rapi. Di bawah lg frame ini menjadi transparan - kolomnya
  * digabung (contents) - sehingga halaman tampil satu kolom seperti
  * sebelumnya, dan navigasi tetap di bottom nav.
  */
 export function ProduksiFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-5">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-5">
       <div className="contents lg:block">
         <ProduksiSidebar />
       </div>
