@@ -371,7 +371,9 @@ export function parsePaymentInput(raw: unknown): PaymentInput {
 type LockedInvoice = { id: number; status: string; version: number; orderId: number | null; total: number; docType: string };
 
 /** Kunci baris invoice supaya dua perangkat tidak bisa mengubahnya bersamaan. */
-async function lockInvoice(tx: Tx, id: number): Promise<LockedInvoice> {
+/* Diexport supaya fitur lain di modul invoice (mis. refund) mengunci baris
+   invoice dengan pola yang sama — satu pintu, tidak ada kunci ganda. */
+export async function lockInvoice(tx: Tx, id: number): Promise<LockedInvoice> {
   type Row = { id: number; status: string; version: number; order_id: number | null; total: number; doc_type: string };
   const result = await tx.execute<Row>(
     sql`select id, status, version, order_id, total, doc_type from invoices where id = ${id} for update`,

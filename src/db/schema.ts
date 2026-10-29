@@ -471,6 +471,54 @@ export const payments = pgTable("payments", {
   voidReason: text("void_reason"),
 });
 
+/**
+ * REFUND (PENGEMBALIAN UANG)
+ * ----------------------------------------------------------------
+ * Tabel TERPISAH dari payments sesuai PRD: uang MASUK (payments) tidak
+ * pernah diutak-atik refund, sehingga semua perhitungan lama berjalan
+ * tanpa risiko — terbayar, status lunas, laporan kas masuk, matching
+ * mutasi bank, dan cermin ke pesanan produksi semua tetap kekal.
+ *
+ * Dampak refund baru muncul SETELAH statusnya "completed" dan hanya di
+ * laporan kas keluar / kas masuk neto (PRD: pengajuan yang belum
+ * selesai TIDAK dihitung sebagai uang keluar). Pengajuan berstatus
+ * pending/approved tetap ikut memakan "sisa uang yang boleh
+ * direfund" supaya total pengajuan tidak bisa melebihi uang aktif.
+ *
+ * Alur status: pending → (Owner) approved → (Owner) completed.
+ * Owner juga boleh membatalkan approval (→ rejected), mis. kalau
+ * uang aktif berkurang sejak pengajuan. Baris TIDAK PERNAH dihapus
+ * (append + perubahan status saja) sesuai PRD.
+ */
+export const refunds = pgTable("refunds", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  /** Nominal uang KELUAR — selalu positif; arahnya dilihat dari tabel ini sendiri. */
+  amount: integer("amount").notNull(),
+  /** Transfer | Cash | QRIS — jalur tempat uang keluar. */
+  method: text("method").notNull().default("Transfer"),
+  /** Alasan pengajuan (wajib, diisi pihak yang mengajukan). */
+  reason: text("reason").notNull().default(""),
+  /** No. referensi transfer keluar / rekening tujuan; opsional. */
+  reference: text("reference"),
+  /** pending | approved | rejected | completed */
+  status: text("status").notNull().default("pending"),
+  requestedBy: text("requested_by").notNull().default("Owner"),
+  decidedBy: text("decided_by"),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+  /** Catatan keputusan Owner (wajib bila ditolak / approval dibatalkan). */
+  decisionNote: text("decision_note"),
+  completedBy: text("completed_by"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  /** Tanggal uang benar-benar keluar (boleh mundur). Diisi saat completed. */
+  paidOutAt: date("paid_out_at", { mode: "string" }),
+  /** Kode unik perangkat: pengajuan yang terkirim dua kali tidak jadi dobel. */
+  clientRef: text("client_ref").unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** JEJAK AKTIVITAS INVOICE (dibuat, diedit, terbit, bayar, batal, ...). */
 export const invoiceEvents = pgTable("invoice_events", {
   id: serial("id").primaryKey(),
@@ -486,6 +534,7 @@ export const invoiceEvents = pgTable("invoice_events", {
 export type Invoice = typeof invoices.$inferSelect;
 export type InvoiceItemRow = typeof invoiceItems.$inferSelect;
 export type PaymentRow = typeof payments.$inferSelect;
+export type RefundRow = typeof refunds.$inferSelect;
 export type InvoiceEventRow = typeof invoiceEvents.$inferSelect;
 
 /**

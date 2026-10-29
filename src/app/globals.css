@@ -2971,13 +2971,6 @@ button.ppi-dashed:hover { background: var(--ppi-accent-tint); }
     radial-gradient(120% 55% at 50% 0%, rgba(45, 212, 191, 0.08), transparent 62%),
     linear-gradient(180deg, #112a38 0%, #0c1e29 100%);
 }
-.ppi-side--produksi .ppi-kicker {
-  padding: 0 8px;
-  font-size: 12.6px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-}
 .ppi-side-hero {
   margin: 6px 0 14px;
   aspect-ratio: 640 / 277;
@@ -3022,6 +3015,65 @@ button.ppi-dashed:hover { background: var(--ppi-accent-tint); }
   .ppi-side--produksi .ppi-side-btn .ppi-ico { width: 36px; height: 36px; }
   .ppi-side-nav { gap: 2px; }
   .ppi-side--produksi .ppi-side-hr { margin-block: 8px; }
+}
+
+/* ------------------------------------------------------------------
+   SIDEBAR PRODUKSI - MODE RAIL (diminta owner, gagasan sidebar kasir
+   ala Aceternity): bawaan SEMPIT hanya ikon; mouse masuk ATAU fokus
+   lewat keyboard mengembangkannya ke 300px (label + ilustrasi muncul).
+   Semua animasi CSS murni (transisi width) — tanpa dependensi baru.
+   Aturan tetap dibatasi .ppi-side--produksi, jadi sidebar Invoice dan
+   drawer mobile yang juga memakai .ppi-side-btn tidak tersentuh.
+   ------------------------------------------------------------------ */
+.ppi-side--produksi {
+  width: 84px;
+  overflow: hidden;
+  transition: width 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.ppi-side--produksi:hover,
+.ppi-side--produksi:focus-within {
+  width: 300px;
+}
+/* Label & ilustrasi memudar mengikuti keadaan terbuka atau runtuh. */
+.ppi-side--produksi .ppi-side-label {
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.2s ease 0.12s;
+}
+.ppi-side--produksi:not(:hover):not(:focus-within) .ppi-side-label {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.ppi-side--produksi .ppi-side-hero {
+  max-height: 300px;
+  transition:
+    max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.2s ease 0.12s,
+    margin 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.ppi-side--produksi:not(:hover):not(:focus-within) .ppi-side-hero {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  transition:
+    max-height 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.1s ease,
+    margin 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* Hormati pengaturan aksesibilitas: tanpa animasi. */
+@media (prefers-reduced-motion: reduce) {
+  .ppi-side--produksi,
+  .ppi-side--produksi .ppi-side-label,
+  .ppi-side--produksi .ppi-side-hero {
+    transition: none;
+  }
+}
+/* Perangkat sentuh yang tetap lebar (iPad dsb) tidak punya hover:
+   rail sempit tak mungkin dibuka — jadikan selalu mengembang. */
+@media (hover: none) and (min-width: 1024px) {
+  .ppi-side--produksi {
+    width: 300px;
+  }
 }
 
 @media print {

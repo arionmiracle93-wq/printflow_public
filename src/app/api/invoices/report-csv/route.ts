@@ -2,7 +2,7 @@ import { jakartaDateISO } from "@/lib/domain";
 import { requireInvoiceAccess } from "@/lib/invoice-access";
 import { invoiceFailure } from "@/lib/invoice-api";
 import { buildPeriod } from "@/lib/invoice-period";
-import { getExportRows, getReport, getReportLite, periodLabelForCsv, toCsv } from "@/lib/invoice-reports";
+import { getExportRows, getRefundReport, getReport, getReportLite, periodLabelForCsv, toCsv } from "@/lib/invoice-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +16,17 @@ export async function GET(request: Request) {
       { mode: sp.get("mode") ?? undefined, bulan: sp.get("bulan") ?? undefined, tanggal: sp.get("tanggal") ?? undefined, dari: sp.get("dari") ?? undefined, sampai: sp.get("sampai") ?? undefined },
       jakartaDateISO(),
     );
-    const [rep, prev, rows] = await Promise.all([
+    const [rep, prev, rows, refund] = await Promise.all([
       getReport(period.from, period.to, { parts: { methods: false } }),
       getReportLite(period.prevFrom, period.prevTo),
       getExportRows({ from: period.from, to: period.to }),
+      /* Refund aman digagalkan sendiri: CSV invoice tidak boleh rusak gara-gara data refund. */
+      getRefundReport(period.from, period.to).catch(() => null),
     ]);
-    if (!rep.count) return Response.json({ ok: false, error: "Tidak ada data pada periode ini." }, { status: 404 });
+    if (!rep.count && !refund?.count) return Response.json({ ok: false, error: "Tidak ada data pada periode ini." }, { status: 404 });
+    /* Mode A: nilai invoice tidak berubah oleh refund — kas keluarnya
+       dilaporkan sekilas di ringkasan dan rinci di seksi tersendiri. */
+    const neto = rep.terbayar - (refund?.total ?? 0);
     const csv = toCsv([
       [periodLabelForCsv(period), period.label],
       [],
@@ -32,6 +37,8 @@ export async function GET(request: Request) {
       ["Sudah dibayar", rep.terbayar],
       ["Belum dibayar", rep.piutang],
       ["Invoice lunas", rep.lunasCount],
+      ["Refund terkirim (uang keluar)", refund?.total ?? 0],
+      ["Kas masuk neto (dibayar - refund)", neto],
       [`Omzet ${period.prevLabel}`, prev.omzet],
       [],
       ["PRODUK TERLARIS"],
@@ -41,6 +48,14 @@ export async function GET(request: Request) {
       ["PELANGGAN TERATAS"],
       ["Pelanggan", "Jumlah Invoice", "Total"],
       ...rep.customers.map((r) => [r.name, r.count, r.amount]),
+      ...(refund?.rows.length
+        ? [
+            [],
+            ["REFUND TERKIRIM (UANG KELUAR)"],
+            ["Tanggal Keluar", "No Invoice", "Customer", "Metode", "Alasan", "Nominal"],
+            ...refund.rows.map((r) => [r.paidOutAt, r.number, r.customer, r.method, r.reason, r.amount]),
+          ]
+        : []),
       [],
       ["RINCIAN INVOICE"],
       ["No Invoice", "Tanggal", "Customer", "Total", "Dibayar", "Sisa", "Status"],

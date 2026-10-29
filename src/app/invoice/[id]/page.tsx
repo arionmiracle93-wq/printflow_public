@@ -9,6 +9,7 @@ import { ReminderModalHost } from "@/components/ReminderModal";
 import { InvoiceStatusBadge, PayStatusBadge, ProductionMirrorBadge } from "@/components/InvoiceBadges";
 import { InvoicePaper } from "@/components/InvoicePaper";
 import { InvoicePaymentPanel } from "@/components/InvoicePaymentPanel";
+import { InvoiceRefundPanel } from "@/components/InvoiceRefundPanel";
 import { InvoiceFrame, InvoiceSidebar } from "@/components/InvoiceSidebar";
 import { ProblemScreen } from "@/components/ProblemScreen";
 import { safeDb } from "@/lib/dbcheck";
@@ -16,6 +17,7 @@ import { customerLabel, formatDateTimeID, formatRupiah, jakartaDateISO } from "@
 import { getInvoiceAccess } from "@/lib/invoice-access";
 import { DOC_MODES, docModeOf } from "@/lib/invoice-modes";
 import { getInvoiceDetail } from "@/lib/invoice-queries";
+import { listRefunds, refundBuffer } from "@/lib/refund-queries";
 import { dueStatus } from "@/lib/invoice-due";
 import { unmatchedInvoiceItems } from "@/lib/production-sync";
 import { itemsByOrderId } from "@/lib/queries";
@@ -46,6 +48,14 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
 
   const { invoice, payments, events, order, summary, source, converted } = detail;
   const mode = docModeOf(invoice.docType);
+  /* Refund hanya relevan untuk Invoice (mengikuti panel Pembayaran).
+     Kegagalan ambil data dilapangkan jadi null: halaman detail jangan sampai
+     ikut mati gara-gara panel refund. */
+  const refundData = mode.hasPayments
+    ? await Promise.all([listRefunds(invoice.id), refundBuffer(invoice.id)]).catch(() => null)
+    : null;
+  const refundRows = refundData?.[0] ?? [];
+  const refundable = refundData?.[1] ?? 0;
   const activePayments = payments.some((p) => !p.voidedAt);
   // Karyawan tidak boleh mengedit invoice yang sudah ada pembayarannya (server juga menolak).
   const canEdit = access.isOwner || !(invoice.status === "terbit" && activePayments);
@@ -327,6 +337,32 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
                   voidedAt: p.voidedAt ? p.voidedAt.toISOString() : null,
                   voidedBy: p.voidedBy,
                   voidReason: p.voidReason,
+                }))}
+              />
+
+              {/* Panel refund: pasangan panel pembayaran. Datum dihitung
+                  server (sisa uang yang boleh direfund), riwayat tidak ada
+                  hitungan di sisi klien supaya tidak berbeda cerita. */}
+              <InvoiceRefundPanel
+                invoiceId={invoice.id}
+                status={invoice.status}
+                refundable={refundable}
+                isOwner={access.isOwner}
+                refunds={refundRows.map((r) => ({
+                  id: r.id,
+                  amount: r.amount,
+                  method: r.method,
+                  reason: r.reason,
+                  reference: r.reference,
+                  status: r.status,
+                  requestedBy: r.requestedBy,
+                  createdAt: r.createdAt.toISOString(),
+                  decidedBy: r.decidedBy,
+                  decidedAt: r.decidedAt ? r.decidedAt.toISOString() : null,
+                  decisionNote: r.decisionNote,
+                  completedBy: r.completedBy,
+                  completedAt: r.completedAt ? r.completedAt.toISOString() : null,
+                  paidOutAt: r.paidOutAt,
                 }))}
               />
             </div>

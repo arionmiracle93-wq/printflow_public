@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { jakartaDateISO } from "@/lib/domain";
 import { dueStatus } from "@/lib/invoice-due";
 import { monthEnd, type Period } from "@/lib/invoice-period";
+import { ensureRefundSchema } from "@/lib/refund-schema";
 
 /**
  * RINGKASAN PIUTANG & LAPORAN (diporting dari app lama)
@@ -237,6 +238,150 @@ export async function getPayMethodLedger(from: string, to: string, method: strin
       };
     }),
   };
+}
+
+export type SalesTxRow = {
+  id: number;
+  number: string;
+  customer: string;
+  total: number;
+  /** pay_status invoice: belum | sebagian | lunas. */
+  status: string;
+  /** Waktu WIB "YYYY-MM-DD HH:MI" — jam invoice DIBUAT (waktu order). */
+  createdAt: string;
+  /** Waktu WIB pembayaran terakhir yang tidak dibatalkan ("" bila belum pernah bayar). */
+  paidAt: string;
+  method: string;
+  /** Operator yang mencatat pembayaran terakhir ("" bila belum ada). */
+  paidBy: string;
+  /** Operator yang menerbitkan/membuat invoice. */
+  orderedBy: string;
+};
+
+export type SalesTxPage = {
+  /** Jumlah transaksi sepanjang periode (bukan hanya baris halaman ini). */
+  count: number;
+  page: number;
+  per: number;
+  pages: number;
+  rows: SalesTxRow[];
+};
+
+/**
+ * SATU HALAMAN tabel transaksi penjualan (tab Penjualan laporan).
+ * Pengganti tampilan grafik di tab itu (diminta owner): daftar per
+ * invoice dengan mode halaman seperti rekap kasir di aplikasi POS.
+ * Sumber data sama dengan kartu KPI penjualan (invoice terbit per
+ * issue_date), jadi angkanya tidak bisa cerai dari kartu di atas.
+ * Sub-query pembayaran terakhir yang tidak dibatalkan — invoice
+ * tidak disentuh sama sekali, chip kosong hanya menjadi "-".
+ * count pakai window; bila halaman yang diminta melampaui jumlah data,
+ * window menghasilkan baris kosong, maka count diambil lewat query
+ * terpisah sekali jalan alih-alih melaporkan nol palsu.
+ */
+export async function getSalesTransactions(from: string, to: string, page: number, per: number): Promise<SalesTxPage> {
+  const safePage = Math.max(1, Math.floor(page) || 1);
+  const safePer = Math.min(50, Math.max(1, Math.floor(per) || 10));
+  const r = await db.execute<Record<string, string | number | null>>(sql`
+    select i.id, i.number,
+           coalesce(nullif(btrim(i.customer_name), ''), 'Tanpa nama') as customer,
+           i.pay_status, i.total, i.pay_method, i.created_by,
+           to_char(i.created_at at time zone 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI') as waktu_order,
+           (select to_char(p.paid_at at time zone 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI')
+              from payments p
+             where p.invoice_id = i.id and p.voided_at is null
+             order by p.paid_at desc, p.id desc limit 1) as waktu_bayar,
+           (select p.created_by
+              from payments p
+             where p.invoice_id = i.id and p.voided_at is null
+             order by p.paid_at desc, p.id desc limit 1) as paid_by,
+           count(*) over()::text as c_all
+      from invoices i
+     where ${INV} and i.issue_date between ${from}::date and ${to}::date
+     order by i.issue_date desc, i.id desc
+     limit ${safePer} offset ${(safePage - 1) * safePer}
+  `);
+  const raw = r.rows as Record<string, string | number | null>[];
+  let count = num(raw[0]?.c_all ?? null);
+  if (!raw.length) {
+    /* Halaman melewati jumlah data: window tidak bisa menghitung.
+       Hitung total satu kali agar pagination tetap betul. */
+    const c = await db.execute<Record<string, string>>(sql`
+      select count(*)::text as c_all
+        from invoices
+       where ${INV} and issue_date between ${from}::date and ${to}::date
+    `);
+    count = num((c.rows as Record<string, string>[])[0]?.c);
+  }
+  return {
+    count,
+    page: safePage,
+    per: safePer,
+    pages: count > 0 ? Math.ceil(count / safePer) : 1,
+    rows: raw.map((x) => ({
+      id: Number(x.id) || 0,
+      number: String(x.number ?? ""),
+      customer: String(x.customer ?? "Tanpa nama"),
+      total: num(x.total),
+      status: String(x.pay_status ?? "belum"),
+      createdAt: String(x.waktu_order ?? ""),
+      paidAt: String(x.waktu_bayar ?? ""),
+      method: String(x.pay_method ?? ""),
+      paidBy: String(x.paid_by ?? ""),
+      orderedBy: String(x.created_by ?? ""),
+    })),
+  };
+}
+
+export type RefundReportRow = {
+  paidOutAt: string;
+  invoiceId: number;
+  number: string;
+  customer: string;
+  amount: number;
+  method: string;
+  reason: string;
+};
+
+export type RefundReport = {
+  /** Jumlah refund terkirim dalam periode (bukan hanya 60 terbaru yang dilist). */
+  count: number;
+  /** Total uang keluar pada periode — dikurangkan di kartu "kas masuk neto". */
+  total: number;
+  rows: RefundReportRow[];
+};
+
+/**
+ * REFUND TERKIRIM pada satu periode (Mode A).
+ * Uang masuk invoice TIDAK pernah dikurangi refund — refund dilaporkan
+ * sebagai uang KELUAR tersendiri, dibaca per tanggal uang benar-benar
+ * keluar (paid_out_at), bukan tanggal pengajuan/disetujui. Baris yang
+ * masih pending/approved/rejected tidak dihitung sama sekali (PRD).
+ */
+export async function getRefundReport(from: string, to: string): Promise<RefundReport> {
+  await ensureRefundSchema();
+  const r = await db.execute<Record<string, string | null>>(sql`
+    select to_char(rf.paid_out_at, 'YYYY-MM-DD') as paid_out_at, rf.amount, rf.method, rf.reason, rf.invoice_id,
+           i.number, coalesce(nullif(btrim(i.customer_name), ''), 'Tanpa nama') as customer,
+           count(*) over()::text as c_all,
+           coalesce(sum(rf.amount) over(), 0)::text as total_all
+      from refunds rf join invoices i on i.id = rf.invoice_id
+     where rf.status = 'completed'
+       and rf.paid_out_at between ${from}::date and ${to}::date
+     order by rf.paid_out_at desc, rf.id desc
+     limit 60
+  `);
+  const rows = (r.rows as Record<string, string | null>[]).map((x) => ({
+    paidOutAt: x.paid_out_at ?? "",
+    invoiceId: Number(x.invoice_id) || 0,
+    number: x.number ?? "",
+    customer: x.customer ?? "",
+    amount: num(x.amount),
+    method: x.method ?? "",
+    reason: x.reason ?? "",
+  }));
+  const all = (r.rows as Record<string, string | null>[])[0];
+  return { count: num(all?.c_all), total: num(all?.total_all), rows };
 }
 
 export type ExportRow = {

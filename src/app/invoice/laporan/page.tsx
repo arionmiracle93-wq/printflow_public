@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Eye,
   Filter,
   Info,
   Landmark,
@@ -22,6 +23,7 @@ import {
   CircleAlert,
   PieChart,
   ReceiptText,
+  RotateCcw,
   TrendingUp,
   Users,
   Wallet,
@@ -38,16 +40,16 @@ import { safeDb } from "@/lib/dbcheck";
 import { formatRupiah, jakartaDateISO } from "@/lib/domain";
 import { getInvoiceAccess } from "@/lib/invoice-access";
 import { addDays, buildBuckets, buildPeriod, dateLabel, monthEnd, monthLabel, shiftMonthKey, shortcuts, type Period } from "@/lib/invoice-period";
-import { getPayMethodLedger, getReport, getReportLite, type PayMethodLedger, type PayMethodRow, type RankRow } from "@/lib/invoice-reports";
+import { getPayMethodLedger, getRefundReport, getReport, getReportLite, getSalesTransactions, type PayMethodLedger, type PayMethodRow, type RankRow, type RefundReport } from "@/lib/invoice-reports";
 import { getInvoiceSettings } from "@/lib/invoice-settings";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Laporan Invoice - Print Flow" };
 
-type SP = { mode?: string; bulan?: string; tanggal?: string; dari?: string; sampai?: string; banding?: string; tab?: string; metode?: string };
+type SP = { mode?: string; bulan?: string; tanggal?: string; dari?: string; sampai?: string; banding?: string; tab?: string; metode?: string; hal?: string; per?: string };
 
 type Banding = "sebelumnya" | "tahun-lalu" | "tanpa";
-type ContentTab = "ringkasan" | "penjualan" | "produk" | "pelanggan" | "pembayaran";
+type ContentTab = "ringkasan" | "penjualan" | "produk" | "pelanggan" | "pembayaran" | "refund";
 
 /* Daftar tampilan laporan. Default `ringkasan`. */
 const CONTENT_TABS: { key: ContentTab; label: string; icon: LucideIcon }[] = [
@@ -56,15 +58,17 @@ const CONTENT_TABS: { key: ContentTab; label: string; icon: LucideIcon }[] = [
   { key: "produk", label: "Produk", icon: Package },
   { key: "pelanggan", label: "Pelanggan", icon: Users },
   { key: "pembayaran", label: "Pembayaran", icon: Wallet },
+  { key: "refund", label: "Refund", icon: RotateCcw },
 ];
 
 /* Kalimat kecil di bawah judul panel kepala (mengikuti tab aktif). */
 const TAB_SUBTITLES: Record<ContentTab, string> = {
   ringkasan: "Gambaran umum kinerja bisnis Anda.",
-  penjualan: "Tren omzet dan invoice terbit.",
+  penjualan: "Daftar transaksi penjualan dalam periode ini.",
   produk: "Produk yang paling menyumbang omzet.",
   pelanggan: "Pelanggan paling aktif dalam periode ini.",
   pembayaran: "Pantau transaksi dan pembayaran bisnis Anda.",
+  refund: "Uang yang kembali ke pelanggan dan kas masuk netonya.",
 };
 
 /* Kartu "cara menghitung" (pengganti TabBar): ikon + subjudul ringkas, centang saat aktif. */
@@ -253,6 +257,79 @@ function TxRow({ r }: { r: { number: string; issueDate: string; customer: string
   );
 }
 
+/* ==== tabel transaksi penjualan (tab penjualan) ========================= */
+
+/* "YYYY-MM-DD HH:MI" (WIB dari SQL) → "1 Okt 2026, 08:23". */
+function tsLabel(v: string): string {
+  if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(v)) return "-";
+  return `${dateLabel(v.slice(0, 10))}, ${v.slice(11, 16)}`;
+}
+
+/* Urutan tombol nomor halaman dengan elips, gaya rekap kasir POS:
+   1 sampai lebar tengah tetap terlihat, celah jarak jauh jadi "…". */
+function pageList(cur: number, pages: number): Array<number | "..."> {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+  const start = cur <= 3 ? 2 : cur - 1;
+  const end = cur >= pages - 2 ? pages - 1 : Math.max(cur + 1, 4);
+  const out: Array<number | "..."> = [1];
+  if (start > 2) out.push("...");
+  for (let n = start; n <= end; n += 1) out.push(n);
+  if (end < pages - 1) out.push("...");
+  out.push(pages);
+  return out;
+}
+
+/* ==== refund (KPI + tab khusus + kartu di tab pembayaran) =============== */
+
+/* Tiga sel ringkasan uang keluar: dipakai tab Pembayaran dan halaman Refund
+   supaya angkanya tidak pernah berbeda cerita di dua tempat. */
+function RefundTiles({ dibayar, refund }: { dibayar: number; refund: RefundReport }) {
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="rounded-xl bg-emerald-50 p-2.5 dark:bg-emerald-950/40">
+        <p className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-300/80">Dibayar (dari invoice terbit)</p>
+        <p className="mt-0.5 text-[15px] font-extrabold text-emerald-700 dark:text-emerald-300">{formatRupiah(dibayar)}</p>
+      </div>
+      <div className="rounded-xl bg-rose-50 p-2.5 dark:bg-rose-950/40">
+        <p className="text-[10.5px] font-bold uppercase tracking-wider text-rose-700/80 dark:text-rose-300/80">Dikurangi refund terkirim ({refund.count})</p>
+        <p className="mt-0.5 text-[15px] font-extrabold text-rose-600">{formatRupiah(refund.total)}</p>
+      </div>
+      <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/60">
+        <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">Kas masuk neto</p>
+        <p className="mt-0.5 text-[15px] font-extrabold text-[color:var(--pf-ink)]">{formatRupiah(dibayar - refund.total)}</p>
+      </div>
+    </div>
+  );
+}
+
+/* Daftar refund terkirim (maksimal 60 terbaru), sisa dihitung di kartu atas. */
+function RefundRows({ refund }: { refund: RefundReport }) {
+  if (!refund.rows.length) return <p className="py-4 text-xs text-slate-400">Belum ada refund terkirim pada periode ini.</p>;
+  return (
+    <>
+      <ul className="divide-y divide-[color:var(--pf-line-soft)] border-t border-[color:var(--pf-line-soft)]">
+        {refund.rows.map((r, i) => (
+          <li key={`${r.invoiceId}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+            <span className="w-[86px] shrink-0 text-[11px] text-slate-400">{r.paidOutAt ? dateLabel(r.paidOutAt) : "-"}</span>
+            <span className="w-[110px] shrink-0 text-[13px] font-bold text-[color:var(--pf-ink)]">{r.number || "-"}</span>
+            <span className="min-w-0 flex-1 truncate text-[13px] text-[color:var(--pf-ink-2)]">{r.customer}</span>
+            <span className="shrink-0 text-[11px] text-slate-500">{r.method}</span>
+            <span className="shrink-0 text-[13px] font-bold text-rose-600">− {formatRupiah(r.amount)}</span>
+            {r.reason ? (
+              <span className="min-w-full truncate text-[11px] text-slate-400 sm:min-w-0 sm:basis-full" title={r.reason}>
+                {r.reason}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      {refund.count > refund.rows.length ? (
+        <p className="mt-2 text-[11px] text-slate-400">Menampilkan 60 terbaru dari {refund.count} refund. Total lengkapnya di kartu di atas.</p>
+      ) : null}
+    </>
+  );
+}
+
 /* ==== bar chart mingguan (penjualan) =================================== */
 
 function BucketBars({ buckets, label }: { buckets: { label: string; title: string; value: number }[]; label: string }) {
@@ -326,20 +403,34 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
   const cmpPromise = banding === "tanpa" ? Promise.resolve(null) : getReportLite(cmpFrom, cmpTo);
   const ledgerPromise =
     tab === "pembayaran" && metode ? getPayMethodLedger(period.from, period.to, metode) : Promise.resolve(null);
+  /* Refund terkirim dibaca untuk kartu KPI "Refund · Uang Keluar" (semua tab)
+     dan kartu detail di tab Pembayaran — uang keluar per tanggal keluar uang.
+     Gagal ambil dilapangkan jadi null: angka invoice tidak pernah tergantung
+     refund, jadi laporan lama tidak mungkin rusak oleh kartu baru. */
+  const refundPromise = getRefundReport(period.from, period.to).catch(() => null);
+  /* TABEL TRANSAKSI PENJUALAN (tab Penjualan): mode halaman lewat URL —
+     `per` dibatasi {10,25,50}, `hal` dipaksa bilangan sehat. Di tab lain
+     tidak ditarik sama sekali (nol query tambahan). */
+  const txPer = sp.per === "25" || sp.per === "50" ? Number(sp.per) : 10;
+  const txPage = Math.max(1, Number.parseInt(sp.hal ?? "", 10) || 1);
+  const salesPromise =
+    tab === "penjualan" ? getSalesTransactions(period.from, period.to, txPage, txPer).catch(() => null) : Promise.resolve(null);
   const loaded = await safeDb(async () => {
-    const [access, settings, rep, cmp, ledger] = await Promise.all([
+    const [access, settings, rep, cmp, ledger, refund, sales] = await Promise.all([
       getInvoiceAccess(),
       getInvoiceSettings(),
       getReport(period.from, period.to, { productLimit: 12, customerLimit: 10, parts: reportParts }),
       cmpPromise,
       ledgerPromise,
+      refundPromise,
+      salesPromise,
     ]);
     if (!access || !access.isOwner) return null;
-    return { settings, rep, cmp, ledger };
+    return { settings, rep, cmp, ledger, refund, sales };
   });
   if (!loaded.ok) return <ProblemScreen problem={loaded.problem} hint="Laporan dihitung dari data invoice di database." />;
   if (!loaded.data) redirect("/tidak-diizinkan?dari=invoice");
-  const { settings, rep, cmp, ledger } = loaded.data;
+  const { settings, rep, cmp, ledger, refund, sales } = loaded.data;
 
   const showCmp = banding !== "tanpa" && cmp !== null;
   const { buckets, weekly } = buildBuckets(period, rep.byDay);
@@ -405,9 +496,6 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
   const lunasPct = pctStr(rep.terbayar, rep.omzet);
   const topKirimTop5 = rep.products.slice(0, 5);
   const topCustTop5 = rep.customers.slice(0, 5);
-  const topDays = [...buckets].sort((a, b) => b.value - a.value).slice(0, 5);
-  const activeDays = buckets.filter((b) => b.value > 0).length;
-  const avgDay = period.days ? rep.omzet / period.days : 0;
 
   /* header kartu KPI */
   const noCmpNote = <p className="text-[11px] text-slate-400">Pembanding dimatikan</p>;
@@ -427,8 +515,9 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
             /* Tab tampilan laporan (Ringkasan/Penjualan/Produk/Pelanggan/
                Pembayaran) dipindah dari baris di atas kartu - permintaan
                owner: di HP dibuka lewat drawer tiga garis, di layar lebar
-               berdiri paling atas kolom samping. Export CSV menyusul di
-               bawahnya di drawer; di desktop tombolnya tetap di kop judul. */
+               berdiri paling atas kolom samping. Tombol Export CSV tidak
+               ikut di sini (dihapus per permintaan owner) - ekspornya
+               cukup di kop judul halaman. */
             <>
               <nav aria-label="Tampilan laporan" className="space-y-0.5">
                 {CONTENT_TABS.map((t) => (
@@ -442,11 +531,11 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
                   </SideButton>
                 ))}
               </nav>
-              <div className="my-2 h-px bg-[color:var(--pf-line-soft)]" aria-hidden />
-              <a href={csvHref} className="ppi-side-btn lg:hidden" title="Export laporan CSV">
-                <span className="ppi-ico"><Download size={15} /></span>
-                <span className="min-w-0 truncate">Export CSV</span>
-              </a>
+              {/* Pemisah antar grup menu: baris tab laporan di atas, menu
+                  utama Invoice (Invoice Baru/Riwayat/Katalog) di bawah.
+                  Warna dibuat tegas (bukan garis super-lunak) supaya batas
+                  antargrup langsung terlihat - permintaan owner. */}
+              <div className="my-2.5 h-px bg-slate-300 dark:bg-slate-600/70" aria-hidden />
             </>
           }
         />
@@ -613,8 +702,9 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
             </div>
         </section>
 
-        {/* ==== KPI ==== */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {/* ==== KPI ==== 5 kartu: refund ikut ringkasan supaya uang keluar
+            terlihat di samping omzet, bukan sesudah mengejar tab Pembayaran. */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <KpiCard
             tint="bg-teal-50 border-teal-100 dark:bg-teal-950/40 dark:border-teal-900/60"
             labelCls="text-teal-700 dark:text-teal-300"
@@ -654,6 +744,16 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
             value={formatRupiah(rep.piutang)}
             valueCls="text-rose-600"
             delta={deltaOr(rep.piutang, cmp?.piutang, false)}
+          />
+          <KpiCard
+            tint="bg-amber-50 border-amber-100 dark:bg-amber-950/40 dark:border-amber-900/60"
+            labelCls="text-amber-700 dark:text-amber-300"
+            iconCls="bg-white text-amber-600 shadow-sm dark:bg-amber-900/60 dark:text-amber-300"
+            icon={RotateCcw}
+            label="Refund · Keluar"
+            value={formatRupiah(refund?.total ?? 0)}
+            valueCls="text-amber-700 dark:text-amber-300"
+            delta={<p className="text-[11px] text-slate-400">{refund?.count ?? 0} pengajuan terkirim</p>}
           />
         </div>
 
@@ -763,77 +863,138 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
         ) : null}
 
         {tab === "penjualan" ? (
-          <div className="space-y-4">
-            <section className="card flex flex-col p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm font-bold text-[color:var(--pf-ink)]">Tren Penjualan per {weekly ? "Minggu" : "Hari"}</h2>
-                <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-teal-500" aria-hidden /> {period.label}</span>
-                  {showCmp && cmpSeries ? (
-                    <span className="flex items-center gap-1.5"><span className="h-0 w-4 border-t-2 border-dashed border-slate-300" aria-hidden /> {cmpSeries.label}</span>
-                  ) : null}
-                </div>
-              </div>
-              <div className="mt-2 flex-1">
-                <TrendChart series={chartSeries} cmpSeries={cmpSeries} showCmp={showCmp} dailyMode={period.mode === "daily"} />
-              </div>
-              <p className="mt-2 flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-[color:var(--pf-ink-2)] dark:bg-slate-800/60">
-                <TrendingUp size={14} className="shrink-0 text-teal-600 dark:text-teal-400" />
-                {best.value > 0 ? `Tertinggi ${best.title} · ${formatRupiah(best.value)}` : "Belum ada invoice pada periode ini."}
-              </p>
-            </section>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <section className="card p-4">
-                <h2 className="mb-3 text-sm font-bold text-[color:var(--pf-ink)]">Hari Tersibuk</h2>
-                {topDays.length && activeDays ? (
-                  <ol className="space-y-2.5">
-                    {topDays.map((b, i) => (
-                      <li key={b.label + i} className="flex items-center gap-2.5 text-[13px]">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">{i + 1}</span>
-                        <span className="min-w-0 flex-1 truncate text-[color:var(--pf-ink-2)]">{b.title}</span>
-                        <span className="font-bold text-[color:var(--pf-ink)]">{formatRupiah(b.value)}</span>
-                        <span className="w-12 shrink-0 text-right text-[11px] text-slate-400">({pctStr(b.value, rep.omzet)}%)</span>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="text-xs text-slate-400">Belum ada data pada periode ini.</p>
-                )}
-              </section>
-
-              <section className="card p-4">
-                {weekly ? (
-                  <>
-                    <BucketBars buckets={buckets} label="Penjualan per Minggu" />
-                    <p className="mt-2 text-xs text-slate-500">Periode lebih dari 60 hari, digulir sebagai mingguan (Senin–Minggu).</p>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="mb-3 text-sm font-bold text-[color:var(--pf-ink)]">Angka Kunci</h2>
-                    <dl className="space-y-2 text-[13px]">
-                      <div className="flex items-center justify-between border-b border-[color:var(--pf-line-soft)] pb-2">
-                        <dt className="text-[color:var(--pf-ink-2)]">Jumlah hari</dt>
-                        <dd className="font-bold text-[color:var(--pf-ink)]">{period.days}</dd>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-[color:var(--pf-line-soft)] pb-2">
-                        <dt className="text-[color:var(--pf-ink-2)]">Hari dengan omzet</dt>
-                        <dd className="font-bold text-[color:var(--pf-ink)]">{activeDays}</dd>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-[color:var(--pf-line-soft)] pb-2">
-                        <dt className="text-[color:var(--pf-ink-2)]">Rata-rata omzet / hari</dt>
-                        <dd className="font-bold text-[color:var(--pf-ink)]">{formatRupiah(Math.round(avgDay))}</dd>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <dt className="text-[color:var(--pf-ink-2)]">Rata-rata / invoice</dt>
-                        <dd className="font-bold text-[color:var(--pf-ink)]">{formatRupiah(Math.round(rep.avg))}</dd>
-                      </div>
-                    </dl>
-                  </>
-                )}
-              </section>
+          /* ==== TABEL TRANSAKSI PENJUALAN (pengganti grafik, diminta owner)
+             ==== Daftar per transaksi dengan mode halaman seperti rekap
+             kasir di aplikasi POS. Sumber data sama dengan kartu KPI
+             (invoice terbit per issue_date), diurut dari yang terbaru. */
+          <section className="card p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-[color:var(--pf-ink)]">Transaksi Penjualan</h2>
+              <p className="text-xs text-slate-500">{period.label} · dari yang terbaru</p>
             </div>
-          </div>
+
+            {!sales ? (
+              <p className="py-6 text-center text-xs text-slate-400">Data transaksi tidak terbaca — coba muat ulang halaman.</p>
+            ) : !sales.rows.length ? (
+              sales.count > 0 ? (
+                <p className="py-6 text-center text-xs text-slate-400">
+                  Halaman melewati daftar.{" "}
+                  <Link href={laporanUrl({ hal: "1", per: String(sales.per) })} className="font-bold text-[color:var(--pf-accent-strong)] hover:underline">
+                    Kembali ke halaman 1
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <p className="py-6 text-center text-xs text-slate-400">Belum ada transaksi pada periode ini.</p>
+              )
+            ) : (
+              <>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full min-w-[900px] text-left text-[13px]">
+                    <thead>
+                      <tr className="border-b border-[color:var(--pf-line-soft)] text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+                        <th className="py-2 pr-3">No Transaksi</th>
+                        <th className="py-2 pr-3">Waktu Order</th>
+                        <th className="py-2 pr-3">Waktu Bayar</th>
+                        <th className="py-2 pr-3">Pelanggan</th>
+                        <th className="py-2 pr-3 text-right">Total Penjualan (Rp)</th>
+                        <th className="py-2 pr-3">Metode</th>
+                        <th className="py-2 pr-3">Status</th>
+                        <th className="py-2 pr-3">Bayar</th>
+                        <th className="py-2 pr-3">Order</th>
+                        <th className="py-2"><span className="sr-only">Lihat</span></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[color:var(--pf-line-soft)]">
+                      {sales.rows.map((r) => (
+                        <tr key={r.id} className="align-middle hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                          <td className="py-2.5 pr-3 font-bold text-[color:var(--pf-ink)]">
+                            <Link href={`/invoice/${r.id}`} className="hover:underline">{r.number || `#${r.id}`}</Link>
+                          </td>
+                          <td className="whitespace-nowrap py-2.5 pr-3 text-[12px] text-slate-500">{tsLabel(r.createdAt)}</td>
+                          <td className="whitespace-nowrap py-2.5 pr-3 text-[12px] text-slate-500">{r.paidAt ? tsLabel(r.paidAt) : "—"}</td>
+                          <td className="max-w-[190px] truncate py-2.5 pr-3 text-[color:var(--pf-ink-2)]" title={r.customer}>{r.customer}</td>
+                          <td className="whitespace-nowrap py-2.5 pr-3 text-right font-bold text-[color:var(--pf-ink)]">{formatRupiah(r.total)}</td>
+                          <td className="py-2.5 pr-3 text-[12px] text-slate-600 dark:text-slate-300">{r.method}</td>
+                          <td className="py-2.5 pr-3">{payStatusChip({ lunas: r.status === "lunas", paid: r.status === "sebagian" ? 1 : 0 })}</td>
+                          <td className="py-2.5 pr-3 text-[12px] text-slate-600 dark:text-slate-300">{r.paidBy || "—"}</td>
+                          <td className="py-2.5 pr-3 text-[12px] text-slate-600 dark:text-slate-300">{r.orderedBy || "—"}</td>
+                          <td className="py-2.5">
+                            <Link href={`/invoice/${r.id}`} aria-label={`Buka invoice ${r.number || r.id}`} title="Lihat invoice" className="inline-flex text-slate-400 transition-colors hover:text-[color:var(--pf-accent-strong)]">
+                              <Eye size={15} />
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {(() => {
+                  /* ==== MODE HALAMAN (seperti rekap kasir POS): pilihan isi
+                     halaman + rentang baris + nomor + Selanjutnya + Ke
+                     Halaman. Semua form GET murni HTML — pilihan terlihat
+                     di alamat dan bisa dibagikan. */
+                  const pageBase = { ...periodParams(period), banding, ...carry };
+                  const hidden = Object.entries(pageBase).map(([k, v]) => (
+                    <input key={k} type="hidden" name={k} value={v} />
+                  ));
+                  const firstRow = (sales.page - 1) * sales.per + 1;
+                  const lastRow = firstRow + sales.rows.length - 1;
+                  const pageHref = (n: number) => laporanUrl({ hal: String(n), per: String(sales.per) });
+                  const num = (n: number) => n.toLocaleString("id-ID");
+                  const chipIdle = "min-w-[26px] rounded-lg px-2 py-1 text-center font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800";
+                  return (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-t border-[color:var(--pf-line-soft)] pt-3 text-xs text-slate-500">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <form action="/invoice/laporan" method="get" className="flex items-center gap-1.5">
+                          {hidden}
+                          <label htmlFor="tx-per" className="whitespace-nowrap">Tampilkan:</label>
+                          <select id="tx-per" name="per" defaultValue={String(sales.per)} className="rounded-lg border border-[color:var(--pf-line-soft)] bg-white px-1.5 py-1 text-xs text-[color:var(--pf-ink)] dark:bg-slate-900">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                          </select>
+                          <button type="submit" className="whitespace-nowrap rounded-lg bg-slate-100 px-2 py-1 font-semibold text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Terapkan</button>
+                        </form>
+                        <span>
+                          Ditampilkan {num(firstRow)} – {num(lastRow)} dari <span className="font-bold text-[color:var(--pf-ink)]">{num(sales.count)}</span> data
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {sales.page > 1 ? (
+                          <Link href={pageHref(sales.page - 1)} className="whitespace-nowrap rounded-lg px-2 py-1 font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">‹ Sebelumnya</Link>
+                        ) : null}
+                        {pageList(sales.page, sales.pages).map((n, i) =>
+                          n === "..." ? (
+                            <span key={`gap-${i}`} className="px-0.5 text-slate-400">…</span>
+                          ) : n === sales.page ? (
+                            <span key={`cur-${n}`} aria-current="page" className="rounded-lg bg-[color:var(--pf-accent)] px-2 py-1 text-center font-bold text-white">{n}</span>
+                          ) : (
+                            <Link key={`n-${n}`} href={pageHref(n)} className={chipIdle}>{n}</Link>
+                          ),
+                        )}
+                        {sales.page < sales.pages ? (
+                          <Link href={pageHref(sales.page + 1)} className="flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                            Selanjutnya <ArrowRight size={12} />
+                          </Link>
+                        ) : null}
+                        <form action="/invoice/laporan" method="get" className="flex items-center gap-1 pl-1" title={`1 – ${sales.pages}`}>
+                          {hidden}
+                          <input type="hidden" name="per" value={String(sales.per)} />
+                          <input type="number" name="hal" min={1} max={sales.pages} defaultValue={sales.page} aria-label="Ke halaman" className="w-14 rounded-lg border border-[color:var(--pf-line-soft)] bg-white px-1.5 py-1 text-xs text-[color:var(--pf-ink)] dark:bg-slate-900" />
+                          <button type="submit" title="Ke Halaman" aria-label="Ke Halaman" className="rounded-lg bg-slate-100 p-1.5 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+                            <ArrowRight size={13} />
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
+            )}
+          </section>
         ) : null}
 
         {tab === "produk" ? (
@@ -934,6 +1095,51 @@ export default async function InvoiceReportPage({ searchParams }: { searchParams
               )}
             </section>
           )
+        ) : null}
+
+        {tab === "pembayaran" && refund ? (
+          /* ==== REFUND · UANG KELUAR (Mode A) ====
+             Tagihan tidak berubah oleh refund — kartu ini menunjukkan arus
+             keluarnya lalu menyimpulkan kas masuk neto. Riwayatnya punya
+             tab tersendiri: Refund. */
+          <section className="card scroll-mt-24 p-4">
+            <h2 className="text-sm font-bold text-[color:var(--pf-ink)]">Refund · Uang Keluar</h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Uang yang kembali ke pelanggan pada {period.label.toLowerCase()} — dibaca per tanggal uang benar-benar keluar, bukan tanggal ajukan. Nilai invoice dan sisa tagihan tidak berubah oleh refund.
+            </p>
+            <RefundTiles dibayar={rep.terbayar} refund={refund} />
+            <p className="mt-4 text-[10.5px] font-bold uppercase tracking-wider text-slate-400">Daftar Refund Terkirim</p>
+            <RefundRows refund={refund} />
+          </section>
+        ) : null}
+
+        {tab === "refund" ? (
+          /* ==== HALAMAN REFUND — diminta owner: detail uang keluar jadi
+             tab sendiri di bawah Pembayaran. Ringkasan neto + daftar per
+             pengajuan, angkanya dihitung ulang server setiap muat. */
+          <div className="space-y-4">
+            <section className="card p-4">
+              <h2 className="text-sm font-bold text-[color:var(--pf-ink)]">Ringkasan Uang Keluar</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Kas masuk neto = uang yang dibayar invoice terbit dikurangi refund yang sudah terkirim pada {period.label.toLowerCase()}.
+              </p>
+              {refund ? <RefundTiles dibayar={rep.terbayar} refund={refund} /> : null}
+            </section>
+
+            <section className="card p-4">
+              <h2 className="text-sm font-bold text-[color:var(--pf-ink)]">Daftar Refund Terkirim</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Refund diajukan dari panel Refund di halaman detail invoice, disetujui Owner, lalu ditandai terkirim. Pengajuan yang belum terkirim tidak dihitung di sini.
+              </p>
+              {refund ? (
+                <div className="mt-2">
+                  <RefundRows refund={refund} />
+                </div>
+              ) : (
+                <p className="py-4 text-xs text-slate-400">Data refund tidak terbaca — coba muat ulang halaman.</p>
+              )}
+            </section>
+          </div>
         ) : null}
 
         <TipsBanner title="Tips Membaca Laporan" body="Gunakan filter periode dan pilihan Bandingkan Dengan untuk melihat tren dari waktu ke waktu. Semua data dihitung langsung dari database aplikasi." />

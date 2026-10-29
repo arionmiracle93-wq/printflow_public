@@ -25,7 +25,7 @@ export type InvoiceHistoryCardRow = Awaited<ReturnType<typeof listInvoices>>["ro
 
 type InvoiceRow = InvoiceHistoryCardRow;
 
-type Tone = "green" | "teal" | "blue" | "rose" | "amber" | "slate" | "sky" | "violet";
+export type Tone = "green" | "teal" | "blue" | "rose" | "amber" | "slate" | "sky" | "violet";
 
 /* Warna lencana jenis dokumen. Invoice biru (seperti referensi desain),
    sisanya mengikuti warna lama tiap mode supaya Estimasi / Surat Jalan / PO
@@ -37,7 +37,7 @@ const DOC_TONE: Record<DocType, Tone> = {
   po: "violet",
 };
 
-function Chip({ tone, icon, children, className = "" }: { tone: Tone; icon?: ReactNode; children: ReactNode; className?: string }) {
+export function Chip({ tone, icon, children, className = "" }: { tone: Tone; icon?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <span className={`ihc-chip ihc-tone-${tone} ${className}`.trim()}>
       {icon}
@@ -66,7 +66,7 @@ function Row({ icon, label, children, tone }: { icon: ReactNode; label: string; 
  * tampilan tidak pernah berbeda soal status bayar, sisa tagihan, atau
  * warna nominal.
  */
-function historyMeta(row: InvoiceRow, today: string, uniqueCodeEnabled: boolean) {
+export function historyMeta(row: InvoiceRow, today: string, uniqueCodeEnabled: boolean) {
   const docType: DocType = isDocType(row.docType) ? row.docType : "invoice";
   const rowMode: DocMode = DOC_MODES[docType];
   const isInv = docType === "invoice";
